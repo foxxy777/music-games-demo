@@ -139,9 +139,9 @@ body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);ov
 // ============================
 // 可用音高（来自视唱教程切分的汇总音符库）
 const SCALE_NOTES = [
-  '3G','3G#','3A','3A#','3B',
-  '4C','4C#','4D','4D#','4E','4F','4F#','4G','4G#','4A','4A#','4B',
-  '5C','5C#','5D','5D#','5E','5F','5F#','5G','5A'
+  '3G','3Gs','3A','3As','3B',
+  '4C','4Cs','4D','4Ds','4E','4F','4Fs','4G','4Gs','4A','4As','4B',
+  '5C','5Cs','5D','5Ds','5E','5F','5Fs','5G','5A'
 ];
 // 缺少：3C 3D 3E 3F 等（视唱中未出现或检测失败）
 
@@ -156,29 +156,29 @@ function getAnswerFile(label) {
 const NOTES_LAYOUT = [
   {label:'5A', idx:0},
   {label:'5G', idx:1},
-  {label:'5F#', idx:2},
+  {label:'5Fs', idx:2},
   {label:'5F', idx:3},
   {label:'5E', idx:4},
-  {label:'5D#', idx:5},
+  {label:'5Ds', idx:5},
   {label:'5D', idx:6},
-  {label:'5C#', idx:7},
+  {label:'5Cs', idx:7},
   {label:'5C', idx:8},
   {label:'4B', idx:9},
-  {label:'4A#', idx:10},
+  {label:'4As', idx:10},
   {label:'4A', idx:11},
-  {label:'4G#', idx:12},
+  {label:'4Gs', idx:12},
   {label:'4G', idx:13},
-  {label:'4F#', idx:14},
+  {label:'4Fs', idx:14},
   {label:'4F', idx:15},
   {label:'4E', idx:16},
-  {label:'4D#', idx:17},
+  {label:'4Ds', idx:17},
   {label:'4D', idx:18},
-  {label:'4C#', idx:19},
+  {label:'4Cs', idx:19},
   {label:'4C', idx:20},
   {label:'3B', idx:21},
-  {label:'3A#', idx:22},
+  {label:'3As', idx:22},
   {label:'3A', idx:23},
-  {label:'3G#', idx:24},
+  {label:'3Gs', idx:24},
   {label:'3G', idx:25},
 ];
 

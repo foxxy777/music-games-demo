@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>听音觉醒 - 玩法总览</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;color:#eee;padding:20px}
+h1{text-align:center;margin-bottom:30px;color:#e94560}
+h2{text-align:center;margin:40px 0 20px;color:#52b788}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;max-width:1200px;margin:0 auto}
+.card{background:#16213e;border-radius:12px;padding:20px;text-decoration:none;color:#eee;transition:transform .2s,box-shadow .2s;border:1px solid #0f3460}
+.card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(233,69,96,.3)}
+.num{font-size:32px;font-weight:bold;color:#e94560;margin-bottom:8px}
+.title{font-size:18px;font-weight:600;margin-bottom:8px}
+.desc{font-size:14px;color:#aaa;line-height:1.5}
+.boss{border-color:#e94560;background:#1a0a1e}
+.boss .num{color:#ff6b6b}
+</style>
+</head>
+<body>
+<h1>🐱 听音觉醒 — 玩法Demo总览</h1>
+<div class="grid">
+<a class="card" href="01-高低判断.html"><div class="num">档位 1</div><div class="title">高低判断</div><div class="desc">听两个音，选哪个更高</div></a>
+<a class="card" href="02-相同不同.html"><div class="num">档位 2</div><div class="title">相同 / 不同</div><div class="desc">听两个音，判断是否相同</div></a>
+<a class="card" href="03-上行下行.html"><div class="num">档位 3</div><div class="title">上行 / 下行 / 波动</div><div class="desc">听三个音，判断走向</div></a>
+<a class="card" href="04-参考音定位.html"><div class="num">档位 4</div><div class="title">参考音·上方下方</div><div class="desc">给参考音C，判断目标音在上方还是下方</div></a>
+<a class="card" href="05-听音辨名3选1.html"><div class="num">档位 5</div><div class="title">听音辨名 · 3选1</div><div class="desc">给参考音C，从3个选项选音名</div></a>
+<a class="card" href="06-听音辨名5选1.html"><div class="num">档位 6</div><div class="title">听音辨名 · 5选1</div><div class="desc">给参考音C，从5个选项选音名</div></a>
+<a class="card" href="07-音程分类.html"><div class="num">档位 7</div><div class="title">音程分类</div><div class="desc">听两个音，判断大/小/纯</div></a>
+<a class="card" href="08-音程全识别.html"><div class="num">档位 8</div><div class="title">音程全识别</div><div class="desc">听两个音，选完整音程名</div></a>
+<a class="card" href="09-三音旋律.html"><div class="num">档位 9</div><div class="title">3音旋律</div><div class="desc">听3个音的短旋律，依次选出每个音</div></a>
+<a class="card" href="10-旋律走向.html"><div class="num">档位 10</div><div class="title">旋律走向</div><div class="desc">听4-5音旋律，识别整体走向</div></a>
+<a class="card" href="11-节奏型.html"><div class="num">档位 11</div><div class="title">节奏判断</div><div class="desc">听一段节奏，选择正确的节奏型</div></a>
+<a class="card" href="12-大小三和弦.html"><div class="num">档位 12</div><div class="title">大/小三和弦</div><div class="desc">听和弦，判断是大三还是小三</div></a>
+<a class="card" href="13-和弦类型.html"><div class="num">档位 13</div><div class="title">三和弦类型</div><div class="desc">识别大/小/增/减/挂留和弦</div></a>
+<a class="card" href="14-和弦进行.html"><div class="num">档位 14</div><div class="title">和弦进行</div><div class="desc">听和弦进行，识别走向</div></a>
+<a class="card" href="15-综合限时.html"><div class="num">档位 15</div><div class="title">综合限时</div><div class="desc">随机混合题型 + 时间压力</div></a>
+<a class="card boss" href="16-大师.html"><div class="num">档位 16</div><div class="title">大师挑战</div><div class="desc">七和弦、调式、转调</div></a>
+</div>
+
+<h2>📖 辅助练习</h2>
+<div class="grid">
+<a class="card" href="看谱识音.html" style="border-color:#52b788"><div class="num" style="color:#52b788">📜</div><div class="title">看谱识音</div><div class="desc">看五线谱音符位置，选出正确的音名（含三档难度）</div></a>
+</div>
+</body>
+</html>

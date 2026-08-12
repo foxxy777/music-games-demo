@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>档位10 - 旋律走向</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;color:#eee;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+h1{color:#e94560;margin-bottom:8px}.sub{color:#888;margin-bottom:24px;font-size:14px}
+.stats{display:flex;gap:32px;margin-bottom:24px;font-size:18px}.stats span{color:#e94560;font-weight:bold}
+.btn-play{background:#e94560;color:#fff;border:none;padding:14px 48px;font-size:20px;border-radius:50px;cursor:pointer;margin-bottom:24px;transition:all .2s}
+.btn-play:hover{background:#ff6b6b;transform:scale(1.05)}.btn-play:disabled{background:#555;cursor:not-allowed}
+.choices{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;justify-content:center}
+.choice{background:#16213e;color:#eee;border:2px solid #0f3460;padding:16px 28px;font-size:20px;border-radius:12px;cursor:pointer;transition:all .2s;min-width:110px;text-align:center}
+.choice:hover{border-color:#e94560;background:#1a2640}.choice:disabled{opacity:.5;cursor:not-allowed}
+.choice.correct{background:#2d6a4f;border-color:#52b788}.choice.wrong{background:#6a2d2d;border-color:#e94560}
+.result{font-size:24px;font-weight:bold;min-height:36px;margin-bottom:16px}
+.back{position:fixed;top:20px;left:20px;color:#888;text-decoration:none;font-size:14px}.back:hover{color:#e94560}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← 返回总览</a>
+<h1>档位 10 · 旋律走向</h1>
+<div class="sub">听4-5个音的旋律，识别整体走向</div>
+<div class="stats">得分: <span id="score">0</span> | 连击: <span id="combo">0</span> | 题数: <span id="total">0</span></div>
+<button class="btn-play" id="playBtn" onclick="playQuestion()">🔊 播放旋律</button>
+<div class="choices">
+  <button class="choice" id="btnUp" onclick="answer('up')" disabled>📈 上升</button>
+  <button class="choice" id="btnDown" onclick="answer('down')" disabled>📉 下降</button>
+  <button class="choice" id="btnArch" onclick="answer('arch')" disabled>⛰️ 拱形</button>
+  <button class="choice" id="btnValley" onclick="answer('valley')" disabled>🏔️ 谷形</button>
+  <button class="choice" id="btnWave" onclick="answer('wave')" disabled>〰️ 波动</button>
+</div>
+<div class="result" id="result"></div>
+
+<script>
+let correctAnswer, score=0, combo=0, total=0;
+const midiToFreq = m => 440 * Math.pow(2, (m-69)/12);
+function playTone(freq, time, dur=0.4){
+  const s = new Tone.Synth({oscillator:{type:'triangle'},envelope:{attack:0.02,decay:0.2,sustain:0.2,release:0.3}}).toDestination();
+  s.triggerAttackRelease(Tone.Frequency(freq,'hz').toNote(), dur, time);
+}
+
+function genMelody(type, len){
+  const melody=[];
+  let base = Math.floor(Math.random()*7)+60;
+  if(type==='up'){ for(let i=0;i<len;i++) melody.push(base+i*2); }
+  else if(type==='down'){ for(let i=0;i<len;i++) melody.push(base-i*2); }
+  else if(type==='arch'){ for(let i=0;i<len;i++) melody.push(base+Math.min(i,len-1-i)*2); }
+  else if(type==='valley'){ for(let i=0;i<len;i++) melody.push(base-Math.min(i,len-1-i)*2); }
+  else { for(let i=0;i<len;i++) melody.push(base+(i%2===0?i:-i)*1); }
+  return melody.map(m=>Math.max(40,Math.min(84,m)));
+}
+
+async function playQuestion(){
+  await Tone.start();
+  document.getElementById('playBtn').disabled = true;
+  document.getElementById('result').textContent = '';
+  document.querySelectorAll('.choice').forEach(b=>{b.disabled=true;b.className='choice'});
+
+  const types = ['up','down','arch','valley','wave'];
+  const type = types[Math.floor(Math.random()*types.length)];
+  const len = Math.random()>0.5 ? 4 : 5;
+  correctAnswer = type;
+  const melody = genMelody(type, len);
+
+  const now = Tone.now();
+  melody.forEach((m,i) => playTone(midiToFreq(m), now + i*0.5));
+
+  setTimeout(()=>{ document.querySelectorAll('.choice').forEach(b=>b.disabled=false); }, len*500+500);
+}
+
+function answer(choice){
+  document.querySelectorAll('.choice').forEach(b=>b.disabled=true);
+  document.getElementById('playBtn').disabled = false;
+  total++;
+  const btnMap = {up:'btnUp',down:'btnDown',arch:'btnArch',valley:'btnValley',wave:'btnWave'};
+  if(choice===correctAnswer){
+    score++; combo++;
+    document.getElementById(btnMap[choice]).classList.add('correct');
+    document.getElementById('result').textContent='✅ 正确！';
+    document.getElementById('result').style.color='#52b788';
+  } else {
+    combo=0;
+    document.getElementById(btnMap[choice]).classList.add('wrong');
+    const nameMap={up:'上升',down:'下降',arch:'拱形',valley:'谷形',wave:'波动'};
+    document.getElementById('result').textContent='❌ 正确答案: '+nameMap[correctAnswer];
+    document.getElementById('result').style.color='#e94560';
+  }
+  document.getElementById('score').textContent=score;
+  document.getElementById('combo').textContent=combo;
+  document.getElementById('total').textContent=total;
+}
+</script>
+</body>
+</html>

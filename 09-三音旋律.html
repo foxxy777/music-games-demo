@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>档位9 - 3音旋律</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;color:#eee;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+h1{color:#e94560;margin-bottom:8px}.sub{color:#888;margin-bottom:24px;font-size:14px}
+.stats{display:flex;gap:32px;margin-bottom:24px;font-size:18px}.stats span{color:#e94560;font-weight:bold}
+.btn-play{background:#e94560;color:#fff;border:none;padding:14px 48px;font-size:20px;border-radius:50px;cursor:pointer;margin-bottom:20px;transition:all .2s}
+.btn-play:hover{background:#ff6b6b;transform:scale(1.05)}.btn-play:disabled{background:#555;cursor:not-allowed}
+.progress{font-size:16px;color:#aaa;margin-bottom:16px}
+.note-row{display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;justify-content:center}
+.note-row label{font-size:16px;min-width:70px;text-align:right}
+.note-row select{background:#16213e;color:#eee;border:2px solid #0f3460;padding:10px 16px;font-size:18px;border-radius:8px;min-width:80px}
+.btn-submit{background:#0f3460;color:#eee;border:2px solid #16213e;padding:12px 36px;font-size:18px;border-radius:10px;cursor:pointer;margin-bottom:20px}
+.btn-submit:hover{background:#1a2640;border-color:#e94560}.btn-submit:disabled{opacity:.5;cursor:not-allowed}
+.result{font-size:24px;font-weight:bold;min-height:36px;margin-bottom:16px}
+.back{position:fixed;top:20px;left:20px;color:#888;text-decoration:none;font-size:14px}.back:hover{color:#e94560}
+.correct-ans{color:#e94560;font-size:16px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← 返回总览</a>
+<h1>档位 9 · 3音旋律听辨</h1>
+<div class="sub">听3个音的短旋律，依次选出每个音相对于前一个音的走向</div>
+<div class="stats">得分: <span id="score">0</span> | 连击: <span id="combo">0</span> | 题数: <span id="total">0</span></div>
+<button class="btn-play" id="playBtn" onclick="playQuestion()">🔊 播放旋律</button>
+<div class="progress" id="progress"></div>
+<div id="noteInputs"></div>
+<br>
+<button class="btn-submit" id="submitBtn" onclick="submitAnswer()" disabled>✅ 提交答案</button>
+<div class="result" id="result"></div>
+<div class="correct-ans" id="correctAns"></div>
+
+<script>
+let melody=[], score=0, combo=0, total=0;
+const noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const midiToFreq = m => 440 * Math.pow(2, (m-69)/12);
+function playTone(freq, time, dur=0.5){
+  const s = new Tone.Synth({oscillator:{type:'triangle'},envelope:{attack:0.02,decay:0.2,sustain:0.2,release:0.3}}).toDestination();
+  s.triggerAttackRelease(Tone.Frequency(freq,'hz').toNote(), dur, time);
+}
+function midiToName(m){ return noteNames[m%12] + Math.floor(m/12-1); }
+
+async function playQuestion(){
+  await Tone.start();
+  document.getElementById('playBtn').disabled = true;
+  document.getElementById('result').textContent = '';
+  document.getElementById('correctAns').textContent = '';
+  document.getElementById('submitBtn').disabled = true;
+
+  // generate 3-note melody within 1 octave
+  melody = [];
+  let base = Math.floor(Math.random()*12)+60; // C4-B4
+  melody.push(base);
+  for(let i=1;i<3;i++){
+    const step = Math.floor(Math.random()*7)-3; // -3 to +3 semitones
+    const next = Math.max(48, Math.min(72, melody[i-1]+step));
+    melody.push(next);
+  }
+
+  // play
+  const now = Tone.now();
+  melody.forEach((m,i) => playTone(midiToFreq(m), now + i*0.6));
+
+  // build inputs: note 1 is shown, notes 2&3 user picks direction
+  const container = document.getElementById('noteInputs');
+  container.innerHTML = '';
+  
+  document.getElementById('progress').textContent = `第1个音: ${midiToName(melody[0])}`;
+
+  for(let i=1;i<3;i++){
+    const row = document.createElement('div');
+    row.className = 'note-row';
+    row.innerHTML = `<label>第${i+1}个音:</label>
+      <select id="sel${i}">
+        <option value="">请选择</option>
+        <option value="same">→ 相同</option>
+        <option value="up1">↑ 半音</option>
+        <option value="up2">↑↑ 全音</option>
+        <option value="up3">↑↑↑ 小三度</option>
+        <option value="down1">↓ 半音</option>
+        <option value="down2">↓↓ 全音</option>
+        <option value="down3">↓↓↓ 小三度</option>
+      </select>`;
+    container.appendChild(row);
+  }
+
+  setTimeout(()=>{
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('playBtn').disabled = false;
+  }, 2000);
+}
+
+function submitAnswer(){
+  const s1 = document.getElementById('sel1').value;
+  const s2 = document.getElementById('sel2').value;
+  if(!s1||!s2) return;
+
+  document.getElementById('submitBtn').disabled = true;
+  total++;
+
+  let allCorrect = true;
+  for(let i=1;i<3;i++){
+    const sel = document.getElementById(`sel${i}`).value;
+    const diff = melody[i] - melody[i-1];
+    let expected;
+    if(diff===0) expected='same';
+    else if(diff===1) expected='up1';
+    else if(diff===2) expected='up2';
+    else if(diff>=3) expected='up3';
+    else if(diff===-1) expected='down1';
+    else if(diff===-2) expected='down2';
+    else expected='down3';
+    if(sel!==expected) allCorrect=false;
+  }
+
+  if(allCorrect){
+    score++; combo++;
+    document.getElementById('result').textContent='✅ 正确！';
+    document.getElementById('result').style.color='#52b788';
+  } else {
+    combo=0;
+    document.getElementById('result').textContent='❌ 答错了～';
+    document.getElementById('result').style.color='#e94560';
+    document.getElementById('correctAns').textContent = `正确旋律: ${melody.map(m=>midiToName(m)).join(' → ')}`;
+  }
+  document.getElementById('score').textContent=score;
+  document.getElementById('combo').textContent=combo;
+  document.getElementById('total').textContent=total;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>异世界音乐课堂 - 关卡选择</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: auto; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f0f1e; color: #eee; min-height: 100vh; padding: 20px;
+  }
+  h1 { color: #e94560; text-align: center; font-size: 28px; margin-bottom: 6px; }
+  .sub { color: #888; text-align: center; font-size: 14px; margin-bottom: 30px; }
+
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .level-card {
+    background: #16213e;
+    border: 2px solid #0f3460;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    text-decoration: none;
+  }
+  .level-card:hover {
+    border-color: #e94560;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(233,69,96,0.2);
+  }
+  .level-card.locked {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .level-card.locked:hover {
+    border-color: #0f3460;
+    transform: none;
+    box-shadow: none;
+  }
+  .card-image {
+    width: 100%;
+    aspect-ratio: 3/4;
+    object-fit: cover;
+    display: block;
+    background: #000;
+  }
+  .card-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.8) 100%);
+    pointer-events: none;
+  }
+  .card-info {
+    padding: 12px;
+    text-align: center;
+  }
+  .card-title {
+    color: #eee;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .card-stars {
+    font-size: 22px;
+    letter-spacing: 4px;
+  }
+  .star-icon { color: #333; transition: all 0.3s; }
+  .star-icon.lit { color: #fbbf24; filter: drop-shadow(0 0 4px rgba(251,191,36,0.5)); }
+  .card-lock {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 36px;
+    opacity: 0.7;
+  }
+  .card-number {
+    position: absolute;
+    top: 8px; left: 12px;
+    background: rgba(0,0,0,0.6);
+    color: #e94560;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 2px 10px;
+    border-radius: 12px;
+  }
+  .dbg-toggle {
+    position: fixed; bottom: 20px; right: 20px;
+    background: none; border: 1px solid #333; color: #444;
+    padding: 4px 12px; border-radius: 20px; cursor: pointer; font-size: 12px;
+    transition: all 0.2s; z-index: 100;
+  }
+  .dbg-toggle:hover { border-color: #e94560; color: #e94560; }
+  .dbg-toggle.active { border-color: #e94560; color: #e94560; background: rgba(233,69,96,0.1); }
+</style>
+</head>
+<body>
+  <h1>异世界音乐课堂</h1>
+  <button class="dbg-toggle" id="dbgToggle" onclick="toggleDebug()">DBG</button>
+  <div class="sub">选择学生，开始传授音乐知识</div>
+
+  <div class="level-grid" id="levelGrid"></div>
+
+<script>
+// ===== Level config =====
+// Each level: id, name, image, videoDir, bestStars (from localStorage)
+const LEVELS = [
+  { id: '008', name: '学生 1', image: 'students/008/008.png' },
+  { id: '017', name: '学生 2', image: 'students/017/017.png' },
+  { id: '023', name: '学生 3', image: 'students/023/023.png' },
+  { id: '107', name: '学生 4', image: 'students/107/107.png' },
+  { id: '155', name: '学生 5', image: 'students/155/155.png' },
+  { id: '242', name: '学生 6', image: 'students/242/242.png' },
+  { id: '411', name: '学生 7', image: 'students/411/411.png' },
+  { id: '423', name: '学生 8', image: 'students/423/423.png' },
+  { id: '484', name: '学生 9', image: 'students/484/484.png' },
+];
+
+function getBestStars(levelId) {
+  return parseInt(localStorage.getItem('stars_' + levelId) || '0', 10);
+}
+function setBestStars(levelId, stars) {
+  const current = getBestStars(levelId);
+  if (stars > current) localStorage.setItem('stars_' + levelId, stars);
+}
+
+function isDebugMode() {
+  return localStorage.getItem('debug_mode') === '1';
+}
+function toggleDebug() {
+  const next = !isDebugMode();
+  localStorage.setItem('debug_mode', next ? '1' : '0');
+  document.getElementById('dbgToggle').classList.toggle('active', next);
+  buildGrid();
+}
+
+function buildGrid() {
+  const grid = document.getElementById('levelGrid');
+  grid.innerHTML = '';
+  const dbg = isDebugMode();
+  document.getElementById('dbgToggle').classList.toggle('active', dbg);
+  LEVELS.forEach((lvl, i) => {
+    const best = getBestStars(lvl.id);
+    // Unlock logic: debug mode = all unlocked; otherwise first level free, others need prev >= 1 star
+    const unlocked = dbg || i === 0 || getBestStars(LEVELS[i-1].id) >= 1;
+
+    const card = document.createElement(unlocked ? 'a' : 'div');
+    card.className = 'level-card' + (unlocked ? '' : ' locked');
+
+    if (unlocked) {
+      card.href = '听音识谱.html?level=' + lvl.id;
+    }
+
+    card.innerHTML = `
+      <span class="card-number">${i+1}</span>
+      ${unlocked ? '' : '<div class="card-lock">&#128274;</div>'}
+      <img class="card-image" src="${lvl.image}" alt="${lvl.name}" loading="lazy">
+      <div class="card-overlay"></div>
+      <div class="card-info">
+        <div class="card-title">${lvl.name}</div>
+        <div class="card-stars">
+          ${[1,2,3].map(s => `<span class="star-icon ${s<=best?'lit':''}">&#9733;</span>`).join('')}
+        </div>
+      </div>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+buildGrid();
+</script>
+</body>
+</html>

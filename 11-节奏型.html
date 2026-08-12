@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>档位11 - 节奏判断</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;color:#eee;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+h1{color:#e94560;margin-bottom:8px}.sub{color:#888;margin-bottom:24px;font-size:14px}
+.stats{display:flex;gap:32px;margin-bottom:24px;font-size:18px}.stats span{color:#e94560;font-weight:bold}
+.btn-play{background:#e94560;color:#fff;border:none;padding:14px 48px;font-size:20px;border-radius:50px;cursor:pointer;margin-bottom:24px;transition:all .2s}
+.btn-play:hover{background:#ff6b6b;transform:scale(1.05)}.btn-play:disabled{background:#555;cursor:not-allowed}
+.choices{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;justify-content:center}
+.rhythm-option{background:#16213e;color:#eee;border:2px solid #0f3460;padding:16px 24px;font-size:16px;border-radius:12px;cursor:pointer;transition:all .2s;text-align:center;min-width:180px}
+.rhythm-option:hover{border-color:#e94560;background:#1a2640}.rhythm-option:disabled{opacity:.5;cursor:not-allowed}
+.rhythm-option.correct{background:#2d6a4f;border-color:#52b788}.rhythm-option.wrong{background:#6a2d2d;border-color:#e94560}
+.rhythm-option .visual{font-size:32px;margin-bottom:8px;letter-spacing:4px;font-family:monospace}
+.rhythm-option .label{font-size:14px;color:#aaa}
+.result{font-size:24px;font-weight:bold;min-height:36px;margin-bottom:16px}
+.back{position:fixed;top:20px;left:20px;color:#888;text-decoration:none;font-size:14px}.back:hover{color:#e94560}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← 返回总览</a>
+<h1>档位 11 · 节奏判断</h1>
+<div class="sub">听一段节奏，选择对应的节奏型</div>
+<div class="stats">得分: <span id="score">0</span> | 连击: <span id="combo">0</span> | 题数: <span id="total">0</span></div>
+<button class="btn-play" id="playBtn" onclick="playQuestion()">🔊 播放节奏</button>
+<div class="choices" id="choices"></div>
+<div class="result" id="result"></div>
+
+<script>
+let correctId, score=0, combo=0, total=0;
+// rhythms: array of durations in 8th-note units (1=8th, 2=quarter, 4=half)
+const rhythms = [
+  {id:'a', name:'均匀八分', pattern:[1,1,1,1], visual:'♩ ♩ ♩ ♩'},
+  {id:'b', name:'均匀四分', pattern:[2,2,2,2], visual:'♩. ♩. ♩. ♩.'},
+  {id:'c', name:'长短长', pattern:[2,1,1,2], visual:'♩. ♩♩ ♩.'},
+  {id:'d', name:'短短长', pattern:[1,1,2,2], visual:'♩♩ ♩. ♩.'},
+  {id:'e', name:'长短短', pattern:[2,2,1,1], visual:'♩. ♩. ♩♩'},
+];
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+async function playQuestion(){
+  await Tone.start();
+  document.getElementById('playBtn').disabled = true;
+  document.getElementById('result').textContent = '';
+  document.getElementById('choices').innerHTML = '';
+
+  const correct = rhythms[Math.floor(Math.random()*rhythms.length)];
+  correctId = correct.id;
+
+  // play rhythm
+  const unitTime = 0.25; // 8th note = 0.25s
+  let t = Tone.now() + 0.1;
+  correct.pattern.forEach(dur => {
+    const synth = new Tone.MembraneSynth({envelope:{attack:0.01,decay:0.1,sustain:0.05,release:0.1}}).toDestination();
+    synth.triggerAttackRelease('C2', '16n', t);
+    t += dur * unitTime;
+  });
+
+  // show options
+  const opts = shuffle([...rhythms]);
+  const container = document.getElementById('choices');
+  opts.forEach(r => {
+    const btn = document.createElement('button');
+    btn.className = 'rhythm-option';
+    btn.innerHTML = `<div class="visual">${r.visual}</div><div class="label">${r.name}</div>`;
+    btn.onclick = () => answer(r.id, btn);
+    container.appendChild(btn);
+  });
+
+  setTimeout(()=>{
+    document.querySelectorAll('.rhythm-option').forEach(b=>b.disabled=false);
+    document.getElementById('playBtn').disabled = false;
+  }, t - Tone.now() + 300);
+}
+
+function answer(choice, btn){
+  document.querySelectorAll('.rhythm-option').forEach(b=>b.disabled=true);
+  total++;
+  if(choice===correctId){
+    score++; combo++;
+    btn.classList.add('correct');
+    document.getElementById('result').textContent='✅ 正确！';
+    document.getElementById('result').style.color='#52b788';
+  } else {
+    combo=0;
+    btn.classList.add('wrong');
+    const correctName = rhythms.find(r=>r.id===correctId).name;
+    document.getElementById('result').textContent='❌ 正确答案: '+correctName;
+    document.getElementById('result').style.color='#e94560';
+  }
+  document.getElementById('score').textContent=score;
+  document.getElementById('combo').textContent=combo;
+  document.getElementById('total').textContent=total;
+}
+</script>
+</body>
+</html>

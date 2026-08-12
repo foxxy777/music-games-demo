@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>档位16 - 大师挑战</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;color:#eee;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+h1{color:#e94560;margin-bottom:8px}.sub{color:#888;margin-bottom:16px;font-size:14px}
+.stats{display:flex;gap:24px;margin-bottom:16px;font-size:18px}.stats span{color:#e94560;font-weight:bold}
+.timer{font-size:28px;font-weight:bold;color:#ff6b6b;margin-bottom:16px}
+.timer.warning{animation:pulse .5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.btn-play{background:#e94560;color:#fff;border:none;padding:14px 48px;font-size:20px;border-radius:50px;cursor:pointer;margin-bottom:16px;transition:all .2s}
+.btn-play:hover{background:#ff6b6b;transform:scale(1.05)}.btn-play:disabled{background:#555;cursor:not-allowed}
+.question-type{font-size:16px;color:#aaa;margin-bottom:12px;background:#16213e;padding:8px 20px;border-radius:8px}
+.choices{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;justify-content:center}
+.choice{background:#16213e;color:#eee;border:2px solid #0f3460;padding:10px 16px;font-size:16px;border-radius:10px;cursor:pointer;transition:all .2s;min-width:70px;text-align:center}
+.choice:hover{border-color:#e94560;background:#1a2640}.choice:disabled{opacity:.5;cursor:not-allowed}
+.choice.correct{background:#2d6a4f;border-color:#52b788}.choice.wrong{background:#6a2d2d;border-color:#e94560}
+.result{font-size:20px;font-weight:bold;min-height:28px;margin-bottom:8px}
+.back{position:fixed;top:20px;left:20px;color:#888;text-decoration:none;font-size:14px}.back:hover{color:#e94560}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← 返回总览</a>
+<h1>档位 16 · 大师挑战</h1>
+<div class="sub">七和弦、调式、转调 — 每题限时6秒</div>
+<div class="stats">得分: <span id="score">0</span> | 连击: <span id="combo">0</span> | 题数: <span id="total">0</span></div>
+<div class="timer" id="timer">⏱️ --</div>
+<div class="question-type" id="qType">点击开始大师挑战</div>
+<button class="btn-play" id="playBtn" onclick="nextQuestion()">🔊 开始</button>
+<div class="choices" id="choices"></div>
+<div class="result" id="result"></div>
+
+<script>
+let score=0,combo=0,total=0,timerInterval=null,timeLeft=0;
+const midiToFreq=m=>440*Math.pow(2,(m-69)/12);
+const noteNames=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function playChord(freqs, time, dur='4n'){
+  const s=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.02,decay:0.3,sustain:0.3,release:0.6}}).toDestination();
+  s.triggerAttackRelease(freqs.map(f=>Tone.Frequency(f,'hz').toNote()), dur, time);
+}
+
+const masterTypes = ['七和弦','调式听辨','转调识别','音程(含复音程)'];
+
+async function nextQuestion(){
+  await Tone.start();
+  if(timerInterval)clearInterval(timerInterval);
+  document.getElementById('playBtn').disabled=true;
+  document.getElementById('result').textContent='';
+  document.getElementById('choices').innerHTML='';
+
+  const type=masterTypes[Math.floor(Math.random()*masterTypes.length)];
+  document.getElementById('qType').textContent='题型: '+type;
+
+  if(type==='七和弦') genSeventh();
+  else if(type==='调式听辨') genMode();
+  else if(type==='转调识别') genModulation();
+  else genWideInterval();
+
+  timeLeft=6;
+  document.getElementById('timer').textContent='⏱️ '+timeLeft+'s';
+  document.getElementById('timer').className='timer';
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    document.getElementById('timer').textContent='⏱️ '+timeLeft+'s';
+    if(timeLeft<=3)document.getElementById('timer').className='timer warning';
+    if(timeLeft<=0){clearInterval(timerInterval);timeout();}
+  },1000);
+}
+
+function timeout(){
+  combo=0;total++;
+  document.querySelectorAll('.choice').forEach(b=>b.disabled=true);
+  document.getElementById('result').textContent='⏰ 超时！';
+  document.getElementById('result').style.color='#e94560';
+  document.getElementById('playBtn').disabled=false;
+  upd();
+}
+
+function upd(){
+  document.getElementById('score').textContent=score;
+  document.getElementById('combo').textContent=combo;
+  document.getElementById('total').textContent=total;
+}
+
+// 七和弦
+function genSeventh(){
+  const base=Math.floor(Math.random()*12)+48;
+  const types=[
+    {name:'大七',iv:[0,4,7,11]},{name:'属七',iv:[0,4,7,10]},
+    {name:'小七',iv:[0,3,7,10]},{name:'半减七',iv:[0,3,6,10]},{name:'减七',iv:[0,3,6,9]}
+  ];
+  const t=types[Math.floor(Math.random()*types.length)];
+  playChord(t.iv.map(i=>midiToFreq(base+i)),Tone.now());
+  let opts=shuffle(types.map(x=>x.name));
+  showChoices(opts,t.name);
+}
+
+// 调式
+function genMode(){
+  const base=Math.floor(Math.random()*12)+60;
+  const modes=[
+    {name:'大调(Ionian)',scale:[0,2,4,5,7,9,11]},
+    {name:'自然小调(Aeolian)',scale:[0,2,3,5,7,8,10]},
+    {name:'Dorian',scale:[0,2,3,5,7,9,10]},
+    {name:'Mixolydian',scale:[0,2,4,5,7,9,10]},
+  ];
+  const m=modes[Math.floor(Math.random()*modes.length)];
+  // play scale ascending
+  const now=Tone.now();
+  m.scale.forEach((n,i)=>{
+    const s=new Tone.Synth({oscillator:{type:'triangle'},envelope:{attack:0.02,decay:0.2,sustain:0.15,release:0.3}}).toDestination();
+    s.triggerAttackRelease(Tone.Frequency(midiToFreq(base+n),'hz').toNote(),'8n',now+i*0.3);
+  });
+  showChoices(shuffle(modes.map(x=>x.name)),m.name);
+}
+
+// 转调
+function genModulation(){
+  const base=60;
+  const keys=[
+    {name:'C→G(上方五度)',shift:7},
+    {name:'C→F(下方五度)',shift:5},
+    {name:'C→A(关系小调)',shift:9},
+    {name:'C→E(上方三度)',shift:4},
+  ];
+  const k=keys[Math.floor(Math.random()*keys.length)];
+  // play I in C then I in target key
+  playChord([0,4,7].map(n=>midiToFreq(base+n)),Tone.now());
+  playChord([0,4,7].map(n=>midiToFreq(base+k.shift+n)),Tone.now()+1.0);
+  showChoices(shuffle(keys.map(x=>x.name)),k.name);
+}
+
+// 复音程
+function genWideInterval(){
+  const base=Math.floor(Math.random()*12)+48;
+  const ivs=[
+    {s:13,name:'小九度'},{s:14,name:'大九度'},{s:16,name:'大十度'},
+    {s:19,name:'纯十二度'},{s:24,name:'两个八度'}
+  ];
+  const iv=ivs[Math.floor(Math.random()*ivs.length)];
+  const s=new Tone.Synth({oscillator:{type:'triangle'},envelope:{attack:0.02,decay:0.3,sustain:0.2,release:0.5}}).toDestination();
+  s.triggerAttackRelease(Tone.Frequency(midiToFreq(base),'hz').toNote(),0.6,Tone.now());
+  s.triggerAttackRelease(Tone.Frequency(midiToFreq(base+iv.s),'hz').toNote(),0.6,Tone.now()+0.8);
+  showChoices(shuffle(ivs.map(x=>x.name)),iv.name);
+}
+
+function showChoices(options,correct){
+  const c=document.getElementById('choices');
+  options.forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.className='choice';btn.textContent=opt;
+    btn.onclick=()=>answer(opt===correct,btn);
+    c.appendChild(btn);
+  });
+}
+
+function answer(isCorrect,btn){
+  clearInterval(timerInterval);
+  document.querySelectorAll('.choice').forEach(b=>b.disabled=true);
+  document.getElementById('playBtn').disabled=false;
+  total++;
+  if(isCorrect){score++;combo++;btn.classList.add('correct');document.getElementById('result').textContent='✅ 正确！';document.getElementById('result').style.color='#52b788';}
+  else{combo=0;btn.classList.add('wrong');document.getElementById('result').textContent='❌ 答错了～';document.getElementById('result').style.color='#e94560';}
+  upd();
+}
+</script>
+</body>
+</html>

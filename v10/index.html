@@ -3,20 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>V10 - 听音辨序</title>
+<title>V10 - 听音辨序 (手机版)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--bg:#1a1a2e;--bg2:#16213e;--border:#0f3460;--accent:#e94560;--accent2:#52b788;--gold:#ffd700;--text:#eee;--dim:#888}
 html,body{height:100%;overflow:hidden}
-body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--text);user-select:none}
-.start-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
-.start-overlay.hide{display:none}
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);user-select:none}
+
+.start-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity .3s}
+.start-overlay.hide{opacity:0;pointer-events:none}
 .start-overlay h1{color:var(--accent);font-size:28px;margin-bottom:8px}
 .start-overlay p{color:var(--dim);margin-bottom:24px;text-align:center;max-width:90%;line-height:1.6;font-size:14px;padding:0 16px}
 .difficulty{display:flex;gap:10px;margin-bottom:20px}
 .diff-btn{background:var(--bg2);color:var(--text);border:2px solid var(--border);padding:8px 18px;border-radius:10px;font-size:14px;cursor:pointer}
 .diff-btn.active{border-color:var(--accent);background:rgba(233,69,96,0.2);color:var(--accent)}
 .start-btn{background:var(--accent);color:#fff;border:none;padding:14px 48px;font-size:22px;border-radius:50px;cursor:pointer}
+.start-btn:active{transform:scale(0.95)}
+
 .game-container{display:flex;flex-direction:column;height:100vh}
 @media(min-width:700px){.game-container{flex-direction:row}}
 .staff-panel{flex:1;position:relative;display:flex;flex-direction:column;min-height:0}
@@ -24,15 +27,18 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--text)
 .staff-header h3{color:var(--accent);font-size:16px}
 .round-info{color:var(--dim);font-size:12px;margin-left:auto}
 #staffCanvas{flex:1;cursor:pointer;display:block;min-height:0;touch-action:none}
+
 .char-panel{background:var(--bg2);border-top:2px solid var(--border);padding:10px 12px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;justify-content:center}
 @media(min-width:700px){.char-panel{flex-direction:column;border-top:none;border-left:2px solid var(--border);width:220px;padding:16px;justify-content:flex-start}}
 .char-panel img{width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
 @media(min-width:700px){.char-panel img{width:100%;max-width:180px;height:auto;border-radius:12px;border:2px solid var(--border);margin-bottom:16px}}
+.char-info h4{color:var(--accent);font-size:13px}
 .hud{display:flex;gap:8px}
 @media(min-width:700px){.hud{flex-direction:column;width:100%}}
 .hud-row{padding:4px 10px;background:rgba(0,0,0,0.3);border-radius:6px;font-size:13px;white-space:nowrap}
+@media(min-width:700px){.hud-row{padding:6px 12px;margin-bottom:4px;font-size:14px}}
 .hud-row span{font-weight:bold;color:var(--gold)}
-.state-bar{text-align:center;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:bold}
+.state-bar{text-align:center;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:bold;flex-shrink:0}
 .state-bar.listen{background:rgba(233,69,96,0.2);color:var(--accent);border:1px solid var(--accent)}
 .state-bar.repeat{background:rgba(82,183,136,0.2);color:var(--accent2);border:1px solid var(--accent2)}
 .state-bar.correct{background:rgba(82,183,136,0.3);color:var(--accent2)}
@@ -42,26 +48,23 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--text)
 .click-dot.pending{background:rgba(255,255,255,0.1);border:2px dashed var(--dim)}
 .click-dot.filled{background:var(--gold);color:#000}
 .click-dot.wrong{background:var(--accent);color:#fff}
-.btn{padding:10px 16px;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer}
+.btn{padding:10px 16px;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;flex-shrink:0}
 .btn:active{transform:scale(0.95)}
 .btn-replay{background:var(--border);color:var(--text)}
 .btn-next{background:var(--accent2);color:#fff}
-.btn:disabled{opacity:0.4}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
 .judgment-text{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:42px;font-weight:bold;z-index:6;pointer-events:none;opacity:0}
-.judgment-text.show{animation:jp .6s ease-out}
+.judgment-text.show{animation:judgePop 0.6s ease-out}
 .judgment-text.correct{color:var(--accent2);text-shadow:0 0 20px var(--accent2)}
 .judgment-text.wrong{color:var(--accent);text-shadow:0 0 20px var(--accent)}
-@keyframes jp{0%{opacity:0;transform:translate(-50%,-50%) scale(0.3)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+@keyframes judgePop{0%{opacity:0;transform:translate(-50%,-50%) scale(0.3)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
 </style>
 </head>
 <body>
 
-<!-- Hidden audio elements - created in DOM, browser handles loading natively -->
-<div id="audioPool" style="display:none"></div>
-
 <div class="start-overlay" id="startOverlay">
   <h1>🎧 听音辨序 V10</h1>
-  <p>听一段旋律，然后按顺序点击五线谱上对应的音符位置</p>
+  <p>听一段旋律，然后按顺序点击五线谱上对应的音符位置<br>出题用的是视唱音频，答对会播放音效</p>
   <div class="difficulty">
     <button class="diff-btn active" data-level="3" onclick="setDifficulty(3)">3 音符</button>
     <button class="diff-btn" data-level="4" onclick="setDifficulty(4)">4 音符</button>
@@ -81,6 +84,7 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--text)
   </div>
   <div class="char-panel">
     <img src="assets/img/character.png" alt="角色">
+    <div class="char-info"><h4>008</h4></div>
     <div class="state-bar listen" id="stateBar">🎵 准备听音</div>
     <div class="hud">
       <div class="hud-row">分: <span id="score">0</span></div>
@@ -94,8 +98,12 @@ body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--text)
 </div>
 
 <script>
-var SCALE_NOTES = ['3G','3G#','3A','3A#','3B','4C','4C#','4D','4D#','4E','4F','4F#','4G','4G#','4A','4A#','4B','5C','5C#','5D','5D#','5E','5F','5F#','5G','5A'];
-var NOTES_LAYOUT = [
+// 音符
+const SCALE_NOTES = ['3G','3G#','3A','3A#','3B','4C','4C#','4D','4D#','4E','4F','4F#','4G','4G#','4A','4A#','4B','5C','5C#','5D','5D#','5E','5F','5F#','5G','5A'];
+function qFile(l){return 'assets/audio/question_'+l+'.wav'}
+function aFile(l){return 'assets/audio/'+l+'.wav'}
+
+const NOTES_LAYOUT = [
   {label:'5A',idx:0},{label:'5G',idx:1},{label:'5F#',idx:2},{label:'5F',idx:3},
   {label:'5E',idx:4},{label:'5D#',idx:5},{label:'5D',idx:6},{label:'5C#',idx:7},
   {label:'5C',idx:8},{label:'4B',idx:9},{label:'4A#',idx:10},{label:'4A',idx:11},
@@ -105,56 +113,47 @@ var NOTES_LAYOUT = [
   {label:'3G#',idx:24},{label:'3G',idx:25},
 ];
 
-var difficulty = 3;
-var gameState = 'idle';
-var score = 0, combo = 0, totalRounds = 0;
-var currentSequence = [];
-var playerSequence = [];
-var highlightedNotes = {};
-var playTimers = [];
+const NOTE_INTERVAL = 600; // ms between notes
 
-// Audio pool: map of url -> <audio> element
-var audioPool = {};
+// State
+let difficulty = 3;
+let gameState = 'idle';
+let score = 0, combo = 0, totalRounds = 0;
+let currentSequence = [];
+let playerSequence = [];
+let highlightedNotes = new Set();
+let playTimers = [];
+var unlocked = false; // audio unlock flag
 
-function getQFile(l) { return 'assets/audio/question_' + l + '.wav'; }
-function getAFile(l) { return 'assets/audio/' + l + '.wav'; }
+// ============================
+// Audio: simple on-demand using Audio elements
+// No preloading. No Web Audio API. Just new Audio().
+// ============================
+const audioCache = {};
 
-function playAudio(url) {
-  // Get or create audio element
-  var a = audioPool[url];
-  if (!a) {
-    a = document.createElement('audio');
-    a.src = url;
-    a.preload = 'auto';
-    audioPool[url] = a;
-  }
-  // Clone if needed (to allow rapid re-play)
-  try {
+function playFile(url) {
+  let a;
+  if (audioCache[url]) {
+    a = audioCache[url];
     a.currentTime = 0;
-    a.muted = false;
-    var p = a.play();
-    if (p && p.catch) {
-      p.catch(function(e) {
-        // If play() rejected, try creating a fresh element
-        var a2 = document.createElement('audio');
-        a2.src = url;
-        a2.play().catch(function(){});
-      });
-    }
-  } catch(e) {
-    var a3 = document.createElement('audio');
-    a3.src = url;
-    a3.play().catch(function(){});
+  } else {
+    a = new Audio(url);
+    audioCache[url] = a;
   }
+  a.play().catch(function(e){ console.warn('play fail', url, e); });
+  return a;
 }
 
 function playNote(label, type) {
-  playAudio(type === 'q' ? getQFile(label) : getAFile(label));
+  var url = type === 'q' ? qFile(label) : aFile(label);
+  playFile(url);
 }
 
+// ============================
 // Canvas
-var canvas = document.getElementById('staffCanvas');
-var ctx2d = canvas.getContext('2d');
+// ============================
+const canvas = document.getElementById('staffCanvas');
+const ctx2d = canvas.getContext('2d');
 
 function resizeCanvas() {
   var panel = canvas.parentElement;
@@ -170,82 +169,90 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-function CW() { return canvas.parentElement.clientWidth; }
-function CH() { return canvas.parentElement.clientHeight - 40; }
+function CW(){return canvas.parentElement.clientWidth}
+function CH(){return canvas.parentElement.clientHeight - 40}
 
 function noteToY(label) {
-  for (var i = 0; i < NOTES_LAYOUT.length; i++) {
-    if (NOTES_LAYOUT[i].label === label) {
-      var pad = 50, h = CH() - pad * 2;
-      return pad + (NOTES_LAYOUT[i].idx / (NOTES_LAYOUT.length - 1)) * h;
-    }
-  }
-  return CH() / 2;
+  var n = NOTES_LAYOUT.find(function(x){return x.label===label});
+  if(!n) return CH()/2;
+  var pad=50, h=CH()-pad*2;
+  return pad+(n.idx/(NOTES_LAYOUT.length-1))*h;
 }
 
 function yToNote(y) {
-  var best = NOTES_LAYOUT[0], minD = 9999;
-  for (var i = 0; i < NOTES_LAYOUT.length; i++) {
-    var d = Math.abs(noteToY(NOTES_LAYOUT[i].label) - y);
-    if (d < minD) { minD = d; best = NOTES_LAYOUT[i]; }
+  var best=NOTES_LAYOUT[0], minD=9999;
+  for(var i=0;i<NOTES_LAYOUT.length;i++){
+    var d=Math.abs(noteToY(NOTES_LAYOUT[i].label)-y);
+    if(d<minD){minD=d;best=NOTES_LAYOUT[i]}
   }
   return best.label;
 }
 
 function drawStaff() {
-  var w = CW(), h = CH();
-  ctx2d.clearRect(0, 0, w, h);
-  var lines = ['5E', '5G', '4B', '4D', '4F'];
-  ctx2d.strokeStyle = 'rgba(255,255,255,0.25)';
-  ctx2d.lineWidth = 1.5;
-  for (var li = 0; li < lines.length; li++) {
-    var y = noteToY(lines[li]);
-    ctx2d.beginPath(); ctx2d.moveTo(0, y); ctx2d.lineTo(w, y); ctx2d.stroke();
-  }
-  for (var i = 0; i < NOTES_LAYOUT.length; i++) {
-    var n = NOTES_LAYOUT[i];
-    var y = noteToY(n.label);
-    var hl = highlightedNotes[n.label];
-    ctx2d.strokeStyle = 'rgba(255,255,255,0.05)';
-    ctx2d.lineWidth = 1;
-    ctx2d.beginPath(); ctx2d.moveTo(40, y); ctx2d.lineTo(w - 10, y); ctx2d.stroke();
-    if (hl) {
-      var grad = ctx2d.createLinearGradient(40, y, w - 10, y);
-      grad.addColorStop(0, 'rgba(255,215,0,0)');
-      grad.addColorStop(0.5, 'rgba(255,215,0,0.3)');
-      grad.addColorStop(1, 'rgba(255,215,0,0)');
-      ctx2d.fillStyle = grad;
-      ctx2d.fillRect(40, y - 12, w - 50, 24);
-      ctx2d.fillStyle = 'rgba(255,215,0,0.8)';
-      ctx2d.beginPath(); ctx2d.arc(w / 2, y, 16, 0, Math.PI * 2); ctx2d.fill();
-      ctx2d.fillStyle = '#000';
-      ctx2d.font = 'bold 11px sans-serif';
-      ctx2d.textAlign = 'center';
-      ctx2d.fillText(n.label, w / 2, y + 4);
-      ctx2d.textAlign = 'left';
+  var w=CW(), h=CH();
+  ctx2d.clearRect(0,0,w,h);
+  
+  var lines=['5E','5G','4B','4D','4F'];
+  ctx2d.strokeStyle='rgba(255,255,255,0.25)';
+  ctx2d.lineWidth=1.5;
+  lines.forEach(function(ln){
+    var y=noteToY(ln);
+    ctx2d.beginPath();ctx2d.moveTo(0,y);ctx2d.lineTo(w,y);ctx2d.stroke();
+  });
+  
+  ctx2d.fillStyle='rgba(233,69,96,0.6)';
+  ctx2d.font='32px serif';
+  ctx2d.fillText('\uD834\uDD1E',12,noteToY('4A')+8);
+  
+  NOTES_LAYOUT.forEach(function(n){
+    var y=noteToY(n.label);
+    var hl=highlightedNotes.has(n.label);
+    
+    ctx2d.strokeStyle='rgba(255,255,255,0.05)';
+    ctx2d.lineWidth=1;
+    ctx2d.beginPath();ctx2d.moveTo(40,y);ctx2d.lineTo(w-10,y);ctx2d.stroke();
+    
+    if(hl){
+      var grad=ctx2d.createLinearGradient(40,y,w-10,y);
+      grad.addColorStop(0,'rgba(255,215,0,0)');
+      grad.addColorStop(0.5,'rgba(255,215,0,0.3)');
+      grad.addColorStop(1,'rgba(255,215,0,0)');
+      ctx2d.fillStyle=grad;
+      ctx2d.fillRect(40,y-12,w-50,24);
+      
+      ctx2d.fillStyle='rgba(255,215,0,0.8)';
+      ctx2d.beginPath();ctx2d.arc(w/2,y,16,0,Math.PI*2);ctx2d.fill();
+      
+      ctx2d.fillStyle='#000';
+      ctx2d.font='bold 11px sans-serif';
+      ctx2d.textAlign='center';
+      ctx2d.fillText(n.label,w/2,y+4);
+      ctx2d.textAlign='left';
     }
-    ctx2d.fillStyle = hl ? 'rgba(255,215,0,0.9)' : 'rgba(136,136,136,0.4)';
-    ctx2d.font = hl ? 'bold 12px sans-serif' : '10px sans-serif';
-    ctx2d.fillText(n.label, 42, y + 4);
-  }
+    
+    ctx2d.fillStyle=hl?'rgba(255,215,0,0.9)':'rgba(136,136,136,0.4)';
+    ctx2d.font=hl?'bold 12px sans-serif':'10px sans-serif';
+    ctx2d.fillText(n.label,42,y+4);
+  });
 }
 
-// Game
+// ============================
+// Game Logic
+// ============================
 function setDifficulty(level) {
   difficulty = level;
-  var btns = document.querySelectorAll('.diff-btn');
-  for (var i = 0; i < btns.length; i++) {
-    btns[i].classList.toggle('active', parseInt(btns[i].dataset.level) === level);
-  }
+  document.querySelectorAll('.diff-btn').forEach(function(b){
+    b.classList.toggle('active', parseInt(b.dataset.level)===level);
+  });
 }
 
 function generateSequence(count) {
-  var seq = [], prev = null;
-  for (var i = 0; i < count; i++) {
+  var seq=[], prev=null;
+  for(var i=0;i<count;i++){
     var note;
-    do { note = SCALE_NOTES[Math.floor(Math.random() * SCALE_NOTES.length)]; }
-    while (note === prev);
-    seq.push(note); prev = note;
+    do{note=SCALE_NOTES[Math.floor(Math.random()*SCALE_NOTES.length)]}
+    while(note===prev);
+    seq.push(note); prev=note;
   }
   return seq;
 }
@@ -254,33 +261,33 @@ function newRound() {
   currentSequence = generateSequence(difficulty);
   playerSequence = [];
   totalRounds++;
-  document.getElementById('roundInfo').textContent = '\u7B2C ' + totalRounds + ' \u8F6E \xB7 \u96BE\u5EA6\uFF1A' + difficulty + '\u97F3';
+  document.getElementById('roundInfo').textContent = '第 '+totalRounds+' 轮 · 难度：'+difficulty+'音';
   updateHUD();
-  document.getElementById('btnNext').style.display = 'none';
-  document.getElementById('btnReplay').disabled = true;
-  setTimeout(function() { playSequence(currentSequence); }, 500);
+  document.getElementById('btnNext').style.display='none';
+  document.getElementById('btnReplay').disabled=true;
+  setTimeout(function(){playSequence(currentSequence)}, 500);
 }
 
-function playSequence(seq) {
-  for (var i = 0; i < playTimers.length; i++) clearTimeout(playTimers[i]);
+function playSequence(sequence) {
+  playTimers.forEach(function(t){clearTimeout(t)});
   playTimers = [];
   gameState = 'listening';
-  updateStateBar('\uD83C\uDFA7 \u542C\u65CB\u5F8F...', 'listen');
-  highlightedNotes = {};
+  updateStateBar('🎧 听旋律...', 'listen');
+  highlightedNotes.clear();
   drawStaff();
-  for (var i = 0; i < seq.length; i++) {
-    (function(note, i) {
-      var delay = i * 600;
-      playTimers.push(setTimeout(function() { playNote(note, 'q'); }, delay));
-      playTimers.push(setTimeout(function() { highlightedNotes[note] = true; drawStaff(); }, delay));
-      if (i < seq.length - 1) {
-        playTimers.push(setTimeout(function() { delete highlightedNotes[note]; drawStaff(); }, delay + 500));
-      }
-    })(seq[i], i);
-  }
-  var totalTime = (seq.length - 1) * 600 + 800;
-  playTimers.push(setTimeout(function() {
-    highlightedNotes = {};
+  
+  sequence.forEach(function(note, i) {
+    var delay = i * NOTE_INTERVAL;
+    playTimers.push(setTimeout(function(){playNote(note,'q')}, delay));
+    playTimers.push(setTimeout(function(){highlightedNotes.add(note);drawStaff()}, delay));
+    if(i < sequence.length-1) {
+      playTimers.push(setTimeout(function(){highlightedNotes.delete(note);drawStaff()}, delay + 500));
+    }
+  });
+  
+  var totalTime = (sequence.length-1)*NOTE_INTERVAL + 800;
+  playTimers.push(setTimeout(function(){
+    highlightedNotes.clear();
     drawStaff();
     startPlayerTurn();
   }, totalTime));
@@ -289,66 +296,62 @@ function playSequence(seq) {
 function startPlayerTurn() {
   gameState = 'repeating';
   playerSequence = [];
-  updateStateBar('\uD83D\u4463 \u6309\u987A\u5E8F\u70B9\u51FB\u97F3\u7B26', 'repeat');
+  updateStateBar('👆 按顺序点击音符', 'repeat');
   renderClickDots(currentSequence.length);
   document.getElementById('btnReplay').disabled = false;
-  for (var i = 0; i < currentSequence.length; i++) {
-    highlightedNotes[currentSequence[i]] = true;
-  }
+  currentSequence.forEach(function(n){highlightedNotes.add(n)});
   drawStaff();
 }
 
 function replaySequence() {
-  if (gameState !== 'repeating') return;
+  if(gameState !== 'repeating') return;
   playSequence(currentSequence);
 }
-
-function nextRound() { newRound(); }
 
 function renderClickDots(total) {
   var el = document.getElementById('clickSeq');
   el.innerHTML = '';
-  for (var i = 0; i < total; i++) {
-    var d = document.createElement('div');
-    d.className = 'click-dot pending';
+  for(var i=0;i<total;i++){
+    var d=document.createElement('div');
+    d.className='click-dot pending';
     el.appendChild(d);
   }
 }
 
 function onStaffClick(y) {
-  if (gameState !== 'repeating') return;
+  if(gameState !== 'repeating') return;
   var note = yToNote(y);
   var idx = playerSequence.length;
   var expected = currentSequence[idx];
+  
   playerSequence.push(note);
-  playNote(note, 'a');
+  playNote(note, 'a'); // answer sound
+  
   var dots = document.querySelectorAll('.click-dot');
-  if (note === expected) {
+  if(note === expected) {
     dots[idx].className = 'click-dot filled';
     dots[idx].textContent = note;
   } else {
     dots[idx].className = 'click-dot wrong';
-    dots[idx].textContent = '\u2717';
+    dots[idx].textContent = '✗';
   }
-  if (playerSequence.length >= currentSequence.length) {
+  
+  if(playerSequence.length >= currentSequence.length) {
     setTimeout(judgeRound, 400);
   }
 }
 
 function judgeRound() {
-  var correct = true;
-  for (var i = 0; i < playerSequence.length; i++) {
-    if (playerSequence[i] !== currentSequence[i]) { correct = false; break; }
-  }
-  if (correct) {
-    score += difficulty * 10 + combo * 5;
+  var correct = playerSequence.every(function(n,i){return n===currentSequence[i]});
+  if(correct) {
+    score += difficulty*10 + combo*5;
     combo++;
     showJudge('PERFECT!', 'correct');
-    updateStateBar('\u2705 \u5B8C\u7F8E\uFF01', 'correct');
+    updateStateBar('✅ 完美！', 'correct');
   } else {
     combo = 0;
     showJudge('MISS', 'wrong');
-    updateStateBar('\u274C \u7B54\u6848: ' + currentSequence.join(' '), 'wrong');
+    updateStateBar('❌ 答案: '+currentSequence.join(' '), 'wrong');
   }
   updateHUD();
   document.getElementById('btnReplay').disabled = true;
@@ -360,8 +363,10 @@ function showJudge(text, cls) {
   var el = document.getElementById('judgeText');
   el.textContent = text;
   el.className = 'judgment-text show ' + cls;
-  setTimeout(function() { el.className = 'judgment-text'; }, 600);
+  setTimeout(function(){el.className='judgment-text'}, 600);
 }
+
+function nextRound(){newRound()}
 
 function updateHUD() {
   document.getElementById('score').textContent = score;
@@ -375,38 +380,47 @@ function updateStateBar(text, cls) {
   el.className = 'state-bar ' + cls;
 }
 
-// Start: unlock audio in user gesture, then begin
+// ============================
+// Start: unlock audio on user gesture, then play immediately
+// ============================
+// Preload one real audio to use as unlock sound
+// Preload real audio for unlock
+var unlockAudio = new Audio('assets/audio/question_4C.wav');
+unlockAudio.load();
+
 document.getElementById('startBtn').addEventListener('click', function() {
+  // Hide overlay
   document.getElementById('startOverlay').classList.add('hide');
-  // Play unlock sound directly in click handler
-  playAudio(getQFile('4C'));
-  // Start game
+
+  // Play real audio in the click handler to unlock mobile audio.
+  // Do NOT wait for the promise - just fire and forget.
+  // HarmonyOS needs play() called in the gesture, but waiting on the
+  // promise blocks subsequent code from running.
+  unlockAudio.volume = 0.0001;
+  try { unlockAudio.play(); } catch(e) {}
+  // Reset volume shortly after
+  setTimeout(function() { unlockAudio.volume = 1.0; }, 100);
+
+  // Start game immediately
   resizeCanvas();
   score = 0; combo = 0; totalRounds = 0;
   updateHUD();
   newRound();
 });
 
-// Buttons
-document.getElementById('btnReplay').addEventListener('click', function(e) {
-  e.preventDefault();
-  replaySequence();
-});
-document.getElementById('btnNext').addEventListener('click', function(e) {
-  e.preventDefault();
-  nextRound();
-});
-
-// Canvas pointer
+// Pointer events - click + touch
 function handlePointer(e) {
   e.preventDefault();
   var rect = canvas.getBoundingClientRect();
-  var cy = (e.touches && e.touches.length > 0) ? e.touches[0].clientY : e.clientY;
+  var cy;
+  if(e.touches && e.touches.length > 0) cy = e.touches[0].clientY;
+  else cy = e.clientY;
   onStaffClick(cy - rect.top);
 }
 canvas.addEventListener('click', handlePointer);
-canvas.addEventListener('touchstart', handlePointer, {passive: false});
+canvas.addEventListener('touchstart', handlePointer, {passive:false});
 
+// Init
 resizeCanvas();
 drawStaff();
 </script>

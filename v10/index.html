@@ -92,8 +92,8 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:
       <div class="hud-row">次: <span id="totalRounds">0</span></div>
     </div>
     <div class="click-sequence" id="clickSeq"></div>
-    <button class="btn btn-replay" id="btnReplay" onclick="replaySequence()" disabled>🔊 再听一遍</button>
-    <button class="btn btn-next" id="btnNext" onclick="nextRound()" style="display:none">▶ 下一轮</button>
+    <button class="btn btn-replay" id="btnReplay" disabled>🔊 再听一遍</button>
+    <button class="btn btn-next" id="btnNext" style="display:none">▶ 下一轮</button>
   </div>
 </div>
 
@@ -139,6 +139,19 @@ function ensureCtx() {
   }
   if (audioCtx && audioCtx.state === 'suspended') {
     audioCtx.resume();
+  }
+  // Create a silent keepalive oscillator to prevent HarmonyOS from
+  // suspending the AudioContext after the user gesture ends
+  if (audioCtx && !audioCtx._keepalive) {
+    var ka = audioCtx.createOscillator();
+    var kg = audioCtx.createGain();
+    kg.gain.value = 0.0001; // silent
+    ka.frequency.value = 1; // sub-audible
+    ka.connect(kg);
+    kg.connect(audioCtx.destination);
+    ka.start();
+    audioCtx._keepalive = true;
+    console.log('Keepalive oscillator started');
   }
   return audioCtx;
 }
@@ -458,15 +471,20 @@ canvas.addEventListener('touchstart', handlePointer, {passive:false});
 resizeCanvas();
 drawStaff();
 
-// Button event listeners (backup for onclick)
-document.getElementById('btnReplay').addEventListener('click', function(e) {
-  e.preventDefault();
-  replaySequence();
-});
-document.getElementById('btnNext').addEventListener('click', function(e) {
-  e.preventDefault();
-  nextRound();
-});
+// Button events - support both click and touch
+function bindBtn(id, fn) {
+  var el = document.getElementById(id);
+  var handler = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    fn();
+    return false;
+  };
+  el.addEventListener('click', handler);
+  el.addEventListener('touchend', handler, {passive: false});
+}
+bindBtn('btnReplay', replaySequence);
+bindBtn('btnNext', nextRound);
 </script>
 </body>
 </html>

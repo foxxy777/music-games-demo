@@ -294,7 +294,7 @@ function drawStaff() {
 // 音频
 // ============================
 async function loadAudio() {
-  // audioCtx already created in startGame() for mobile compatibility
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   // 加载回答用的高潮音效
   for (const label of SCALE_NOTES) {
     try {
@@ -563,14 +563,11 @@ async function startGame() {
   document.getElementById('startOverlay').style.display = 'none';
   
   if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    await loadAudio();
   }
   if (audioCtx.state === 'suspended') {
     await audioCtx.resume();
   }
-  
-  // Now load audio files (context already running)
-  await loadAudio();
   
   score = 0; combo = 0; totalRounds = 0;
   resizeCanvas();
@@ -585,14 +582,6 @@ canvas.addEventListener('click', e => {
   const y = e.clientY - rect.top;
   onStaffClick(y);
 });
-
-// Mobile touch support
-canvas.addEventListener('touchstart', e => {
-  e.preventDefault();
-  const rect = canvas.getBoundingClientRect();
-  const y = e.touches[0].clientY - rect.top;
-  onStaffClick(y);
-}, {passive: false});
 
 // 初始化
 resizeCanvas();

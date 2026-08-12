@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V8 Demo - 节奏音游</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#1a1a2e; --bg2:#16213e; --border:#0f3460;
+  --accent:#e94560; --accent2:#52b788; --gold:#ffd700;
+  --text:#eee; --dim:#888;
+}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;user-select:none}
+
+.game-container{display:flex;height:100vh}
+
+/* ===== 左侧五线谱（音符直接飞到这里） ===== */
+.staff-panel{
+  width:25%; min-width:280px;
+  background:linear-gradient(180deg,#0d1117 0%,#161b22 100%);
+  border-right:2px solid var(--border);
+  position:relative;
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+.staff-header{padding:10px;text-align:center;color:var(--accent);font-size:14px;font-weight:bold}
+#staffCanvas{flex:1;cursor:crosshair}
+
+/* 判定线在五线谱内 */
+.judge-line-staff{
+  position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:var(--gold); box-shadow:0 0 10px var(--gold);
+  opacity:0.6; z-index:2; pointer-events:none;
+}
+
+/* ===== 右侧角色区 ===== */
+.char-panel{flex:1;display:flex;flex-direction:column;background:var(--bg)}
+.char-video-area{flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#111}
+#charVideo{height:100%;max-width:100%;object-fit:contain}
+
+.state-indicator{position:absolute;top:12px;left:12px;padding:6px 16px;border-radius:12px;font-size:13px;font-weight:bold;z-index:5}
+.state-indicator.idle{background:#333;color:var(--dim)}
+.state-indicator.hit{background:var(--accent);color:#fff}
+.state-indicator.combo{background:var(--gold);color:#000;animation:pulse 0.4s}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* HUD */
+.hud{position:absolute;top:12px;right:16px;z-index:10;text-align:right}
+.hud .score{font-size:28px;font-weight:bold;color:var(--accent)}
+.hud .combo-label{font-size:11px;color:var(--dim)}
+.hud .combo{font-size:36px;font-weight:bold;color:var(--gold);text-shadow:0 0 10px rgba(255,215,0,0.4)}
+.hud .accuracy{font-size:13px;color:var(--accent2);margin-top:2px}
+
+/* 判定文字 */
+.judgment-text{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);font-size:42px;font-weight:bold;z-index:6;pointer-events:none;opacity:0}
+.judgment-text.show{animation:judgePop 0.5s ease-out}
+.judgment-text.perfect{color:var(--gold);text-shadow:0 0 20px var(--gold)}
+.judgment-text.good{color:var(--accent2)}
+.judgment-text.miss{color:var(--accent)}
+@keyframes judgePop{0%{opacity:0;transform:translate(-50%,-50%) scale(0.3)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+
+/* 开始遮罩 */
+.start-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
+.start-overlay h1{color:var(--accent);font-size:36px;margin-bottom:8px}
+.start-overlay p{color:var(--dim);margin-bottom:24px;text-align:center;max-width:420px;line-height:1.6}
+.start-btn{background:var(--accent);color:#fff;border:none;padding:16px 56px;font-size:24px;border-radius:50px;cursor:pointer;transition:all 0.2s}
+.start-btn:hover{background:#ff6b6b;transform:scale(1.05)}
+.controls-hint{margin-top:16px;font-size:13px;color:var(--dim)}
+</style>
+</head>
+<body>
+
+<div class="game-container">
+  <!-- 左侧：五线谱 + 音符飞行 -->
+  <div class="staff-panel">
+    <div class="staff-header">📜 点击音符对应位置</div>
+    <canvas id="staffCanvas"></canvas>
+    <div class="judge-line-staff" id="judgeLine"></div>
+  </div>
+
+  <!-- 右侧：角色视频 -->
+  <div class="char-panel">
+    <div class="char-video-area">
+      <div class="state-indicator idle" id="stateInd">待机</div>
+      <video id="charVideo" loop muted playsinline>
+        <source src="assets/video/idle.mp4" type="video/mp4">
+      </video>
+      <div class="hud">
+        <div class="score" id="score">0</div>
+        <div class="combo-label">COMBO</div>
+        <div class="combo" id="combo">0</div>
+        <div class="accuracy" id="accuracy">100%</div>
+      </div>
+      <div class="judgment-text" id="judgeText"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 开始遮罩 -->
+<div class="start-overlay" id="startOverlay">
+  <h1>🎵 节奏音游 V8</h1>
+  <p>音符从五线谱右侧飞入，到达金色判定线时<br>点击五线谱上对应音高的位置<br>命中 → 播放音效 · 连击 → 角色受击 · 高连击 → combo动画</p>
+  <button class="start-btn" onclick="startGame()">▶ 开始</button>
+  <div class="controls-hint">鼠标点击左侧五线谱上的音符位置</div>
+</div>
+
+<script>
+// ============================
+// 配置
+// ============================
+const NOTES = [
+  {label:'5A', midi:81, idx:0},
+  {label:'5G', midi:79, idx:1},
+  {label:'5F', midi:77, idx:2},
+  {label:'5E', midi:76, idx:3},
+  {label:'5D', midi:74, idx:4},
+  {label:'5C', midi:72, idx:5},
+  {label:'4B', midi:71, idx:6},
+  {label:'4A', midi:69, idx:7},
+  {label:'4G', midi:67, idx:8},
+  {label:'4F', midi:65, idx:9},
+  {label:'4E', midi:64, idx:10},
+  {label:'4D', midi:62, idx:11},
+  {label:'4C', midi:60, idx:12},
+];
+
+// 简单谱面
+const CHART = [
+  {time:2.0, note:'4C'},
+  {time:2.75, note:'4D'},
+  {time:3.5, note:'4E'},
+  {time:4.25, note:'4F'},
+  {time:5.0, note:'4G'},
+  {time:5.75, note:'4A'},
+  {time:6.5, note:'4B'},
+  {time:7.25, note:'5C'},
+  {time:8.0, note:'5D'},
+  {time:8.75, note:'5C'},
+  {time:9.5, note:'4B'},
+  {time:10.25, note:'4A'},
+  {time:11.0, note:'4G'},
+  {time:11.75, note:'4F'},
+  {time:12.5, note:'4E'},
+  {time:13.25, note:'4D'},
+];
+
+const NOTE_SPEED = 180;
+const JUDGE_X_RATIO = 0.15;
+const PERFECT_WINDOW = 0.15;
+const GOOD_WINDOW = 0.30;
+const COMBO_THRESHOLD = 5;
+
+// ============================
+// 状态
+// ============================
+let gameState = 'idle';
+let startTime = 0;
+let score = 0, combo = 0, maxCombo = 0, hits = 0, total = 0;
+let activeNotes = [];
+let audioBuffers = {};
+let audioCtx = null;
+let hoveredY = null;
+
+// ============================
+// Canvas
+// ============================
+const canvas = document.getElementById('staffCanvas');
+const ctx2d = canvas.getContext('2d');
+const judgeLine = document.getElementById('judgeLine');
+
+function resizeCanvas() {
+  const panel = canvas.parentElement;
+  canvas.width = panel.clientWidth;
+  canvas.height = panel.clientHeight - 40; // 减去 header
+  // 判定线位置
+  judgeLine.style.left = (canvas.width * JUDGE_X_RATIO) + 'px';
+}
+window.addEventListener('resize', () => { resizeCanvas(); });
+
+// 音高 → Y 坐标
+function noteToY(label) {
+  const n = NOTES.find(x => x.label === label);
+  if (!n) return canvas.height / 2;
+  const padding = 30;
+  const usableH = canvas.height - padding * 2;
+  return padding + (n.idx / 12) * usableH;
+}
+
+// Y 坐标 → 最近音高
+function yToNote(y) {
+  let closest = NOTES[0];
+  let minDist = Infinity;
+  for (const n of NOTES) {
+    const ny = noteToY(n.label);
+    const dist = Math.abs(ny - y);
+    if (dist < minDist) {
+      minDist = dist;
+      closest = n;
+    }
+  }
+  return closest.label;
+}
+
+// ============================
+// 渲染五线谱
+// ============================
+function drawStaff() {
+  const w = canvas.width;
+  const h = canvas.height;
+  
+  ctx2d.clearRect(0, 0, w, h);
+  
+  // 五条线
+  const lineNotes = ['5E','5G','4B','4D','4F'];
+  ctx2d.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx2d.lineWidth = 1;
+  lineNotes.forEach(ln => {
+    const y = noteToY(ln);
+    ctx2d.beginPath();
+    ctx2d.moveTo(0, y);
+    ctx2d.lineTo(w, y);
+    ctx2d.stroke();
+  });
+  
+  // 音高参考标签（左侧）
+  NOTES.forEach(n => {
+    const y = noteToY(n.label);
+    ctx2d.fillStyle = 'rgba(136,136,136,0.5)';
+    ctx2d.font = '10px Segoe UI';
+    ctx2d.fillText(n.label, 4, y + 3);
+    
+    // 辅助横线（每个音高都有一条淡线）
+    ctx2d.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx2d.beginPath();
+    ctx2d.moveTo(30, y);
+    ctx2d.lineTo(w, y);
+    ctx2d.stroke();
+  });
+  
+  // 悬停指示器
+  if (hoveredY !== null) {
+    ctx2d.fillStyle = 'rgba(82,183,136,0.15)';
+    ctx2d.fillRect(0, hoveredY - 8, w, 16);
+    // 当前音名
+    const hoveredNote = yToNote(hoveredY);
+    ctx2d.fillStyle = 'rgba(82,183,136,0.8)';
+    ctx2d.font = 'bold 12px Segoe UI';
+    ctx2d.fillText(hoveredNote, w - 30, hoveredY + 4);
+  }
+  
+  // 判定线区域标记
+  const judgeX = w * JUDGE_X_RATIO;
+  ctx2d.fillStyle = 'rgba(255,215,0,0.05)';
+  ctx2d.fillRect(judgeX - 20, 0, 40, h);
+}
+
+// ============================
+// 渲染飞行音符
+// ============================
+function drawNotes() {
+  const now = (Date.now() - startTime) / 1000;
+  const w = canvas.width;
+  const judgeX = w * JUDGE_X_RATIO;
+  
+  activeNotes.forEach(note => {
+    if (note.hit) return;
+    
+    const dt = note.time - now;
+    const x = judgeX + dt * NOTE_SPEED;
+    
+    if (x < -20) {
+      if (!note.missed && !note.scored) {
+        note.missed = true;
+      }
+      return;
+    }
+    if (x > w + 20) return;
+    
+    const y = noteToY(note.note);
+    
+    // 判定窗口颜色
+    let color = '#52b788';
+    let glowColor = 'rgba(82,183,136,0.3)';
+    if (note.missed) { color = '#555'; glowColor = 'transparent'; }
+    else if (Math.abs(dt) < PERFECT_WINDOW) {
+      color = '#ffd700';
+      glowColor = 'rgba(255,215,0,0.5)';
+    } else if (Math.abs(dt) < GOOD_WINDOW) {
+      color = '#e94560';
+      glowColor = 'rgba(233,69,96,0.3)';
+    }
+    
+    // 光环
+    if (!note.missed) {
+      ctx2d.fillStyle = glowColor;
+      ctx2d.beginPath();
+      ctx2d.arc(x, y, 20 + 3 * Math.sin(now * 5), 0, Math.PI * 2);
+      ctx2d.fill();
+    }
+    
+    // 音符主体
+    ctx2d.fillStyle = color;
+    ctx2d.beginPath();
+    ctx2d.ellipse(x, y, 13, 10, -0.3, 0, Math.PI * 2);
+    ctx2d.fill();
+    
+    // 音名
+    ctx2d.fillStyle = '#fff';
+    ctx2d.font = 'bold 9px Segoe UI';
+    ctx2d.textAlign = 'center';
+    ctx2d.fillText(note.note, x, y + 3);
+    ctx2d.textAlign = 'left';
+  });
+}
+
+// ============================
+// 音频加载
+// ============================
+async function loadAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const promises = NOTES.map(async n => {
+    try {
+      const resp = await fetch(`assets/audio/${n.label}.wav`);
+      const buf = await resp.arrayBuffer();
+      audioBuffers[n.label] = await audioCtx.decodeAudioData(buf);
+    } catch(e) {
+      console.warn(`Load fail: ${n.label}`, e);
+    }
+  });
+  await Promise.all(promises);
+  console.log('Audio loaded:', Object.keys(audioBuffers).length);
+}
+
+function playSound(label) {
+  if (!audioCtx || !audioBuffers[label]) {
+    console.warn('No audio for:', label);
+    return;
+  }
+  const src = audioCtx.createBufferSource();
+  src.buffer = audioBuffers[label];
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.8;
+  src.connect(gain).connect(audioCtx.destination);
+  src.start(0);
+}
+
+// ============================
+// 游戏循环
+// ============================
+let animId;
+
+function gameLoop() {
+  if (gameState !== 'playing') return;
+  
+  drawStaff();
+  drawNotes();
+  
+  // 检查 miss
+  const now = (Date.now() - startTime) / 1000;
+  activeNotes.forEach(n => {
+    if (!n.hit && !n.scored && n.time < now - GOOD_WINDOW) {
+      n.scored = true;
+      n.missed = true;
+      onMiss();
+    }
+  });
+  
+  // 检查游戏结束
+  const lastTime = CHART[CHART.length - 1].time;
+  if (now > lastTime + 2) {
+    endGame();
+    return;
+  }
+  
+  animId = requestAnimationFrame(gameLoop);
+}
+
+// ============================
+// 判定
+// ============================
+function handleClick(y) {
+  if (gameState !== 'playing') return;
+  
+  const now = (Date.now() - startTime) / 1000;
+  const clickedNote = yToNote(y);
+  
+  // 找最近的未命中音符
+  let closest = null;
+  let closestDt = Infinity;
+  for (const n of activeNotes) {
+    if (n.hit || n.scored) continue;
+    const dt = Math.abs(n.time - now);
+    if (dt < closestDt) {
+      closestDt = dt;
+      closest = n;
+    }
+  }
+  
+  if (!closest || closestDt > GOOD_WINDOW) return;
+  
+  if (closest.note === clickedNote) {
+    // 命中！
+    closest.hit = true;
+    closest.scored = true;
+    total++;
+    hits++;
+    
+    let judgment, points;
+    if (closestDt < PERFECT_WINDOW) {
+      judgment = 'PERFECT';
+      points = 100;
+    } else {
+      judgment = 'GOOD';
+      points = 50;
+    }
+    
+    score += Math.floor(points * (1 + combo * 0.1));
+    combo++;
+    maxCombo = Math.max(maxCombo, combo);
+    
+    playSound(clickedNote);
+    showJudgment(judgment);
+    updateCharacter();
+    updateHUD();
+  } else {
+    // 音高不匹配
+    closest.scored = true;
+    closest.missed = true;
+    combo = 0;
+    total++;
+    showJudgment('MISS');
+    updateCharacter();
+    updateHUD();
+  }
+}
+
+function onMiss() {
+  total++;
+  combo = 0;
+  showJudgment('MISS');
+  updateCharacter();
+  updateHUD();
+}
+
+// ============================
+// UI
+// ============================
+function showJudgment(text) {
+  const el = document.getElementById('judgeText');
+  el.textContent = text;
+  el.className = 'judgment-text show ' + text.toLowerCase();
+  setTimeout(() => { el.className = 'judgment-text'; }, 500);
+}
+
+function updateHUD() {
+  document.getElementById('score').textContent = Math.floor(score);
+  document.getElementById('combo').textContent = combo;
+  const acc = total > 0 ? Math.round(hits / total * 100) : 100;
+  document.getElementById('accuracy').textContent = acc + '%';
+}
+
+// ============================
+// 角色视频控制
+// ============================
+const charVideo = document.getElementById('charVideo');
+const stateInd = document.getElementById('stateInd');
+let charTimer = null;
+
+function setVideo(name) {
+  const src = `assets/video/${name}.mp4`;
+  if (!charVideo.src.endsWith(src)) {
+    charVideo.src = src;
+    charVideo.load();
+    charVideo.play().catch(()=>{});
+  }
+}
+
+function updateCharacter() {
+  clearTimeout(charTimer);
+  
+  if (combo >= COMBO_THRESHOLD) {
+    setVideo('combo');
+    stateInd.textContent = `COMBO x${combo}!`;
+    stateInd.className = 'state-indicator combo';
+    charTimer = setTimeout(() => {
+      if (combo >= COMBO_THRESHOLD) {
+        setVideo('encourage');
+        stateInd.textContent = '受击中';
+        stateInd.className = 'state-indicator hit';
+      }
+    }, 2500);
+  } else if (combo > 0) {
+    setVideo('encourage');
+    stateInd.textContent = '受击';
+    stateInd.className = 'state-indicator hit';
+    charTimer = setTimeout(() => {
+      if (combo > 0 && combo < COMBO_THRESHOLD) {
+        setVideo('idle');
+        stateInd.textContent = '待机';
+        stateInd.className = 'state-indicator idle';
+      }
+    }, 1800);
+  } else {
+    setVideo('idle');
+    stateInd.textContent = '待机';
+    stateInd.className = 'state-indicator idle';
+  }
+}
+
+// ============================
+// 游戏控制
+// ============================
+async function startGame() {
+  document.getElementById('startOverlay').style.display = 'none';
+  
+  // 音频必须在用户交互后初始化
+  if (!audioCtx) {
+    await loadAudio();
+  }
+  // 恢复 suspended 的 audioContext
+  if (audioCtx.state === 'suspended') {
+    await audioCtx.resume();
+  }
+  
+  // 重置
+  score = 0; combo = 0; maxCombo = 0; hits = 0; total = 0;
+  activeNotes = CHART.map(c => ({...c, hit:false, missed:false, scored:false}));
+  
+  resizeCanvas();
+  setVideo('idle');
+  stateInd.textContent = '待机';
+  stateInd.className = 'state-indicator idle';
+  
+  updateHUD();
+  gameState = 'playing';
+  startTime = Date.now();
+  
+  gameLoop();
+}
+
+function endGame() {
+  gameState = 'idle';
+  cancelAnimationFrame(animId);
+  
+  const acc = total > 0 ? Math.round(hits / total * 100) : 0;
+  
+  const overlay = document.getElementById('startOverlay');
+  overlay.querySelector('h1').textContent = '🎉 完成!';
+  overlay.querySelector('p').innerHTML = `
+    得分: <b style="color:var(--accent)">${Math.floor(score)}</b><br>
+    最大连击: <b style="color:var(--gold)">${maxCombo}</b><br>
+    准确率: <b style="color:var(--accent2)">${acc}%</b>
+  `;
+  overlay.querySelector('.start-btn').textContent = '🔄 再来一次';
+  overlay.style.display = 'flex';
+}
+
+// ============================
+// 鼠标事件
+// ============================
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  hoveredY = e.clientY - rect.top;
+});
+
+canvas.addEventListener('mouseleave', () => {
+  hoveredY = null;
+});
+
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const y = e.clientY - rect.top;
+  handleClick(y);
+});
+
+// 初始化
+resizeCanvas();
+charVideo.play().catch(()=>{});
+</script>
+</body>
+</html>

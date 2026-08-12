@@ -383,25 +383,43 @@ function updateStateBar(text, cls) {
 // ============================
 // Start: unlock audio on user gesture, then play immediately
 // ============================
+// Preload one real audio to use as unlock sound
+var unlockAudio = new Audio('assets/audio/question_4C.wav');
+unlockAudio.load();
+
 document.getElementById('startBtn').addEventListener('click', function() {
   // Hide overlay
   document.getElementById('startOverlay').classList.add('hide');
-  
-  // Play a silent dummy audio to unlock mobile audio
-  var dummy = new Audio();
-  dummy.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
-  dummy.play().then(function(){
-    unlocked = true;
-    console.log('Audio unlocked');
-  }).catch(function(e){
-    console.warn('Unlock failed, will try on first play', e);
-  });
-  
-  // Start game immediately - no waiting for preload
-  resizeCanvas();
-  score = 0; combo = 0; totalRounds = 0;
-  updateHUD();
-  newRound();
+
+  // CRITICAL: Play a REAL audio file directly in the click handler to unlock mobile audio.
+  // HarmonyOS/Huawei browsers require actual audio playback in the gesture, not data: URLs.
+  unlockAudio.volume = 0.01;
+  var playPromise = unlockAudio.play();
+  if (playPromise) {
+    playPromise.then(function() {
+      unlocked = true;
+      console.log('Audio unlocked with real file');
+      unlockAudio.volume = 1.0;
+      // Start game after unlock confirmed
+      resizeCanvas();
+      score = 0; combo = 0; totalRounds = 0;
+      updateHUD();
+      newRound();
+    }).catch(function(e) {
+      console.warn('Unlock play rejected:', e);
+      // Start anyway, audio might work on subsequent calls
+      resizeCanvas();
+      score = 0; combo = 0; totalRounds = 0;
+      updateHUD();
+      newRound();
+    });
+  } else {
+    // Old browser, just start
+    resizeCanvas();
+    score = 0; combo = 0; totalRounds = 0;
+    updateHUD();
+    newRound();
+  }
 });
 
 // Pointer events - click + touch

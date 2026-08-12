@@ -278,33 +278,36 @@ function drawStaff() {
 async function loadAllAudio() {
   totalToLoad = SCALE_NOTES.length * 2;
   loadedCount = 0;
-  
-  // 并行加载所有音频
-  const promises = [];
-  
+
+  const loadOne = async (url, key) => {
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) return;
+      const buf = await resp.arrayBuffer();
+      const decoded = await audioCtx.decodeAudioData(buf);
+      audioBuffers[key] = decoded;
+    } catch(e) {
+      console.warn('Load fail:', key);
+    } finally {
+      loadedCount++;
+      updateLoadPct();
+    }
+  };
+
+  const tasks = [];
   for (const label of SCALE_NOTES) {
-    // 答题音效
-    promises.push(
-      fetch(getAnswerFile(label))
-        .then(r => r.arrayBuffer())
-        .then(buf => audioCtx.decodeAudioData(buf))
-        .then(decoded => { audioBuffers['answer_' + label] = decoded; })
-        .catch(e => console.warn('Load answer fail:', label, e))
-        .finally(() => { loadedCount++; updateLoadPct(); })
-    );
-    // 出题音频
-    promises.push(
-      fetch(getQuestionFile(label))
-        .then(r => r.arrayBuffer())
-        .then(buf => audioCtx.decodeAudioData(buf))
-        .then(decoded => { audioBuffers['question_' + label] = decoded; })
-        .catch(e => console.warn('Load question fail:', label, e))
-        .finally(() => { loadedCount++; updateLoadPct(); })
-    );
+    tasks.push(() => loadOne(getAnswerFile(label), 'answer_' + label));
+    tasks.push(() => loadOne(getQuestionFile(label), 'question_' + label));
   }
-  
-  await Promise.all(promises);
-  console.log('Audio loaded:', Object.keys(audioBuffers).length);
+
+  // Process in batches of 6 for mobile
+  const BATCH = 6;
+  for (let i = 0; i < tasks.length; i += BATCH) {
+    const batch = tasks.slice(i, i + BATCH).map(fn => fn());
+    await Promise.all(batch);
+  }
+
+  console.log('Audio loaded:', Object.keys(audioBuffers).length, '/', totalToLoad);
 }
 
 function updateLoadPct() {
@@ -493,7 +496,10 @@ document.getElementById('startBtn').addEventListener('click', async function() {
   document.getElementById('loader').classList.remove('hide');
   
   // 加载所有音频
-  await loadAllAudio();
+  // Load with 15s timeout safety
+  const loadPromise = loadAllAudio();
+  const timeoutPromise = new Promise(resolve => setTimeout(resolve, 15000));
+  await Promise.race([loadPromise, timeoutPromise]);
   
   // 隐藏加载页，开始游戏
   setTimeout(() => {

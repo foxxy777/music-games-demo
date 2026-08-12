@@ -80,6 +80,13 @@ body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);ov
 </style>
 </head>
 <body>
+<div id="loader" style="position:fixed;inset:0;background:#1a1a2e;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:200">
+<div style="width:48px;height:48px;border:4px solid #0f3460;border-top-color:#e94560;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px"></div>
+<div style="color:#888;font-size:14px;margin-bottom:4px" id="loadText">Loading audio...</div>
+<div style="color:#e94560;font-size:24px;font-weight:bold" id="loadPct">0%</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
 
 <div class="game-container">
   <!-- 左侧：五线谱 -->
@@ -114,6 +121,7 @@ body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);ov
 </div>
 
 <!-- 开始遮罩 -->
+
 <div class="start-overlay" id="startOverlay">
   <h1>🎵 听音辨序 V9</h1>
   <p>先听一段音符序列，然后按顺序点击五线谱上对应的音高位置<br>注意：播放时对应位置会亮起来，但你要靠耳朵记住顺序！</p>
@@ -293,23 +301,38 @@ function drawStaff() {
 // ============================
 // 音频
 // ============================
+let _loadTotal = 0, _loadDone = 0;
 async function loadAudio() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  // 加载回答用的高潮音效
-  for (const label of SCALE_NOTES) {
+  _loadTotal = SCALE_NOTES.length * 2;
+  _loadDone = 0;
+
+  async function loadOne(url, key) {
     try {
-      const resp = await fetch(getAnswerFile(label));
+      const resp = await fetch(url);
+      if (!resp.ok) return;
       const buf = await resp.arrayBuffer();
-      audioBuffers['answer_' + label] = await audioCtx.decodeAudioData(buf);
-    } catch(e) { console.warn(`Load answer fail: ${label}`, e); }
+      audioBuffers[key] = await audioCtx.decodeAudioData(buf);
+    } catch(e) { console.warn('Load fail:', key); }
+    finally {
+      _loadDone++;
+      var pct = Math.round((_loadDone / _loadTotal) * 100);
+      var lt = document.getElementById('loadText');
+      var lp = document.getElementById('loadPct');
+      if (lt) lt.textContent = 'Loading... ' + _loadDone + '/' + _loadTotal;
+      if (lp) lp.textContent = pct + '%';
+    }
   }
-  // 加载出题用的啊啊啊
+
+  const tasks = [];
   for (const label of SCALE_NOTES) {
-    try {
-      const resp = await fetch(getQuestionFile(label));
-      const buf = await resp.arrayBuffer();
-      audioBuffers['question_' + label] = await audioCtx.decodeAudioData(buf);
-    } catch(e) { console.warn(`Load question fail: ${label}`, e); }
+    tasks.push(loadOne(getAnswerFile(label), 'answer_' + label));
+    tasks.push(loadOne(getQuestionFile(label), 'question_' + label));
+  }
+  // Load in batches of 6 to avoid mobile connection limits
+  const BATCH = 6;
+  for (let i = 0; i < tasks.length; i += BATCH) {
+    await Promise.all(tasks.slice(i, i + BATCH));
   }
   console.log('Audio loaded:', Object.keys(audioBuffers).length);
 }
@@ -561,14 +584,16 @@ function setDifficulty(level) {
 // ============================
 async function startGame() {
   document.getElementById('startOverlay').style.display = 'none';
-  
+  document.getElementById('loader').style.display = 'flex';
+
   if (!audioCtx) {
     await loadAudio();
   }
-  if (audioCtx.state === 'suspended') {
+  if (audioCtx && audioCtx.state === 'suspended') {
     await audioCtx.resume();
   }
-  
+
+  document.getElementById('loader').style.display = 'none';
   score = 0; combo = 0; totalRounds = 0;
   resizeCanvas();
   drawStaff();

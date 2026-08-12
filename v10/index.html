@@ -384,6 +384,7 @@ function updateStateBar(text, cls) {
 // Start: unlock audio on user gesture, then play immediately
 // ============================
 // Preload one real audio to use as unlock sound
+// Preload real audio for unlock
 var unlockAudio = new Audio('assets/audio/question_4C.wav');
 unlockAudio.load();
 
@@ -391,35 +392,20 @@ document.getElementById('startBtn').addEventListener('click', function() {
   // Hide overlay
   document.getElementById('startOverlay').classList.add('hide');
 
-  // CRITICAL: Play a REAL audio file directly in the click handler to unlock mobile audio.
-  // HarmonyOS/Huawei browsers require actual audio playback in the gesture, not data: URLs.
-  unlockAudio.volume = 0.01;
-  var playPromise = unlockAudio.play();
-  if (playPromise) {
-    playPromise.then(function() {
-      unlocked = true;
-      console.log('Audio unlocked with real file');
-      unlockAudio.volume = 1.0;
-      // Start game after unlock confirmed
-      resizeCanvas();
-      score = 0; combo = 0; totalRounds = 0;
-      updateHUD();
-      newRound();
-    }).catch(function(e) {
-      console.warn('Unlock play rejected:', e);
-      // Start anyway, audio might work on subsequent calls
-      resizeCanvas();
-      score = 0; combo = 0; totalRounds = 0;
-      updateHUD();
-      newRound();
-    });
-  } else {
-    // Old browser, just start
-    resizeCanvas();
-    score = 0; combo = 0; totalRounds = 0;
-    updateHUD();
-    newRound();
-  }
+  // Play real audio in the click handler to unlock mobile audio.
+  // Do NOT wait for the promise - just fire and forget.
+  // HarmonyOS needs play() called in the gesture, but waiting on the
+  // promise blocks subsequent code from running.
+  unlockAudio.volume = 0.0001;
+  try { unlockAudio.play(); } catch(e) {}
+  // Reset volume shortly after
+  setTimeout(function() { unlockAudio.volume = 1.0; }, 100);
+
+  // Start game immediately
+  resizeCanvas();
+  score = 0; combo = 0; totalRounds = 0;
+  updateHUD();
+  newRound();
 });
 
 // Pointer events - click + touch

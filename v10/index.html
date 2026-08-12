@@ -92,8 +92,8 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:
       <div class="hud-row">次: <span id="totalRounds">0</span></div>
     </div>
     <div class="click-sequence" id="clickSeq"></div>
-    <button class="btn btn-replay" id="btnReplay" disabled>🔊 再听一遍</button>
-    <button class="btn btn-next" id="btnNext" style="display:none">▶ 下一轮</button>
+    <button class="btn btn-replay" id="btnReplay" onclick="replaySequence()" disabled>🔊 再听一遍</button>
+    <button class="btn btn-next" id="btnNext" onclick="nextRound()" style="display:none">▶ 下一轮</button>
   </div>
 </div>
 
@@ -126,27 +126,57 @@ let playTimers = [];
 var unlocked = false; // audio unlock flag
 
 // ============================
-// Audio: simple on-demand using Audio elements
-// No preloading. No Web Audio API. Just new Audio().
+// Audio: Web Audio API with lazy per-note loading
 // ============================
-const audioCache = {};
+var audioCtx = null;
+var bufferCache = {}; // key -> AudioBuffer
 
-function playFile(url) {
-  let a;
-  if (audioCache[url]) {
-    a = audioCache[url];
-    a.currentTime = 0;
-  } else {
-    a = new Audio(url);
-    audioCache[url] = a;
+function ensureCtx() {
+  if (!audioCtx) {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch(e) { console.error('AudioContext fail:', e); }
   }
-  a.play().catch(function(e){ console.warn('play fail', url, e); });
-  return a;
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
+function loadBuffer(url, cb) {
+  if (bufferCache[url]) { cb(bufferCache[url]); return; }
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.responseType = 'arraybuffer';
+  xhr.onload = function() {
+    try {
+      audioCtx.decodeAudioData(xhr.response, function(buf) {
+        bufferCache[url] = buf;
+        cb(buf);
+      }, function(e) { console.warn('decode fail:', url); cb(null); });
+    } catch(e) { console.warn('decode ex:', url); cb(null); }
+  };
+  xhr.onerror = function() { console.warn('xhr fail:', url); cb(null); };
+  xhr.send();
+}
+
+function playUrl(url) {
+  if (!audioCtx) return;
+  loadBuffer(url, function(buf) {
+    if (!buf || !audioCtx) return;
+    var src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    var gain = audioCtx.createGain();
+    gain.gain.value = 0.8;
+    src.connect(gain);
+    gain.connect(audioCtx.destination);
+    src.start(0);
+  });
 }
 
 function playNote(label, type) {
   var url = type === 'q' ? qFile(label) : aFile(label);
-  playFile(url);
+  playUrl(url);
 }
 
 // ============================
@@ -384,24 +414,28 @@ function updateStateBar(text, cls) {
 // Start: unlock audio on user gesture, then play immediately
 // ============================
 // Preload one real audio to use as unlock sound
-// Preload real audio for unlock
-var unlockAudio = new Audio('assets/audio/question_4C.wav');
-unlockAudio.load();
-
 document.getElementById('startBtn').addEventListener('click', function() {
-  // Hide overlay
   document.getElementById('startOverlay').classList.add('hide');
 
-  // Play real audio in the click handler to unlock mobile audio.
-  // Do NOT wait for the promise - just fire and forget.
-  // HarmonyOS needs play() called in the gesture, but waiting on the
-  // promise blocks subsequent code from running.
-  unlockAudio.volume = 0.0001;
-  try { unlockAudio.play(); } catch(e) {}
-  // Reset volume shortly after
-  setTimeout(function() { unlockAudio.volume = 1.0; }, 100);
+  // Create AudioContext synchronously in the user gesture
+  ensureCtx();
 
-  // Start game immediately
+  // Play a real sound immediately to confirm unlock
+  // Use the Web Audio API path directly
+  loadBuffer('assets/audio/question_4C.wav', function(buf) {
+    if (buf && audioCtx) {
+      var src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      var gain = audioCtx.createGain();
+      gain.gain.value = 0.01; // almost silent
+      src.connect(gain);
+      gain.connect(audioCtx.destination);
+      src.start(0);
+      console.log('Unlock sound played');
+    }
+  });
+
+  // Start game
   resizeCanvas();
   score = 0; combo = 0; totalRounds = 0;
   updateHUD();
@@ -423,6 +457,16 @@ canvas.addEventListener('touchstart', handlePointer, {passive:false});
 // Init
 resizeCanvas();
 drawStaff();
+
+// Button event listeners (backup for onclick)
+document.getElementById('btnReplay').addEventListener('click', function(e) {
+  e.preventDefault();
+  replaySequence();
+});
+document.getElementById('btnNext').addEventListener('click', function(e) {
+  e.preventDefault();
+  nextRound();
+});
 </script>
 </body>
 </html>

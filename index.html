@@ -182,8 +182,7 @@ const NOTES_LAYOUT = [
   {label:'3G', idx:25},
 ];
 
-const NOTE_INTERVAL = 0.6; // 播放间隔（秒）
-const HIGHLIGHT_DURATION = 0.5; // 亮起持续时间
+const NOTE_GAP = 0.25; // 音符之间的静音间隔（秒）；每个音按实际音频时长播完再播下一个
 
 // ============================
 // 状态
@@ -338,6 +337,7 @@ async function loadAudio() {
 }
 
 // type: 'question' = 出题(啊啊啊), 'answer' = 回答(高潮音效)
+let activeSources = []; // 正在播放的音源（用于打断时停声）
 function playSound(label, type = 'answer', delay = 0) {
   const key = type + '_' + label;
   if (!audioCtx || !audioBuffers[key]) {
@@ -350,6 +350,38 @@ function playSound(label, type = 'answer', delay = 0) {
   gain.gain.value = 0.7;
   src.connect(gain).connect(audioCtx.destination);
   src.start(audioCtx.currentTime + delay);
+  activeSources.push(src);
+  src.onended = () => {
+    const i = activeSources.indexOf(src);
+    if (i >= 0) activeSources.splice(i, 1);
+  };
+}
+
+function stopAllSounds() {
+  activeSources.forEach(s => { try { s.stop(); } catch (e) {} });
+  activeSources = [];
+}
+
+// 单个出题音的实际时长（秒）；音频缺失时用兜底值，保证调度不塌
+function noteDuration(label, type = 'question') {
+  const buf = audioBuffers[type + '_' + label];
+  return (buf && buf.duration > 0) ? buf.duration : 1.5;
+}
+
+// 逐音排队：第 i 个音从「上一个音结束 + NOTE_GAP」开始，天然防重叠。
+// 换任何长度的出题素材都自动适配。返回最后一个音的结束时刻（秒）。
+function scheduleQuestionSequence(sequence) {
+  let t = 0;
+  sequence.forEach((note, i) => {
+    const dur = noteDuration(note, 'question');
+    playSound(note, 'question', t); // Web Audio 时间轴精确排程
+    playTimers.push(setTimeout(() => { highlightedNotes.add(note); drawStaff(); }, t * 1000));
+    if (i < sequence.length - 1) {
+      playTimers.push(setTimeout(() => { highlightedNotes.delete(note); drawStaff(); }, (t + dur) * 1000));
+    }
+    t += dur + NOTE_GAP;
+  });
+  return t - NOTE_GAP;
 }
 
 // ============================
@@ -371,45 +403,25 @@ function generateSequence(count) {
 }
 
 function playSequence(sequence) {
-  // 清除之前的定时器
+  // 清除之前的定时器和声音
   playTimers.forEach(t => clearTimeout(t));
   playTimers = [];
+  stopAllSounds();
   
   gameState = 'listening';
   updateStateBar('🎧 听音中...', 'listen');
   highlightedNotes.clear();
   drawStaff();
   
-  sequence.forEach((note, i) => {
-    const delay = i * NOTE_INTERVAL * 1000;
-    
-    // 播放出题声音（啊啊啊）
-    playTimers.push(setTimeout(() => {
-      playSound(note, 'question');
-    }, delay));
-    
-    // 亮起对应位置
-    playTimers.push(setTimeout(() => {
-      highlightedNotes.add(note);
-      drawStaff();
-    }, delay));
-    
-    // 熄灭（最后保持亮着直到全部播完）
-    if (i < sequence.length - 1) {
-      playTimers.push(setTimeout(() => {
-        highlightedNotes.delete(note);
-        drawStaff();
-      }, delay + HIGHLIGHT_DURATION * 1000));
-    }
-  });
+  // 按每个音频的实际时长排队，播完一个再播下一个
+  const lastEnd = scheduleQuestionSequence(sequence);
   
   // 播放完毕 → 进入玩家回合
-  const totalTime = (sequence.length - 1) * NOTE_INTERVAL + HIGHLIGHT_DURATION + 0.3;
   playTimers.push(setTimeout(() => {
     highlightedNotes.clear();
     drawStaff();
     startPlayerTurn(sequence);
-  }, totalTime * 1000));
+  }, (lastEnd + 0.3) * 1000));
 }
 
 function startPlayerTurn(sequence) {
@@ -509,27 +521,21 @@ function replaySequence() {
   highlightedNotes.clear();
   drawStaff();
   
-  // 重新播放
+  // 重新播放（先停掉旧声音和定时器）
+  playTimers.forEach(t => clearTimeout(t));
+  playTimers = [];
+  stopAllSounds();
   gameState = 'listening';
   updateStateBar('🎧 重新听音...', 'listen');
   
-  currentSequence.forEach((note, i) => {
-    const delay = i * NOTE_INTERVAL * 1000;
-    playTimers.push(setTimeout(() => { playSound(note, 'question'); }, delay));
-    playTimers.push(setTimeout(() => { highlightedNotes.add(note); drawStaff(); }, delay));
-    if (i < currentSequence.length - 1) {
-      playTimers.push(setTimeout(() => { highlightedNotes.delete(note); drawStaff(); }, delay + HIGHLIGHT_DURATION * 1000));
-    }
-  });
-  
-  const totalTime = (currentSequence.length - 1) * NOTE_INTERVAL + HIGHLIGHT_DURATION + 0.3;
+  const lastEnd = scheduleQuestionSequence(currentSequence);
   playTimers.push(setTimeout(() => {
     currentSequence.forEach(n => highlightedNotes.add(n));
     drawStaff();
     gameState = 'repeating';
     updateStateBar('👆 按顺序点击', 'repeat');
     document.getElementById('btnReplay').disabled = false;
-  }, totalTime * 1000));
+  }, (lastEnd + 0.3) * 1000));
 }
 
 function nextRound() {

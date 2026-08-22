@@ -12,9 +12,11 @@
   --gold-soft:rgba(255,215,0,0.2);
   --text:#eee; --dim:#888;
 }
-body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;user-select:none}
+*{-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;height:100dvh;user-select:none;-webkit-user-select:none}
+canvas,.btn,.diff-btn,.start-btn{touch-action:manipulation}
 
-.game-container{display:flex;height:100vh}
+.game-container{display:flex;height:100vh;height:100dvh}
 
 /* ===== 左侧五线谱 ===== */
 .staff-panel{
@@ -24,7 +26,7 @@ body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);ov
 .staff-header{padding:12px 20px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)}
 .staff-header h3{color:var(--accent);font-size:18px}
 .round-info{color:var(--dim);font-size:14px}
-#staffCanvas{flex:1;cursor:pointer}
+#staffCanvas{flex:1;cursor:pointer;display:block;min-height:0}
 
 /* ===== 右侧角色区 ===== */
 .char-panel{width:220px;background:var(--bg2);border-left:2px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:16px}
@@ -77,6 +79,25 @@ body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);ov
 .difficulty{display:flex;gap:12px;margin-bottom:20px}
 .diff-btn{background:var(--bg2);color:var(--text);border:2px solid var(--border);padding:10px 24px;border-radius:10px;cursor:pointer;font-size:14px;transition:all 0.2s}
 .diff-btn.active{border-color:var(--accent);background:rgba(233,69,96,0.2);color:var(--accent)}
+
+/* ===== 手机布局（窄屏） ===== */
+@media (max-width:700px){
+  .game-container{flex-direction:column}
+  .staff-panel{min-height:40vh}
+  .char-panel{width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;border-left:none;border-top:2px solid var(--border);padding:8px}
+  .char-avatar{display:none!important}
+  .char-info{display:none}
+  .state-bar{width:auto;margin-top:0;padding:5px 10px;font-size:12px}
+  .hud{width:auto;margin-top:0;display:flex;gap:6px}
+  .hud-row{margin-bottom:0;padding:5px 8px;font-size:12px;white-space:nowrap}
+  .click-sequence{width:100%;margin-top:0;min-height:30px}
+  .click-dot{width:26px;height:26px;font-size:10px}
+  .btn{width:auto;padding:9px 16px;margin-top:0;font-size:14px}
+  .staff-header{padding:8px 12px}
+  .staff-header h3{font-size:15px}
+  .round-info{font-size:12px}
+  .judgment-text{font-size:30px}
+}
 </style>
 </head>
 <body>
@@ -101,7 +122,7 @@ body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);ov
 
   <!-- 右侧：角色 + 控制 -->
   <div class="char-panel">
-    <div style="width:60px;height:60px;border-radius:8px;background:#e94560;display:flex;align-items:center;justify-content:center;font-size:24px">MIC</div>
+    <div class="char-avatar" style="width:60px;height:60px;border-radius:8px;background:#e94560;display:flex;align-items:center;justify-content:center;font-size:24px">MIC</div>
     <div class="char-info">
       <h4>008</h4>
     </div>
@@ -196,6 +217,32 @@ let highlightedNotes = new Set(); // 当前亮起的音高位置
 let audioBuffers = {};
 let audioCtx = null;
 let playTimers = [];
+let flashNote = null, flashTimer = null;
+
+// 点击位置闪一个绿圈，给触摸操作即时视觉反馈
+function flashTappedNote(note) {
+  flashNote = note;
+  drawStaff();
+  if (flashTimer) clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => { flashNote = null; drawStaff(); }, 400);
+}
+
+// 移动端音频解锁：浏览器自动播放策略会把 AudioContext 挂起（尤其加载耗时超过
+// 手势有效期后 resume 会静默失败）。任何触摸/点击都尝试 resume + 静音 buffer 解锁。
+function ensureAudioRunning() {
+  if (!audioCtx || audioCtx.state !== 'suspended') return;
+  try {
+    const b = audioCtx.createBuffer(1, 1, 22050);
+    const s = audioCtx.createBufferSource();
+    s.buffer = b;
+    s.connect(audioCtx.destination);
+    s.start(0);
+  } catch (e) {}
+  audioCtx.resume().catch(() => {});
+}
+['touchstart', 'touchend', 'mousedown', 'keydown'].forEach(ev => {
+  document.addEventListener(ev, ensureAudioRunning, { passive: true });
+});
 
 // ============================
 // Canvas
@@ -204,11 +251,13 @@ const canvas = document.getElementById('staffCanvas');
 const ctx2d = canvas.getContext('2d');
 
 function resizeCanvas() {
-  const panel = canvas.parentElement;
-  canvas.width = panel.clientWidth;
-  canvas.height = panel.clientHeight - 50; // 减去 header
+  // 用 canvas 自身的显示尺寸做位图尺寸：位图坐标 == CSS 坐标，点击映射才不会漂
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.max(100, Math.round(rect.width));
+  canvas.height = Math.max(100, Math.round(rect.height));
 }
 window.addEventListener('resize', () => { resizeCanvas(); drawStaff(); });
+window.addEventListener('orientationchange', () => { setTimeout(() => { resizeCanvas(); drawStaff(); }, 300); });
 
 function noteToY(label) {
   const n = NOTES_LAYOUT.find(x => x.label === label);
@@ -290,6 +339,15 @@ function drawStaff() {
       ctx2d.textAlign = 'left';
     }
     
+    // 点击反馈：最近点过的位置画绿圈
+    if (flashNote === n.label) {
+      ctx2d.strokeStyle = 'rgba(82,183,136,0.95)';
+      ctx2d.lineWidth = 2.5;
+      ctx2d.beginPath();
+      ctx2d.arc(w / 2, y, 20, 0, Math.PI * 2);
+      ctx2d.stroke();
+    }
+    
     // 音名标签（左侧）
     ctx2d.fillStyle = isHighlighted ? 'rgba(255,215,0,0.9)' : 'rgba(136,136,136,0.5)';
     ctx2d.font = isHighlighted ? 'bold 12px Segoe UI' : '11px Segoe UI';
@@ -306,13 +364,14 @@ async function loadAudio() {
   _loadTotal = SCALE_NOTES.length * 2;
   _loadDone = 0;
 
+  const loadFails = [];
   async function loadOne(url, key) {
     try {
       const resp = await fetch(url);
-      if (!resp.ok) return;
+      if (!resp.ok) { loadFails.push(key); return; }
       const buf = await resp.arrayBuffer();
       audioBuffers[key] = await audioCtx.decodeAudioData(buf);
-    } catch(e) { console.warn('Load fail:', key); }
+    } catch(e) { loadFails.push(key); console.warn('Load fail:', key, e); }
     finally {
       _loadDone++;
       var pct = Math.round((_loadDone / _loadTotal) * 100);
@@ -333,7 +392,11 @@ async function loadAudio() {
   for (let i = 0; i < tasks.length; i += BATCH) {
     await Promise.all(tasks.slice(i, i + BATCH));
   }
-  console.log('Audio loaded:', Object.keys(audioBuffers).length);
+  console.log('Audio loaded:', Object.keys(audioBuffers).length, '/', _loadTotal);
+  if (loadFails.length) {
+    console.warn('Missing audio (' + loadFails.length + '):', loadFails.join(','));
+    window._loadFails = loadFails;
+  }
 }
 
 // type: 'question' = 出题(啊啊啊), 'answer' = 回答(高潮音效)
@@ -407,9 +470,17 @@ function playSequence(sequence) {
   playTimers.forEach(t => clearTimeout(t));
   playTimers = [];
   stopAllSounds();
+  ensureAudioRunning();
   
   gameState = 'listening';
   updateStateBar('🎧 听音中...', 'listen');
+  
+  // 兜底：如果声音仍被浏览器挂起，提示点一下屏幕
+  playTimers.push(setTimeout(() => {
+    if (audioCtx && audioCtx.state !== 'running') {
+      updateStateBar('🔇 声音被浏览器挂起，点一下屏幕任意位置即可开启', 'wrong');
+    }
+  }, 500));
   highlightedNotes.clear();
   drawStaff();
   
@@ -458,12 +529,17 @@ function updateClickDot(index, note, correct) {
 
 function onStaffClick(y) {
   if (gameState !== 'repeating') return;
+  ensureAudioRunning();
   
   const note = yToNote(y);
   const index = playerSequence.length;
   const expected = currentSequence[index];
   
   playerSequence.push(note);
+  
+  // 触摸反馈：绿圈 + 短震动
+  flashTappedNote(note);
+  if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} }
   
   // 播放对应音效
   playSound(note);
@@ -595,8 +671,18 @@ async function startGame() {
   if (!audioCtx) {
     await loadAudio();
   }
+  ensureAudioRunning();
   if (audioCtx && audioCtx.state === 'suspended') {
     await audioCtx.resume();
+  }
+
+  // 音频全挂了的明确报错（网络/代理问题），别让玩家无声地猜
+  const loadedCount = Object.keys(audioBuffers).length;
+  if (!audioCtx || loadedCount === 0) {
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('startOverlay').style.display = 'flex';
+    alert('音频加载失败（0/' + _loadTotal + '）。请检查网络后刷新页面重试；若持续失败请截图告诉我。');
+    return;
   }
 
   document.getElementById('loader').style.display = 'none';
@@ -609,6 +695,7 @@ async function startGame() {
 
 // 鼠标事件
 canvas.addEventListener('click', e => {
+  ensureAudioRunning();
   const rect = canvas.getBoundingClientRect();
   const y = e.clientY - rect.top;
   onStaffClick(y);

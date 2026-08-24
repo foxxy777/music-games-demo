@@ -7,145 +7,153 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#1a1a2e; --bg2:#16213e; --border:#0f3460;
+  --bg:#0b0e16; --bg2:#141a2a; --border:#26304a;
   --accent:#e94560; --accent2:#52b788; --gold:#ffd700;
-  --gold-soft:rgba(255,215,0,0.2);
-  --text:#eee; --dim:#888;
+  --text:#eee; --dim:#8892b0;
 }
 *{-webkit-tap-highlight-color:transparent}
-body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;height:100dvh;user-select:none;-webkit-user-select:none}
-canvas,.btn,.diff-btn,.start-btn{touch-action:manipulation}
+html,body{height:100%}
+body{font-family:'Segoe UI',sans-serif;background:radial-gradient(1200px 800px at 70% 20%,#141a2a 0%,#0b0e16 60%,#070910 100%);color:var(--text);overflow:hidden;user-select:none;-webkit-user-select:none}
+button{touch-action:manipulation;cursor:pointer}
 
-.game-container{display:flex;height:100vh;height:100dvh}
+/* ===== 1920x1080 舞台（等比缩放居中） ===== */
+#stage{position:fixed;left:50%;top:50%;width:1920px;height:1080px;transform:translate(-50%,-50%) scale(1);transform-origin:center;display:flex;background:#0d1120;border-radius:8px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,0.04),0 30px 80px rgba(0,0,0,0.6)}
 
-/* ===== 左侧五线谱 ===== */
-.staff-panel{
-  flex:1; background:linear-gradient(180deg,#0d1117 0%,#161b22 100%);
-  position:relative; display:flex; flex-direction:column;
+/* ===== 左 1/3：唱名方块键盘 ===== */
+.left-panel{width:640px;height:100%;display:flex;flex-direction:column;padding:14px 14px 16px;border-right:1px solid var(--border)}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px}
+.panel-header h3{color:var(--accent);font-size:24px;letter-spacing:2px}
+.round-info{color:var(--dim);font-size:18px}
+
+.note-stack{flex:1;display:flex;flex-direction:column;gap:3px;min-height:0}
+
+.note-bar{
+  flex:1;display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px 0 14px;border-radius:8px;border:1px solid transparent;
+  background:hsla(var(--hue),70%,55%,0.10);
+  border-left:6px solid hsl(var(--hue),70%,55%);
+  transition:background 0.15s,box-shadow 0.15s,transform 0.1s;
+  position:relative;
 }
-.staff-header{padding:12px 20px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)}
-.staff-header h3{color:var(--accent);font-size:18px}
-.round-info{color:var(--dim);font-size:14px}
-#staffCanvas{flex:1;cursor:pointer;display:block;min-height:0}
+.nb-name{font-size:25px;font-weight:800;letter-spacing:1px;color:hsl(var(--hue),75%,68%);line-height:1}
+.nb-label{font-family:Consolas,monospace;font-size:18px;font-weight:700;color:rgba(255,255,255,0.35);line-height:1}
 
-/* ===== 右侧角色区 ===== */
-.char-panel{width:220px;background:var(--bg2);border-left:2px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:16px}
-.char-panel img{width:100%;max-width:180px;border-radius:12px;border:2px solid var(--border);margin-bottom:16px}
-.char-info{text-align:center}
-.char-info h4{color:var(--accent);font-size:15px;margin-bottom:6px}
+/* 播放中亮起 */
+.note-bar.lit{
+  background:hsla(var(--hue),85%,60%,0.55);
+  box-shadow:0 0 24px hsla(var(--hue),85%,60%,0.45),inset 0 0 12px rgba(255,255,255,0.18);
+  transform:scale(1.03);
+}
+.note-bar.lit .nb-name{color:#fff;text-shadow:0 0 14px rgba(255,255,255,0.8)}
+.note-bar.lit .nb-label{color:rgba(255,255,255,0.85)}
 
-/* HUD */
-.hud{width:100%;margin-top:12px}
-.hud-row{display:flex;justify-content:space-between;padding:6px 12px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:6px;font-size:14px}
-.hud-row span{font-weight:bold;color:var(--gold)}
+/* 玩家点过的反馈 */
+.note-bar.tapped{outline:3px solid var(--accent2);outline-offset:1px;animation:tappop 0.35s ease}
+@keyframes tappop{0%{transform:scale(0.96)}60%{transform:scale(1.05)}100%{transform:scale(1)}}
 
-/* 状态指示 */
-.state-bar{width:100%;margin-top:8px;text-align:center;padding:8px;border-radius:8px;font-size:13px;font-weight:bold}
-.state-bar.listen{background:rgba(233,69,96,0.2);color:var(--accent);border:1px solid var(--accent)}
-.state-bar.repeat{background:rgba(82,183,136,0.2);color:var(--accent2);border:1px solid var(--accent2)}
+/* 答错时正确答案提示 */
+.note-bar.reveal{outline:3px solid #4fc3f7;outline-offset:1px;animation:revealPulse 0.5s ease infinite alternate}
+@keyframes revealPulse{from{background:hsla(203,90%,60%,0.25)}to{background:hsla(203,90%,60%,0.55)}}
+
+/* ===== 右 2/3：预留图片区 ===== */
+.right-panel{width:1280px;height:100%;position:relative}
+/* 占位提示：放图时删掉这一块即可 */
+.reserved{position:absolute;inset:30px;border:2px dashed rgba(255,255,255,0.10);border-radius:16px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.14);font-size:30px;letter-spacing:6px;pointer-events:none}
+
+/* HUD 右上角 */
+.hud-chips{position:absolute;top:22px;right:26px;display:flex;gap:12px}
+.chip{background:rgba(0,0,0,0.45);border:1px solid var(--border);border-radius:999px;padding:8px 22px;font-size:20px}
+.chip b{color:var(--gold);font-size:22px;margin-left:8px}
+
+/* 控制坞 右下角 */
+.control-dock{position:absolute;left:30px;right:30px;bottom:24px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.state-bar{width:100%;text-align:center;padding:12px;border-radius:10px;font-size:20px;font-weight:bold;background:rgba(0,0,0,0.5);color:var(--dim)}
+.state-bar.listen{background:rgba(233,69,96,0.18);color:var(--accent);border:1px solid var(--accent)}
+.state-bar.repeat{background:rgba(82,183,136,0.18);color:var(--accent2);border:1px solid var(--accent2)}
 .state-bar.correct{background:rgba(82,183,136,0.3);color:var(--accent2)}
 .state-bar.wrong{background:rgba(233,69,96,0.3);color:var(--accent)}
 
-/* 操作按钮 */
-.btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer;transition:all 0.2s;margin-top:8px}
-.btn-play{background:var(--accent);color:#fff}
-.btn-play:hover{background:#ff6b6b}
-.btn-replay{background:var(--border);color:var(--text)}
-.btn-replay:hover{background:#1a4060}
-.btn-next{background:var(--accent2);color:#fff}
-.btn-next:hover{background:#3a8c68}
-.btn:disabled{opacity:0.4;cursor:not-allowed}
-
-/* 点击序列显示 */
-.click-sequence{width:100%;margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:36px}
-.click-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold}
-.click-dot.pending{background:rgba(255,255,255,0.1);border:2px dashed var(--dim)}
+.click-sequence{display:flex;gap:10px;justify-content:center;min-height:44px}
+.click-dot{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:bold}
+.click-dot.pending{background:rgba(255,255,255,0.08);border:2px dashed var(--dim)}
 .click-dot.filled{background:var(--gold);color:#000}
 .click-dot.wrong{background:var(--accent);color:#fff}
 
-/* 判定文字 */
-.judgment-text{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:42px;font-weight:bold;z-index:6;pointer-events:none;opacity:0}
+.btn-row{display:flex;gap:14px}
+.btn{padding:14px 46px;border:none;border-radius:12px;font-size:20px;font-weight:bold;transition:all 0.2s}
+.btn-play{background:var(--accent);color:#fff}
+.btn-replay{background:#223052;color:var(--text);border:1px solid var(--border)}
+.btn-replay:hover{background:#2c3d68}
+.btn-next{background:var(--accent2);color:#fff}
+.btn-next:hover{background:#3a8c68}
+.btn:disabled{opacity:0.35;cursor:not-allowed}
+
+/* 判定文字（舞台中央） */
+.judgment-text{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:96px;font-weight:bold;z-index:6;pointer-events:none;opacity:0;white-space:nowrap}
 .judgment-text.show{animation:judgePop 0.6s ease-out}
-.judgment-text.correct{color:var(--accent2);text-shadow:0 0 20px var(--accent2)}
-.judgment-text.wrong{color:var(--accent);text-shadow:0 0 20px var(--accent)}
-@keyframes judgePop{0%{opacity:0;transform:translate(-50%,-50%) scale(0.3)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+.judgment-text.correct{color:var(--accent2);text-shadow:0 0 40px var(--accent2)}
+.judgment-text.wrong{color:var(--accent);text-shadow:0 0 40px var(--accent)}
+@keyframes judgePop{0%{opacity:0;transform:translate(-50%,-50%) scale(0.3)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.25)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
 
 /* 开始遮罩 */
-.start-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
-.start-overlay h1{color:var(--accent);font-size:36px;margin-bottom:8px}
-.start-overlay p{color:var(--dim);margin-bottom:24px;text-align:center;max-width:440px;line-height:1.6}
-.start-btn{background:var(--accent);color:#fff;border:none;padding:16px 56px;font-size:24px;border-radius:50px;cursor:pointer;transition:all 0.2s}
+.start-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(4,6,12,0.94);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
+.start-overlay h1{color:var(--accent);font-size:42px;margin-bottom:10px}
+.start-overlay p{color:var(--dim);margin-bottom:22px;text-align:center;max-width:520px;line-height:1.7;font-size:16px}
+.rotate-hint{display:none;color:#e94560;font-size:14px;margin-bottom:14px}
+@media (orientation:portrait){.rotate-hint{display:block}}
+.start-btn{background:var(--accent);color:#fff;border:none;padding:16px 56px;font-size:24px;border-radius:50px;transition:all 0.2s}
 .start-btn:hover{background:#ff6b6b;transform:scale(1.05)}
 .difficulty{display:flex;gap:12px;margin-bottom:20px}
-.diff-btn{background:var(--bg2);color:var(--text);border:2px solid var(--border);padding:10px 24px;border-radius:10px;cursor:pointer;font-size:14px;transition:all 0.2s}
+.diff-btn{background:var(--bg2);color:var(--text);border:2px solid var(--border);padding:10px 24px;border-radius:10px;font-size:14px;transition:all 0.2s}
 .diff-btn.active{border-color:var(--accent);background:rgba(233,69,96,0.2);color:var(--accent)}
-
-/* ===== 手机布局（窄屏） ===== */
-@media (max-width:700px){
-  .game-container{flex-direction:column}
-  .staff-panel{min-height:40vh}
-  .char-panel{width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;border-left:none;border-top:2px solid var(--border);padding:8px}
-  .char-avatar{display:none!important}
-  .char-info{display:none}
-  .state-bar{width:auto;margin-top:0;padding:5px 10px;font-size:12px}
-  .hud{width:auto;margin-top:0;display:flex;gap:6px}
-  .hud-row{margin-bottom:0;padding:5px 8px;font-size:12px;white-space:nowrap}
-  .click-sequence{width:100%;margin-top:0;min-height:30px}
-  .click-dot{width:26px;height:26px;font-size:10px}
-  .btn{width:auto;padding:9px 16px;margin-top:0;font-size:14px}
-  .staff-header{padding:8px 12px}
-  .staff-header h3{font-size:15px}
-  .round-info{font-size:12px}
-  .judgment-text{font-size:30px}
-}
 </style>
 </head>
 <body>
-<div id="loader" style="position:fixed;inset:0;background:#1a1a2e;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:200">
-<div style="width:48px;height:48px;border:4px solid #0f3460;border-top-color:#e94560;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px"></div>
-<div style="color:#888;font-size:14px;margin-bottom:4px" id="loadText">Loading audio...</div>
+<div id="loader" style="position:fixed;inset:0;background:#0b0e16;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:200">
+<div style="width:48px;height:48px;border:4px solid #26304a;border-top-color:#e94560;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px"></div>
+<div style="color:#8892b0;font-size:14px;margin-bottom:4px" id="loadText">Loading audio...</div>
 <div style="color:#e94560;font-size:24px;font-weight:bold" id="loadPct">0%</div>
 </div>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
-
-<div class="game-container">
-  <!-- 左侧：五线谱 -->
-  <div class="staff-panel">
-    <div class="staff-header">
+<div id="stage">
+  <!-- 左 1/3：唱名方块键盘 -->
+  <div class="left-panel">
+    <div class="panel-header">
       <h3>📜 听音辨序</h3>
       <div class="round-info" id="roundInfo">第 1 轮 · 难度：3音</div>
     </div>
-    <canvas id="staffCanvas"></canvas>
-    <div class="judgment-text" id="judgeText"></div>
+    <div class="note-stack" id="noteStack"></div>
   </div>
 
-  <!-- 右侧：角色 + 控制 -->
-  <div class="char-panel">
-    <div class="char-avatar" style="width:60px;height:60px;border-radius:8px;background:#e94560;display:flex;align-items:center;justify-content:center;font-size:24px">MIC</div>
-    <div class="char-info">
-      <h4>008</h4>
-    </div>
-    <div class="state-bar listen" id="stateBar">🎧 准备听音</div>
+  <!-- 右 2/3：预留图片区（放图时删掉 .reserved 占位块即可） -->
+  <div class="right-panel">
+    <div class="reserved">🖼️ 图片预留区</div>
 
-    <div class="hud">
-      <div class="hud-row">得分: <span id="score">0</span></div>
-      <div class="hud-row">连击: <span id="combo">0</span></div>
-      <div class="hud-row">轮次: <span id="totalRounds">0</span></div>
+    <div class="hud-chips">
+      <div class="chip">得分<b id="score">0</b></div>
+      <div class="chip">连击<b id="combo">0</b></div>
+      <div class="chip">轮次<b id="totalRounds">0</b></div>
     </div>
 
-    <div class="click-sequence" id="clickSeq"></div>
-
-    <button class="btn btn-replay" id="btnReplay" onclick="replaySequence()" disabled>🔊 再听一遍</button>
-    <button class="btn btn-next" id="btnNext" onclick="nextRound()" style="display:none">➡️ 下一轮</button>
+    <div class="control-dock">
+      <div class="state-bar listen" id="stateBar">🎧 准备听音</div>
+      <div class="click-sequence" id="clickSeq"></div>
+      <div class="btn-row">
+        <button class="btn btn-replay" id="btnReplay" onclick="replaySequence()" disabled>🔊 再听一遍</button>
+        <button class="btn btn-next" id="btnNext" onclick="nextRound()" style="display:none">➡️ 下一轮</button>
+      </div>
+    </div>
   </div>
+
+  <div class="judgment-text" id="judgeText"></div>
 </div>
 
 <!-- 开始遮罩 -->
-
 <div class="start-overlay" id="startOverlay">
   <h1>🎵 听音辨序 V10b</h1>
-  <p>先听一段音符序列，然后按顺序点击五线谱上对应的音高位置<br>注意：播放时对应位置会亮起来，但你要靠耳朵记住顺序！</p>
+  <p>先听一段音符序列，然后按顺序点击左侧对应的唱名方块<br>每个音都有专属颜色，播放时方块会亮起<br>但顺序要靠耳朵记住！</p>
+  <div class="rotate-hint">📱 手机建议横屏游玩</div>
   <div class="difficulty">
     <button class="diff-btn active" data-level="3" onclick="setDifficulty(3)">3 个音</button>
     <button class="diff-btn" data-level="4" onclick="setDifficulty(4)">4 个音</button>
@@ -158,52 +166,32 @@ canvas,.btn,.diff-btn,.start-btn{touch-action:manipulation}
 // ============================
 // 配置
 // ============================
-// 可用音高（来自视唱教程切分的汇总音符库）
 const SCALE_NOTES = [
   '3G','3Gs','3A','3As','3B',
   '4C','4Cs','4D','4Ds','4E','4F','4Fs','4G','4Gs','4A','4As','4B',
   '5C','5Cs','5D','5Ds','5E','5F','5Fs','5G','5A'
 ];
-// 缺少：3C 3D 3E 3F 等（视唱中未出现或检测失败）
 
-// 出题用 question_ 前缀（视唱切分），回答用直接文件名（高潮音效）
-function getQuestionFile(label) {
-  return `assets/audio/question_${label}.wav`;
+// 唱名（固定 Do 唱法），♯ 为半音
+const SOLFEGE = ['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
+const PC_BASE = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+function pitchClass(label) {
+  const m = label.match(/^(\d)([A-G])(s?)$/);
+  return (PC_BASE[m[2]] + (m[3] ? 1 : 0)) % 12;
 }
-function getAnswerFile(label) {
-  return `assets/audio/${label}.wav`;
-}
+function solfege(label) { return SOLFEGE[pitchClass(label)]; }
 
+function getQuestionFile(label) { return `assets/audio/question_${label}.wav`; }
+function getAnswerFile(label)   { return `assets/audio/${label}.wav`; }
+
+// 从高音到低音排列（idx 仅作顺序参考）
 const NOTES_LAYOUT = [
-  {label:'5A', idx:0},
-  {label:'5G', idx:1},
-  {label:'5Fs', idx:2},
-  {label:'5F', idx:3},
-  {label:'5E', idx:4},
-  {label:'5Ds', idx:5},
-  {label:'5D', idx:6},
-  {label:'5Cs', idx:7},
-  {label:'5C', idx:8},
-  {label:'4B', idx:9},
-  {label:'4As', idx:10},
-  {label:'4A', idx:11},
-  {label:'4Gs', idx:12},
-  {label:'4G', idx:13},
-  {label:'4Fs', idx:14},
-  {label:'4F', idx:15},
-  {label:'4E', idx:16},
-  {label:'4Ds', idx:17},
-  {label:'4D', idx:18},
-  {label:'4Cs', idx:19},
-  {label:'4C', idx:20},
-  {label:'3B', idx:21},
-  {label:'3As', idx:22},
-  {label:'3A', idx:23},
-  {label:'3Gs', idx:24},
-  {label:'3G', idx:25},
+  '5A','5G','5Fs','5F','5E','5Ds','5D','5Cs','5C',
+  '4B','4As','4A','4Gs','4G','4Fs','4F','4E','4Ds','4D','4Cs','4C',
+  '3B','3As','3A','3Gs','3G'
 ];
 
-const NOTE_GAP = 0.25; // 音符之间的静音间隔（秒）；每个音按实际音频时长播完再播下一个
+const NOTE_GAP = 0.25;
 
 // ============================
 // 状态
@@ -211,24 +199,66 @@ const NOTE_GAP = 0.25; // 音符之间的静音间隔（秒）；每个音按实
 let difficulty = 3;
 let gameState = 'idle'; // idle, listening, repeating, judging
 let score = 0, combo = 0, totalRounds = 0;
-let currentSequence = []; // [{note:'4C', time:0}, ...]
-let playerSequence = []; // 玩家点击的音符
-let highlightedNotes = new Set(); // 当前亮起的音高位置
+let currentSequence = [];
+let playerSequence = [];
+let highlightedNotes = new Set();
 let audioBuffers = {};
 let audioCtx = null;
 let playTimers = [];
 let flashNote = null, flashTimer = null;
+let revealNote = null, revealTimer = null;
 
-// 点击位置闪一个绿圈，给触摸操作即时视觉反馈
-function flashTappedNote(note) {
-  flashNote = note;
-  drawStaff();
-  if (flashTimer) clearTimeout(flashTimer);
-  flashTimer = setTimeout(() => { flashNote = null; drawStaff(); }, 400);
+// ============================
+// 舞台缩放（1920x1080 等比适配）
+// ============================
+const stage = document.getElementById('stage');
+function fitStage() {
+  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  stage.style.transform = `translate(-50%,-50%) scale(${s})`;
+}
+window.addEventListener('resize', fitStage);
+window.addEventListener('orientationchange', () => setTimeout(fitStage, 300));
+fitStage();
+
+// ============================
+// 构建唱名方块
+// ============================
+const noteStack = document.getElementById('noteStack');
+NOTES_LAYOUT.forEach(label => {
+  const pc = pitchClass(label);
+  const btn = document.createElement('button');
+  btn.className = 'note-bar';
+  btn.dataset.note = label;
+  btn.style.setProperty('--hue', pc * 30); // 音级→色相：12 个半音均分色环
+  btn.innerHTML = `<span class="nb-name">${SOLFEGE[pc]}</span><span class="nb-label">${label}</span>`;
+  btn.addEventListener('click', () => onNotePick(label));
+  noteStack.appendChild(btn);
+});
+
+function renderNoteStates() {
+  document.querySelectorAll('.note-bar').forEach(b => {
+    const n = b.dataset.note;
+    b.classList.toggle('lit', highlightedNotes.has(n));
+    b.classList.toggle('tapped', flashNote === n);
+    b.classList.toggle('reveal', revealNote === n);
+  });
 }
 
-// 移动端音频解锁：浏览器自动播放策略会把 AudioContext 挂起（尤其加载耗时超过
-// 手势有效期后 resume 会静默失败）。任何触摸/点击都尝试 resume + 静音 buffer 解锁。
+function flashTappedNote(note) {
+  flashNote = note;
+  renderNoteStates();
+  if (flashTimer) clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => { flashNote = null; renderNoteStates(); }, 400);
+}
+
+function revealAnswer(note) {
+  revealNote = note;
+  renderNoteStates();
+  if (revealTimer) clearTimeout(revealTimer);
+  revealTimer = setTimeout(() => { revealNote = null; renderNoteStates(); }, 1600);
+}
+
+// 移动端音频解锁
 function ensureAudioRunning() {
   if (!audioCtx || audioCtx.state !== 'suspended') return;
   try {
@@ -243,117 +273,6 @@ function ensureAudioRunning() {
 ['touchstart', 'touchend', 'mousedown', 'keydown'].forEach(ev => {
   document.addEventListener(ev, ensureAudioRunning, { passive: true });
 });
-
-// ============================
-// Canvas
-// ============================
-const canvas = document.getElementById('staffCanvas');
-const ctx2d = canvas.getContext('2d');
-
-function resizeCanvas() {
-  // 用 canvas 自身的显示尺寸做位图尺寸：位图坐标 == CSS 坐标，点击映射才不会漂
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = Math.max(100, Math.round(rect.width));
-  canvas.height = Math.max(100, Math.round(rect.height));
-}
-window.addEventListener('resize', () => { resizeCanvas(); drawStaff(); });
-window.addEventListener('orientationchange', () => { setTimeout(() => { resizeCanvas(); drawStaff(); }, 300); });
-
-function noteToY(label) {
-  const n = NOTES_LAYOUT.find(x => x.label === label);
-  if (!n) return canvas.height / 2;
-  const padding = 60;
-  const usableH = canvas.height - padding * 2;
-  return padding + (n.idx / (NOTES_LAYOUT.length - 1)) * usableH;
-}
-
-function yToNote(y) {
-  let closest = NOTES_LAYOUT[0];
-  let minDist = Infinity;
-  for (const n of NOTES_LAYOUT) {
-    const ny = noteToY(n.label);
-    const dist = Math.abs(ny - y);
-    if (dist < minDist) { minDist = dist; closest = n; }
-  }
-  return closest.label;
-}
-
-// ============================
-// 渲染五线谱
-// ============================
-function drawStaff() {
-  const w = canvas.width;
-  const h = canvas.height;
-  
-  ctx2d.clearRect(0, 0, w, h);
-  
-  // 五条主线
-  const lineNotes = ['5E','5G','4B','4D','4F'];
-  ctx2d.strokeStyle = 'rgba(255,255,255,0.25)';
-  ctx2d.lineWidth = 1.5;
-  lineNotes.forEach(ln => {
-    const y = noteToY(ln);
-    ctx2d.beginPath();
-    ctx2d.moveTo(0, y);
-    ctx2d.lineTo(w, y);
-    ctx2d.stroke();
-  });
-  
-  // 高音谱号
-  ctx2d.fillStyle = 'rgba(233,69,96,0.6)';
-  ctx2d.font = '36px serif';
-  ctx2d.fillText('𝄞', 12, noteToY('4A') + 8);
-  
-  // 每个音高位置
-  NOTES_LAYOUT.forEach(n => {
-    const y = noteToY(n.label);
-    const isHighlighted = highlightedNotes.has(n.label);
-    
-    // 辅助线
-    ctx2d.strokeStyle = 'rgba(255,255,255,0.05)';
-    ctx2d.lineWidth = 1;
-    ctx2d.beginPath();
-    ctx2d.moveTo(50, y);
-    ctx2d.lineTo(w - 20, y);
-    ctx2d.stroke();
-    
-    // 亮起的高亮区域
-    if (isHighlighted) {
-      const grad = ctx2d.createLinearGradient(50, y, w - 20, y);
-      grad.addColorStop(0, 'rgba(255,215,0,0)');
-      grad.addColorStop(0.5, 'rgba(255,215,0,0.3)');
-      grad.addColorStop(1, 'rgba(255,215,0,0)');
-      ctx2d.fillStyle = grad;
-      ctx2d.fillRect(50, y - 12, w - 70, 24);
-      
-      // 金色圆点
-      ctx2d.fillStyle = 'rgba(255,215,0,0.8)';
-      ctx2d.beginPath();
-      ctx2d.arc(w / 2, y, 16, 0, Math.PI * 2);
-      ctx2d.fill();
-      
-      ctx2d.fillStyle = '#000';
-      ctx2d.font = 'bold 11px Segoe UI';
-      ctx2d.textAlign = 'center';
-      ctx2d.fillText(n.label, w / 2, y + 4);
-      ctx2d.textAlign = 'left';
-    }
-    
-    // 点击反馈：最近点过的位置画绿圈
-    if (flashNote === n.label) {
-      ctx2d.strokeStyle = 'rgba(82,183,136,0.95)';
-      ctx2d.lineWidth = 2.5;
-      ctx2d.beginPath();
-      ctx2d.arc(w / 2, y, 20, 0, Math.PI * 2);
-      ctx2d.stroke();
-    }
-    
-    // 音名标签（左侧）
-    ctx2d.fillStyle = isHighlighted ? 'rgba(255,215,0,0.9)' : 'rgba(136,136,136,0.5)';
-    ctx2d.font = isHighlighted ? 'bold 12px Segoe UI' : '11px Segoe UI';
-    ctx2d.fillText(n.label, 52, y + 4);
-  });
-}
 
 // ============================
 // 音频
@@ -387,7 +306,6 @@ async function loadAudio() {
     tasks.push(loadOne(getAnswerFile(label), 'answer_' + label));
     tasks.push(loadOne(getQuestionFile(label), 'question_' + label));
   }
-  // Load in batches of 6 to avoid mobile connection limits
   const BATCH = 6;
   for (let i = 0; i < tasks.length; i += BATCH) {
     await Promise.all(tasks.slice(i, i + BATCH));
@@ -399,8 +317,7 @@ async function loadAudio() {
   }
 }
 
-// type: 'question' = 出题(啊啊啊), 'answer' = 回答(高潮音效)
-let activeSources = []; // 正在播放的音源（用于打断时停声）
+let activeSources = [];
 function playSound(label, type = 'answer', delay = 0) {
   const key = type + '_' + label;
   if (!audioCtx || !audioBuffers[key]) {
@@ -425,22 +342,19 @@ function stopAllSounds() {
   activeSources = [];
 }
 
-// 单个出题音的实际时长（秒）；音频缺失时用兜底值，保证调度不塌
 function noteDuration(label, type = 'question') {
   const buf = audioBuffers[type + '_' + label];
   return (buf && buf.duration > 0) ? buf.duration : 1.5;
 }
 
-// 逐音排队：第 i 个音从「上一个音结束 + NOTE_GAP」开始，天然防重叠。
-// 换任何长度的出题素材都自动适配。返回最后一个音的结束时刻（秒）。
 function scheduleQuestionSequence(sequence) {
   let t = 0;
   sequence.forEach((note, i) => {
     const dur = noteDuration(note, 'question');
-    playSound(note, 'question', t); // Web Audio 时间轴精确排程
-    playTimers.push(setTimeout(() => { highlightedNotes.add(note); drawStaff(); }, t * 1000));
+    playSound(note, 'question', t);
+    playTimers.push(setTimeout(() => { highlightedNotes.add(note); renderNoteStates(); }, t * 1000));
     if (i < sequence.length - 1) {
-      playTimers.push(setTimeout(() => { highlightedNotes.delete(note); drawStaff(); }, (t + dur) * 1000));
+      playTimers.push(setTimeout(() => { highlightedNotes.delete(note); renderNoteStates(); }, (t + dur) * 1000));
     }
     t += dur + NOTE_GAP;
   });
@@ -451,7 +365,6 @@ function scheduleQuestionSequence(sequence) {
 // 游戏逻辑
 // ============================
 function generateSequence(count) {
-  // 从自然音中随机选 count 个，允许重复但避免完全相邻相同
   const seq = [];
   let prev = null;
   for (let i = 0; i < count; i++) {
@@ -466,31 +379,27 @@ function generateSequence(count) {
 }
 
 function playSequence(sequence) {
-  // 清除之前的定时器和声音
   playTimers.forEach(t => clearTimeout(t));
   playTimers = [];
   stopAllSounds();
   ensureAudioRunning();
-  
+
   gameState = 'listening';
   updateStateBar('🎧 听音中...', 'listen');
-  
-  // 兜底：如果声音仍被浏览器挂起，提示点一下屏幕
+
   playTimers.push(setTimeout(() => {
     if (audioCtx && audioCtx.state !== 'running') {
       updateStateBar('🔇 声音被浏览器挂起，点一下屏幕任意位置即可开启', 'wrong');
     }
   }, 500));
   highlightedNotes.clear();
-  drawStaff();
-  
-  // 按每个音频的实际时长排队，播完一个再播下一个
+  renderNoteStates();
+
   const lastEnd = scheduleQuestionSequence(sequence);
-  
-  // 播放完毕 → 进入玩家回合
+
   playTimers.push(setTimeout(() => {
     highlightedNotes.clear();
-    drawStaff();
+    renderNoteStates();
     startPlayerTurn(sequence);
   }, (lastEnd + 0.3) * 1000));
 }
@@ -498,13 +407,12 @@ function playSequence(sequence) {
 function startPlayerTurn(sequence) {
   gameState = 'repeating';
   playerSequence = [];
-  updateStateBar('👆 按顺序点击音高', 'repeat');
+  updateStateBar('👆 按顺序点击唱名方块', 'repeat');
   renderClickDots(sequence.length);
   document.getElementById('btnReplay').disabled = false;
-  
-  // 亮起所有可能的音高（浅色印记）
+
   sequence.forEach(n => highlightedNotes.add(n));
-  drawStaff();
+  renderNoteStates();
 }
 
 function renderClickDots(total) {
@@ -523,38 +431,32 @@ function updateClickDot(index, note, correct) {
   if (index < dots.length) {
     const dot = dots[index];
     dot.className = 'click-dot ' + (correct ? 'filled' : 'wrong');
-    dot.textContent = note;
+    dot.textContent = solfege(note);
   }
 }
 
-function onStaffClick(y) {
+function onNotePick(note) {
   if (gameState !== 'repeating') return;
   ensureAudioRunning();
-  
-  const note = yToNote(y);
+
   const index = playerSequence.length;
   const expected = currentSequence[index];
-  
+
   playerSequence.push(note);
-  
-  // 触摸反馈：绿圈 + 短震动
+
   flashTappedNote(note);
   if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} }
-  
-  // 播放对应音效
+
   playSound(note);
-  
+
   if (note === expected) {
-    // 正确
     updateClickDot(index, note, true);
-    
     if (playerSequence.length === currentSequence.length) {
-      // 全部正确！
       onRoundComplete(true);
     }
   } else {
-    // 错误
     updateClickDot(index, note, false);
+    revealAnswer(expected);
     onRoundComplete(false);
   }
 }
@@ -562,7 +464,7 @@ function onStaffClick(y) {
 function onRoundComplete(success) {
   gameState = 'judging';
   document.getElementById('btnReplay').disabled = true;
-  
+
   if (success) {
     score += 100 * (1 + combo * 0.1);
     combo++;
@@ -574,18 +476,16 @@ function onRoundComplete(success) {
     totalRounds++;
     showJudgment('错误!', 'wrong');
     updateStateBar('❌ 顺序错误', 'wrong');
-    // 显示正确答案
-    const correctSeq = currentSequence.join(' → ');
+    const correctSeq = currentSequence.map(n => solfege(n)).join(' → ');
     setTimeout(() => {
       updateStateBar(`正确: ${correctSeq}`, 'wrong');
     }, 800);
   }
-  
+
   updateHUD();
-  
-  // 显示下一轮按钮
+
   setTimeout(() => {
-    document.getElementById('btnNext').style.display = 'block';
+    document.getElementById('btnNext').style.display = 'inline-block';
   }, 1000);
 }
 
@@ -595,19 +495,18 @@ function replaySequence() {
   playerSequence = [];
   renderClickDots(currentSequence.length);
   highlightedNotes.clear();
-  drawStaff();
-  
-  // 重新播放（先停掉旧声音和定时器）
+  renderNoteStates();
+
   playTimers.forEach(t => clearTimeout(t));
   playTimers = [];
   stopAllSounds();
   gameState = 'listening';
   updateStateBar('🎧 重新听音...', 'listen');
-  
+
   const lastEnd = scheduleQuestionSequence(currentSequence);
   playTimers.push(setTimeout(() => {
     currentSequence.forEach(n => highlightedNotes.add(n));
-    drawStaff();
+    renderNoteStates();
     gameState = 'repeating';
     updateStateBar('👆 按顺序点击', 'repeat');
     document.getElementById('btnReplay').disabled = false;
@@ -617,7 +516,7 @@ function replaySequence() {
 function nextRound() {
   document.getElementById('btnNext').style.display = 'none';
   highlightedNotes.clear();
-  drawStaff();
+  renderNoteStates();
   newRound();
 }
 
@@ -626,7 +525,7 @@ function newRound() {
   document.getElementById('roundInfo').textContent = `第 ${totalRounds + 1} 轮 · 难度：${difficulty}音`;
   playerSequence = [];
   renderClickDots(difficulty);
-  
+
   setTimeout(() => {
     playSequence(currentSequence);
   }, 500);
@@ -676,7 +575,6 @@ async function startGame() {
     await audioCtx.resume();
   }
 
-  // 音频全挂了的明确报错（网络/代理问题），别让玩家无声地猜
   const loadedCount = Object.keys(audioBuffers).length;
   if (!audioCtx || loadedCount === 0) {
     document.getElementById('loader').style.display = 'none';
@@ -687,23 +585,12 @@ async function startGame() {
 
   document.getElementById('loader').style.display = 'none';
   score = 0; combo = 0; totalRounds = 0;
-  resizeCanvas();
-  drawStaff();
+  renderNoteStates();
   updateHUD();
   newRound();
 }
 
-// 鼠标事件
-canvas.addEventListener('click', e => {
-  ensureAudioRunning();
-  const rect = canvas.getBoundingClientRect();
-  const y = e.clientY - rect.top;
-  onStaffClick(y);
-});
-
-// 初始化
-resizeCanvas();
-drawStaff();
+renderNoteStates();
 </script>
 </body>
 </html>

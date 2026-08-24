@@ -162,7 +162,7 @@ button{touch-action:manipulation;cursor:pointer}
 <!-- 开始遮罩 -->
 <div class="start-overlay" id="startOverlay">
   <h1>🎵 听音辨序 V10b</h1>
-  <p>先听一段音符序列，按顺序点击左侧唱名方块作答（点击即发声）<br>可以撤销/清空，也可以重听题目或回放自己的答案<br>按够数量后点「交卷」判定！</p>
+  <p>先听一段音符序列，按顺序点击左侧唱名方块作答（点击即发声）<br>Do Re Mi Fa Sol La Si 七个音，可以撤销/清空，可重听题目或回放答案<br>按够数量后点「交卷」判定！</p>
   <div class="rotate-hint">📱 手机建议横屏游玩</div>
   <div class="difficulty">
     <button class="diff-btn active" data-level="3" onclick="setDifficulty(3)">3 个音</button>
@@ -176,11 +176,8 @@ button{touch-action:manipulation;cursor:pointer}
 // ============================
 // 配置
 // ============================
-const SCALE_NOTES = [
-  '3G','3Gs','3A','3As','3B',
-  '4C','4Cs','4D','4Ds','4E','4F','4Fs','4G','4Gs','4A','4As','4B',
-  '5C','5Cs','5D','5Ds','5E','5F','5Fs','5G','5A'
-];
+// 只用一个八度的自然音（4C~4B，中音区）：Do Re Mi Fa Sol La Si
+const SCALE_NOTES = ['4C','4D','4E','4F','4G','4A','4B'];
 
 // 唱名（固定 Do 唱法），♯ 为半音
 const SOLFEGE = ['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
@@ -194,12 +191,8 @@ function solfege(label) { return SOLFEGE[pitchClass(label)]; }
 function getQuestionFile(label) { return `assets/audio/question_${label}.wav`; }
 function getAnswerFile(label)   { return `assets/audio/${label}.wav`; }
 
-// 从高音到低音排列（idx 仅作顺序参考）
-const NOTES_LAYOUT = [
-  '5A','5G','5Fs','5F','5E','5Ds','5D','5Cs','5C',
-  '4B','4As','4A','4Gs','4G','4Fs','4F','4E','4Ds','4D','4Cs','4C',
-  '3B','3As','3A','3Gs','3G'
-];
+// 从高音到低音排列（Si 顶 → Do 底）
+const NOTES_LAYOUT = ['4B','4A','4G','4F','4E','4D','4C'];
 
 const NOTE_GAP = 0.25;
 

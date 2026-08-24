@@ -182,6 +182,13 @@ const SCALE_NOTES = ['4C','4D','4E','4F','4G','4A','4B'];
 // 唱名（固定 Do 唱法），♯ 为半音
 const SOLFEGE = ['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
 const PC_BASE = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+// 斯克里亚宾音高→色彩（Prometheus 色彩键盘，1911）：
+// C=红 D=黄 E=天蓝 F=深红 G=橙 A=绿 B=蓝（五度圈排列正好是光谱序）
+const NOTE_HUES = {C:0, D:55, E:203, F:352, G:32, A:128, B:225};
+function noteHue(label) {
+  const m = label.match(/^(\d)([A-G])(s?)$/);
+  return NOTE_HUES[m ? m[2] : 'C'] ?? 0;
+}
 function pitchClass(label) {
   const m = label.match(/^(\d)([A-G])(s?)$/);
   return (PC_BASE[m[2]] + (m[3] ? 1 : 0)) % 12;
@@ -232,7 +239,7 @@ NOTES_LAYOUT.forEach(label => {
   const btn = document.createElement('button');
   btn.className = 'note-bar';
   btn.dataset.note = label;
-  btn.style.setProperty('--hue', pc * 30); // 音级→色相：12 个半音均分色环
+  btn.style.setProperty('--hue', noteHue(label)); // 斯克里亚宾色彩体系
   btn.innerHTML = `<span class="nb-name">${SOLFEGE[pc]}</span><span class="nb-label">${label}</span>`;
   btn.addEventListener('click', () => onNotePick(label));
   noteStack.appendChild(btn);

@@ -87,6 +87,10 @@ button{touch-action:manipulation;cursor:pointer}
 .btn-next{background:var(--accent2);color:#fff}
 .btn-next:hover{background:#3a8c68}
 .btn:disabled{opacity:0.35;cursor:not-allowed}
+.btn-small{padding:14px 26px;background:#1b2440;color:var(--text);border:1px solid var(--border);font-size:18px}
+.btn-small:hover:not(:disabled){background:#263358}
+.btn-submit.ready{animation:submitPulse 1s ease infinite}
+@keyframes submitPulse{0%,100%{box-shadow:0 0 0 0 rgba(82,183,136,0.45)}50%{box-shadow:0 0 26px 6px rgba(82,183,136,0.45)}}
 
 /* 判定文字（舞台中央） */
 .judgment-text{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:96px;font-weight:bold;z-index:6;pointer-events:none;opacity:0;white-space:nowrap}
@@ -140,7 +144,13 @@ button{touch-action:manipulation;cursor:pointer}
       <div class="state-bar listen" id="stateBar">🎧 准备听音</div>
       <div class="click-sequence" id="clickSeq"></div>
       <div class="btn-row">
-        <button class="btn btn-replay" id="btnReplay" onclick="replaySequence()" disabled>🔊 再听一遍</button>
+        <button class="btn btn-replay" id="btnReplay" onclick="replayQuestion()" disabled>🔊 重听题目</button>
+        <button class="btn btn-replay" id="btnMyAnswer" onclick="replayMyAnswer()" disabled>🎵 播我的答案</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-small" id="btnUndo" onclick="undoPick()" disabled>↩ 撤销</button>
+        <button class="btn btn-small" id="btnClear" onclick="clearPicks()" disabled>🗑 清空</button>
+        <button class="btn btn-next btn-submit" id="btnSubmit" onclick="submitAnswer()" disabled>✅ 提交 0/3</button>
         <button class="btn btn-next" id="btnNext" onclick="nextRound()" style="display:none">➡️ 下一轮</button>
       </div>
     </div>
@@ -152,7 +162,7 @@ button{touch-action:manipulation;cursor:pointer}
 <!-- 开始遮罩 -->
 <div class="start-overlay" id="startOverlay">
   <h1>🎵 听音辨序 V10b</h1>
-  <p>先听一段音符序列，然后按顺序点击左侧对应的唱名方块<br>每个音都有专属颜色，播放时方块会亮起<br>但顺序要靠耳朵记住！</p>
+  <p>先听一段音符序列，按顺序点击左侧唱名方块作答（点击即发声）<br>可以撤销/清空，也可以重听题目或回放自己的答案<br>按够数量后点「交卷」判定！</p>
   <div class="rotate-hint">📱 手机建议横屏游玩</div>
   <div class="difficulty">
     <button class="diff-btn active" data-level="3" onclick="setDifficulty(3)">3 个音</button>
@@ -206,7 +216,7 @@ let audioBuffers = {};
 let audioCtx = null;
 let playTimers = [];
 let flashNote = null, flashTimer = null;
-let revealNote = null, revealTimer = null;
+let revealNotes = new Set();
 
 // ============================
 // 舞台缩放（1920x1080 等比适配）
@@ -240,7 +250,7 @@ function renderNoteStates() {
     const n = b.dataset.note;
     b.classList.toggle('lit', highlightedNotes.has(n));
     b.classList.toggle('tapped', flashNote === n);
-    b.classList.toggle('reveal', revealNote === n);
+    b.classList.toggle('reveal', revealNotes.has(n));
   });
 }
 
@@ -251,11 +261,10 @@ function flashTappedNote(note) {
   flashTimer = setTimeout(() => { flashNote = null; renderNoteStates(); }, 400);
 }
 
-function revealAnswer(note) {
-  revealNote = note;
+function revealAnswer(note, holdMs = 2200) {
+  revealNotes.add(note);
   renderNoteStates();
-  if (revealTimer) clearTimeout(revealTimer);
-  revealTimer = setTimeout(() => { revealNote = null; renderNoteStates(); }, 1600);
+  setTimeout(() => { revealNotes.delete(note); renderNoteStates(); }, holdMs);
 }
 
 // 移动端音频解锁
@@ -386,6 +395,7 @@ function playSequence(sequence) {
 
   gameState = 'listening';
   updateStateBar('🎧 听音中...', 'listen');
+  updateInputUI();
 
   playTimers.push(setTimeout(() => {
     if (audioCtx && audioCtx.state !== 'running') {
@@ -413,109 +423,150 @@ function startPlayerTurn(sequence) {
 
   sequence.forEach(n => highlightedNotes.add(n));
   renderNoteStates();
+  updateInputUI();
 }
 
-function renderClickDots(total) {
+function renderClickDots(total, results) {
   const el = document.getElementById('clickSeq');
   el.innerHTML = '';
   for (let i = 0; i < total; i++) {
     const dot = document.createElement('div');
-    dot.className = 'click-dot pending';
-    dot.textContent = i + 1;
+    const picked = playerSequence[i];
+    if (results) {
+      dot.className = 'click-dot ' + (results[i] ? 'filled' : 'wrong');
+      dot.textContent = picked ? solfege(picked) : (i + 1);
+    } else if (picked) {
+      dot.className = 'click-dot filled';
+      dot.textContent = solfege(picked);
+    } else {
+      dot.className = 'click-dot pending';
+      dot.textContent = i + 1;
+    }
     el.appendChild(dot);
   }
 }
 
-function updateClickDot(index, note, correct) {
-  const dots = document.getElementById('clickSeq').children;
-  if (index < dots.length) {
-    const dot = dots[index];
-    dot.className = 'click-dot ' + (correct ? 'filled' : 'wrong');
-    dot.textContent = solfege(note);
-  }
+function updateInputUI() {
+  const total = currentSequence.length || difficulty;
+  const n = playerSequence.length;
+  const full = total > 0 && n === total;
+  const canInput = gameState === 'repeating';
+  const sub = document.getElementById('btnSubmit');
+  sub.textContent = full ? '✅ 交卷' : `✅ 提交 ${n}/${total}`;
+  sub.disabled = !full || !canInput;
+  sub.classList.toggle('ready', full && canInput);
+  document.getElementById('btnUndo').disabled = n === 0 || !canInput;
+  document.getElementById('btnClear').disabled = n === 0 || !canInput;
+  document.getElementById('btnMyAnswer').disabled = n === 0 || !canInput;
+  document.getElementById('btnReplay').disabled = !canInput;
 }
 
 function onNotePick(note) {
   if (gameState !== 'repeating') return;
+  if (playerSequence.length >= currentSequence.length) return;
   ensureAudioRunning();
-
-  const index = playerSequence.length;
-  const expected = currentSequence[index];
-
   playerSequence.push(note);
-
   flashTappedNote(note);
   if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} }
-
   playSound(note);
+  renderClickDots(currentSequence.length);
+  updateInputUI();
+}
 
-  if (note === expected) {
-    updateClickDot(index, note, true);
-    if (playerSequence.length === currentSequence.length) {
-      onRoundComplete(true);
-    }
-  } else {
-    updateClickDot(index, note, false);
-    revealAnswer(expected);
-    onRoundComplete(false);
+function undoPick() {
+  if (gameState !== 'repeating' || playerSequence.length === 0) return;
+  playerSequence.pop();
+  renderClickDots(currentSequence.length);
+  updateInputUI();
+}
+
+function clearPicks() {
+  if (gameState !== 'repeating' || playerSequence.length === 0) return;
+  playerSequence = [];
+  renderClickDots(currentSequence.length);
+  updateInputUI();
+}
+
+function replayMyAnswer() {
+  if (gameState !== 'repeating' || playerSequence.length === 0) return;
+  ensureAudioRunning();
+  let t = 0;
+  playerSequence.forEach(note => {
+    playSound(note, 'answer', t);
+    t += noteDuration(note, 'answer') + NOTE_GAP;
+  });
+}
+
+function submitAnswer() {
+  if (gameState !== 'repeating' || playerSequence.length !== currentSequence.length) return;
+  const total = currentSequence.length;
+  const results = [];
+  let allCorrect = true;
+  for (let i = 0; i < total; i++) {
+    const ok = playerSequence[i] === currentSequence[i];
+    results.push(ok);
+    if (!ok) allCorrect = false;
   }
+  renderClickDots(total, results);
+  onRoundComplete(allCorrect);
 }
 
 function onRoundComplete(success) {
   gameState = 'judging';
-  document.getElementById('btnReplay').disabled = true;
+  updateInputUI();
 
   if (success) {
     score += 100 * (1 + combo * 0.1);
     combo++;
     totalRounds++;
     showJudgment('正确!', 'correct');
-    updateStateBar('✅ 正确！', 'correct');
+    updateStateBar('✅ 全对！', 'correct');
   } else {
     combo = 0;
     totalRounds++;
     showJudgment('错误!', 'wrong');
-    updateStateBar('❌ 顺序错误', 'wrong');
+    updateStateBar('❌ 有音不对', 'wrong');
+    // 逐个闪出正确答案的方块
+    currentSequence.forEach((n, i) => setTimeout(() => revealAnswer(n), 400 + i * 220));
     const correctSeq = currentSequence.map(n => solfege(n)).join(' → ');
     setTimeout(() => {
-      updateStateBar(`正确: ${correctSeq}`, 'wrong');
-    }, 800);
+      updateStateBar(`正确答案: ${correctSeq}`, 'wrong');
+    }, 1800);
   }
 
   updateHUD();
 
   setTimeout(() => {
     document.getElementById('btnNext').style.display = 'inline-block';
-  }, 1000);
+  }, 1200);
 }
 
-function replaySequence() {
+function replayQuestion() {
   if (gameState !== 'repeating') return;
-  document.getElementById('btnReplay').disabled = true;
-  playerSequence = [];
-  renderClickDots(currentSequence.length);
-  highlightedNotes.clear();
-  renderNoteStates();
-
   playTimers.forEach(t => clearTimeout(t));
   playTimers = [];
   stopAllSounds();
+  ensureAudioRunning();
   gameState = 'listening';
-  updateStateBar('🎧 重新听音...', 'listen');
+  updateStateBar('🎧 重听题目...', 'listen');
+  updateInputUI();
+  highlightedNotes.clear();
+  renderNoteStates();
 
   const lastEnd = scheduleQuestionSequence(currentSequence);
   playTimers.push(setTimeout(() => {
+    gameState = 'repeating';
     currentSequence.forEach(n => highlightedNotes.add(n));
     renderNoteStates();
-    gameState = 'repeating';
-    updateStateBar('👆 按顺序点击', 'repeat');
-    document.getElementById('btnReplay').disabled = false;
+    updateStateBar('👆 按顺序点击唱名方块，按完点交卷', 'repeat');
+    updateInputUI();
   }, (lastEnd + 0.3) * 1000));
 }
 
 function nextRound() {
   document.getElementById('btnNext').style.display = 'none';
   highlightedNotes.clear();
+  revealNotes.clear();
   renderNoteStates();
   newRound();
 }
@@ -525,6 +576,7 @@ function newRound() {
   document.getElementById('roundInfo').textContent = `第 ${totalRounds + 1} 轮 · 难度：${difficulty}音`;
   playerSequence = [];
   renderClickDots(difficulty);
+  updateInputUI();
 
   setTimeout(() => {
     playSequence(currentSequence);

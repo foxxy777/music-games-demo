@@ -16,57 +16,32 @@ html,body{height:100%}
 body{font-family:'Segoe UI',sans-serif;background:radial-gradient(1200px 800px at 70% 20%,#141a2a 0%,#0b0e16 60%,#070910 100%);color:var(--text);overflow:hidden;user-select:none;-webkit-user-select:none}
 button{touch-action:manipulation;cursor:pointer}
 
-/* ===== 1920x1080 舞台（等比缩放居中） ===== */
-#stage{position:fixed;left:50%;top:50%;width:1920px;height:1080px;transform:translate(-50%,-50%) scale(1);transform-origin:center;display:flex;background:#0d1120;border-radius:8px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,0.04),0 30px 80px rgba(0,0,0,0.6)}
+/* ===== 1920x1080 舞台（等比缩放居中）：上图片区 + 底部键排 ===== */
+#stage{position:fixed;left:50%;top:50%;width:1920px;height:1080px;transform:translate(-50%,-50%) scale(1);transform-origin:center;display:flex;flex-direction:column;background:#0d1120;border-radius:8px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,0.04),0 30px 80px rgba(0,0,0,0.6)}
 
-/* ===== 左 1/3：唱名方块键盘 ===== */
-.left-panel{width:640px;height:100%;display:flex;flex-direction:column;padding:14px 14px 16px;border-right:1px solid var(--border)}
-.panel-header{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px}
-.panel-header h3{color:var(--accent);font-size:24px;letter-spacing:2px}
-.round-info{color:var(--dim);font-size:18px}
-
-.note-stack{flex:1;display:flex;flex-direction:column;gap:3px;min-height:0}
-
-.note-bar{
-  flex:1;display:flex;align-items:center;justify-content:space-between;
-  padding:0 18px 0 14px;border-radius:8px;border:1px solid transparent;
-  background:hsla(var(--hue),70%,55%,0.10);
-  border-left:6px solid hsl(var(--hue),70%,55%);
-  transition:background 0.15s,box-shadow 0.15s,transform 0.1s;
-  position:relative;
-}
-.nb-name{font-size:25px;font-weight:800;letter-spacing:1px;color:hsl(var(--hue),75%,68%);line-height:1}
-.nb-label{font-family:Consolas,monospace;font-size:18px;font-weight:700;color:rgba(255,255,255,0.35);line-height:1}
-
-/* 播放中亮起 */
-.note-bar.lit{
-  background:hsla(var(--hue),85%,60%,0.55);
-  box-shadow:0 0 24px hsla(var(--hue),85%,60%,0.45),inset 0 0 12px rgba(255,255,255,0.18);
-  transform:scale(1.03);
-}
-.note-bar.lit .nb-name{color:#fff;text-shadow:0 0 14px rgba(255,255,255,0.8)}
-.note-bar.lit .nb-label{color:rgba(255,255,255,0.85)}
-
-/* 玩家点过的反馈 */
-.note-bar.tapped{outline:3px solid var(--accent2);outline-offset:1px;animation:tappop 0.35s ease}
-@keyframes tappop{0%{transform:scale(0.96)}60%{transform:scale(1.05)}100%{transform:scale(1)}}
-
-/* 答错时正确答案提示 */
-.note-bar.reveal{outline:3px solid #4fc3f7;outline-offset:1px;animation:revealPulse 0.5s ease infinite alternate}
-@keyframes revealPulse{from{background:hsla(203,90%,60%,0.25)}to{background:hsla(203,90%,60%,0.55)}}
-
-/* ===== 右 2/3：预留图片区 ===== */
-.right-panel{width:1280px;height:100%;position:relative}
-/* 占位提示：放图时删掉这一块即可 */
-.reserved{position:absolute;inset:30px;border:2px dashed rgba(255,255,255,0.10);border-radius:16px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.14);font-size:30px;letter-spacing:6px;pointer-events:none}
-
-/* HUD 右上角 */
-.hud-chips{position:absolute;top:22px;right:26px;display:flex;gap:12px}
+/* ===== 顶部栏：标题 + 轮次 | HUD ===== */
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:18px 30px 6px}
+.top-left{display:flex;align-items:baseline;gap:26px}
+.top-bar h3{color:var(--accent);font-size:25px;letter-spacing:2px}
+.round-info{color:var(--dim);font-size:19px}
+.hud-chips{display:flex;gap:12px}
 .chip{background:rgba(0,0,0,0.45);border:1px solid var(--border);border-radius:999px;padding:8px 22px;font-size:20px}
 .chip b{color:var(--gold);font-size:22px;margin-left:8px}
 
-/* 控制坞 右下角 */
-.control-dock{position:absolute;left:30px;right:30px;bottom:24px;display:flex;flex-direction:column;gap:12px;align-items:center}
+/* ===== 主区：预留图片区 ===== */
+.main-area{flex:1;position:relative;min-height:0}
+/* 占位提示：放图时删掉这一块即可 */
+.reserved{position:absolute;inset:30px;border:2px dashed rgba(255,255,255,0.10);border-radius:16px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.14);font-size:30px;letter-spacing:6px;pointer-events:none}
+
+/* 判定文字（主区中央） */
+.judgment-text{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:96px;font-weight:bold;z-index:6;pointer-events:none;opacity:0;white-space:nowrap}
+.judgment-text.show{animation:judgePop 0.6s ease-out}
+.judgment-text.correct{color:var(--accent2);text-shadow:0 0 40px var(--accent2)}
+.judgment-text.wrong{color:var(--accent);text-shadow:0 0 40px var(--accent)}
+@keyframes judgePop{0%{opacity:0;transform:translate(-50%,-50%) scale(0.3)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.25)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+
+/* ===== 底部坞：状态 + 答题进度 + 按钮 + 键排 ===== */
+.bottom-dock{padding:10px 30px 24px;display:flex;flex-direction:column;gap:12px;align-items:center}
 .state-bar{width:100%;text-align:center;padding:12px;border-radius:10px;font-size:20px;font-weight:bold;background:rgba(0,0,0,0.5);color:var(--dim)}
 .state-bar.listen{background:rgba(233,69,96,0.18);color:var(--accent);border:1px solid var(--accent)}
 .state-bar.repeat{background:rgba(82,183,136,0.18);color:var(--accent2);border:1px solid var(--accent2)}
@@ -79,25 +54,48 @@ button{touch-action:manipulation;cursor:pointer}
 .click-dot.filled{background:var(--gold);color:#000}
 .click-dot.wrong{background:var(--accent);color:#fff}
 
-.btn-row{display:flex;gap:14px}
-.btn{padding:14px 46px;border:none;border-radius:12px;font-size:20px;font-weight:bold;transition:all 0.2s}
+.btn-row{display:flex;gap:14px;justify-content:center;flex-wrap:nowrap}
+.btn{padding:13px 30px;border:none;border-radius:12px;font-size:19px;font-weight:bold;transition:all 0.2s}
 .btn-play{background:var(--accent);color:#fff}
 .btn-replay{background:#223052;color:var(--text);border:1px solid var(--border)}
 .btn-replay:hover{background:#2c3d68}
 .btn-next{background:var(--accent2);color:#fff}
 .btn-next:hover{background:#3a8c68}
 .btn:disabled{opacity:0.35;cursor:not-allowed}
-.btn-small{padding:14px 26px;background:#1b2440;color:var(--text);border:1px solid var(--border);font-size:18px}
+.btn-small{background:#1b2440;color:var(--text);border:1px solid var(--border);font-size:19px}
 .btn-small:hover:not(:disabled){background:#263358}
 .btn-submit.ready{animation:submitPulse 1s ease infinite}
 @keyframes submitPulse{0%,100%{box-shadow:0 0 0 0 rgba(82,183,136,0.45)}50%{box-shadow:0 0 26px 6px rgba(82,183,136,0.45)}}
 
-/* 判定文字（舞台中央） */
-.judgment-text{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:96px;font-weight:bold;z-index:6;pointer-events:none;opacity:0;white-space:nowrap}
-.judgment-text.show{animation:judgePop 0.6s ease-out}
-.judgment-text.correct{color:var(--accent2);text-shadow:0 0 40px var(--accent2)}
-.judgment-text.wrong{color:var(--accent);text-shadow:0 0 40px var(--accent)}
-@keyframes judgePop{0%{opacity:0;transform:translate(-50%,-50%) scale(0.3)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.25)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+/* ===== 底部键排：7 个自然音横排占满整行 ===== */
+.note-keys{display:flex;gap:10px;width:100%;height:176px}
+.note-bar{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  border-radius:12px;border:1px solid transparent;
+  background:hsla(var(--hue),70%,55%,0.10);
+  border-top:6px solid hsl(var(--hue),70%,55%);
+  transition:background 0.15s,box-shadow 0.15s,transform 0.1s;
+  position:relative;
+}
+.nb-name{font-size:42px;font-weight:800;letter-spacing:1px;color:hsl(var(--hue),75%,68%);line-height:1}
+.nb-label{font-family:Consolas,monospace;font-size:20px;font-weight:700;color:rgba(255,255,255,0.35);line-height:1}
+
+/* 播放中亮起 */
+.note-bar.lit{
+  background:hsla(var(--hue),85%,60%,0.55);
+  box-shadow:0 0 24px hsla(var(--hue),85%,60%,0.45),inset 0 0 12px rgba(255,255,255,0.18);
+  transform:translateY(-6px);
+}
+.note-bar.lit .nb-name{color:#fff;text-shadow:0 0 14px rgba(255,255,255,0.8)}
+.note-bar.lit .nb-label{color:rgba(255,255,255,0.85)}
+
+/* 玩家点过的反馈 */
+.note-bar.tapped{outline:3px solid var(--accent2);outline-offset:1px;animation:tappop 0.35s ease}
+@keyframes tappop{0%{transform:scale(0.96)}60%{transform:scale(1.05)}100%{transform:scale(1)}}
+
+/* 答错时正确答案提示 */
+.note-bar.reveal{outline:3px solid #4fc3f7;outline-offset:1px;animation:revealPulse 0.5s ease infinite alternate}
+@keyframes revealPulse{from{background:hsla(203,90%,60%,0.25)}to{background:hsla(203,90%,60%,0.55)}}
 
 /* 开始遮罩 */
 .start-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(4,6,12,0.94);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
@@ -121,48 +119,45 @@ button{touch-action:manipulation;cursor:pointer}
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
 <div id="stage">
-  <!-- 左 1/3：唱名方块键盘 -->
-  <div class="left-panel">
-    <div class="panel-header">
+  <!-- 顶部栏 -->
+  <div class="top-bar">
+    <div class="top-left">
       <h3>📜 听音辨序</h3>
       <div class="round-info" id="roundInfo">第 1 轮 · 难度：3音</div>
     </div>
-    <div class="note-stack" id="noteStack"></div>
-  </div>
-
-  <!-- 右 2/3：预留图片区（放图时删掉 .reserved 占位块即可） -->
-  <div class="right-panel">
-    <div class="reserved">🖼️ 图片预留区</div>
-
     <div class="hud-chips">
       <div class="chip">得分<b id="score">0</b></div>
       <div class="chip">连击<b id="combo">0</b></div>
       <div class="chip">轮次<b id="totalRounds">0</b></div>
     </div>
-
-    <div class="control-dock">
-      <div class="state-bar listen" id="stateBar">🎧 准备听音</div>
-      <div class="click-sequence" id="clickSeq"></div>
-      <div class="btn-row">
-        <button class="btn btn-replay" id="btnReplay" onclick="replayQuestion()" disabled>🔊 重听题目</button>
-        <button class="btn btn-replay" id="btnMyAnswer" onclick="replayMyAnswer()" disabled>🎵 播我的答案</button>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-small" id="btnUndo" onclick="undoPick()" disabled>↩ 撤销</button>
-        <button class="btn btn-small" id="btnClear" onclick="clearPicks()" disabled>🗑 清空</button>
-        <button class="btn btn-next btn-submit" id="btnSubmit" onclick="submitAnswer()" disabled>✅ 提交 0/3</button>
-        <button class="btn btn-next" id="btnNext" onclick="nextRound()" style="display:none">➡️ 下一轮</button>
-      </div>
-    </div>
   </div>
 
-  <div class="judgment-text" id="judgeText"></div>
+  <!-- 主区：预留图片区（放图时删掉 .reserved 占位块即可） -->
+  <div class="main-area">
+    <div class="reserved">🖼️ 图片预留区</div>
+    <div class="judgment-text" id="judgeText"></div>
+  </div>
+
+  <!-- 底部坞 -->
+  <div class="bottom-dock">
+    <div class="state-bar listen" id="stateBar">🎧 准备听音</div>
+    <div class="click-sequence" id="clickSeq"></div>
+    <div class="btn-row">
+      <button class="btn btn-replay" id="btnReplay" onclick="replayQuestion()" disabled>🔊 重听题目</button>
+      <button class="btn btn-replay" id="btnMyAnswer" onclick="replayMyAnswer()" disabled>🎵 播我的答案</button>
+      <button class="btn btn-small" id="btnUndo" onclick="undoPick()" disabled>↩ 撤销</button>
+      <button class="btn btn-small" id="btnClear" onclick="clearPicks()" disabled>🗑 清空</button>
+      <button class="btn btn-next btn-submit" id="btnSubmit" onclick="submitAnswer()" disabled>✅ 提交 0/3</button>
+      <button class="btn btn-next" id="btnNext" onclick="nextRound()" style="display:none">➡️ 下一轮</button>
+    </div>
+    <div class="note-keys" id="noteStack"></div>
+  </div>
 </div>
 
 <!-- 开始遮罩 -->
 <div class="start-overlay" id="startOverlay">
   <h1>🎵 听音辨序 V10b</h1>
-  <p>先听一段音符序列，按顺序点击左侧唱名方块作答（点击即发声）<br>Do Re Mi Fa Sol La Si 七个音，可以撤销/清空，可重听题目或回放答案<br>按够数量后点「交卷」判定！</p>
+  <p>先听一段音符序列，按顺序点击下方琴键作答（点击即发声）<br>Do Re Mi Fa Sol La Si 七个音，可以撤销/清空，可重听题目或回放答案<br>按够数量后点「交卷」判定！</p>
   <div class="rotate-hint">📱 手机建议横屏游玩</div>
   <div class="difficulty">
     <button class="diff-btn active" data-level="3" onclick="setDifficulty(3)">3 个音</button>
@@ -198,8 +193,8 @@ function solfege(label) { return SOLFEGE[pitchClass(label)]; }
 function getQuestionFile(label) { return `assets/audio/question_${label}.wav`; }
 function getAnswerFile(label)   { return `assets/audio/${label}.wav`; }
 
-// 从高音到低音排列（Si 顶 → Do 底）
-const NOTES_LAYOUT = ['4B','4A','4G','4F','4E','4D','4C'];
+// 底部键排：从左到右 Do → Si（升序）
+const NOTES_LAYOUT = ['4C','4D','4E','4F','4G','4A','4B'];
 
 const NOTE_GAP = 0.25;
 
@@ -231,7 +226,7 @@ window.addEventListener('orientationchange', () => setTimeout(fitStage, 300));
 fitStage();
 
 // ============================
-// 构建唱名方块
+// 构建底部琴键
 // ============================
 const noteStack = document.getElementById('noteStack');
 NOTES_LAYOUT.forEach(label => {
@@ -417,7 +412,7 @@ function playSequence(sequence) {
 function startPlayerTurn(sequence) {
   gameState = 'repeating';
   playerSequence = [];
-  updateStateBar('👆 按顺序点击唱名方块', 'repeat');
+  updateStateBar('👆 按顺序点击下方琴键', 'repeat');
   renderClickDots(sequence.length);
   document.getElementById('btnReplay').disabled = false;
 
@@ -526,7 +521,7 @@ function onRoundComplete(success) {
     totalRounds++;
     showJudgment('错误!', 'wrong');
     updateStateBar('❌ 有音不对', 'wrong');
-    // 逐个闪出正确答案的方块
+    // 逐个闪出正确答案的琴键
     currentSequence.forEach((n, i) => setTimeout(() => revealAnswer(n), 400 + i * 220));
     const correctSeq = currentSequence.map(n => solfege(n)).join(' → ');
     setTimeout(() => {
@@ -558,7 +553,7 @@ function replayQuestion() {
     gameState = 'repeating';
     currentSequence.forEach(n => highlightedNotes.add(n));
     renderNoteStates();
-    updateStateBar('👆 按顺序点击唱名方块，按完点交卷', 'repeat');
+    updateStateBar('👆 按顺序点击下方琴键，按完点交卷', 'repeat');
     updateInputUI();
   }, (lastEnd + 0.3) * 1000));
 }

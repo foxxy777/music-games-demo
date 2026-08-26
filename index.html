@@ -63,6 +63,7 @@ button{touch-action:manipulation;cursor:pointer}
 .btn-next:hover{background:#3a8c68}
 .btn:disabled{opacity:0.35;cursor:not-allowed}
 .btn-small{background:#1b2440;color:var(--text);border:1px solid var(--border);font-size:19px}
+#btnMyAnswer{min-width:186px}
 .btn-small:hover:not(:disabled){background:#263358}
 .btn-submit.ready{animation:submitPulse 1s ease infinite}
 @keyframes submitPulse{0%,100%{box-shadow:0 0 0 0 rgba(82,183,136,0.45)}50%{box-shadow:0 0 26px 6px rgba(82,183,136,0.45)}}
@@ -212,6 +213,8 @@ let audioCtx = null;
 let playTimers = [];
 let flashNote = null, flashTimer = null;
 let revealNotes = new Set();
+let answerPlaying = false; // 「播我的答案」回放中标记（防叠加）
+let answerReplayTimer = null; // 回放总时长计时器（播完自动复位）
 
 // ============================
 // 舞台缩放（1920x1080 等比适配）
@@ -339,6 +342,7 @@ function playSound(label, type = 'answer', delay = 0) {
     const i = activeSources.indexOf(src);
     if (i >= 0) activeSources.splice(i, 1);
   };
+  return src;
 }
 
 function stopAllSounds() {
@@ -383,6 +387,7 @@ function generateSequence(count) {
 }
 
 function playSequence(sequence) {
+  stopAnswerReplay();
   playTimers.forEach(t => clearTimeout(t));
   playTimers = [];
   stopAllSounds();
@@ -458,6 +463,7 @@ function updateInputUI() {
 
 function onNotePick(note) {
   if (gameState !== 'repeating') return;
+  stopAnswerReplay(); // 点琴键立即打断回放
   if (playerSequence.length >= currentSequence.length) return;
   ensureAudioRunning();
   playerSequence.push(note);
@@ -470,6 +476,7 @@ function onNotePick(note) {
 
 function undoPick() {
   if (gameState !== 'repeating' || playerSequence.length === 0) return;
+  stopAnswerReplay();
   playerSequence.pop();
   renderClickDots(currentSequence.length);
   updateInputUI();
@@ -477,23 +484,43 @@ function undoPick() {
 
 function clearPicks() {
   if (gameState !== 'repeating' || playerSequence.length === 0) return;
+  stopAnswerReplay();
   playerSequence = [];
   renderClickDots(currentSequence.length);
   updateInputUI();
 }
 
+function stopAnswerReplay() {
+  if (!answerPlaying) return;
+  answerPlaying = false;
+  if (answerReplayTimer) { clearTimeout(answerReplayTimer); answerReplayTimer = null; }
+  stopAllSounds();
+  updateMyAnswerBtn();
+}
+function updateMyAnswerBtn() {
+  document.getElementById('btnMyAnswer').textContent = answerPlaying ? '⏹ 停止回放' : '🎵 播我的答案';
+}
 function replayMyAnswer() {
   if (gameState !== 'repeating' || playerSequence.length === 0) return;
+  if (answerPlaying) { stopAnswerReplay(); return; } // 回放中再点 = 停止，绝不叠加
   ensureAudioRunning();
-  let t = 0;
+  answerPlaying = true;
+  updateMyAnswerBtn();
+  let t = 0, lastSrc = null;
   playerSequence.forEach(note => {
-    playSound(note, 'answer', t);
+    lastSrc = playSound(note, 'answer', t);
     t += noteDuration(note, 'answer') + NOTE_GAP;
   });
+  if (answerReplayTimer) clearTimeout(answerReplayTimer);
+  answerReplayTimer = setTimeout(() => { // 播完自动复位
+    answerReplayTimer = null;
+    if (answerPlaying) { answerPlaying = false; updateMyAnswerBtn(); }
+  }, t * 1000 + 100);
 }
 
 function submitAnswer() {
   if (gameState !== 'repeating' || playerSequence.length !== currentSequence.length) return;
+  stopAnswerReplay();
   const total = currentSequence.length;
   const results = [];
   let allCorrect = true;
@@ -538,6 +565,7 @@ function onRoundComplete(success) {
 
 function replayQuestion() {
   if (gameState !== 'repeating') return;
+  stopAnswerReplay();
   playTimers.forEach(t => clearTimeout(t));
   playTimers = [];
   stopAllSounds();

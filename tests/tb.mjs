@@ -241,6 +241,24 @@ async function main() {
   const t6c = await ev(`JSON.stringify({ state: gameState, len: playerSequence.length })`).then(JSON.parse);
   check('T6 回放答案不影响作答', t6c.state === 'repeating' && t6c.len === 2, JSON.stringify(t6c));
 
+  // ===== T9 回放防叠加（08-26 大爷反馈：回放中再点=停止；点琴键=打断）=====
+  await ev(`window._stopCalls = 0; const _origStop = stopAllSounds; stopAllSounds = function(){ window._stopCalls++; return _origStop.apply(this, arguments); }`);
+  await ev(`stopAnswerReplay()`);
+  await ev(`replayMyAnswer()`);
+  const t9a = await ev(`JSON.stringify({ playing: answerPlaying, txt: document.getElementById('btnMyAnswer').textContent })`).then(JSON.parse);
+  check('T9 回放中标记+按钮变停止', t9a.playing === true && t9a.txt.includes('停止'), JSON.stringify(t9a));
+  await ev(`replayMyAnswer()`);
+  await sleep(50);
+  const t9b = await ev(`JSON.stringify({ playing: answerPlaying, txt: document.getElementById('btnMyAnswer').textContent, stopCalls: window._stopCalls })`).then(JSON.parse);
+  check('T9 再点一次=停止不叠加', t9b.playing === false && t9b.txt.includes('播我的答案') && t9b.stopCalls >= 1, JSON.stringify(t9b));
+  await ev(`replayMyAnswer()`);
+  await ev(`document.querySelector('.note-bar[data-note="${seq3[0]}"]').click()`);
+  await sleep(50);
+  const t9c = await ev(`JSON.stringify({ playing: answerPlaying, stopCalls: window._stopCalls })`).then(JSON.parse);
+  check('T9 点琴键打断回放', t9c.playing === false && t9c.stopCalls >= 2, JSON.stringify(t9c));
+  await ev(`flashNote = null; renderNoteStates(); stopAllSounds = _origStop;`); // 清 tapped 动画，避免污染 T7 布局测量
+  await sleep(400);
+
   // ===== T7 桌面布局不变量（1280x720）=====
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
   await sleep(200);

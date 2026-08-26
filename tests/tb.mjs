@@ -260,6 +260,27 @@ async function main() {
   await ev(`flashNote = null; renderNoteStates(); stopAllSounds = _origStop;`); // 清 tapped 动画，避免污染 T7 布局测量
   await sleep(400);
 
+  // ===== T10 听题中点琴键=停止一切并转作答（08-26 22:00 拍板）=====
+  await ev(`window._stopCalls = 0; const _o = stopAllSounds; stopAllSounds = function(){ window._stopCalls++; return _o.apply(this, arguments); }`);
+  await ev(`replayQuestion()`);
+  const t10a = await ev(`JSON.stringify({ state: gameState })`).then(JSON.parse);
+  check('T10 重听进入listening', t10a.state === 'listening', JSON.stringify(t10a));
+  await ev(`document.querySelector('.note-bar[data-note="${seq3[0]}"]').click()`);
+  await sleep(50);
+  const t10b = await ev(`JSON.stringify({ state: gameState, len: playerSequence.length, stopCalls: window._stopCalls, subDis: document.getElementById('btnSubmit').disabled })`).then(JSON.parse);
+  check('T10 听题中点键=停音转作答', t10b.state === 'repeating' && t10b.len === 3 && t10b.stopCalls >= 1 && t10b.subDis === false, JSON.stringify(t10b));
+  // 半答保留：清空→按2个→重听→点键，已按不丢且新键记为第三笔
+  await ev(`clearPicks()`);
+  await ev(`document.querySelector('.note-bar[data-note="${seq3[0]}"]').click()`);
+  await ev(`document.querySelector('.note-bar[data-note="${seq3[1]}"]').click()`);
+  await ev(`replayQuestion()`);
+  await ev(`document.querySelector('.note-bar[data-note="${seq3[2]}"]').click()`);
+  await sleep(50);
+  const t10c = await ev(`JSON.stringify({ state: gameState, len: playerSequence.length, subDis: document.getElementById('btnSubmit').disabled })`).then(JSON.parse);
+  check('T10 打断保留已按答案', t10c.state === 'repeating' && t10c.len === 3 && t10c.subDis === false, JSON.stringify(t10c));
+  await ev(`stopAllSounds = _o; flashNote = null; renderNoteStates();`);
+  await sleep(400);
+
   // ===== T7 桌面布局不变量（1280x720）=====
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
   await sleep(200);

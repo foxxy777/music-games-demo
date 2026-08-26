@@ -462,10 +462,26 @@ function updateInputUI() {
 }
 
 function onNotePick(note) {
+  if (gameState === 'listening') {
+    // 08-26：听题/重听中点琴键 = 停掉一切、立即转作答；已按答案保留，本键记为新的一笔
+    playTimers.forEach(t => clearTimeout(t));
+    playTimers = [];
+    stopAllSounds();
+    highlightedNotes.clear();
+    const keepPicks = playerSequence.slice();
+    startPlayerTurn(currentSequence);
+    playerSequence = keepPicks;
+    renderClickDots(currentSequence.length);
+    updateInputUI();
+  }
   if (gameState !== 'repeating') return;
   stopAnswerReplay(); // 点琴键立即打断回放
-  if (playerSequence.length >= currentSequence.length) return;
   ensureAudioRunning();
+  if (playerSequence.length >= currentSequence.length) {
+    playSound(note); // 已按满：点击仍发声（点击即发声），但不记录
+    flashTappedNote(note);
+    return;
+  }
   playerSequence.push(note);
   flashTappedNote(note);
   if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} }

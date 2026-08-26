@@ -195,8 +195,9 @@ async function main() {
 
   // ===== T3 开局状态机 =====
   await ev(`document.querySelector('.start-btn').click()`);
-  check('T3 进入听音态', await waitFor('gameState', 'listening', 15000));
-  check('T3 转入作答态', await waitFor('gameState', 'repeating', 15000));
+  const T3_WAIT = LIVE ? 45000 : 15000; // live：github.io 拉音频慢，放宽
+  check('T3 进入听音态', await waitFor('gameState', 'listening', T3_WAIT));
+  check('T3 转入作答态', await waitFor('gameState', 'repeating', T3_WAIT));
   const seq1 = await ev(`JSON.stringify(currentSequence)`).then(JSON.parse);
   check('T3 题长=难度3', seq1.length === 3, JSON.stringify(seq1));
   check('T3 进度点数=3', (await ev(`document.getElementById('clickSeq').children.length`)) === 3);

@@ -136,8 +136,9 @@ async function waitFor(expression, want, timeout = 10000, label = '') {
   }
   return false;
 }
-const NOTES = ['4C', '4D', '4E', '4F', '4G', '4A', '4B'];
-const NAMES = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
+const NOTES = ['4C', '4Cs', '4D', '4Ds', '4E', '4F', '4Fs', '4G', '4Gs', '4A', '4As', '4B'];
+const NAMES = ['Do', 'Do♯', 'Re', 'Re♯', 'Mi', 'Fa', 'Fa♯', 'Sol', 'Sol♯', 'La', 'La♯', 'Si'];
+const HUES = [0, 267, 55, 310, 203, 352, 246, 32, 288, 128, 331, 225];
 
 async function main() {
   const BASE = LIVE ? LIVE_URL : `http://127.0.0.1:${PORT}/`;
@@ -173,10 +174,10 @@ async function main() {
       names: ks.map(k => k.querySelector('.nb-name').textContent),
       hues: ks.map(k => k.style.getPropertyValue('--hue')) };
   })())`).then(JSON.parse);
-  check('T1 七键渲染', kb.n === 7, `n=${kb.n}`);
-  check('T1 键序 Do→Si', JSON.stringify(kb.notes) === JSON.stringify(NOTES), kb.notes.join(','));
+  check('T1 十二键渲染', kb.n === 12, `n=${kb.n}`);
+  check('T1 键序 Do→Si(含升号)', JSON.stringify(kb.notes) === JSON.stringify(NOTES), kb.notes.join(','));
   check('T1 唱名正确', JSON.stringify(kb.names) === JSON.stringify(NAMES), kb.names.join(','));
-  check('T1 斯克里亚宾色相', JSON.stringify(kb.hues.map(Number)) === JSON.stringify([0, 55, 203, 352, 32, 128, 225]), kb.hues.join(','));
+  check('T1 斯克里亚宾色相', JSON.stringify(kb.hues.map(Number)) === JSON.stringify(HUES), kb.hues.join(','));
 
   // ===== T2 音频资产（RIFF/WAVE 结构校验，防错素材混入）=====
   let t2ok = true, t2detail = [];
@@ -191,7 +192,7 @@ async function main() {
       } catch (e) { t2ok = false; t2detail.push(`${kind}_${label}:fetch-fail`); }
     }
   }
-  check('T2 音频资产 14/14 RIFF/WAVE', t2ok, t2detail.join(' '));
+  check('T2 音频资产 24/24 RIFF/WAVE', t2ok, t2detail.join(' '));
 
   // ===== T3 开局状态机 =====
   await ev(`document.querySelector('.start-btn').click()`);
@@ -201,7 +202,7 @@ async function main() {
   const seq1 = await ev(`JSON.stringify(currentSequence)`).then(JSON.parse);
   check('T3 题长=难度3', seq1.length === 3, JSON.stringify(seq1));
   check('T3 进度点数=3', (await ev(`document.getElementById('clickSeq').children.length`)) === 3);
-  check('T3 音频加载日志', consoleLogs.some(l => l.includes('Audio loaded: 14 / 14')), consoleLogs.find(l => l.includes('Audio loaded')) || '未见加载日志');
+  check('T3 音频加载日志', consoleLogs.some(l => l.includes('Audio loaded: 24 / 24')), consoleLogs.find(l => l.includes('Audio loaded')) || '未见加载日志');
 
   // ===== T4 答对流程 =====
   for (const n of seq1) await ev(`document.querySelector('.note-bar[data-note="${n}"]').click()`);
@@ -305,7 +306,7 @@ async function main() {
       mainH: main.height, stageH: st.height };
   })())`).then(JSON.parse);
   check('T7 舞台16:9', Math.abs(L.aspect - 16 / 9) < 0.02, `aspect=${L.aspect}`);
-  check('T7 七键等宽', Math.max(...L.ws) - Math.min(...L.ws) <= 2, L.ws.join(','));
+  check('T7 十二键等宽', Math.max(...L.ws) - Math.min(...L.ws) <= 2, L.ws.join(','));
   check('T7 键排占满行宽', L.rowW / L.stageW >= 0.95, `${(L.rowW / L.stageW * 100).toFixed(1)}%`);
   check('T7 图片区≥50%高', L.mainH / L.stageH >= 0.5, `${(L.mainH / L.stageH * 100).toFixed(1)}%`);
 

@@ -69,7 +69,7 @@ button{touch-action:manipulation;cursor:pointer}
 @keyframes submitPulse{0%,100%{box-shadow:0 0 0 0 rgba(82,183,136,0.45)}50%{box-shadow:0 0 26px 6px rgba(82,183,136,0.45)}}
 
 /* ===== 底部键排：7 个自然音横排占满整行 ===== */
-.note-keys{display:flex;gap:10px;width:100%;height:176px}
+.note-keys{display:flex;gap:8px;width:100%;height:176px}
 .note-bar{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
   border-radius:12px;border:1px solid transparent;
@@ -78,7 +78,7 @@ button{touch-action:manipulation;cursor:pointer}
   transition:background 0.15s,box-shadow 0.15s,transform 0.1s;
   position:relative;
 }
-.nb-name{font-size:42px;font-weight:800;letter-spacing:1px;color:hsl(var(--hue),75%,68%);line-height:1}
+.nb-name{font-size:32px;font-weight:800;letter-spacing:0.5px;color:hsl(var(--hue),75%,68%);line-height:1}
 .nb-label{font-family:Consolas,monospace;font-size:20px;font-weight:700;color:rgba(255,255,255,0.35);line-height:1}
 
 /* 播放中亮起 */
@@ -158,7 +158,7 @@ button{touch-action:manipulation;cursor:pointer}
 <!-- 开始遮罩 -->
 <div class="start-overlay" id="startOverlay">
   <h1>🎵 听音辨序 V10b</h1>
-  <p>先听一段音符序列，按顺序点击下方琴键作答（点击即发声）<br>Do Re Mi Fa Sol La Si 七个音，可以撤销/清空，可重听题目或回放答案<br>按够数量后点「交卷」判定！</p>
+  <p>先听一段音符序列，按顺序点击下方琴键作答（点击即发声）<br>Do~Si 一个八度 12 个键（含 5 个升号键），可以撤销/清空，可重听题目或回放答案<br>按够数量后点「交卷」判定！</p>
   <div class="rotate-hint">📱 手机建议横屏游玩</div>
   <div class="difficulty">
     <button class="diff-btn active" data-level="3" onclick="setDifficulty(3)">3 个音</button>
@@ -172,18 +172,22 @@ button{touch-action:manipulation;cursor:pointer}
 // ============================
 // 配置
 // ============================
-// 只用一个八度的自然音（4C~4B，中音区）：Do Re Mi Fa Sol La Si
-const SCALE_NOTES = ['4C','4D','4E','4F','4G','4A','4B'];
+// 一个八度全半音（4C~4B，s=升号）：音频资产集与琴键集合
+const SCALE_NOTES = ['4C','4Cs','4D','4Ds','4E','4F','4Fs','4G','4Gs','4A','4As','4B'];
+// 出题仍用 7 个自然音（08-27 拍板：键加伴音，题目难度暂不变；要升号入题改这里即可）
+const NATURAL_NOTES = ['4C','4D','4E','4F','4G','4A','4B'];
 
 // 唱名（固定 Do 唱法），♯ 为半音
 const SOLFEGE = ['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
 const PC_BASE = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 // 斯克里亚宾音高→色彩（Prometheus 色彩键盘，1911）：
-// C=红 D=黄 E=天蓝 F=深红 G=橙 A=绿 B=蓝（五度圈排列正好是光谱序）
-const NOTE_HUES = {C:0, D:55, E:203, F:352, G:32, A:128, B:225};
+// 自然音：C=红 D=黄 E=天蓝 F=深红 G=橙 A=绿 B=蓝（五度圈排列正好是光谱序）
+// 升号（08-27 补）：延续五度圈光谱序，填在 B(225°蓝)→F(352°深红) 之间的蓝紫-紫-品红弧，间隔 21°
+const NOTE_HUES = {C:0, D:55, E:203, F:352, G:32, A:128, B:225, Cs:267, Ds:310, Fs:246, Gs:288, As:331};
 function noteHue(label) {
   const m = label.match(/^(\d)([A-G])(s?)$/);
-  return NOTE_HUES[m ? m[2] : 'C'] ?? 0;
+  if (!m) return 0;
+  return NOTE_HUES[m[2] + (m[3] ? 's' : '')] ?? NOTE_HUES[m[2]] ?? 0;
 }
 function pitchClass(label) {
   const m = label.match(/^(\d)([A-G])(s?)$/);
@@ -194,8 +198,8 @@ function solfege(label) { return SOLFEGE[pitchClass(label)]; }
 function getQuestionFile(label) { return `assets/audio/question_${label}.wav`; }
 function getAnswerFile(label)   { return `assets/audio/${label}.wav`; }
 
-// 底部键排：从左到右 Do → Si（升序）
-const NOTES_LAYOUT = ['4C','4D','4E','4F','4G','4A','4B'];
+// 底部键排：从左到右 Do → Si（升序，含升号 12 键）
+const NOTES_LAYOUT = ['4C','4Cs','4D','4Ds','4E','4F','4Fs','4G','4Gs','4A','4As','4B'];
 
 const NOTE_GAP = 0.25;
 
@@ -384,7 +388,7 @@ function generateSequence(count) {
   for (let i = 0; i < count; i++) {
     let note;
     do {
-      note = SCALE_NOTES[Math.floor(Math.random() * SCALE_NOTES.length)];
+      note = NATURAL_NOTES[Math.floor(Math.random() * NATURAL_NOTES.length)];
     } while (note === prev);
     seq.push(note);
     prev = note;

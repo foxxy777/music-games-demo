@@ -281,6 +281,18 @@ async function main() {
   await ev(`stopAllSounds = _o; flashNote = null; renderNoteStates();`);
   await sleep(400);
 
+  // ===== T11 连点单声部：新点键音掐旧点键音（08-26 22:17 拍板）=====
+  await ev(`nextRound()`);
+  await waitFor('gameState', 'repeating', 12000);
+  await ev(`document.querySelector('.note-bar[data-note="4C"]').click()`);
+  await ev(`window._tap1 = lastTapSrc; window._tap1Stopped = false; _tap1.stop = function(){ window._tap1Stopped = true; };`);
+  await ev(`document.querySelector('.note-bar[data-note="4E"]').click()`);
+  await sleep(50);
+  const t11 = await ev(`JSON.stringify({ stopped: window._tap1Stopped, different: lastTapSrc !== window._tap1, len: playerSequence.length })`).then(JSON.parse);
+  check('T11 连点时旧点键音被掐掉', t11.stopped === true && t11.different === true && t11.len === 2, JSON.stringify(t11));
+  await ev(`flashNote = null; renderNoteStates();`);
+  await sleep(400);
+
   // ===== T7 桌面布局不变量（1280x720）=====
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
   await sleep(200);

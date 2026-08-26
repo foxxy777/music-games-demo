@@ -345,9 +345,15 @@ function playSound(label, type = 'answer', delay = 0) {
   return src;
 }
 
+let lastTapSrc = null; // 最近一次点键音；连点时新音掐旧音（单声部，08-26 22:17 拍板）
 function stopAllSounds() {
   activeSources.forEach(s => { try { s.stop(); } catch (e) {} });
   activeSources = [];
+  lastTapSrc = null;
+}
+function playTapSound(note) {
+  if (lastTapSrc) { try { lastTapSrc.stop(); } catch (e) {} }
+  lastTapSrc = playSound(note);
 }
 
 function noteDuration(label, type = 'question') {
@@ -478,14 +484,14 @@ function onNotePick(note) {
   stopAnswerReplay(); // 点琴键立即打断回放
   ensureAudioRunning();
   if (playerSequence.length >= currentSequence.length) {
-    playSound(note); // 已按满：点击仍发声（点击即发声），但不记录
+    playTapSound(note); // 已按满：点击仍发声（点击即发声），但不记录
     flashTappedNote(note);
     return;
   }
   playerSequence.push(note);
   flashTappedNote(note);
   if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} }
-  playSound(note);
+  playTapSound(note); // 连点时掐掉上一个点键音（单声部）
   renderClickDots(currentSequence.length);
   updateInputUI();
 }

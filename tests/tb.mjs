@@ -196,7 +196,7 @@ async function main() {
 
   // ===== T3 开局状态机 =====
   await ev(`document.querySelector('.start-btn').click()`);
-  const T3_WAIT = LIVE ? 90000 : 15000; // live：github.io 晚高峰拉音频能慢到 50s+，放宽
+  const T3_WAIT = LIVE ? 180000 : 15000; // live：24 资产后加载时间更长，深夜也能到 90s+
   check('T3 进入听音态', await waitFor('gameState', 'listening', T3_WAIT));
   check('T3 转入作答态', await waitFor('gameState', 'repeating', T3_WAIT));
   const seq1 = await ev(`JSON.stringify(currentSequence)`).then(JSON.parse);

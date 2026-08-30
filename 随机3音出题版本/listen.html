@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>音频试听</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;color:#eee;font-family:sans-serif;padding:16px;max-width:700px;margin:0 auto}
+h1{color:#e94560;font-size:20px;margin-bottom:8px}
+h2{color:#52b788;font-size:16px;margin:20px 0 8px}
+.item{display:flex;align-items:center;gap:12px;padding:8px;border-bottom:1px solid #16213e}
+.item button{background:#e94560;color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0}
+.item button:active{transform:scale(0.9)}
+.item button.playing{background:#52b788}
+.item .name{font-size:14px;flex:1}
+.note{color:#888;font-size:13px;margin-bottom:16px;line-height:1.5}
+</style>
+</head>
+<body>
+<h1>🎵 音频试听</h1>
+<p class="note">点 ▶ 播放</p>
+
+<h2>📝 出题音频（视唱切片 26个）</h2>
+<div id="qList"></div>
+
+<h2>🎤 答题音频（变频人声 26个）</h2>
+<div id="aList"></div>
+
+<script>
+var allNotes = ['3G','3Gs','3A','3As','3B','4C','4Cs','4D','4Ds','4E','4F','4Fs','4G','4Gs','4A','4As','4B','5C','5Cs','5D','5Ds','5E','5F','5Fs','5G','5A'];
+
+function makeList(containerId, prefix) {
+  var c = document.getElementById(containerId);
+  c.innerHTML = '';
+  for (var i = 0; i < allNotes.length; i++) {
+    var f = allNotes[i];
+    var url = 'assets/audio/' + prefix + f + '.wav';
+    var div = document.createElement('div');
+    div.className = 'item';
+    var btn = document.createElement('button');
+    btn.innerHTML = '&#9654;';
+    btn.onclick = (function(url, btn) {
+      return function() { play(url, btn); };
+    })(url, btn);
+    var name = document.createElement('span');
+    name.className = 'name';
+    name.textContent = f;
+    div.appendChild(btn);
+    div.appendChild(name);
+    c.appendChild(div);
+  }
+}
+
+var current = null;
+var currentBtn = null;
+function play(url, btn) {
+  if (current) { current.pause(); if(currentBtn) currentBtn.innerHTML='&#9654;'; currentBtn.className=''; }
+  var a = new Audio(url);
+  current = a;
+  currentBtn = btn;
+  btn.innerHTML = '&#9208;';
+  btn.className = 'playing';
+  a.play().catch(function(e) {
+    btn.innerHTML = '&#10060;';
+    setTimeout(function(){ btn.innerHTML='&#9654;'; btn.className=''; }, 1000);
+  });
+  a.onended = function() { btn.innerHTML='&#9654;'; btn.className=''; };
+  a.onerror = function() { btn.innerHTML='&#10060;'; setTimeout(function(){ btn.innerHTML='&#9654;'; btn.className=''; }, 1000); };
+}
+
+makeList('qList', 'question_');
+makeList('aList', '');
+</script>
+</body>
+</html>

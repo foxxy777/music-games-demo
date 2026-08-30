@@ -298,37 +298,41 @@ async function main() {
   await ev(`flashNote = null; renderNoteStates();`);
   await sleep(400);
 
-  // ===== T12 谱面展示渲染（08-30 大爷点名：小星星跟谱高亮）=====
+    // ===== T12 谱面展示渲染（08-30 二改：五线谱版）=====
   const sc = await ev(`JSON.stringify((() => {
-    const cells = [...document.querySelectorAll('.sc-note')];
-    return { n: cells.length,
+    const cells = [...document.querySelectorAll('.sn')];
+    return { svgs: document.querySelectorAll('.stave-row').length,
+      lines: document.querySelectorAll('.stave-line').length,
+      clef: !!document.querySelector('.clef'),
+      n: cells.length,
       notes: cells.map(c => c.dataset.note),
-      nums: cells.map(c => c.querySelector('.sc-num').textContent.replace(/—/g, '')),
-      lyrics: [...document.querySelectorAll('.sc-lyric')].map(l => l.textContent),
+      halves: document.querySelectorAll('.sn.half').length,
+      ledgers: document.querySelectorAll('.ledger').length,
+      lyrics: [...document.querySelectorAll('.sn-lyric')].map(l => l.textContent),
       btn: !!document.getElementById('btnScore') };
   })())`).then(JSON.parse);
   const SC_NOTES = ['4C','4C','4G','4G','4A','4A','4G','4F','4F','4E','4E','4D','4D','4C'];
-  const SC_NUMS = ['1','1','5','5','6','6','5','4','4','3','3','2','2','1'];
+  check('T12 五线谱两行谱表+谱号', sc.svgs === 2 && sc.lines === 10 && sc.clef === true, `svgs=${sc.svgs} lines=${sc.lines} clef=${sc.clef}`);
   check('T12 谱面14音渲染', sc.n === 14, `n=${sc.n}`);
   check('T12 音符序列=题库#89', JSON.stringify(sc.notes) === JSON.stringify(SC_NOTES), sc.notes.join(','));
-  check('T12 简谱数字正确', JSON.stringify(sc.nums) === JSON.stringify(SC_NUMS), sc.nums.join(','));
+  check('T12 二分音符与下加线', sc.halves === 2 && sc.ledgers === 3, `half=${sc.halves} ledger=${sc.ledgers}`); // 下加线×3 = 开头两个 4C + 结尾二分 4C
   check('T12 歌词两句完整', sc.lyrics.join('') === '一闪一闪亮晶晶满天都是小星星', sc.lyrics.join(''));
   check('T12 播放按钮存在', sc.btn === true);
 
   // ===== T13 跟谱播放联动（逐音高亮/再点停止/点键打断）=====
   await ev(`toggleScoreDemo()`);
   check('T13 播放态开启', await waitFor('scorePlaying', true, 3000));
-  check('T13 首音高亮=4C', await waitFor(`document.querySelector('.sc-note.active')?.dataset.note`, '4C', 3000));
+  check('T13 首音高亮=4C', await waitFor(`document.querySelector('.sn.active')?.dataset.note`, '4C', 3000));
   check('T13 底部琴键同步亮', await waitFor(`document.querySelector('.note-bar.score-lit')?.dataset.note`, '4C', 2000));
-  check('T13 高亮逐音推进', await waitFor(`[...document.querySelectorAll('.sc-note')].findIndex(c => c.classList.contains('active')) >= 1`, true, 3000));
+  check('T13 高亮逐音推进', await waitFor(`[...document.querySelectorAll('.sn')].findIndex(c => c.classList.contains('active')) >= 1`, true, 3000));
   await ev(`toggleScoreDemo()`);
   check('T13 再点=停止', await waitFor('scorePlaying', false, 2000));
-  check('T13 停止清高亮', await ev(`document.querySelectorAll('.sc-note.active').length === 0 && document.querySelectorAll('.note-bar.score-lit').length === 0`) === true);
+  check('T13 停止清高亮', await ev(`document.querySelectorAll('.sn.active').length === 0 && document.querySelectorAll('.note-bar.score-lit').length === 0`) === true);
   await ev(`toggleScoreDemo()`);
   await waitFor('scorePlaying', true, 2000);
   await ev(`document.querySelector('.note-bar[data-note="4E"]').click()`);
   await sleep(150);
-  check('T13 点琴键打断演示', (await ev(`scorePlaying`)) === false && (await ev(`document.querySelectorAll('.sc-note.active').length`)) === 0);
+  check('T13 点琴键打断演示', (await ev(`scorePlaying`)) === false && (await ev(`document.querySelectorAll('.sn.active').length`)) === 0);
   await ev(`flashNote = null; renderNoteStates();`);
   await sleep(400);
 

@@ -39,17 +39,25 @@ button{touch-action:manipulation;cursor:pointer}
 .btn-score:hover{background:#2c3d68}
 .btn-score.playing{background:var(--accent);color:#fff}
 .score-rows{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;min-height:0}
-.score-row{display:flex;align-items:stretch;gap:10px;justify-content:center}
-.sc-bar{width:3px;background:rgba(255,255,255,0.14);border-radius:3px;margin:14px 8px}
-.sc-note{--hue:0;flex:1 1 0;max-width:212px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:12px 6px 10px;border-radius:14px;background:hsla(var(--hue),70%,55%,0.07);border-top:5px solid hsla(var(--hue),70%,55%,0.5);transition:background .12s,box-shadow .12s,transform .12s}
-.sc-num{font-size:74px;font-weight:800;line-height:1;color:hsl(var(--hue),75%,66%);white-space:nowrap}
-.sc-ext{font-size:40px;font-weight:700;margin-left:6px;opacity:.85}
-.sc-label{font-family:Consolas,monospace;font-size:17px;font-weight:700;color:rgba(255,255,255,0.3)}
-.sc-lyric{font-size:25px;color:#cdd6f4;letter-spacing:1px}
-.sc-note.active{background:hsla(var(--hue),85%,60%,0.55);box-shadow:0 0 30px hsla(var(--hue),85%,60%,0.5),inset 0 0 14px rgba(255,255,255,0.18);transform:translateY(-6px) scale(1.06)}
-.sc-note.active .sc-num{color:#fff;text-shadow:0 0 18px rgba(255,255,255,0.85)}
-.sc-note.active .sc-label{color:rgba(255,255,255,0.85)}
-.sc-note.active .sc-lyric{color:#fff}
+.stave-row{width:100%;height:auto;flex:0 1 auto}
+.stave-line{stroke:rgba(255,255,255,0.45);stroke-width:2}
+.stave-bar{stroke:rgba(255,255,255,0.6);stroke-width:3}
+.stave-bar.thick{stroke-width:8}
+.clef{fill:none;stroke:#cfd8ea;stroke-width:7;stroke-linecap:round}
+.ts-num{fill:#cfd8ea;font:bold 46px Georgia,'Times New Roman',serif;text-anchor:middle}
+.sn{transition:transform .12s ease,filter .12s ease;transform-box:fill-box;transform-origin:center}
+.sn .head{fill:#cfd8ea}
+.sn.half .head{fill:#101624;stroke:#cfd8ea;stroke-width:3.4}
+.sn .stem{stroke:#cfd8ea;stroke-width:3.4;stroke-linecap:round}
+.sn .ledger{stroke:#cfd8ea;stroke-width:3}
+.sn .sharp{fill:#cfd8ea;font:bold 34px Georgia,serif;text-anchor:middle}
+.sn-lyric{fill:#cdd6f4;font-size:27px;font-family:'Segoe UI',sans-serif;text-anchor:middle}
+.sn.active{transform:scale(1.16);filter:drop-shadow(0 0 14px hsla(var(--hue),85%,60%,0.95))}
+.sn.active .head{fill:hsl(var(--hue),85%,62%)}
+.sn.half.active .head{fill:#101624;stroke:hsl(var(--hue),85%,62%)}
+.sn.active .stem,.sn.active .ledger{stroke:hsl(var(--hue),85%,62%)}
+.sn.active .sharp{fill:hsl(var(--hue),85%,62%)}
+.sn.active .sn-lyric{fill:#fff}
 
 /* 判定文字（主区中央） */
 .judgment-text{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:96px;font-weight:bold;z-index:6;pointer-events:none;opacity:0;white-space:nowrap}
@@ -187,7 +195,7 @@ button{touch-action:manipulation;cursor:pointer}
 <!-- 开始遮罩 -->
 <div class="start-overlay" id="startOverlay">
   <h1>🎵 听音辨序 V10b</h1>
-  <p>先听一段音符序列，按顺序点击下方琴键作答（点击即发声）<br>Do~Si 一个八度 12 个键（含 5 个升号键），可以撤销/清空，可重听题目或回放答案<br>中间谱面区：▶ 播放小星星，音符随歌声逐个亮起<br>按够数量后点「交卷」判定！</p>
+  <p>先听一段音符序列，按顺序点击下方琴键作答（点击即发声）<br>Do~Si 一个八度 12 个键（含 5 个升号键），可以撤销/清空，可重听题目或回放答案<br>中间谱面区：▶ 播放小星星，五线谱音符随歌声逐个亮起<br>按够数量后点「交卷」判定！</p>
   <div class="rotate-hint">📱 手机建议横屏游玩</div>
   <div class="difficulty">
     <button class="diff-btn active" data-level="3" onclick="setDifficulty(3)">3 个音</button>
@@ -421,11 +429,18 @@ const SCORE_SONGS = {
     ],
   },
 };
-const JIANPU = { C:'1', Cs:'1♯', D:'2', Ds:'2♯', E:'3', F:'4', Fs:'4♯', G:'5', Gs:'5♯', A:'6', As:'6♯', B:'7' };
-function jianpuOf(label) {
-  const m = label.match(/^\d([A-G]s?)$/);
-  return m ? JIANPU[m[1]] : '?';
+const DIA = 'CDEFGAB';
+// 手绘 G 谱号（简化一笔画：顶卷→下行→绕 G 线螺旋→底部尾钩）
+const CLEF_PATH = 'M 44 170 C 28 150 21 127 26 105 C 31 83 50 72 57 54 C 63 39 54 25 42 30 C 29 36 26 57 38 69 C 51 81 67 92 67 113 C 67 134 47 144 39 130 C 32 118 44 108 55 114';
+// 五线谱几何：G 谱表，SS=线距；第5线(F5)=lineTop，第1线(E4)=lineTop+4SS
+const STAFF = { SS: 24, lineTop: 40, noteX0: 172, noteDx: 226, barX: 965, endX: 1700, lyricY: 200, W: 1800, H: 214 };
+
+function diaStep(label) {
+  const m = label.match(/^(\d)([A-G])(s?)$/);
+  return { step: (+m[1] - 4) * 7 + DIA.indexOf(m[2]), sharp: !!m[3] }; // step: C4=0, E4=2, B4=6, C5=7...
 }
+function stepY(step) { return STAFF.lineTop + 4 * STAFF.SS - (step - 2) * (STAFF.SS / 2); }
+function noteY(label) { return stepY(diaStep(label).step); }
 
 let scorePlaying = false;
 let scoreTimers = [];
@@ -434,22 +449,52 @@ let scoreSources = [];
 function buildScorePanel() {
   const rowsEl = document.getElementById('scoreRows');
   rowsEl.innerHTML = '';
-  SCORE_SONGS.twinkle.phrases.forEach(ph => {
-    const row = document.createElement('div');
-    row.className = 'score-row';
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (t, attrs) => {
+    const e = document.createElementNS(NS, t);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  };
+  SCORE_SONGS.twinkle.phrases.forEach((ph, rowIdx) => {
+    const svg = el('svg', { viewBox: `0 0 ${STAFF.W} ${STAFF.H}`, class: 'stave-row', preserveAspectRatio: 'xMidYMid meet' });
+    for (let i = 0; i < 5; i++) { // 五条谱线
+      svg.appendChild(el('line', { x1: 8, y1: STAFF.lineTop + i * STAFF.SS, x2: 1726, y2: STAFF.lineTop + i * STAFF.SS, class: 'stave-line' }));
+    }
+    svg.appendChild(el('path', { class: 'clef', d: CLEF_PATH })); // G 谱号
+    const ts1 = el('text', { class: 'ts-num', x: 106, y: 84 }); ts1.textContent = '4'; // 拍号 4/4
+    const ts2 = el('text', { class: 'ts-num', x: 106, y: 132 }); ts2.textContent = '4';
+    svg.appendChild(ts1); svg.appendChild(ts2);
     const chars = [...ph.lyric];
     ph.notes.forEach(([label, beats], i) => {
-      const cell = document.createElement('div');
-      cell.className = 'sc-note';
-      cell.dataset.note = label;
-      cell.style.setProperty('--hue', noteHue(label));
-      const ext = beats > 1 ? `<span class="sc-ext">${'—'.repeat(beats - 1)}</span>` : '';
-      cell.innerHTML = `<div class="sc-num">${jianpuOf(label)}${ext}</div>` +
-        `<div class="sc-label">${label}</div><div class="sc-lyric">${chars[i] || ''}</div>`;
-      row.appendChild(cell);
-      if (i === 3) { const bar = document.createElement('div'); bar.className = 'sc-bar'; row.appendChild(bar); } // 4/4 小节线
+      const { step, sharp } = diaStep(label);
+      const x = STAFF.noteX0 + i * STAFF.noteDx, y = stepY(step);
+      const g = el('g', { class: 'sn' + (beats > 1 ? ' half' : '') });
+      g.dataset.note = label;
+      g.style.setProperty('--hue', noteHue(label));
+      for (let s = step % 2 === 0 ? step : step + 1; s < 2; s += 2) { // 下加线（C4 等）
+        g.appendChild(el('line', { x1: x - 17, y1: stepY(s), x2: x + 17, y2: stepY(s), class: 'ledger' }));
+      }
+      if (sharp) {
+        const sh = el('text', { class: 'sharp', x: x - 26, y: y + 11 }); sh.textContent = '♯';
+        g.appendChild(sh);
+      }
+      g.appendChild(el('ellipse', { class: 'head', cx: x, cy: y, rx: 11, ry: 7.6, transform: `rotate(-18 ${x} ${y})` }));
+      const up = step < 6; // B4(中线)以下符干朝上
+      g.appendChild(el('line', up
+        ? { class: 'stem', x1: x + 9.6, y1: y - 2, x2: x + 9.6, y2: y - 86 }
+        : { class: 'stem', x1: x - 9.6, y1: y + 2, x2: x - 9.6, y2: y + 86 }));
+      const ly = el('text', { class: 'sn-lyric', x, y: STAFF.lyricY }); ly.textContent = chars[i] || '';
+      g.appendChild(ly);
+      svg.appendChild(g);
+      if (i === 3) svg.appendChild(el('line', { x1: STAFF.barX, y1: STAFF.lineTop, x2: STAFF.barX, y2: STAFF.lineTop + 4 * STAFF.SS, class: 'stave-bar' })); // 4/4 小节线
     });
-    rowsEl.appendChild(row);
+    if (rowIdx === SCORE_SONGS.twinkle.phrases.length - 1) { // 末行终止线（细+粗）
+      svg.appendChild(el('line', { x1: STAFF.endX - 9, y1: STAFF.lineTop, x2: STAFF.endX - 9, y2: STAFF.lineTop + 4 * STAFF.SS, class: 'stave-bar' }));
+      svg.appendChild(el('line', { x1: STAFF.endX, y1: STAFF.lineTop, x2: STAFF.endX, y2: STAFF.lineTop + 4 * STAFF.SS, class: 'stave-bar thick' }));
+    } else {
+      svg.appendChild(el('line', { x1: STAFF.endX, y1: STAFF.lineTop, x2: STAFF.endX, y2: STAFF.lineTop + 4 * STAFF.SS, class: 'stave-bar' }));
+    }
+    rowsEl.appendChild(svg);
   });
 }
 
@@ -493,7 +538,7 @@ function stopScoreDemo() {
   scoreTimers = [];
   scoreSources.forEach(s => { try { s.stop(); } catch (e) {} });
   scoreSources = [];
-  document.querySelectorAll('.sc-note.active').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.sn.active').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.note-bar.score-lit').forEach(el => el.classList.remove('score-lit'));
   const btn = document.getElementById('btnScore');
   if (btn) { btn.textContent = '▶ 播放'; btn.classList.remove('playing'); }
@@ -506,7 +551,7 @@ async function toggleScoreDemo() {
   if (audioCtx.state !== 'running') { try { await audioCtx.resume(); } catch (e) {} }
   stopAllSounds(); // 单声部原则：与题目/回放/点键互斥（游戏定时器不受影响）
   const song = SCORE_SONGS.twinkle;
-  const cells = [...document.querySelectorAll('.sc-note')];
+  const cells = [...document.querySelectorAll('.sn')];
   const total = cells.length;
   scorePlaying = true;
   const btn = document.getElementById('btnScore');
@@ -841,6 +886,7 @@ async function startGame() {
   newRound();
 }
 
+if (new URLSearchParams(location.search).has('autostart')) startGame(); // ?autostart=1：截图/调试用
 buildScorePanel();
 renderNoteStates();
 </script>

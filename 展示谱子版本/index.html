@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V10b Demo - 听音辨序</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0b0e16; --bg2:#141a2a; --border:#26304a;
+  --accent:#e94560; --accent2:#52b788; --gold:#ffd700;
+  --text:#eee; --dim:#8892b0;
+}
+*{-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'Segoe UI',sans-serif;background:radial-gradient(1200px 800px at 70% 20%,#141a2a 0%,#0b0e16 60%,#070910 100%);color:var(--text);overflow:hidden;user-select:none;-webkit-user-select:none}
+button{touch-action:manipulation;cursor:pointer}
+
+/* ===== 1920x1080 舞台（等比缩放居中）：上图片区 + 底部键排 ===== */
+#stage{position:fixed;left:50%;top:50%;width:1920px;height:1080px;transform:translate(-50%,-50%) scale(1);transform-origin:center;display:flex;flex-direction:column;background:#0d1120;border-radius:8px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,0.04),0 30px 80px rgba(0,0,0,0.6)}
+
+/* ===== 顶部栏：标题 + 轮次 | HUD ===== */
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:18px 30px 6px}
+.top-left{display:flex;align-items:baseline;gap:26px}
+.top-bar h3{color:var(--accent);font-size:25px;letter-spacing:2px}
+.round-info{color:var(--dim);font-size:19px}
+.hud-chips{display:flex;gap:12px}
+.chip{background:rgba(0,0,0,0.45);border:1px solid var(--border);border-radius:999px;padding:8px 22px;font-size:20px}
+.chip b{color:var(--gold);font-size:22px;margin-left:8px}
+
+/* ===== 主区：预留图片区 ===== */
+.main-area{flex:1;position:relative;min-height:0}
+/* ===== 主区：谱面展示（08-30 跟谱高亮演示） ===== */
+.score-panel{position:absolute;inset:26px;border-radius:16px;background:rgba(10,14,26,0.55);border:1px solid var(--border);display:flex;flex-direction:column;padding:16px 34px 20px}
+.score-head{display:flex;align-items:center;justify-content:space-between;flex:0 0 auto}
+.score-title{color:var(--gold);font-size:26px;font-weight:800;letter-spacing:2px}
+.score-key{color:var(--dim);font-size:18px;margin-left:16px;font-weight:400}
+.btn-score{background:#223052;color:var(--text);border:1px solid var(--border);padding:10px 28px;border-radius:10px;font-size:19px;font-weight:bold}
+.btn-score:hover{background:#2c3d68}
+.btn-score.playing{background:var(--accent);color:#fff}
+.score-rows{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;min-height:0}
+.stave-row{width:100%;height:auto;flex:0 1 auto}
+.stave-line{stroke:rgba(255,255,255,0.45);stroke-width:2}
+.stave-bar{stroke:rgba(255,255,255,0.6);stroke-width:3}
+.stave-bar.thick{stroke-width:8}
+.clef{fill:none;stroke:#cfd8ea;stroke-width:7;stroke-linecap:round}
+.ts-num{fill:#cfd8ea;font:bold 46px Georgia,'Times New Roman',serif;text-anchor:middle}
+.sn{transition:transform .12s ease,filter .12s ease;transform-box:fill-box;transform-origin:center}
+.sn .head{fill:#cfd8ea}
+.sn.half .head{fill:#101624;stroke:#cfd8ea;stroke-width:3.4}
+.sn .stem{stroke:#cfd8ea;stroke-width:3.4;stroke-linecap:round}
+.sn .ledger{stroke:#cfd8ea;stroke-width:3}
+.sn .sharp{fill:#cfd8ea;font:bold 34px Georgia,serif;text-anchor:middle}
+.sn-lyric{fill:#cdd6f4;font-size:27px;font-family:'Segoe UI',sans-serif;text-anchor:middle}
+.sn.active{transform:scale(1.16);filter:drop-shadow(0 0 14px hsla(var(--hue),85%,60%,0.95))}
+.sn.active .head{fill:hsl(var(--hue),85%,62%)}
+.sn.half.active .head{fill:#101624;stroke:hsl(var(--hue),85%,62%)}
+.sn.active .stem,.sn.active .ledger{stroke:hsl(var(--hue),85%,62%)}
+.sn.active .sharp{fill:hsl(var(--hue),85%,62%)}
+.sn.active .sn-lyric{fill:#fff}
+
+/* 判定文字（主区中央） */
+.judgment-text{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:96px;font-weight:bold;z-index:6;pointer-events:none;opacity:0;white-space:nowrap}
+.judgment-text.show{animation:judgePop 0.6s ease-out}
+.judgment-text.correct{color:var(--accent2);text-shadow:0 0 40px var(--accent2)}
+.judgment-text.wrong{color:var(--accent);text-shadow:0 0 40px var(--accent)}
+@keyframes judgePop{0%{opacity:0;transform:translate(-50%,-50%) scale(0.3)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.25)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+
+/* ===== 底部坞：状态 + 答题进度 + 按钮 + 键排 ===== */
+.bottom-dock{padding:10px 30px 24px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.state-bar{width:100%;text-align:center;padding:12px;border-radius:10px;font-size:20px;font-weight:bold;background:rgba(0,0,0,0.5);color:var(--dim)}
+.state-bar.listen{background:rgba(233,69,96,0.18);color:var(--accent);border:1px solid var(--accent)}
+.state-bar.repeat{background:rgba(82,183,136,0.18);color:var(--accent2);border:1px solid var(--accent2)}
+.state-bar.correct{background:rgba(82,183,136,0.3);color:var(--accent2)}
+.state-bar.wrong{background:rgba(233,69,96,0.3);color:var(--accent)}
+
+.click-sequence{display:flex;gap:10px;justify-content:center;min-height:44px}
+.click-dot{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:bold}
+.click-dot.pending{background:rgba(255,255,255,0.08);border:2px dashed var(--dim)}
+.click-dot.filled{background:var(--gold);color:#000}
+.click-dot.wrong{background:var(--accent);color:#fff}
+
+.btn-row{display:flex;gap:14px;justify-content:center;flex-wrap:nowrap}
+.btn{padding:13px 30px;border:none;border-radius:12px;font-size:19px;font-weight:bold;transition:all 0.2s}
+.btn-play{background:var(--accent);color:#fff}
+.btn-replay{background:#223052;color:var(--text);border:1px solid var(--border)}
+.btn-replay:hover{background:#2c3d68}
+.btn-next{background:var(--accent2);color:#fff}
+.btn-next:hover{background:#3a8c68}
+.btn:disabled{opacity:0.35;cursor:not-allowed}
+.btn-small{background:#1b2440;color:var(--text);border:1px solid var(--border);font-size:19px}
+#btnMyAnswer{min-width:186px}
+.btn-small:hover:not(:disabled){background:#263358}
+.btn-submit.ready{animation:submitPulse 1s ease infinite}
+@keyframes submitPulse{0%,100%{box-shadow:0 0 0 0 rgba(82,183,136,0.45)}50%{box-shadow:0 0 26px 6px rgba(82,183,136,0.45)}}
+
+/* ===== 底部键排：7 个自然音横排占满整行 ===== */
+.note-keys{display:flex;gap:8px;width:100%;height:176px}
+.note-bar{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  border-radius:12px;border:1px solid transparent;
+  background:hsla(var(--hue),70%,55%,0.10);
+  border-top:6px solid hsl(var(--hue),70%,55%);
+  transition:background 0.15s,box-shadow 0.15s,transform 0.1s;
+  position:relative;
+}
+.nb-name{font-size:32px;font-weight:800;letter-spacing:0.5px;color:hsl(var(--hue),75%,68%);line-height:1}
+.nb-label{font-family:Consolas,monospace;font-size:20px;font-weight:700;color:rgba(255,255,255,0.35);line-height:1}
+
+/* 播放中亮起 */
+.note-bar.lit{
+  background:hsla(var(--hue),85%,60%,0.55);
+  box-shadow:0 0 24px hsla(var(--hue),85%,60%,0.45),inset 0 0 12px rgba(255,255,255,0.18);
+  transform:translateY(-6px);
+}
+.note-bar.lit .nb-name{color:#fff;text-shadow:0 0 14px rgba(255,255,255,0.8)}
+.note-bar.lit .nb-label{color:rgba(255,255,255,0.85)}
+
+/* 谱面演示联动亮键（与 .lit 同款视觉但通道独立，不碰游戏状态） */
+.note-bar.score-lit{background:hsla(var(--hue),85%,60%,0.45);box-shadow:0 0 20px hsla(var(--hue),85%,60%,0.35);transform:translateY(-4px)}
+.note-bar.score-lit .nb-name{color:#fff;text-shadow:0 0 12px rgba(255,255,255,0.7)}
+.note-bar.score-lit .nb-label{color:rgba(255,255,255,0.7)}
+
+/* 玩家点过的反馈 */
+.note-bar.tapped{outline:3px solid var(--accent2);outline-offset:1px;animation:tappop 0.35s ease}
+@keyframes tappop{0%{transform:scale(0.96)}60%{transform:scale(1.05)}100%{transform:scale(1)}}
+
+/* 答错时正确答案提示 */
+.note-bar.reveal{outline:3px solid #4fc3f7;outline-offset:1px;animation:revealPulse 0.5s ease infinite alternate}
+@keyframes revealPulse{from{background:hsla(203,90%,60%,0.25)}to{background:hsla(203,90%,60%,0.55)}}
+
+/* 开始遮罩 */
+.start-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(4,6,12,0.94);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
+.start-overlay h1{color:var(--accent);font-size:42px;margin-bottom:10px}
+.start-overlay p{color:var(--dim);margin-bottom:22px;text-align:center;max-width:520px;line-height:1.7;font-size:16px}
+.rotate-hint{display:none;color:#e94560;font-size:14px;margin-bottom:14px}
+@media (orientation:portrait){.rotate-hint{display:block}}
+.start-btn{background:var(--accent);color:#fff;border:none;padding:16px 56px;font-size:24px;border-radius:50px;transition:all 0.2s}
+.start-btn:hover{background:#ff6b6b;transform:scale(1.05)}
+</style>
+</head>
+<body>
+<div id="loader" style="position:fixed;inset:0;background:#0b0e16;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:200">
+<div style="width:48px;height:48px;border:4px solid #26304a;border-top-color:#e94560;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px"></div>
+<div style="color:#8892b0;font-size:14px;margin-bottom:4px" id="loadText">Loading audio...</div>
+<div style="color:#e94560;font-size:24px;font-weight:bold" id="loadPct">0%</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<div id="stage">
+  <!-- 顶部栏 -->
+  <div class="top-bar">
+    <div class="top-left">
+      <h3>📜 听音辨序</h3>
+      <div class="round-info" id="roundInfo">第 1 轮 · 难度：3音</div>
+    </div>
+    <div class="hud-chips">
+      <div class="chip">得分<b id="score">0</b></div>
+      <div class="chip">连击<b id="combo">0</b></div>
+      <div class="chip">轮次<b id="totalRounds">0</b></div>
+    </div>
+  </div>
+
+  <!-- 主区：谱面展示（小星星跟谱高亮；后续可接题库更多曲目或替换为图片素材） -->
+  <div class="main-area">
+    <div class="score-panel">
+      <div class="score-head">
+        <div><span class="score-title">🎼 小星星</span><span class="score-key">1=C · 4/4 · 出自题库 #89（完整）</span></div>
+        <button class="btn-score" id="btnScore" onclick="toggleScoreDemo()">▶ 播放</button>
+      </div>
+      <div class="score-rows" id="scoreRows"></div>
+    </div>
+    <div class="judgment-text" id="judgeText"></div>
+  </div>
+
+  <!-- 底部坞 -->
+  <div class="bottom-dock">
+    <div class="state-bar listen" id="stateBar">🎧 准备听音</div>
+    <div class="click-sequence" id="clickSeq"></div>
+    <div class="btn-row">
+      <button class="btn btn-replay" id="btnReplay" onclick="replayQuestion()" disabled>🔊 重听题目</button>
+      <button class="btn btn-replay" id="btnMyAnswer" onclick="replayMyAnswer()" disabled>🎵 播我的答案</button>
+      <button class="btn btn-small" id="btnUndo" onclick="undoPick()" disabled>↩ 撤销</button>
+      <button class="btn btn-small" id="btnClear" onclick="clearPicks()" disabled>🗑 清空</button>
+      <button class="btn btn-next btn-submit" id="btnSubmit" onclick="submitAnswer()" disabled>✅ 提交 0/3</button>
+      <button class="btn btn-next" id="btnNext" onclick="nextRound()" style="display:none">➡️ 下一轮</button>
+    </div>
+    <div class="note-keys" id="noteStack"></div>
+  </div>
+</div>
+
+<!-- 开始遮罩 -->
+<div class="start-overlay" id="startOverlay">
+  <h1>🎵 听音辨序 V10b</h1>
+  <p>听一段旋律（现在是《小星星》），上方五线谱会逐音亮起<br>按顺序点击下方琴键复刻（点击即发声），Do~Si 一个八度 12 键（含 5 个升号键）<br>可撤销/清空，可重听题目或回放答案；按够 14 个音后点「交卷」判定！</p>
+  <div class="rotate-hint">📱 手机建议横屏游玩</div>
+  <button class="start-btn" onclick="startGame()">▶ 开始</button>
+</div>
+
+<script>
+// ============================
+// 配置
+// ============================
+// 一个八度全半音（4C~4B，s=升号）：音频资产集与琴键集合
+const SCALE_NOTES = ['4C','4Cs','4D','4Ds','4E','4F','4Fs','4G','4Gs','4A','4As','4B'];
+// 出题仍用 7 个自然音（08-27 拍板：键加伴音，题目难度暂不变；要升号入题改这里即可）
+const NATURAL_NOTES = ['4C','4D','4E','4F','4G','4A','4B'];
+
+// 唱名（固定 Do 唱法），♯ 为半音
+const SOLFEGE = ['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'];
+const PC_BASE = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+// 斯克里亚宾音高→色彩（Prometheus 色彩键盘，1911）：
+// 自然音：C=红 D=黄 E=天蓝 F=深红 G=橙 A=绿 B=蓝（五度圈排列正好是光谱序）
+// 升号（08-27 补）：延续五度圈光谱序，填在 B(225°蓝)→F(352°深红) 之间的蓝紫-紫-品红弧，间隔 21°
+const NOTE_HUES = {C:0, D:55, E:203, F:352, G:32, A:128, B:225, Cs:267, Ds:310, Fs:246, Gs:288, As:331};
+function noteHue(label) {
+  const m = label.match(/^(\d)([A-G])(s?)$/);
+  if (!m) return 0;
+  return NOTE_HUES[m[2] + (m[3] ? 's' : '')] ?? NOTE_HUES[m[2]] ?? 0;
+}
+function pitchClass(label) {
+  const m = label.match(/^(\d)([A-G])(s?)$/);
+  return (PC_BASE[m[2]] + (m[3] ? 1 : 0)) % 12;
+}
+function solfege(label) { return SOLFEGE[pitchClass(label)]; }
+
+function getQuestionFile(label) { return `assets/audio/question_${label}.wav`; }
+function getAnswerFile(label)   { return `assets/audio/${label}.wav`; }
+
+// 底部键排：从左到右 Do → Si（升序，含升号 12 键）
+const NOTES_LAYOUT = ['4C','4Cs','4D','4Ds','4E','4F','4Fs','4G','4Gs','4A','4As','4B'];
+
+const NOTE_GAP = 0.25;
+
+// ============================
+// 状态
+// ============================
+let gameState = 'idle'; // idle, listening, repeating, judging
+let score = 0, combo = 0, totalRounds = 0;
+let currentSequence = [];
+let playerSequence = [];
+let highlightedNotes = new Set();
+let audioBuffers = {};
+let audioCtx = null;
+let playTimers = [];
+let flashNote = null, flashTimer = null;
+let revealNotes = new Set();
+let answerPlaying = false; // 「播我的答案」回放中标记（防叠加）
+let answerReplayTimer = null; // 回放总时长计时器（播完自动复位）
+
+// ============================
+// 舞台缩放（1920x1080 等比适配）
+// ============================
+const stage = document.getElementById('stage');
+function fitStage() {
+  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  stage.style.transform = `translate(-50%,-50%) scale(${s})`;
+}
+window.addEventListener('resize', fitStage);
+window.addEventListener('orientationchange', () => setTimeout(fitStage, 300));
+fitStage();
+
+// ============================
+// 构建底部琴键
+// ============================
+const noteStack = document.getElementById('noteStack');
+NOTES_LAYOUT.forEach(label => {
+  const pc = pitchClass(label);
+  const btn = document.createElement('button');
+  btn.className = 'note-bar';
+  btn.dataset.note = label;
+  btn.style.setProperty('--hue', noteHue(label)); // 斯克里亚宾色彩体系
+  btn.innerHTML = `<span class="nb-name">${SOLFEGE[pc]}</span><span class="nb-label">${label}</span>`;
+  btn.addEventListener('click', () => onNotePick(label));
+  noteStack.appendChild(btn);
+});
+
+function renderNoteStates() {
+  document.querySelectorAll('.note-bar').forEach(b => {
+    const n = b.dataset.note;
+    b.classList.toggle('lit', highlightedNotes.has(n));
+    b.classList.toggle('tapped', flashNote === n);
+    b.classList.toggle('reveal', revealNotes.has(n));
+  });
+}
+
+function flashTappedNote(note) {
+  flashNote = note;
+  renderNoteStates();
+  if (flashTimer) clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => { flashNote = null; renderNoteStates(); }, 400);
+}
+
+function revealAnswer(note, holdMs = 2200) {
+  revealNotes.add(note);
+  renderNoteStates();
+  setTimeout(() => { revealNotes.delete(note); renderNoteStates(); }, holdMs);
+}
+
+// 移动端音频解锁
+function ensureAudioRunning() {
+  if (!audioCtx || audioCtx.state !== 'suspended') return;
+  try {
+    const b = audioCtx.createBuffer(1, 1, 22050);
+    const s = audioCtx.createBufferSource();
+    s.buffer = b;
+    s.connect(audioCtx.destination);
+    s.start(0);
+  } catch (e) {}
+  audioCtx.resume().catch(() => {});
+}
+['touchstart', 'touchend', 'mousedown', 'keydown'].forEach(ev => {
+  document.addEventListener(ev, ensureAudioRunning, { passive: true });
+});
+
+// ============================
+// 音频
+// ============================
+let _loadTotal = 0, _loadDone = 0;
+async function loadAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  _loadTotal = SCALE_NOTES.length * 2;
+  _loadDone = 0;
+
+  const loadFails = [];
+  async function loadOne(url, key) {
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) { loadFails.push(key); return; }
+      const buf = await resp.arrayBuffer();
+      audioBuffers[key] = await audioCtx.decodeAudioData(buf);
+    } catch(e) { loadFails.push(key); console.warn('Load fail:', key, e); }
+    finally {
+      _loadDone++;
+      var pct = Math.round((_loadDone / _loadTotal) * 100);
+      var lt = document.getElementById('loadText');
+      var lp = document.getElementById('loadPct');
+      if (lt) lt.textContent = 'Loading... ' + _loadDone + '/' + _loadTotal;
+      if (lp) lp.textContent = pct + '%';
+    }
+  }
+
+  const tasks = [];
+  for (const label of SCALE_NOTES) {
+    tasks.push(loadOne(getAnswerFile(label), 'answer_' + label));
+    tasks.push(loadOne(getQuestionFile(label), 'question_' + label));
+  }
+  const BATCH = 6;
+  for (let i = 0; i < tasks.length; i += BATCH) {
+    await Promise.all(tasks.slice(i, i + BATCH));
+  }
+  console.log('Audio loaded:', Object.keys(audioBuffers).length, '/', _loadTotal);
+  if (loadFails.length) {
+    console.warn('Missing audio (' + loadFails.length + '):', loadFails.join(','));
+    window._loadFails = loadFails;
+  }
+}
+
+let activeSources = [];
+function playSound(label, type = 'answer', delay = 0) {
+  const key = type + '_' + label;
+  if (!audioCtx || !audioBuffers[key]) {
+    console.warn('No audio:', key);
+    return;
+  }
+  const src = audioCtx.createBufferSource();
+  src.buffer = audioBuffers[key];
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.7;
+  src.connect(gain).connect(audioCtx.destination);
+  src.start(audioCtx.currentTime + delay);
+  activeSources.push(src);
+  src.onended = () => {
+    const i = activeSources.indexOf(src);
+    if (i >= 0) activeSources.splice(i, 1);
+  };
+  return src;
+}
+
+let lastTapSrc = null; // 最近一次点键音；连点时新音掐旧音（单声部，08-26 22:17 拍板）
+function stopAllSounds() {
+  activeSources.forEach(s => { try { s.stop(); } catch (e) {} });
+  activeSources = [];
+  lastTapSrc = null;
+}
+function playTapSound(note) {
+  if (lastTapSrc) { try { lastTapSrc.stop(); } catch (e) {} }
+  lastTapSrc = playSound(note);
+}
+
+// ============================
+// 谱面展示 + 跟谱高亮（08-30 大爷点名：小星星随播随亮）
+// 数据与题库对齐：design/songs/题库.md #89「小星星（完整）」
+// ============================
+const SCORE_SONGS = {
+  twinkle: {
+    beatMs: 600, // 四分音符时长（音频是 2s 长音素材，按节拍裁出+包络收尾）
+    phrases: [
+      { lyric: '一闪一闪亮晶晶', notes: [['4C',1],['4C',1],['4G',1],['4G',1],['4A',1],['4A',1],['4G',2]] },
+      { lyric: '满天都是小星星', notes: [['4F',1],['4F',1],['4E',1],['4E',1],['4D',1],['4D',1],['4C',2]] },
+    ],
+  },
+};
+// 08-30 20:26 拍板：题目=谱面上的曲子（不再是随机 N 音）
+const TWINKLE_SEQ = SCORE_SONGS.twinkle.phrases.flatMap(ph => ph.notes.map(([l]) => l));
+const DIA = 'CDEFGAB';
+// 手绘 G 谱号（简化一笔画：顶卷→下行→绕 G 线螺旋→底部尾钩）
+const CLEF_PATH = 'M 44 170 C 28 150 21 127 26 105 C 31 83 50 72 57 54 C 63 39 54 25 42 30 C 29 36 26 57 38 69 C 51 81 67 92 67 113 C 67 134 47 144 39 130 C 32 118 44 108 55 114';
+// 五线谱几何：G 谱表，SS=线距；第5线(F5)=lineTop，第1线(E4)=lineTop+4SS
+const STAFF = { SS: 24, lineTop: 40, noteX0: 172, noteDx: 226, barX: 965, endX: 1700, lyricY: 200, W: 1800, H: 214 };
+
+function diaStep(label) {
+  const m = label.match(/^(\d)([A-G])(s?)$/);
+  return { step: (+m[1] - 4) * 7 + DIA.indexOf(m[2]), sharp: !!m[3] }; // step: C4=0, E4=2, B4=6, C5=7...
+}
+function stepY(step) { return STAFF.lineTop + 4 * STAFF.SS - (step - 2) * (STAFF.SS / 2); }
+function noteY(label) { return stepY(diaStep(label).step); }
+
+let scorePlaying = false;
+let scoreTimers = [];
+let scoreSources = [];
+
+function buildScorePanel() {
+  const rowsEl = document.getElementById('scoreRows');
+  rowsEl.innerHTML = '';
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (t, attrs) => {
+    const e = document.createElementNS(NS, t);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  };
+  SCORE_SONGS.twinkle.phrases.forEach((ph, rowIdx) => {
+    const svg = el('svg', { viewBox: `0 0 ${STAFF.W} ${STAFF.H}`, class: 'stave-row', preserveAspectRatio: 'xMidYMid meet' });
+    for (let i = 0; i < 5; i++) { // 五条谱线
+      svg.appendChild(el('line', { x1: 8, y1: STAFF.lineTop + i * STAFF.SS, x2: 1726, y2: STAFF.lineTop + i * STAFF.SS, class: 'stave-line' }));
+    }
+    svg.appendChild(el('path', { class: 'clef', d: CLEF_PATH })); // G 谱号
+    const ts1 = el('text', { class: 'ts-num', x: 106, y: 84 }); ts1.textContent = '4'; // 拍号 4/4
+    const ts2 = el('text', { class: 'ts-num', x: 106, y: 132 }); ts2.textContent = '4';
+    svg.appendChild(ts1); svg.appendChild(ts2);
+    const chars = [...ph.lyric];
+    ph.notes.forEach(([label, beats], i) => {
+      const { step, sharp } = diaStep(label);
+      const x = STAFF.noteX0 + i * STAFF.noteDx, y = stepY(step);
+      const g = el('g', { class: 'sn' + (beats > 1 ? ' half' : '') });
+      g.dataset.note = label;
+      g.style.setProperty('--hue', noteHue(label));
+      for (let s = step % 2 === 0 ? step : step + 1; s < 2; s += 2) { // 下加线（C4 等）
+        g.appendChild(el('line', { x1: x - 17, y1: stepY(s), x2: x + 17, y2: stepY(s), class: 'ledger' }));
+      }
+      if (sharp) {
+        const sh = el('text', { class: 'sharp', x: x - 26, y: y + 11 }); sh.textContent = '♯';
+        g.appendChild(sh);
+      }
+      g.appendChild(el('ellipse', { class: 'head', cx: x, cy: y, rx: 11, ry: 7.6, transform: `rotate(-18 ${x} ${y})` }));
+      const up = step < 6; // B4(中线)以下符干朝上
+      g.appendChild(el('line', up
+        ? { class: 'stem', x1: x + 9.6, y1: y - 2, x2: x + 9.6, y2: y - 86 }
+        : { class: 'stem', x1: x - 9.6, y1: y + 2, x2: x - 9.6, y2: y + 86 }));
+      const ly = el('text', { class: 'sn-lyric', x, y: STAFF.lyricY }); ly.textContent = chars[i] || '';
+      g.appendChild(ly);
+      svg.appendChild(g);
+      if (i === 3) svg.appendChild(el('line', { x1: STAFF.barX, y1: STAFF.lineTop, x2: STAFF.barX, y2: STAFF.lineTop + 4 * STAFF.SS, class: 'stave-bar' })); // 4/4 小节线
+    });
+    if (rowIdx === SCORE_SONGS.twinkle.phrases.length - 1) { // 末行终止线（细+粗）
+      svg.appendChild(el('line', { x1: STAFF.endX - 9, y1: STAFF.lineTop, x2: STAFF.endX - 9, y2: STAFF.lineTop + 4 * STAFF.SS, class: 'stave-bar' }));
+      svg.appendChild(el('line', { x1: STAFF.endX, y1: STAFF.lineTop, x2: STAFF.endX, y2: STAFF.lineTop + 4 * STAFF.SS, class: 'stave-bar thick' }));
+    } else {
+      svg.appendChild(el('line', { x1: STAFF.endX, y1: STAFF.lineTop, x2: STAFF.endX, y2: STAFF.lineTop + 4 * STAFF.SS, class: 'stave-bar' }));
+    }
+    rowsEl.appendChild(svg);
+  });
+}
+
+function playScoreSound(label, when, durS) {
+  const key = 'answer_' + label;
+  if (!audioCtx || !audioBuffers[key]) return;
+  const src = audioCtx.createBufferSource();
+  src.buffer = audioBuffers[key];
+  const gain = audioCtx.createGain();
+  const g = gain.gain;
+  if (g.setValueAtTime) { // 真机：包络防爆音（TB 桩没有 ramp API，走 value 兜底）
+    const rel = Math.min(0.13, durS * 0.3);
+    g.setValueAtTime(0.0001, when);
+    g.exponentialRampToValueAtTime(0.8, when + 0.02);
+    g.setValueAtTime(0.8, when + Math.max(0.03, durS - rel));
+    g.linearRampToValueAtTime(0.0001, when + durS);
+  } else {
+    g.value = 0.8;
+  }
+  src.connect(gain).connect(audioCtx.destination);
+  try { src.start(when); src.stop(when + durS + 0.03); } catch (e) {}
+  scoreSources.push(src);
+  src.onended = () => { const i = scoreSources.indexOf(src); if (i >= 0) scoreSources.splice(i, 1); };
+}
+
+function highlightScoreNote(cells, idx, label, total) {
+  if (!scorePlaying) return;
+  cells.forEach(c => c.classList.remove('active'));
+  if (cells[idx]) cells[idx].classList.add('active');
+  document.querySelectorAll('.note-bar.score-lit').forEach(b => b.classList.remove('score-lit'));
+  const bar = document.querySelector(`.note-bar[data-note="${label}"]`);
+  if (bar) bar.classList.add('score-lit');
+  const btn = document.getElementById('btnScore');
+  if (btn) btn.textContent = `⏹ ${idx + 1}/${total}`;
+}
+
+function stopScoreDemo() {
+  if (!scorePlaying && !scoreTimers.length && !scoreSources.length) return;
+  scorePlaying = false;
+  scoreTimers.forEach(t => clearTimeout(t));
+  scoreTimers = [];
+  scoreSources.forEach(s => { try { s.stop(); } catch (e) {} });
+  scoreSources = [];
+  document.querySelectorAll('.sn.active').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.note-bar.score-lit').forEach(el => el.classList.remove('score-lit'));
+  const btn = document.getElementById('btnScore');
+  if (btn) { btn.textContent = '▶ 播放'; btn.classList.remove('playing'); }
+}
+
+async function toggleScoreDemo() {
+  if (gameState === 'listening') return; // 听题中不抢戏：题目优先
+  if (scorePlaying) { stopScoreDemo(); return; } // 再点 = 停止
+  if (!audioCtx || Object.keys(audioBuffers).length === 0) return;
+  ensureAudioRunning();
+  if (audioCtx.state !== 'running') { try { await audioCtx.resume(); } catch (e) {} }
+  stopAnswerReplay(); // 回放答案中开演示 = 先停回放
+  stopAllSounds(); // 单声部原则：与题目/回放/点键互斥（游戏定时器不受影响）
+  startMelodyPlayback(null);
+}
+
+// 旋律播放核心（演示/出题/重听共用）：节拍版音源 + 五线谱逐音高亮；onEnd 播完回调
+function startMelodyPlayback(onEnd) {
+  const song = SCORE_SONGS.twinkle;
+  const cells = [...document.querySelectorAll('.sn')];
+  const total = cells.length;
+  scorePlaying = true;
+  const btn = document.getElementById('btnScore');
+  if (btn) { btn.textContent = `⏹ 0/${total}`; btn.classList.add('playing'); }
+  const LEAD = 0.09; // 起播缓冲
+  const t0 = audioCtx.currentTime + LEAD;
+  let tMs = 0, idx = 0;
+  song.phrases.forEach(ph => ph.notes.forEach(([label, beats]) => {
+    const durMs = beats * song.beatMs;
+    playScoreSound(label, t0 + tMs / 1000, durMs / 1000);
+    const at = tMs + LEAD * 1000, i = idx;
+    scoreTimers.push(setTimeout(() => highlightScoreNote(cells, i, label, total), at));
+    tMs += durMs;
+    idx++;
+  }));
+  scoreTimers.push(setTimeout(() => {
+    stopScoreDemo(); // 清谱面高亮/按钮/状态
+    if (onEnd) onEnd();
+  }, tMs + LEAD * 1000 + 600));
+}
+
+// ============================
+// 游戏逻辑
+// ============================
+function playSequence(sequence) {
+  stopScoreDemo(); // 出题打断谱面演示/回放
+  stopAnswerReplay();
+  stopAllSounds();
+  ensureAudioRunning();
+
+  gameState = 'listening';
+  updateStateBar('🎧 听音中...', 'listen');
+  updateInputUI();
+
+  playTimers.push(setTimeout(() => {
+    if (audioCtx && audioCtx.state !== 'running') {
+      updateStateBar('🔇 声音被浏览器挂起，点一下屏幕任意位置即可开启', 'wrong');
+    }
+  }, 500));
+  highlightedNotes.clear();
+  renderNoteStates();
+
+  // 08-30 拍板：题目=谱面上的曲子，节拍版播放 + 五线谱逐音高亮
+  startMelodyPlayback(() => startPlayerTurn(sequence));
+}
+
+function startPlayerTurn(sequence) {
+  gameState = 'repeating';
+  playerSequence = [];
+  updateStateBar('👆 按顺序点击下方琴键', 'repeat');
+  renderClickDots(sequence.length);
+  document.getElementById('btnReplay').disabled = false;
+
+  sequence.forEach(n => highlightedNotes.add(n));
+  renderNoteStates();
+  updateInputUI();
+}
+
+function renderClickDots(total, results) {
+  const el = document.getElementById('clickSeq');
+  el.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const dot = document.createElement('div');
+    const picked = playerSequence[i];
+    if (results) {
+      dot.className = 'click-dot ' + (results[i] ? 'filled' : 'wrong');
+      dot.textContent = picked ? solfege(picked) : (i + 1);
+    } else if (picked) {
+      dot.className = 'click-dot filled';
+      dot.textContent = solfege(picked);
+    } else {
+      dot.className = 'click-dot pending';
+      dot.textContent = i + 1;
+    }
+    el.appendChild(dot);
+  }
+}
+
+function updateInputUI() {
+  const total = currentSequence.length;
+  const n = playerSequence.length;
+  const full = total > 0 && n === total;
+  const canInput = gameState === 'repeating';
+  const sub = document.getElementById('btnSubmit');
+  sub.textContent = full ? '✅ 交卷' : `✅ 提交 ${n}/${total}`;
+  sub.disabled = !full || !canInput;
+  sub.classList.toggle('ready', full && canInput);
+  document.getElementById('btnUndo').disabled = n === 0 || !canInput;
+  document.getElementById('btnClear').disabled = n === 0 || !canInput;
+  document.getElementById('btnMyAnswer').disabled = n === 0 || !canInput;
+  document.getElementById('btnReplay').disabled = !canInput;
+}
+
+function onNotePick(note) {
+  stopScoreDemo(); // 点琴键 = 打断谱面演示（单声部原则）
+  if (gameState === 'listening') {
+    // 08-26：听题/重听中点琴键 = 停掉一切、立即转作答；已按答案保留，本键记为新的一笔
+    playTimers.forEach(t => clearTimeout(t));
+    playTimers = [];
+    stopAllSounds();
+    highlightedNotes.clear();
+    const keepPicks = playerSequence.slice();
+    startPlayerTurn(currentSequence);
+    playerSequence = keepPicks;
+    renderClickDots(currentSequence.length);
+    updateInputUI();
+  }
+  if (gameState !== 'repeating') return;
+  stopAnswerReplay(); // 点琴键立即打断回放
+  ensureAudioRunning();
+  if (playerSequence.length >= currentSequence.length) {
+    playTapSound(note); // 已按满：点击仍发声（点击即发声），但不记录
+    flashTappedNote(note);
+    return;
+  }
+  playerSequence.push(note);
+  flashTappedNote(note);
+  if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} }
+  playTapSound(note); // 连点时掐掉上一个点键音（单声部）
+  renderClickDots(currentSequence.length);
+  updateInputUI();
+}
+
+function undoPick() {
+  if (gameState !== 'repeating' || playerSequence.length === 0) return;
+  stopAnswerReplay();
+  playerSequence.pop();
+  renderClickDots(currentSequence.length);
+  updateInputUI();
+}
+
+function clearPicks() {
+  if (gameState !== 'repeating' || playerSequence.length === 0) return;
+  stopAnswerReplay();
+  playerSequence = [];
+  renderClickDots(currentSequence.length);
+  updateInputUI();
+}
+
+function stopAnswerReplay() {
+  if (!answerPlaying) return;
+  answerPlaying = false;
+  if (answerReplayTimer) { clearTimeout(answerReplayTimer); answerReplayTimer = null; }
+  stopAllSounds(); // 掂点键音等 activeSources
+  stopScoreDemo();   // 掂节拍音源 + 清高亮（回放也走 scoreSources/scoreTimers 通道）
+  updateMyAnswerBtn();
+}
+function updateMyAnswerBtn() {
+  document.getElementById('btnMyAnswer').textContent = answerPlaying ? '⏹ 停止回放' : '🎵 播我的答案';
+}
+function lightScoreKeyOnly(label) { // 回放答案：只亮底部琴键，不动谱面
+  document.querySelectorAll('.note-bar.score-lit').forEach(b => b.classList.remove('score-lit'));
+  const bar = document.querySelector(`.note-bar[data-note="${label}"]`);
+  if (bar) bar.classList.add('score-lit');
+}
+
+function replayMyAnswer() {
+  if (gameState !== 'repeating' || playerSequence.length === 0) return;
+  stopScoreDemo(); // 回放答案与谱面演示/出题互斥
+  if (answerPlaying) { stopAnswerReplay(); return; } // 回放中再点 = 停止，绝不叠加
+  ensureAudioRunning();
+  answerPlaying = true;
+  updateMyAnswerBtn();
+  const LEAD = 0.09, BEAT = 0.6; // 节拍版回放（600ms/音）
+  const t0 = audioCtx.currentTime + LEAD;
+  let t = 0;
+  playerSequence.forEach(note => {
+    playScoreSound(note, t0 + t, BEAT);
+    const atMs = t * 1000 + LEAD * 1000, n = note;
+    scoreTimers.push(setTimeout(() => lightScoreKeyOnly(n), atMs));
+    t += BEAT;
+  });
+  if (answerReplayTimer) clearTimeout(answerReplayTimer);
+  answerReplayTimer = setTimeout(() => { // 播完自动复位
+    answerReplayTimer = null;
+    if (answerPlaying) { answerPlaying = false; updateMyAnswerBtn(); }
+    document.querySelectorAll('.note-bar.score-lit').forEach(el => el.classList.remove('score-lit'));
+  }, t * 1000 + LEAD * 1000 + 200);
+}
+
+function submitAnswer() {
+  if (gameState !== 'repeating' || playerSequence.length !== currentSequence.length) return;
+  stopAnswerReplay();
+  const total = currentSequence.length;
+  const results = [];
+  let allCorrect = true;
+  for (let i = 0; i < total; i++) {
+    const ok = playerSequence[i] === currentSequence[i];
+    results.push(ok);
+    if (!ok) allCorrect = false;
+  }
+  renderClickDots(total, results);
+  onRoundComplete(allCorrect);
+}
+
+function onRoundComplete(success) {
+  gameState = 'judging';
+  updateInputUI();
+
+  if (success) {
+    score += 100 * (1 + combo * 0.1);
+    combo++;
+    totalRounds++;
+    showJudgment('正确!', 'correct');
+    updateStateBar('✅ 全对！', 'correct');
+  } else {
+    combo = 0;
+    totalRounds++;
+    showJudgment('错误!', 'wrong');
+    updateStateBar('❌ 有音不对', 'wrong');
+    // 逐个闪出正确答案的琴键
+    currentSequence.forEach((n, i) => setTimeout(() => revealAnswer(n), 400 + i * 220));
+    const correctSeq = currentSequence.map(n => solfege(n)).join(' → ');
+    setTimeout(() => {
+      updateStateBar(`正确答案: ${correctSeq}`, 'wrong');
+    }, 1800);
+  }
+
+  updateHUD();
+
+  setTimeout(() => {
+    document.getElementById('btnNext').style.display = 'inline-block';
+  }, 1200);
+}
+
+function replayQuestion() {
+  if (gameState !== 'repeating') return;
+  stopScoreDemo(); // 重听打断谱面演示
+  stopAnswerReplay();
+  stopAllSounds();
+  ensureAudioRunning();
+  gameState = 'listening';
+  updateStateBar('🎧 重听题目...', 'listen');
+  updateInputUI();
+  highlightedNotes.clear();
+  renderNoteStates();
+
+  startMelodyPlayback(() => {
+    gameState = 'repeating';
+    currentSequence.forEach(n => highlightedNotes.add(n));
+    renderNoteStates();
+    updateStateBar('👆 按顺序点击下方琴键，按完点交卷', 'repeat');
+    updateInputUI();
+  });
+}
+
+function nextRound() {
+  document.getElementById('btnNext').style.display = 'none';
+  highlightedNotes.clear();
+  revealNotes.clear();
+  renderNoteStates();
+  newRound();
+}
+
+function newRound() {
+  currentSequence = [...TWINKLE_SEQ]; // 08-30 拍板：题目固定为谱面曲子（小星星 14 音）
+  document.getElementById('roundInfo').textContent = `第 ${totalRounds + 1} 轮 · 小星星 · 14 音`;
+  playerSequence = [];
+  renderClickDots(currentSequence.length);
+  updateInputUI();
+
+  setTimeout(() => {
+    playSequence(currentSequence);
+  }, 500);
+}
+
+// ============================
+// UI
+// ============================
+function showJudgment(text, type) {
+  const el = document.getElementById('judgeText');
+  el.textContent = text;
+  el.className = 'judgment-text show ' + type;
+  setTimeout(() => { el.className = 'judgment-text'; }, 600);
+}
+
+function updateStateBar(text, cls) {
+  const el = document.getElementById('stateBar');
+  el.textContent = text;
+  el.className = 'state-bar ' + cls;
+}
+
+function updateHUD() {
+  document.getElementById('score').textContent = Math.floor(score);
+  document.getElementById('combo').textContent = combo;
+  document.getElementById('totalRounds').textContent = totalRounds;
+}
+
+// ============================
+// 控制
+// ============================
+async function startGame() {
+  document.getElementById('startOverlay').style.display = 'none';
+  document.getElementById('loader').style.display = 'flex';
+
+  if (!audioCtx) {
+    await loadAudio();
+  }
+  ensureAudioRunning();
+  if (audioCtx && audioCtx.state === 'suspended') {
+    await audioCtx.resume();
+  }
+
+  const loadedCount = Object.keys(audioBuffers).length;
+  if (!audioCtx || loadedCount === 0) {
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('startOverlay').style.display = 'flex';
+    alert('音频加载失败（0/' + _loadTotal + '）。请检查网络后刷新页面重试；若持续失败请截图告诉我。');
+    return;
+  }
+
+  document.getElementById('loader').style.display = 'none';
+  score = 0; combo = 0; totalRounds = 0;
+  renderNoteStates();
+  updateHUD();
+  newRound();
+}
+
+if (new URLSearchParams(location.search).has('autostart')) startGame(); // ?autostart=1：截图/调试用
+buildScorePanel();
+renderNoteStates();
+</script>
+</body>
+</html>

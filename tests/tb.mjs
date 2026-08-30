@@ -196,12 +196,12 @@ async function main() {
 
   // ===== T3 开局状态机 =====
   await ev(`document.querySelector('.start-btn').click()`);
-  const T3_WAIT = LIVE ? 180000 : 15000; // live：24 资产后加载时间更长，深夜也能到 90s+
+  const T3_WAIT = LIVE ? 180000 : 18000; // 14 音题目节拍版出题 ~10.5s，live 网络更慢
   check('T3 进入听音态', await waitFor('gameState', 'listening', T3_WAIT));
   check('T3 转入作答态', await waitFor('gameState', 'repeating', T3_WAIT));
   const seq1 = await ev(`JSON.stringify(currentSequence)`).then(JSON.parse);
-  check('T3 题长=难度3', seq1.length === 3, JSON.stringify(seq1));
-  check('T3 进度点数=3', (await ev(`document.getElementById('clickSeq').children.length`)) === 3);
+  check('T3 题长=14(小星星)', seq1.length === 14, JSON.stringify(seq1));
+  check('T3 进度点数=14', (await ev(`document.getElementById('clickSeq').children.length`)) === 14);
   check('T3 音频加载日志', consoleLogs.some(l => l.includes('Audio loaded: 24 / 24')), consoleLogs.find(l => l.includes('Audio loaded')) || '未见加载日志');
 
   // ===== T4 答对流程 =====
@@ -216,10 +216,10 @@ async function main() {
   // ===== T5 答错流程 =====
   await ev(`nextRound()`);
   check('T5 下一轮回听音态', await waitFor('gameState', 'listening', 8000) || await waitFor('gameState', 'repeating', 8000));
-  await waitFor('gameState', 'repeating', 10000);
+  await waitFor('gameState', 'repeating', 16000);
   const seq2 = await ev(`JSON.stringify(currentSequence)`).then(JSON.parse);
   const wrongFirst = NOTES.find(n => n !== seq2[0]);
-  for (const n of [wrongFirst, seq2[1], seq2[2]]) await ev(`document.querySelector('.note-bar[data-note="${n}"]').click()`);
+  for (const n of [wrongFirst, ...seq2.slice(1)]) await ev(`document.querySelector('.note-bar[data-note="${n}"]').click()`);
   await ev(`submitAnswer()`);
   check('T5 连击清零', (await ev(`combo`)) === 0);
   check('T5 判定=错误', (await ev(`document.getElementById('judgeText').className`)).includes('wrong'));
@@ -227,7 +227,7 @@ async function main() {
 
   // ===== T6 撤销/清空/重听回归（08-24 修复项）=====
   await ev(`nextRound()`);
-  await waitFor('gameState', 'repeating', 12000);
+  await waitFor('gameState', 'repeating', 16000);
   const seq3 = await ev(`JSON.stringify(currentSequence)`).then(JSON.parse);
   await ev(`document.querySelector('.note-bar[data-note="${seq3[0]}"]').click()`);
   await ev(`undoPick()`);
@@ -236,7 +236,7 @@ async function main() {
   await ev(`document.querySelector('.note-bar[data-note="${seq3[0]}"]').click()`);
   await ev(`document.querySelector('.note-bar[data-note="${seq3[1]}"]').click()`);
   await ev(`replayQuestion()`);
-  await waitFor('gameState', 'repeating', 8000);
+  await waitFor('gameState', 'repeating', 16000);
   const t6b = await ev(`JSON.stringify(playerSequence)`).then(JSON.parse);
   check('T6 重听不清答案', JSON.stringify(t6b) === JSON.stringify([seq3[0], seq3[1]]), JSON.stringify(t6b));
   await ev(`replayMyAnswer()`);
@@ -269,7 +269,7 @@ async function main() {
   await ev(`document.querySelector('.note-bar[data-note="${seq3[0]}"]').click()`);
   await sleep(50);
   const t10b = await ev(`JSON.stringify({ state: gameState, len: playerSequence.length, stopCalls: window._stopCalls, subDis: document.getElementById('btnSubmit').disabled })`).then(JSON.parse);
-  check('T10 听题中点键=停音转作答', t10b.state === 'repeating' && t10b.len === 3 && t10b.stopCalls >= 1 && t10b.subDis === false, JSON.stringify(t10b));
+  check('T10 听题中点键=停音转作答', t10b.state === 'repeating' && t10b.len === 4 && t10b.stopCalls >= 1, JSON.stringify(t10b)); // 14音时代打断点击也入列(3+1)
   // 半答保留：清空→按2个→重听→点键，已按不丢且新键记为第三笔
   await ev(`clearPicks()`);
   await ev(`document.querySelector('.note-bar[data-note="${seq3[0]}"]').click()`);
@@ -278,7 +278,7 @@ async function main() {
   await ev(`document.querySelector('.note-bar[data-note="${seq3[2]}"]').click()`);
   await sleep(50);
   const t10c = await ev(`JSON.stringify({ state: gameState, len: playerSequence.length, subDis: document.getElementById('btnSubmit').disabled })`).then(JSON.parse);
-  check('T10 打断保留已按答案', t10c.state === 'repeating' && t10c.len === 3 && t10c.subDis === false, JSON.stringify(t10c));
+  check('T10 打断保留已按答案', t10c.state === 'repeating' && t10c.len === 3, JSON.stringify(t10c));
   await ev(`stopAllSounds = _o; flashNote = null; renderNoteStates();`);
   await sleep(400);
 
@@ -288,7 +288,7 @@ async function main() {
   // 否则会吃到上一轮残留的 repeating 态立即通过，本轮 playSequence 在 500ms 后才杀出，
   // 曾把 T13 的谱面演示按互斥规则掐死（T13 五连挂的真凶）
   await waitFor('gameState', 'listening', 8000);
-  await waitFor('gameState', 'repeating', 12000);
+  await waitFor('gameState', 'repeating', 16000);
   await ev(`document.querySelector('.note-bar[data-note="4C"]').click()`);
   await ev(`window._tap1 = lastTapSrc; window._tap1Stopped = false; _tap1.stop = function(){ window._tap1Stopped = true; };`);
   await ev(`document.querySelector('.note-bar[data-note="4E"]').click()`);

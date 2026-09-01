@@ -15,44 +15,38 @@
     background:radial-gradient(ellipse at 30% 20%, #1a1326 0%, #0b0812 60%);
     display:flex; flex-direction:column; }
 
-  /* ============ 顶栏：玩家(左) / 敌人(右) ============ */
-  #topbar { height:170px; display:flex; justify-content:space-between; align-items:flex-start; padding:18px 40px; }
-  .panel { background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.09); border-radius:16px; padding:14px 22px; }
-  #playerPanel { width:560px; display:flex; align-items:center; gap:18px; }
-  .avatar { font-size:64px; line-height:1; filter:drop-shadow(0 0 14px rgba(255,215,0,.25)); }
-  .pinfo { flex:1; }
-  .pname { font-size:22px; color:#ffd88a; font-weight:700; letter-spacing:2px; margin-bottom:8px; }
-  .hpbar { height:20px; background:rgba(255,255,255,.08); border-radius:10px; overflow:hidden; position:relative; }
+  #turnBanner { position:absolute; top:14px; left:50%; transform:translateX(-50%); font-size:17px; color:#cbb8de;
+    letter-spacing:3px; background:#00000055; padding:6px 22px; border-radius:20px; z-index:50; }
+
+  /* ============ 战场：英雄(左) / 7音轨(中) / 小怪(右) ============ */
+  #battlefield { flex:1; display:flex; padding:56px 10px 6px; min-height:0; }
+  .charZone { width:250px; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:26px; }
+  #enemyZone { width:280px; }
+  .figure { font-size:120px; line-height:1.15; filter:drop-shadow(0 0 22px rgba(255,215,0,.28)); }
+  #enemyZone .figure { filter:drop-shadow(0 0 22px rgba(255,120,160,.30)); }
+  .charName { font-size:22px; font-weight:800; letter-spacing:2px; margin-top:8px; }
+  #heroZone .charName { color:#ffd88a; } #enemyZone .charName { color:#ff9fc0; }
+  .charHpWrap { width:210px; margin-bottom:10px; }
+  .hpbar { height:20px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); border-radius:10px; overflow:hidden; position:relative; }
   .hpfill { height:100%; background:linear-gradient(90deg,#e94560,#ff6b6b); transition:width .35s; }
-  .hptext { position:absolute; inset:0; text-align:center; font-size:14px; color:#fff; line-height:20px; font-weight:700; text-shadow:0 1px 2px #000; }
-  .energyRow { margin-top:8px; display:flex; align-items:center; gap:10px; }
-  .energyOrb { width:46px; height:46px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #7ee8fa, #1f7a8c 70%);
-    border:3px solid #bdefff; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:900; color:#04222b;
-    box-shadow:0 0 18px rgba(126,232,250,.5); }
-  .energyNum { font-size:22px; color:#bdefff; font-weight:800; }
-  .energyLabel { font-size:13px; color:#7aa; }
+  #enemyZone .hpfill { background:linear-gradient(90deg,#c0392b,#ff7675); }
+  .hptext { position:absolute; inset:0; text-align:center; font-size:13px; color:#fff; line-height:20px; font-weight:700; text-shadow:0 1px 2px #000; }
+  .shieldChip { margin-top:6px; font-size:15px; color:#bdefff; font-weight:800; min-height:20px; }
+  .shieldChip.has { background:#1f7a8c55; border:1px solid #7ee8fa88; border-radius:10px; padding:1px 12px; }
+  #intentLabel { margin-top:14px; font-size:15px; color:#c9a; text-align:center; line-height:1.5; max-width:250px; }
 
-  #enemyPanel { width:620px; text-align:right; }
-  .ename { font-size:24px; color:#ff9fc0; font-weight:800; letter-spacing:2px; margin-bottom:6px; }
-  .edesc { font-size:13px; color:#a89; margin-bottom:10px; }
-  #enemyPanel .hpbar { height:24px; }
-  #enemyPanel .hpfill { background:linear-gradient(90deg,#c0392b,#ff7675); }
-  #intent { margin-top:10px; display:flex; justify-content:flex-end; gap:8px; align-items:center; min-height:44px; }
-  .intentLabel { font-size:13px; color:#c9a; }
-  .intentBlk { min-width:44px; height:38px; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    font-size:12px; font-weight:800; color:#fff; text-shadow:0 1px 2px #000; padding:0 6px; }
-
-  /* ============ 中部：7 音轨战场 ============ */
-  #lanesWrap { flex:1; position:relative; padding:6px 40px; }
+  /* 音轨 */
+  #lanesWrap { flex:1; position:relative; padding:6px 8px; min-width:0; }
   #lanes { position:relative; height:100%; display:flex; flex-direction:column-reverse; gap:6px; }
   .lane { flex:1; position:relative; border-radius:12px; background:var(--laneBg); border:1px solid var(--laneBd);
     box-shadow:inset 0 0 30px rgba(0,0,0,.35); overflow:visible; }
-  .laneTag { position:absolute; left:-4px; top:50%; transform:translateY(-50%); width:76px; text-align:center;
-    font-size:26px; font-weight:900; color:var(--laneC); text-shadow:0 0 12px var(--laneC); font-family:Georgia,serif; z-index:5; }
-  .laneZone { position:absolute; left:84px; right:120px; top:0; bottom:0; }
-  .goalP { position:absolute; left:84px; top:0; bottom:0; width:10px; border-radius:5px; background:linear-gradient(#7ee8fa33,#1f7a8c55); }
-  .goalE { position:absolute; right:120px; top:0; bottom:0; width:10px; border-radius:5px; background:linear-gradient(#ff9fc055,#c0392b66); }
+  .laneTag { position:absolute; left:-6px; top:50%; transform:translateY(-50%); width:66px; text-align:center;
+    font-size:24px; font-weight:900; color:var(--laneC); text-shadow:0 0 12px var(--laneC); font-family:Georgia,serif; z-index:5; }
+  .laneZone { position:absolute; left:70px; right:110px; top:0; bottom:0; }
+  .goalP { position:absolute; left:70px; top:0; bottom:0; width:8px; border-radius:4px; background:linear-gradient(#7ee8fa33,#1f7a8c55); }
+  .goalE { position:absolute; right:110px; top:0; bottom:0; width:8px; border-radius:4px; background:linear-gradient(#ff9fc055,#c0392b66); }
 
+  /* 飞行音块 */
   .blk { position:absolute; width:58px; height:58px; top:50%; transform:translate(-50%,-50%);
     display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:900; font-family:Georgia,serif;
     color:#fff; text-shadow:0 1px 3px #000; will-change:left; z-index:10; }
@@ -62,11 +56,20 @@
     border:3px solid var(--c1); box-shadow:0 0 14px var(--c1); }
   .blk.e > span:not(.fnum) { transform:rotate(-45deg); }
   .blk .fnum { position:absolute; bottom:-6px; right:-6px; font-size:13px; background:#000a; border-radius:8px; padding:1px 6px; color:#ffd88a; font-family:system-ui; }
-  .blk.boosted { animation:resopulse 1s infinite alternate; border-color:#ffd60a; box-shadow:0 0 24px #ffd60a; }
-  @keyframes resopulse { from { box-shadow:0 0 12px #ffd60a88; } to { box-shadow:0 0 28px #ffd60a; } }
+
+  /* 待发格（钢琴卷帘出招表）：小一号+呼吸动画 */
+  .slot { position:absolute; width:46px; height:46px; top:50%; transform:translate(-50%,-50%);
+    display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:900; font-family:Georgia,serif;
+    color:#fff; text-shadow:0 1px 3px #000; z-index:8; animation:slotbreath 1.6s ease-in-out infinite alternate; }
+  .slot.p { border-radius:50%; background:radial-gradient(circle at 35% 30%, var(--c2), var(--c1) 75%); border:2px solid var(--c1);
+    box-shadow:0 0 10px var(--c1); opacity:.92; }
+  .slot.e { border-radius:10px; transform:translate(-50%,-50%) rotate(45deg); background:linear-gradient(135deg,#3a2030,#552838);
+    border:2px solid var(--c1); box-shadow:0 0 9px var(--c1); opacity:.92; }
+  .slot.e > span:not(.fnum) { transform:rotate(-45deg); }
+  .slot .fnum { position:absolute; bottom:-5px; right:-5px; font-size:11px; background:#000a; border-radius:6px; padding:0 4px; color:#ffd88a; font-family:system-ui; }
+  @keyframes slotbreath { from { filter:brightness(.85); } to { filter:brightness(1.12); } }
 
   #resonantSvg { pointer-events:none; z-index:9; }
-
   .spark { position:absolute; width:10px; height:10px; border-radius:50%; background:#fff; z-index:20; pointer-events:none;
     animation:sparkfly .55s ease-out forwards; }
   @keyframes sparkfly { to { transform:translate(var(--dx),var(--dy)) scale(.2); opacity:0; } }
@@ -74,56 +77,45 @@
     animation:dmgup .9s ease-out forwards; pointer-events:none; }
   @keyframes dmgup { to { transform:translateY(-56px); opacity:0; } }
 
-  /* ============ 底栏：手牌区 ============ */
-  #bottombar { height:294px; position:relative; display:flex; align-items:flex-end; justify-content:center; padding:0 40px 16px; }
-  #hand { display:flex; align-items:flex-end; justify-content:center; min-height:240px; }
-  .card { width:158px; height:226px; margin:0; border-radius:14px; position:relative; cursor:pointer;
-    background:linear-gradient(160deg, #2a2333, #171221); border:2px solid var(--cardBd,#556);
+  /* ============ 底栏：两张卡 + 结束小节 ============ */
+  #bottombar { height:280px; position:relative; display:flex; align-items:flex-end; justify-content:center; padding:0 40px 14px; }
+  #hand { display:flex; align-items:flex-end; justify-content:center; gap:36px; min-height:240px; }
+  .card { width:230px; height:240px; border-radius:16px; position:relative; cursor:pointer;
+    background:linear-gradient(160deg, #2a2333, #171221); border:3px solid var(--cardBd,#556);
     box-shadow:0 4px 14px #000a; transition:transform .16s ease, box-shadow .16s ease; z-index:1; }
   @media (hover:hover) {
-    .card:hover { transform:translateY(-30px) scale(1.13); z-index:20; box-shadow:0 10px 30px #000c, 0 0 20px var(--cardBd); }
+    .card:hover { transform:translateY(-30px) scale(1.1); z-index:20; box-shadow:0 10px 30px #000c, 0 0 20px var(--cardBd); }
     #endTurnBtn:hover:not(:disabled) { box-shadow:0 0 26px #ff9fc066; }
     #overlayBtn:hover { background:#ffd60a22; }
   }
-  .card.selected { transform:translateY(-30px) scale(1.13); z-index:30; border-color:#ffd60a !important;
-    box-shadow:0 10px 30px #000c, 0 0 26px #ffd60aaa !important; }
+  .card.selected { transform:translateY(-30px) scale(1.1); z-index:30; border-color:#ffd60a !important;
+    box-shadow:0 10px 34px #000d, 0 0 26px #ffd60aaa !important; }
   .card.disabled { filter:grayscale(.85) brightness(.6); }
-  .cost { position:absolute; top:-10px; left:-10px; width:40px; height:40px; border-radius:50%;
-    background:radial-gradient(circle at 35% 30%, #7ee8fa, #1f7a8c 75%); border:3px solid #bdefff;
-    display:flex; align-items:center; justify-content:center; font-size:19px; font-weight:900; color:#04222b; z-index:2; }
-  .cardType { text-align:center; font-size:12px; color:#b9a8c9; letter-spacing:4px; margin-top:16px; }
-  .cardName { text-align:center; font-size:30px; font-weight:900; margin-top:2px; color:var(--cardTc,#fff);
+  .cardType { text-align:center; font-size:13px; color:#b9a8c9; letter-spacing:4px; margin-top:18px; }
+  .cardName { text-align:center; font-size:32px; font-weight:900; margin-top:6px; color:var(--cardTc,#fff);
     text-shadow:0 0 14px var(--cardBd); font-family:Georgia,"Microsoft YaHei",serif; }
-  .cardGlyph { text-align:center; font-size:44px; margin:6px 0 2px; }
-  .cardDesc { position:absolute; left:8px; right:8px; bottom:34px; text-align:center; font-size:13.5px; line-height:1.45; color:#d8cbe6; }
-  .cardForce { position:absolute; bottom:8px; width:100%; text-align:center; font-size:13px; color:#ffd88a; font-weight:800; }
-  .cardRune .cardName { font-size:24px; }
+  .cardGlyph { text-align:center; font-size:40px; margin:10px 0 4px; }
+  .cardDesc { position:absolute; left:12px; right:12px; bottom:38px; text-align:center; font-size:14.5px; line-height:1.5; color:#d8cbe6; }
+  .cardForce { position:absolute; bottom:10px; width:100%; text-align:center; font-size:14px; color:#ffd88a; font-weight:800; }
 
-  .pile { position:absolute; bottom:20px; width:120px; text-align:center; font-size:14px; color:#9a8bb0; }
-  .pile .pileIcon { font-size:34px; filter:drop-shadow(0 2px 4px #000); }
-  .pile .pileNum { font-size:20px; font-weight:800; color:#cbb8de; margin-top:2px; }
-  #drawPile { left:56px; } #discardPile { right:180px; }
-
-  #controlsRow { display:contents; }
-  #endTurnBtn { position:absolute; right:52px; bottom:96px; width:150px; height:56px; border-radius:14px; border:2px solid #ff9fc0;
-    background:linear-gradient(160deg,#4a2030,#2a1020); color:#ffb8cf; font-size:19px; font-weight:800; cursor:pointer; letter-spacing:3px;
+  #endTurnBtn { position:absolute; right:52px; bottom:90px; width:180px; height:64px; border-radius:14px; border:2px solid #ff9fc0;
+    background:linear-gradient(160deg,#4a2030,#2a1020); color:#ffb8cf; font-size:21px; font-weight:800; cursor:pointer; letter-spacing:3px;
     box-shadow:0 0 16px #ff9fc033; }
   #endTurnBtn:disabled { opacity:.35; cursor:not-allowed; }
-
-  /* 触屏设备（手机/平板横屏）：按钮加大，好按 */
+  /* 触屏设备（手机/平板横屏）：按钮加大，好按（必须写在基础规则之后） */
   @media (pointer:coarse) {
-    #endTurnBtn { width:210px; height:92px; font-size:24px; right:40px; bottom:80px; border-radius:18px; }
+    #endTurnBtn { width:230px; height:96px; font-size:26px; right:36px; bottom:76px; border-radius:18px; }
   }
 
-  /* 触屏点选说明条（无 hover 的替代）：浮在手牌上方 */
-  #cardPreview { position:absolute; bottom:316px; left:50%; transform:translateX(-50%);
+  /* 触屏点选说明条 */
+  #cardPreview { position:absolute; bottom:300px; left:50%; transform:translateX(-50%);
     background:#000000d0; border:1px solid #ffd60a66; border-radius:14px; color:#ffe9b0;
     font-size:30px; line-height:1.5; padding:14px 30px; max-width:1500px; white-space:nowrap;
     opacity:0; transition:opacity .15s; pointer-events:none; z-index:60; }
   #cardPreview.show { opacity:1; }
   #cardPreview .pvHint { color:#ffd60a; font-weight:800; }
 
-  /* 竖屏遮罩：请把手机横过来（真实像素，不随舞台缩放） */
+  /* 竖屏遮罩 */
   #rotateMask { position:fixed; inset:0; z-index:999; display:none; flex-direction:column;
     align-items:center; justify-content:center; gap:16px;
     background:radial-gradient(ellipse at 30% 20%, #1a1326 0%, #0b0812 60%); }
@@ -133,10 +125,7 @@
   #rotateMask .rotTitle { font-size:30px; color:#ffd88a; font-weight:800; letter-spacing:2px; }
   #rotateMask .rotSub { font-size:16px; color:#9a8bb0; }
 
-  #turnBanner { position:absolute; top:16px; left:50%; transform:translateX(-50%); font-size:17px; color:#cbb8de; letter-spacing:3px;
-    background:#00000055; padding:6px 22px; border-radius:20px; }
-
-  #toast { position:absolute; top:220px; left:50%; transform:translateX(-50%); background:#000c; color:#ffd88a; font-size:17px;
+  #toast { position:absolute; top:60px; left:50%; transform:translateX(-50%); background:#000c; color:#ffd88a; font-size:17px;
     padding:10px 28px; border-radius:12px; opacity:0; transition:opacity .25s; pointer-events:none; z-index:99; max-width:1400px; text-align:center; }
 
   #overlay { position:absolute; inset:0; background:#000000bb; display:none; flex-direction:column; align-items:center; justify-content:center; z-index:200; }
@@ -149,39 +138,51 @@
 </head>
 <body>
 <div id="stage">
-  <div id="topbar">
-    <div class="panel" id="playerPanel">
-      <div class="avatar">📻</div>
-      <div class="pinfo">
-        <div class="pname">老收音机</div>
-        <div class="hpbar"><div class="hpfill" id="pHpFill"></div><div class="hptext" id="pHpText"></div></div>
-        <div class="energyRow">
-          <div class="energyOrb" id="energyOrb">3</div>
-          <div><div class="energyNum" id="energyNum">3/3</div><div class="energyLabel">音量 🔊</div></div>
-        </div>
-      </div>
-    </div>
-    <div id="turnBanner">第 1 小节</div>
-    <div class="panel" id="enemyPanel">
-      <div class="ename">🎵 走音的八音盒</div>
-      <div class="edesc">一台被摔坏的八音盒，循环播放着走调的歌</div>
-      <div class="hpbar"><div class="hpfill" id="eHpFill"></div><div class="hptext" id="eHpText"></div></div>
-      <div id="intent"><span class="intentLabel">下小节它将唱出：</span></div>
-    </div>
-  </div>
+  <div id="turnBanner">第 1 小节</div>
 
-  <div id="lanesWrap">
-    <div id="lanes"></div>
+  <div id="battlefield">
+    <div class="charZone" id="heroZone">
+      <div class="charHpWrap">
+        <div class="hpbar"><div class="hpfill" id="pHpFill"></div><div class="hptext" id="pHpText"></div></div>
+        <div class="shieldChip" id="shieldChip"></div>
+      </div>
+      <div class="figure">📻</div>
+      <div class="charName">老收音机</div>
+    </div>
+
+    <div id="lanesWrap">
+      <div id="lanes"></div>
+    </div>
+
+    <div class="charZone" id="enemyZone">
+      <div class="charHpWrap">
+        <div class="hpbar"><div class="hpfill" id="eHpFill"></div><div class="hptext" id="eHpText"></div></div>
+      </div>
+      <div class="figure">🎵</div>
+      <div class="charName">走音的八音盒</div>
+      <div id="intentLabel"></div>
+    </div>
   </div>
 
   <div id="bottombar">
     <div id="cardPreview"></div>
-    <div id="hand"></div>
-    <div id="controlsRow">
-      <div class="pile" id="drawPile"><div class="pileIcon">🎼</div>曲库<div class="pileNum" id="drawNum">15</div></div>
-      <button id="endTurnBtn">结束小节</button>
-      <div class="pile" id="discardPile"><div class="pileIcon">🎙️</div>已奏<div class="pileNum" id="discardNum">0</div></div>
+    <div id="hand">
+      <div class="card" id="cardAttack">
+        <div class="cardType">攻 击</div>
+        <div class="cardName">四季 · 春</div>
+        <div class="cardGlyph">🌸</div>
+        <div class="cardDesc">奏响维瓦尔第《春》的下一句（6 个音块）</div>
+        <div class="cardForce">每个音块 力度 4</div>
+      </div>
+      <div class="card" id="cardDefense">
+        <div class="cardType">防 御</div>
+        <div class="cardName">升阶曲</div>
+        <div class="cardGlyph">🛡️</div>
+        <div class="cardDesc">升起 8 点护盾，抵挡本回合伤害（机制占位，待大爷细化）</div>
+        <div class="cardForce">护盾 8</div>
+      </div>
     </div>
+    <button id="endTurnBtn">结束小节</button>
   </div>
 
   <div id="toast"></div>
@@ -200,68 +201,58 @@
 
 <script>
 'use strict';
-/* ================= V11 音符对撞 · 全横屏版 =================
-   主打横屏（手机/PC/Steam 统一）：1920×1080 设计稿等比缩放。
-   手机竖屏 → 全屏「请横过来」提示；横过来自动进游戏。
-   触屏设备（无 hover）→ 两段式出牌：点一下选中看说明、再点打出。
-   鼠标设备 → 悬停看牌 + 单击直出（原版手感）。 */
+/* ================= V11 音符对撞 · 卷帘对峙版 =================
+   大爷 09-01 10:54 改版：
+   - 英雄(左) vs 小怪(右)，血条挂在各自头上
+   - 敌方意图 = 音轨右端预排待发格（先发的靠中间）
+   - 我方出卡 = 音轨左端预排待发格
+   - 结束小节：双方按节拍(500ms/step)齐射 → 同轨对撞抵消 → 到达扣血
+   - 手牌只有两张：四季·春(攻击·每回合一次) / 升阶曲(防御占位·每回合一次)
+   音序来源：v10h_audio/analysis/tracks.json《春》真音频归轨数据。 */
 
 const NOTES = [
-  { id:'do',  cn:'Do',  full:'主音', semi:0,  hue:0   },
-  { id:'re',  cn:'Re',  full:'上行', semi:2,  hue:55  },
-  { id:'mi',  cn:'Mi',  full:'中音', semi:4,  hue:203 },
-  { id:'fa',  cn:'Fa',  full:'下属', semi:5,  hue:352 },
-  { id:'sol', cn:'Sol', full:'属音', semi:7,  hue:32  },
-  { id:'la',  cn:'La',  full:'下中', semi:9,  hue:128 },
-  { id:'si',  cn:'Si',  full:'导音', semi:11, hue:225 },
+  { id:'do',  cn:'Do',  semi:0,  hue:0   },
+  { id:'re',  cn:'Re',  semi:2,  hue:55  },
+  { id:'mi',  cn:'Mi',  semi:4,  hue:203 },
+  { id:'fa',  cn:'Fa',  semi:5,  hue:352 },
+  { id:'sol', cn:'Sol', semi:7,  hue:32  },
+  { id:'la',  cn:'La',  semi:9,  hue:128 },
+  { id:'si',  cn:'Si',  semi:11, hue:225 },
 ];
 const NMAP = Object.fromEntries(NOTES.map(n=>[n.id,n]));
-const LANE_C = {}; // 轨道主色/辅色
+const LANE_C = {};
 NOTES.forEach(n=>{
   LANE_C[n.id] = { c1:`hsl(${n.hue} 90% 58%)`, c2:`hsl(${n.hue} 70% 30%)`,
     bg:`hsl(${n.hue} 60% 14% / .55)`, bd:`hsl(${n.hue} 70% 40% / .5)` };
 });
 
-/* ---------- 卡牌定义 ---------- */
-const CARDS = {
-  do:  { type:'note', note:'do',  cost:1, name:'Do · 主音', desc:'在 Do 轨发射一个音块' },
-  re:  { type:'note', note:'re',  cost:1, name:'Re · 上行', desc:'在 Re 轨发射一个音块' },
-  mi:  { type:'note', note:'mi',  cost:1, name:'Mi · 中音', desc:'在 Mi 轨发射一个音块' },
-  fa:  { type:'note', note:'fa',  cost:1, name:'Fa · 下属', desc:'在 Fa 轨发射一个音块' },
-  sol: { type:'note', note:'sol', cost:1, name:'Sol · 属音', desc:'在 Sol 轨发射一个音块' },
-  la:  { type:'note', note:'la',  cost:1, name:'La · 下中', desc:'在 La 轨发射一个音块' },
-  si:  { type:'note', note:'si',  cost:1, name:'Si · 导音', desc:'在 Si 轨发射一个音块' },
-  cresc:  { type:'rune', cost:1, glyph:'𝄝', name:'渐强', desc:'本小节你奏出的音符力度 +2', en:'crescendo' },
-  wave:   { type:'rune', cost:1, glyph:'〜', name:'波浪', desc:'下一张音符卡：该轨与相邻轨各发一块', en:'trillo' },
-  decresc:{ type:'rune', cost:1, glyph:'𝄞', name:'渐弱', desc:'所有敌方音块力度 −3', en:'diminuendo' },
-  dacapo: { type:'rune', cost:1, glyph:'𝄋', name:'反复', desc:'重演最后一张音符卡（再发一块）', en:'da capo' },
-  rest:   { type:'rune', cost:2, glyph:'𝄐', name:'终曲华彩', desc:'所有飞行中的我方音块立即命中结算，无视拦截', en:'cadenza' },
-  heal:   { type:'aux',  cost:1, glyph:'🔧', name:'调音', desc:'恢复 6 点生命', en:'accordatura' },
-  draw2:  { type:'aux',  cost:0, glyph:'👂', name:'复听', desc:'抽 2 张牌', en:'riascolto' },
-};
-const NOTE_FORCE = 6, BASE_SPEED = 150; // px/s（设计稿坐标）
-const START_DECK = ['do','do','re','mi','mi','fa','sol','sol','la','si','cresc','dacapo','heal','draw2','wave'];
-
-/* ---------- 敌人歌单（循环，每圈力度+cycle） ---------- */
+/* ---------- 曲子数据 ---------- */
+/* 维瓦尔第《春》主题：v10h_audio 真音频归轨（E大调 mi 主导，14 格） */
+const SPRING = ['mi','mi','mi','mi','sol','mi','mi','mi','fa','mi','si','si','sol','mi'];
+const SPRING_SEG = 6, SPRING_FORCE = 4;
+/* 敌方：小星星分句，4 小节循环，每圈力度 +cycle 加成 */
 const SONG = [
-  [], // 第1小节蓄力
-  [ {n:'do',f:3},{n:'re',f:3},{n:'mi',f:3} ],
-  [ {n:'sol',f:7} ],
-  [ {n:'la',f:4},{n:'si',f:4},{n:'do',f:4} ],
+  { label:'小星星 · 第一句', notes:[['do',3],['do',3],['sol',4]] },
+  { label:'小星星 · 第二句', notes:[['sol',4],['la',4],['la',5]] },
+  { label:'小星星 · 第三句', notes:[['si',5],['do',6]] },
+  { label:'小星星 · 第四句', notes:[['do',4],['sol',4],['la',5],['si',5]] },
 ];
-const ENEMY_HP = 42, PLAYER_HP = 50, ENERGY_MAX = 3;
+const ENEMY_HP = 66, PLAYER_HP = 50, SHIELD_VAL = 8;
+const NOTE_FORCE_UNUSED = 0, BASE_SPEED = 240; // px/s（设计稿坐标）
 
 /* ---------- 状态 ---------- */
 const S = {
-  php:PLAYER_HP, ehp:ENEMY_HP, energy:ENERGY_MAX,
-  deck:[], hand:[], discard:[], turn:1, phase:'play', // play | resolve | over
-  blocks:[], lastNote:null, crescThisBar:false, waveNext:false,
-  cycle:0, songIdx:0,
+  php:PLAYER_HP, ehp:ENEMY_HP, shield:0,
+  turn:1, phase:'play', // play | resolve | over
+  blocks:[],            // 飞行中的音块
+  pending:{ p:[], e:[] }, // 待发格（卷帘）：{note, force, step, slotEl}
+  springIdx:0, cardsUsed:{ attack:false, defense:false },
+  cycle:0, songIdx:0, launched:false,
 };
 const $=id=>document.getElementById(id);
-const lanesEl=$('lanes'), handEl=$('hand');
+const lanesEl=$('lanes');
 
-/* ---------- 音频（Web Audio 合成，零资产；首次触摸解锁） ---------- */
+/* ---------- 音频（Web Audio 合成；首次触摸解锁） ---------- */
 let AC=null;
 function ensureAudio(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
   if(AC && AC.state==='suspended') AC.resume(); }
@@ -285,11 +276,10 @@ function playCrash(){ if(!AC)return; const t=AC.currentTime, len=.22, buf=AC.cre
 function playChord(ids){ ids.forEach((n,i)=>setTimeout(()=>playNote(n,.45,.75), i*90)); }
 function playBad(){ playNote('fa',.3,.3); setTimeout(()=>playNote('mi',.3,.4),110); }
 
-/* ---------- 舞台缩放：全横屏，1920×1080 等比；竖屏 → 旋转提示遮罩 ---------- */
+/* ---------- 舞台缩放（全横屏） ---------- */
 const stage=$('stage');
 const DESIGN_W=1920, DESIGN_H=1080;
 let S_SCALE=1;
-/* 触屏判定（加载时一次）：决定两段式点选还是单击直出 */
 const TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints>0 || matchMedia('(pointer: coarse)').matches;
 function fit(){
   const portrait = innerWidth < innerHeight;
@@ -297,7 +287,6 @@ function fit(){
   stage.style.visibility = portrait ? 'hidden' : 'visible';
   S_SCALE = Math.min(innerWidth/DESIGN_W, innerHeight/DESIGN_H);
   stage.style.transform=`translate(-50%,-50%) scale(${S_SCALE})`;
-  if(!portrait) layoutHand();
 }
 addEventListener('resize',fit);
 addEventListener('orientationchange',()=>setTimeout(fit,120));
@@ -316,25 +305,23 @@ NOTES.forEach(n=>{
 function zoneOf(id){ return $('zone_'+id); }
 function zoneW(id){ return zoneOf(id).clientWidth; }
 
-/* ---------- 音块 ---------- */
+/* ---------- 飞行音块 ---------- */
 function spawnBlock(side, note, force){
   const c=LANE_C[note];
   const el=document.createElement('div'); el.className='blk '+side;
   el.style.setProperty('--c1',c.c1); el.style.setProperty('--c2',c.c2);
   el.innerHTML=`<span>${NMAP[note].cn}</span><span class="fnum">${force}</span>`;
-  const b={ side, note, force, x:(side==='p'?58:zoneW(note)-58), el, boosted:false };
+  const b={ side, note, force, x:(side==='p'?40:zoneW(note)-40), el };
   el.style.left=b.x+'px'; zoneOf(note).appendChild(el);
   S.blocks.push(b);
-  if(side==='p'){ playNote(note,.4,.5); if(S.crescThisBar){ b.force+=2; b.boosted=true; el.classList.add('boosted'); b.el.querySelector('.fnum').textContent=b.force; } }
-  checkResonance();
+  playNote(note, side==='p'?.4:.25, side==='p'?.5:.35);
   return b;
 }
 function killBlock(b, spark=true){
   if(spark) doSpark(b);
-  b.el.remove(); S.blocks.splice(S.blocks.indexOf(b),1);
-  checkResonance();
+  b.el.remove(); const i=S.blocks.indexOf(b); if(i>=0) S.blocks.splice(i,1);
 }
-function stagePosOfZone(zone){ // 音轨区 → 舞台设计稿坐标
+function stagePosOfZone(zone){
   const r=zone.getBoundingClientRect(), sr=stage.getBoundingClientRect();
   return { ox:(r.left-sr.left)/S_SCALE, oy:(r.top-sr.top)/S_SCALE, w:r.width/S_SCALE, h:r.height/S_SCALE };
 }
@@ -352,181 +339,139 @@ function doSpark(b){
 }
 function floatDmg(target, val){
   const el=document.createElement('div'); el.className='dmgFloat'; el.textContent='-'+val;
-  const px = target==='e'? 1660 : 320, py = target==='e'? 120 : 60;
+  const px = target==='e'? 1620 : 300, py = 260;
   el.style.left=px+'px'; el.style.top=py+'px'; stage.appendChild(el); setTimeout(()=>el.remove(),950);
 }
 
-/* ---------- 大三和弦共鸣：do+mi+sol 同场 → 我方全体+2（一次性标记） ---------- */
-function checkResonance(){
-  const mine=S.blocks.filter(b=>b.side==='p').map(b=>b.note);
-  const has=['do','mi','sol'].every(n=>mine.includes(n));
-  if(has){
-    let any=false;
-    S.blocks.filter(b=>b.side==='p'&&!b.boosted).forEach(b=>{ b.force+=2; b.boosted=true; b.el.classList.add('boosted');
-      b.el.querySelector('.fnum').textContent=b.force; any=true; });
-    if(any){ playChord(['do','mi','sol']); toast('🎹 大三和弦共鸣！我方音块 +2'); }
-  }
-  document.querySelectorAll('#resonantSvg').forEach(e=>e.remove());
-  if(has) drawResonantLines();
+/* ---------- 待发格（卷帘） ---------- */
+function queueBlock(side, note, force, step){
+  const b={ side, note, force, step, slotEl:null };
+  S.pending[side].push(b);
+  renderSlot(b);
+  return b;
 }
-function drawResonantLines(){
-  document.querySelectorAll('#resonantSvg').forEach(e=>e.remove());
-  const trio=S.blocks.filter(b=>b.side==='p'&&['do','mi','sol'].includes(b.note));
-  if(trio.length<3) return;
-  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.id='resonantSvg';
-  svg.setAttribute('width',DESIGN_W); svg.setAttribute('height',DESIGN_H);
-  svg.style.cssText='position:absolute;left:0;top:0;pointer-events:none;z-index:9;';
-  const pts=trio.map(b=>{ const z=stagePosOfZone(zoneOf(b.note));
-    return { x:z.ox + b.x, y:z.oy + z.h/2 }; });
-  for(let i=0;i<pts.length;i++){
-    const l=document.createElementNS('http://www.w3.org/2000/svg','line');
-    const a=pts[i], bp=pts[(i+1)%pts.length];
-    l.setAttribute('x1',a.x); l.setAttribute('y1',a.y); l.setAttribute('x2',bp.x); l.setAttribute('y2',bp.y);
-    l.setAttribute('stroke','#ffd60a'); l.setAttribute('stroke-width','3'); l.setAttribute('opacity','.75');
-    l.setAttribute('stroke-dasharray','12 8'); svg.appendChild(l);
-  }
-  stage.appendChild(svg);
+function renderSlot(b){
+  const c=LANE_C[b.note];
+  const el=document.createElement('div'); el.className='slot '+b.side;
+  el.style.setProperty('--c1',c.c1); el.style.setProperty('--c2',c.c2);
+  el.innerHTML=`<span>${NMAP[b.note].cn}</span><span class="fnum">${b.force}</span>`;
+  el.style.left=slotX(b)+'px';
+  zoneOf(b.note).appendChild(el);
+  b.slotEl=el;
+}
+/* 我方格排在左端：先发的(step小)最靠中间，依次往左；敌方镜像 */
+function slotX(b){
+  const w=zoneW(b.note);
+  const same=S.pending[b.side].filter(x=>x.note===b.note && x.step<=b.step).length; // 含自己，1=第一个
+  const k=same-1;
+  return b.side==='p' ? 108 + k*62 : w-108 - k*62;
+}
+function refreshSlots(side){
+  S.pending[side].forEach(b=>{ if(b.slotEl){ b.slotEl.style.left=slotX(b)+'px'; } });
+}
+function removeSlot(b){
+  if(b.slotEl){ b.slotEl.remove(); b.slotEl=null; }
+  const arr=S.pending[b.side]; const i=arr.indexOf(b); if(i>=0){ arr.splice(i,1); refreshSlots(b.side); }
 }
 
-/* ---------- 牌 ---------- */
-function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.random()*(i+1)|0; [a[i],a[j]]=[a[j],a[i]]; } return a; }
-function drawCards(n){
+/* ---------- 卡牌 ---------- */
+function renderCards(){
+  const atk=$('cardAttack'), def=$('cardDefense');
+  atk.classList.toggle('disabled', S.phase!=='play' || S.cardsUsed.attack);
+  def.classList.toggle('disabled', S.phase!=='play' || S.cardsUsed.defense);
+  atk.style.setProperty('--cardBd','#63d47e'); atk.style.setProperty('--cardTc','#fff');
+  def.style.setProperty('--cardBd','#7ea8d4'); def.style.setProperty('--cardTc','#e6f0ff');
+  atk.classList.toggle('selected', selectedCard==='attack');
+  def.classList.toggle('selected', selectedCard==='defense');
+}
+function nextSpringSeg(){
+  const seg=[];
+  for(let i=0;i<SPRING_SEG;i++) seg.push(SPRING[(S.springIdx+i)%SPRING.length]);
+  S.springIdx=(S.springIdx+SPRING_SEG)%SPRING.length;
+  return seg;
+}
+function playCard(key){
+  if(S.phase!=='play'){ toast('这一小节已经结束啦'); return; }
+  if(S.cardsUsed[key]){ toast(key==='attack'?'四季·春 本小节已奏过':'升阶曲 本小节已用'); return; }
   clearSelection();
-  for(let i=0;i<n;i++){
-    if(S.hand.length>=10) break;
-    if(!S.deck.length){ if(!S.discard.length) break; S.deck=shuffle(S.discard.splice(0)); }
-    S.hand.push(S.deck.pop());
+  if(key==='attack'){
+    S.cardsUsed.attack=true;
+    const seg=nextSpringSeg();
+    seg.forEach((note,i)=> queueBlock('p', note, SPRING_FORCE, i));
+    refreshSlots('p');
+    toast('🌸 四季·春：'+seg.map(n=>NMAP[n].cn).join('-')+' 蓄势待发');
+  } else {
+    S.cardsUsed.defense=true;
+    S.shield+=SHIELD_VAL;
+    toast('🛡️ 升阶曲：护盾 +'+SHIELD_VAL);
   }
-  renderHand(); renderPiles();
+  renderTop(); renderCards();
 }
-function cardForceOf(def){ return def.type==='note'? NOTE_FORCE + (S.crescThisBar?2:0) : null; }
-function renderHand(){
-  handEl.innerHTML='';
-  S.hand.forEach((cid,i)=>{
-    const def=CARDS[cid]; const el=document.createElement('div');
-    el.className='card '+(def.type==='note'?'cardNote':def.type==='rune'?'cardRune':'');
-    const note=def.note, c=note?LANE_C[note]:null;
-    const bd = def.type==='note'? (c?c.c1:'#888') : def.type==='rune'? '#b07af0' : '#63d47e';
-    el.style.setProperty('--cardBd',bd); el.style.setProperty('--cardTc', def.type==='note'?'#fff':'#e6d9f5');
-    const force=cardForceOf(def);
-    el.innerHTML=`
-      <div class="cost">${def.cost}</div>
-      <div class="cardType">${def.type==='note'?'音 符':def.type==='rune'?'符 文':'辅 助'}</div>
-      <div class="cardName">${def.name}</div>
-      <div class="cardGlyph">${def.type==='note'? (NMAP[note].cn) : def.glyph}</div>
-      <div class="cardDesc">${def.desc}</div>
-      <div class="cardForce">${def.type==='note'? '力度 '+force : def.en||''}</div>`;
-    const usable = S.phase==='play' && S.energy>=def.cost;
-    if(!usable) el.classList.add('disabled');
-    el.onclick=(ev)=>{ ev.stopPropagation(); cardTap(i); };
-    handEl.appendChild(el);
-  });
-  layoutHand();
-  applySelection();
-}
-/* 手牌自动铺开/叠压：牌多时叠，牌少时摊开（设计稿坐标） */
-function layoutHand(){
-  const cards=[...handEl.children], n=cards.length; if(!n) return;
-  const W=158, avail=1560, cap=90;
-  let m = n>1 ? (avail - n*W)/(n-1) : 0;
-  m = Math.max(-W*.55, Math.min(cap, m));
-  cards.forEach((c,i)=>{ c.style.marginLeft = (i>0? m : 0)+'px'; });
-}
-/* ---------- 触屏两段式出牌：点一下选中看说明，再点打出（鼠标=单击直出） ---------- */
-let selectedIdx=-1;
-function clearSelection(){ selectedIdx=-1; hidePreview(); applySelection(); }
-function applySelection(){ [...handEl.children].forEach((c,i)=>c.classList.toggle('selected', i===selectedIdx)); }
-function showPreview(def){
-  const usable = S.phase==='play' && S.energy>=def.cost;
+/* 触屏两段式 */
+let selectedCard=null;
+function clearSelection(){ selectedCard=null; hidePreview(); renderCards(); }
+function showPreview(key){
   const pv=$('cardPreview');
-  pv.innerHTML=`【${def.name}】 🔊${def.cost} · ${def.desc} <span class="pvHint">${usable?'▸ 再点一次打出':'▸ '+(S.phase!=='play'?'等这小节结束':'音量不够')}</span>`;
+  const usable=S.phase==='play' && !S.cardsUsed[key];
+  const name=key==='attack'?'四季·春':'升阶曲';
+  const desc=key==='attack'?'奏响维瓦尔第《春》下一句（6 音块×力度4）':`护盾 +${SHIELD_VAL}（占位机制，待细化）`;
+  pv.innerHTML=`【${name}】 ${desc} <span class="pvHint">${usable?'▸ 再点一次打出':'▸ '+(S.phase!=='play'?'等这小节结束':'本小节已用')}</span>`;
   pv.classList.add('show');
 }
 function hidePreview(){ $('cardPreview').classList.remove('show'); }
-function cardTap(i){
-  if(!TOUCH){ playCard(i); return; }
-  if(selectedIdx===i){ clearSelection(); playCard(i); return; }
-  selectedIdx=i; applySelection(); showPreview(CARDS[S.hand[i]]);
+function cardTap(key){
+  if(!TOUCH){ playCard(key); return; }
+  if(selectedCard===key){ clearSelection(); playCard(key); return; }
+  selectedCard=key; renderCards(); showPreview(key);
 }
-lanesEl.addEventListener('pointerdown', ()=>{ if(selectedIdx>=0) clearSelection(); });
+$('cardAttack').onclick=(ev)=>{ ev.stopPropagation(); cardTap('attack'); };
+$('cardDefense').onclick=(ev)=>{ ev.stopPropagation(); cardTap('defense'); };
+lanesEl.addEventListener('pointerdown', ()=>{ if(selectedCard) clearSelection(); });
 
-function playCard(i){
-  if(S.phase!=='play'){ toast('这一小节已经结束啦'); return; }
-  const cid=S.hand[i], def=CARDS[cid];
-  if(S.energy<def.cost){ toast('音量不够了 🔇'); playBad(); return; }
-  if(cid==='dacapo' && !S.lastNote){ toast('还没有奏出任何音符'); return; }
-
-  S.energy-=def.cost; S.hand.splice(i,1); S.discard.push(cid);
-  clearSelection();
-  if(def.type==='note'){
-    S.lastNote=def.note;
-    const f=NOTE_FORCE+(S.crescThisBar?2:0);
-    spawnBlock('p',def.note,f);
-    if(S.waveNext){
-      S.waveNext=false;
-      const idx=NOTES.findIndex(n=>n.id===def.note);
-      const up=idx<6?NOTES[idx+1].id:null, dn=idx>0?NOTES[idx-1].id:null;
-      const adj=up||dn; spawnBlock('p',adj,f); toast('〜 波浪：'+NMAP[adj].cn+' 轨追加一块');
-    }
-  }
-  else if(cid==='cresc'){ S.crescThisBar=true; toast('𝄝 渐强：本小节音符 +2 力度'); }
-  else if(cid==='wave'){ S.waveNext=true; toast('〜 波浪已蓄势：下一张音符双轨齐发'); }
-  else if(cid==='decresc'){ let hit=0; S.blocks.filter(b=>b.side==='e').forEach(b=>{ b.force=Math.max(0,b.force-3);
-      b.el.querySelector('.fnum').textContent=b.force; hit++; }); toast(hit?('𝄞 渐弱：'+hit+' 个敌方音块 −3'):'𝄞 渐弱：敌方还没有音块'); }
-  else if(cid==='dacapo'){ const f=NOTE_FORCE+(S.crescThisBar?2:0); spawnBlock('p',S.lastNote,f); toast('𝄋 反复：重演 '+NMAP[S.lastNote].cn); }
-  else if(cid==='rest'){ let n=0,total=0;
-      [...S.blocks].filter(b=>b.side==='p').forEach(b=>{ total+=b.force; S.ehp-=b.force; n++; doSpark(b); killBlock(b,false); });
-      if(n){ floatDmg('e',total); playChord(['sol','si','do']); toast('𝄐 华彩！'+n+' 个音块立即命中，共 '+total+' 伤害'); renderTop(); if(S.ehp<=0) return gameOver(true); }
-      else toast('场上没有我方音块'); }
-  else if(cid==='heal'){ S.php=Math.min(PLAYER_HP,S.php+6); toast('🔧 调音完成，生命 +6'); }
-  else if(cid==='draw2'){ drawCards(2); toast('👂 复听：抽 2 张'); }
-
-  renderTop(); renderHand(); renderPiles();
-}
-function renderPiles(){ $('drawNum').textContent=S.deck.length; $('discardNum').textContent=S.discard.length; }
+/* ---------- 顶栏渲染 ---------- */
 function renderTop(){
   $('pHpFill').style.width=(S.php/PLAYER_HP*100)+'%'; $('pHpText').textContent=S.php+' / '+PLAYER_HP;
   $('eHpFill').style.width=(Math.max(0,S.ehp)/ENEMY_HP*100)+'%'; $('eHpText').textContent=Math.max(0,S.ehp)+' / '+ENEMY_HP;
-  $('energyOrb').textContent=S.energy; $('energyNum').textContent=S.energy+'/'+ENERGY_MAX;
-  $('turnBanner').textContent='第 '+S.turn+' 小节'+(S.phase==='resolve'?' · 演奏中…':'');
+  const sc=$('shieldChip');
+  if(S.shield>0){ sc.textContent='🛡️ '+S.shield; sc.classList.add('has'); } else { sc.textContent=''; sc.classList.remove('has'); }
+  $('turnBanner').textContent='第 '+S.turn+' 小节'+(S.phase==='resolve'?' · 交战中…':'');
   $('endTurnBtn').disabled = S.phase!=='play';
 }
 function renderIntent(){
-  const next=SONG[S.songIdx].map(b=>({...b, f:b.f+S.cycle}));
-  const it=$('intent'); it.innerHTML='<span class="intentLabel">结束本小节时它将唱出：</span>';
-  if(!next.length){ it.innerHTML+='<span class="intentLabel">💤 蓄力（不发块）</span>'; return; }
-  next.forEach(b=>{ const d=document.createElement('div'); d.className='intentBlk';
-    d.style.background=LANE_C[b.n].bg; d.style.border='2px solid '+LANE_C[b.n].c1; d.style.color=LANE_C[b.n].c1;
-    d.innerHTML=NMAP[b.n].cn+'<b style="font-size:14px">'+b.f+'</b>'; it.appendChild(d); });
+  const bar=SONG[S.songIdx];
+  $('intentLabel').innerHTML=`结束本小节时它将唱：<br><b style="color:#ff9fc0">${bar.label}</b>${S.cycle>0?`（狂热+${S.cycle}）`:''}<br><span style="font-size:13px">（右侧菱形格=它的音块）</span>`;
 }
 
-/* ---------- 敌方回合 ---------- */
+/* ---------- 结束小节：双方齐射 ---------- */
+const STEP_MS=500;
 $('endTurnBtn').onclick=()=>{
   if(S.phase!=='play') return;
   clearSelection();
-  S.phase='resolve'; renderTop();
-  const bar=SONG[S.songIdx].map(b=>({...b}));
-  S.songIdx++; if(S.songIdx>=SONG.length){ S.songIdx=0; S.cycle++; }
-  if(!bar.length){ S.enemySpawning=false; toast('八音盒在蓄力……'); setTimeout(endResolveCheck, 900); }
-  else {
-    S.enemySpawning=true;
-    bar.forEach((b,k)=> setTimeout(()=>{
+  S.phase='resolve'; renderTop(); renderCards();
+  const maxStep=Math.max(0, ...S.pending.p.map(b=>b.step), ...S.pending.e.map(b=>b.step), 0);
+  for(let step=0; step<=maxStep; step++){
+    setTimeout(()=>{
       if(S.phase==='over') return;
-      spawnBlock('e', b.n, b.f+S.cycle); playNote(b.n,.25,.35);
-      if(k===bar.length-1) S.enemySpawning=false;
-    }, k*400+250));
+      S.pending.p.filter(b=>b.step===step).forEach(b=>{ removeSlot(b); spawnBlock('p',b.note,b.force); });
+      S.pending.e.filter(b=>b.step===step).forEach(b=>{ removeSlot(b); spawnBlock('e',b.note,b.force); });
+    }, step*STEP_MS);
   }
+  // 注意：不能提前清空 S.pending —— 发射器从里面逐个取；全部发射后自然清空
 };
 function endResolveCheck(){
   if(S.phase!=='resolve') return;
-  if(S.enemySpawning) return;
-  if(S.blocks.length){ setTimeout(endResolveCheck,500); return; }
+  if(S.blocks.length){ setTimeout(endResolveCheck,400); return; }
   if(S.php<=0) return gameOver(false);
   if(S.ehp<=0) return gameOver(true);
-  S.turn++; S.energy=ENERGY_MAX; S.crescThisBar=false; S.phase='play';
-  drawCards(Math.max(0,5-S.hand.length));
-  renderTop(); renderIntent();
+  S.turn++; S.cardsUsed={attack:false,defense:false}; S.shield=0; S.phase='play';
+  S.songIdx++; if(S.songIdx>=SONG.length){ S.songIdx=0; S.cycle++; }
+  queueEnemyIntent();
+  renderTop(); renderCards(); renderIntent();
+  toast('📻 第 '+S.turn+' 小节 · 出牌吧');
+}
+function queueEnemyIntent(){
+  SONG[S.songIdx].notes.forEach(([n,f],i)=> queueBlock('e', n, f+S.cycle, i));
+  refreshSlots('e');
 }
 
 /* ---------- 主循环：飞行 / 对撞 / 到达 ---------- */
@@ -538,22 +483,20 @@ function tick(t){
       const dir=b.side==='p'?1:-1;
       b.x += dir*BASE_SPEED*dt;
       b.el.style.left=b.x+'px';
-      // 到达判定
-      if(b.side==='p' && b.x>=zoneW(b.note)-30){
+      if(b.side==='p' && b.x>=zoneW(b.note)-26){
         S.ehp-=b.force; floatDmg('e',b.force); doSpark(b);
         playChord([b.note]); killBlock(b,false);
-        $('enemyPanel').style.transform='translateX(-6px)'; setTimeout(()=>$('enemyPanel').style.transform='',120);
         renderTop();
         if(S.ehp<=0) return gameOver(true);
-      } else if(b.side==='e' && b.x<=30){
-        S.php-=b.force; floatDmg('p',b.force); doSpark(b);
-        playCrash(); killBlock(b,false);
-        $('playerPanel').style.transform='translateX(6px)'; setTimeout(()=>$('playerPanel').style.transform='',120);
+      } else if(b.side==='e' && b.x<=26){
+        let dmg=b.force;
+        if(S.shield>0){ const abs=Math.min(S.shield,dmg); S.shield-=abs; dmg-=abs; }
+        if(dmg>0){ S.php-=dmg; floatDmg('p',dmg); }
+        doSpark(b); playCrash(); killBlock(b,false);
         renderTop();
         if(S.php<=0) return gameOver(false);
       }
     }
-    // 对撞判定（同轨异侧）
     for(let i=0;i<S.blocks.length;i++){
       const a=S.blocks[i];
       for(let j=i+1;j<S.blocks.length;j++){
@@ -562,16 +505,15 @@ function tick(t){
           playCrash();
           const diff=a.force-b.force;
           if(diff>0){ b.force=0; killBlock(b); a.force=diff; a.el.querySelector('.fnum').textContent=a.force;
-            toast('💥 '+NMAP[a.note].cn+' 轨对撞！'+(a.side==='p'?'我方':'敌方')+'音块胜出，余力 '+diff); }
+            toast('💥 '+NMAP[a.note].cn+' 轨对撞！我方胜出，余力 '+diff); }
           else if(diff<0){ a.force=0; killBlock(a); b.force=-diff; b.el.querySelector('.fnum').textContent=b.force;
-            toast('💥 '+NMAP[b.note].cn+' 轨对撞！'+(b.side==='p'?'我方':'敌方')+'音块胜出，余力 '+(-diff)); }
+            toast('💥 '+NMAP[b.note].cn+' 轨对撞！敌方胜出，余力 '+(-diff)); }
           else { toast('💥 '+NMAP[a.note].cn+' 轨对撞！同归于尽'); killBlock(a); killBlock(b); }
           renderTop(); break;
         }
       }
     }
-    if(S.phase==='resolve' && !S.blocks.length) endResolveCheck();
-    if(document.querySelector('.blk.boosted')) drawResonantLines();
+    if(S.phase==='resolve' && !S.blocks.length && !S.pending.p.length && !S.pending.e.length) endResolveCheck();
   }
   requestAnimationFrame(tick);
 }
@@ -580,6 +522,8 @@ requestAnimationFrame(tick);
 /* ---------- 胜负 ---------- */
 function gameOver(win){
   S.phase='over'; renderTop(); clearSelection();
+  S.pending.p.forEach(b=>b.slotEl&&b.slotEl.remove()); S.pending.e.forEach(b=>b.slotEl&&b.slotEl.remove());
+  S.pending.p=[]; S.pending.e=[];
   const ov=$('overlay');
   $('overlayTitle').textContent = win?'🏆 演出成功':'📻 声音哑了';
   $('overlayTitle').style.color = win?'#ffd60a':'#ff7675';
@@ -596,12 +540,11 @@ function toast(msg){ const t=$('toast'); t.textContent=msg; t.style.opacity=1;
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.style.opacity=0,1600); }
 
 /* ---------- 开局 ---------- */
-S.deck=shuffle([...START_DECK]);
-drawCards(5);
-renderTop(); renderPiles(); renderIntent();
-toast('📻 收音机V11 · 打出音符卡拦截敌方旋律，或直取八音盒！');
-window.__game=S; window.__api={spawnBlock, playCard}; // 调试/测试钩子
-window.__touch=TOUCH; // 测试钩子：触屏模式判定结果
+queueEnemyIntent();
+renderTop(); renderCards(); renderIntent();
+toast('📻 打出「四季·春」，音块排在音轨左端；点「结束小节」双方齐射对撞！');
+window.__game=S; window.__api={playCard, spawnBlock}; // 调试/测试钩子
+window.__touch=TOUCH;
 </script>
 </body>
 </html>

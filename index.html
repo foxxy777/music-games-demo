@@ -85,8 +85,8 @@
     #endTurnBtn:hover:not(:disabled) { box-shadow:0 0 26px #ff9fc066; }
     #overlayBtn:hover { background:#ffd60a22; }
   }
-  .card.selected { transform:translateY(-30px) scale(1.1); z-index:30; border-color:#ffd60a !important;
-    box-shadow:0 10px 34px #000d, 0 0 26px #ffd60aaa !important; }
+  .card.selected { transform:translateY(-30px) scale(1.13); z-index:30; border-color:#ffd60a !important;
+    box-shadow:0 10px 30px #000c, 0 0 26px #ffd60aaa !important; }
   .card.disabled { filter:grayscale(.85) brightness(.6); }
   .cost { position:absolute; top:-10px; left:-10px; width:40px; height:40px; border-radius:50%;
     background:radial-gradient(circle at 35% 30%, #7ee8fa, #1f7a8c 75%); border:3px solid #bdefff;
@@ -110,7 +110,28 @@
     box-shadow:0 0 16px #ff9fc033; }
   #endTurnBtn:disabled { opacity:.35; cursor:not-allowed; }
 
-  #cardPreview { display:none; }
+  /* 触屏设备（手机/平板横屏）：按钮加大，好按 */
+  @media (pointer:coarse) {
+    #endTurnBtn { width:210px; height:92px; font-size:24px; right:40px; bottom:80px; border-radius:18px; }
+  }
+
+  /* 触屏点选说明条（无 hover 的替代）：浮在手牌上方 */
+  #cardPreview { position:absolute; bottom:316px; left:50%; transform:translateX(-50%);
+    background:#000000d0; border:1px solid #ffd60a66; border-radius:14px; color:#ffe9b0;
+    font-size:30px; line-height:1.5; padding:14px 30px; max-width:1500px; white-space:nowrap;
+    opacity:0; transition:opacity .15s; pointer-events:none; z-index:60; }
+  #cardPreview.show { opacity:1; }
+  #cardPreview .pvHint { color:#ffd60a; font-weight:800; }
+
+  /* 竖屏遮罩：请把手机横过来（真实像素，不随舞台缩放） */
+  #rotateMask { position:fixed; inset:0; z-index:999; display:none; flex-direction:column;
+    align-items:center; justify-content:center; gap:16px;
+    background:radial-gradient(ellipse at 30% 20%, #1a1326 0%, #0b0812 60%); }
+  #rotateMask.show { display:flex; }
+  #rotateMask .rotIcon { font-size:76px; line-height:1; animation:rotphone 2.2s ease-in-out infinite; filter:drop-shadow(0 0 18px rgba(255,216,10,.25)); }
+  @keyframes rotphone { 0%,25% { transform:rotate(0deg); } 55%,100% { transform:rotate(-90deg); } }
+  #rotateMask .rotTitle { font-size:30px; color:#ffd88a; font-weight:800; letter-spacing:2px; }
+  #rotateMask .rotSub { font-size:16px; color:#9a8bb0; }
 
   #turnBanner { position:absolute; top:16px; left:50%; transform:translateX(-50%); font-size:17px; color:#cbb8de; letter-spacing:3px;
     background:#00000055; padding:6px 22px; border-radius:20px; }
@@ -124,68 +145,6 @@
   #overlaySub { font-size:20px; color:#b9a8c9; margin-bottom:44px; }
   #overlayBtn { padding:16px 52px; font-size:22px; border-radius:14px; border:2px solid #ffd60a; background:transparent;
     color:#ffd60a; cursor:pointer; letter-spacing:4px; font-weight:800; }
-
-  /* ================================================================
-     竖屏（手机）布局：1080×1920 设计稿
-     顶=敌人 → 小节横幅 → 玩家状态，中=音轨，底=手牌(点选+预览)
-     ================================================================ */
-  #stage.portrait { width:1080px; height:1920px; }
-
-  .portrait #topbar { flex-direction:column; height:auto; padding:20px 28px 8px; gap:12px; align-items:stretch; }
-  .portrait #enemyPanel { order:1; width:auto; text-align:left; }
-  .portrait #turnBanner { order:2; position:static; transform:none; align-self:center; font-size:24px; padding:8px 30px; }
-  .portrait #playerPanel { order:3; width:auto; }
-  .portrait .avatar { font-size:54px; }
-  .portrait .pname { font-size:26px; margin-bottom:8px; }
-  .portrait .hpbar { height:30px; border-radius:15px; }
-  .portrait #enemyPanel .hpbar { height:34px; }
-  .portrait .hptext { font-size:22px; line-height:30px; }
-  .portrait #enemyPanel .hptext { font-size:24px; line-height:34px; }
-  .portrait .energyRow { margin-top:10px; }
-  .portrait .energyOrb { width:58px; height:58px; font-size:26px; }
-  .portrait .energyNum { font-size:28px; }
-  .portrait .energyLabel { font-size:20px; }
-  .portrait .ename { font-size:32px; margin-bottom:8px; }
-  .portrait .edesc { font-size:21px; margin-bottom:10px; }
-  .portrait #intent { justify-content:flex-start; flex-wrap:wrap; min-height:88px; gap:10px; }
-  .portrait .intentLabel { font-size:23px; }
-  .portrait .intentBlk { min-width:108px; height:82px; font-size:28px; border-radius:12px; }
-  .portrait .intentBlk b { font-size:32px; }
-
-  .portrait #lanesWrap { padding:10px 30px; }
-  .portrait #lanes { gap:8px; }
-  .portrait .laneTag { width:72px; font-size:32px; }
-  .portrait .laneZone { left:84px; right:116px; }
-  .portrait .goalP { left:84px; } .portrait .goalE { right:116px; }
-  .portrait .blk { width:66px; height:66px; font-size:28px; }
-  .portrait .blk .fnum { font-size:17px; padding:2px 8px; }
-  .portrait .dmgFloat { font-size:44px; }
-
-  .portrait #bottombar { flex-direction:column; height:660px; align-items:stretch; justify-content:flex-end; padding:0 24px 14px; }
-  .portrait #cardPreview { display:block; order:1; min-height:104px; margin:4px 8px 10px; background:#000000b0;
-    border:1px solid #ffd60a66; border-radius:14px; color:#ffe9b0; font-size:26px; line-height:1.5; padding:14px 22px;
-    opacity:0; transition:opacity .15s; }
-  #cardPreview.show { opacity:1; }
-  #cardPreview .pvHint { color:#ffd60a; font-weight:800; white-space:nowrap; }
-  .portrait #hand { order:2; min-height:0; margin-bottom:6px; }
-  .portrait .card { width:150px; height:228px; }
-  .portrait .cardType { font-size:14px; letter-spacing:3px; margin-top:14px; }
-  .portrait .cardName { font-size:33px; }
-  .portrait .cardGlyph { font-size:48px; }
-  .portrait .cardRune .cardName { font-size:27px; }
-  .portrait .cardDesc { display:none; }
-  .portrait .cardForce { font-size:16px; bottom:12px; }
-  .portrait .cost { width:48px; height:48px; font-size:23px; top:-12px; left:-12px; }
-  .portrait #controlsRow { display:flex; order:3; justify-content:space-between; align-items:center; height:118px; }
-  .portrait .pile { position:static; width:170px; font-size:20px; }
-  .portrait .pileIcon { font-size:42px; }
-  .portrait .pileNum { font-size:26px; }
-  .portrait #endTurnBtn { position:static; width:360px; height:118px; font-size:28px; border-radius:18px; }
-
-  .portrait #toast { top:auto; bottom:716px; font-size:25px; padding:12px 32px; max-width:980px; }
-  .portrait #overlayTitle { font-size:100px; }
-  .portrait #overlaySub { font-size:30px; margin-bottom:64px; }
-  .portrait #overlayBtn { padding:26px 72px; font-size:32px; }
 </style>
 </head>
 <body>
@@ -233,13 +192,19 @@
   </div>
 </div>
 
+<div id="rotateMask">
+  <div class="rotIcon">📱</div>
+  <div class="rotTitle">请把手机横过来</div>
+  <div class="rotSub">这个游戏为横屏设计 · 转过来就开始（若已锁定屏幕方向，请先解除锁定）</div>
+</div>
+
 <script>
 'use strict';
-/* ================= V11 音符对撞 · 双布局版 =================
-   横屏/桌面：1920×1080（原版，悬停看牌+单击出牌）
-   竖屏/手机：1080×1920（敌人置顶、音轨居中、手牌底部
-   点一下选中看说明、再点一下打出）
-   游戏逻辑与对撞结算与原版完全一致。 */
+/* ================= V11 音符对撞 · 全横屏版 =================
+   主打横屏（手机/PC/Steam 统一）：1920×1080 设计稿等比缩放。
+   手机竖屏 → 全屏「请横过来」提示；横过来自动进游戏。
+   触屏设备（无 hover）→ 两段式出牌：点一下选中看说明、再点打出。
+   鼠标设备 → 悬停看牌 + 单击直出（原版手感）。 */
 
 const NOTES = [
   { id:'do',  cn:'Do',  full:'主音', semi:0,  hue:0   },
@@ -320,25 +285,19 @@ function playCrash(){ if(!AC)return; const t=AC.currentTime, len=.22, buf=AC.cre
 function playChord(ids){ ids.forEach((n,i)=>setTimeout(()=>playNote(n,.45,.75), i*90)); }
 function playBad(){ playNote('fa',.3,.3); setTimeout(()=>playNote('mi',.3,.4),110); }
 
-/* ---------- 舞台缩放 + 横竖屏切换 ---------- */
+/* ---------- 舞台缩放：全横屏，1920×1080 等比；竖屏 → 旋转提示遮罩 ---------- */
 const stage=$('stage');
-let DESIGN_W=1920, DESIGN_H=1080, S_SCALE=1;
-const isPortrait=()=>stage.classList.contains('portrait');
+const DESIGN_W=1920, DESIGN_H=1080;
+let S_SCALE=1;
+/* 触屏判定（加载时一次）：决定两段式点选还是单击直出 */
+const TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints>0 || matchMedia('(pointer: coarse)').matches;
 function fit(){
   const portrait = innerWidth < innerHeight;
-  stage.classList.toggle('portrait', portrait);
-  if (portrait) {
-    // 竖屏：宽固定 1080，高按真机视口比例自适应（铺满整屏，音轨区弹性吸收）
-    DESIGN_W = 1080;
-    DESIGN_H = Math.round(1080 * innerHeight / innerWidth);
-    S_SCALE = innerWidth / DESIGN_W;
-  } else {
-    DESIGN_W = 1920; DESIGN_H = 1080;
-    S_SCALE = Math.min(innerWidth/DESIGN_W, innerHeight/DESIGN_H);
-  }
-  stage.style.width=DESIGN_W+'px'; stage.style.height=DESIGN_H+'px';
+  $('rotateMask').classList.toggle('show', portrait);
+  stage.style.visibility = portrait ? 'hidden' : 'visible';
+  S_SCALE = Math.min(innerWidth/DESIGN_W, innerHeight/DESIGN_H);
   stage.style.transform=`translate(-50%,-50%) scale(${S_SCALE})`;
-  layoutHand();
+  if(!portrait) layoutHand();
 }
 addEventListener('resize',fit);
 addEventListener('orientationchange',()=>setTimeout(fit,120));
@@ -393,8 +352,7 @@ function doSpark(b){
 }
 function floatDmg(target, val){
   const el=document.createElement('div'); el.className='dmgFloat'; el.textContent='-'+val;
-  const px = target==='e'? (isPortrait()?540:1660) : (isPortrait()?540:320);
-  const py = target==='e'? (isPortrait()?215:120)  : (isPortrait()?435:60);
+  const px = target==='e'? 1660 : 320, py = target==='e'? 120 : 60;
   el.style.left=px+'px'; el.style.top=py+'px'; stage.appendChild(el); setTimeout(()=>el.remove(),950);
 }
 
@@ -470,14 +428,12 @@ function renderHand(){
 /* 手牌自动铺开/叠压：牌多时叠，牌少时摊开（设计稿坐标） */
 function layoutHand(){
   const cards=[...handEl.children], n=cards.length; if(!n) return;
-  const W = isPortrait()?150:158;
-  const avail = isPortrait()? 1012 : 1560;
-  const cap = isPortrait()? 26 : 90;
+  const W=158, avail=1560, cap=90;
   let m = n>1 ? (avail - n*W)/(n-1) : 0;
   m = Math.max(-W*.55, Math.min(cap, m));
   cards.forEach((c,i)=>{ c.style.marginLeft = (i>0? m : 0)+'px'; });
 }
-/* ---------- 竖屏两段式出牌：点一下选中看说明，再点打出 ---------- */
+/* ---------- 触屏两段式出牌：点一下选中看说明，再点打出（鼠标=单击直出） ---------- */
 let selectedIdx=-1;
 function clearSelection(){ selectedIdx=-1; hidePreview(); applySelection(); }
 function applySelection(){ [...handEl.children].forEach((c,i)=>c.classList.toggle('selected', i===selectedIdx)); }
@@ -489,7 +445,7 @@ function showPreview(def){
 }
 function hidePreview(){ $('cardPreview').classList.remove('show'); }
 function cardTap(i){
-  if(!isPortrait()){ playCard(i); return; }
+  if(!TOUCH){ playCard(i); return; }
   if(selectedIdx===i){ clearSelection(); playCard(i); return; }
   selectedIdx=i; applySelection(); showPreview(CARDS[S.hand[i]]);
 }
@@ -645,6 +601,7 @@ drawCards(5);
 renderTop(); renderPiles(); renderIntent();
 toast('📻 收音机V11 · 打出音符卡拦截敌方旋律，或直取八音盒！');
 window.__game=S; window.__api={spawnBlock, playCard}; // 调试/测试钩子
+window.__touch=TOUCH; // 测试钩子：触屏模式判定结果
 </script>
 </body>
 </html>

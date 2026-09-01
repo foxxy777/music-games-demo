@@ -102,8 +102,8 @@ let desel = await ev(`(function(){ const S=window.__game;
   document.getElementById('lanes').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
   return { selected: document.getElementById('cardDefense').classList.contains('selected'),
     previewShown: document.getElementById('cardPreview').classList.contains('show'),
-    shield: S.shield }; })()`);
-check('鐐归煶杞?鍙栨秷閫変腑(涓嶅嚭鐗?', desel.selected === false && desel.previewShown === false && desel.shield === 0, desel);
+    defSum: Object.values(S.defense).reduce((a,b)=>a+b,0) }; })()`);
+check('鐐归煶杞?鍙栨秷閫変腑(涓嶅嚭鐗?', desel.selected === false && desel.previewShown === false && desel.defSum === 0, desel);
 
 // ---- 4. 缁撴潫灏忚妭鈫掗綈灏勨啋缁撶畻 ----
 await ev(`document.getElementById('endTurnBtn').click()`);

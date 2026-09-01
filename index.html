@@ -31,8 +31,6 @@
   .hpfill { height:100%; background:linear-gradient(90deg,#e94560,#ff6b6b); transition:width .35s; }
   #enemyZone .hpfill { background:linear-gradient(90deg,#c0392b,#ff7675); }
   .hptext { position:absolute; inset:0; text-align:center; font-size:13px; color:#fff; line-height:20px; font-weight:700; text-shadow:0 1px 2px #000; }
-  .shieldChip { margin-top:6px; font-size:15px; color:#bdefff; font-weight:800; min-height:20px; }
-  .shieldChip.has { background:#1f7a8c55; border:1px solid #7ee8fa88; border-radius:10px; padding:1px 12px; }
   #intentLabel { margin-top:14px; font-size:15px; color:#c9a; text-align:center; line-height:1.5; max-width:250px; }
 
   /* 音轨 */
@@ -68,6 +66,16 @@
   .slot.e > span:not(.fnum) { transform:rotate(-45deg); }
   .slot .fnum { position:absolute; bottom:-5px; right:-5px; font-size:11px; background:#000a; border-radius:6px; padding:0 4px; color:#ffd88a; font-family:system-ui; }
   @keyframes slotbreath { from { filter:brightness(.85); } to { filter:brightness(1.12); } }
+
+  /* 防御格：蓝色，每轨左端一枚，×N 乘数标记=层数，敌方音符到达消耗一层 */
+  .defslot { position:absolute; width:52px; height:52px; top:50%; transform:translate(-50%,-50%); left:44px;
+    display:flex; align-items:center; justify-content:center; border-radius:14px; z-index:8;
+    background:radial-gradient(circle at 35% 30%, #7ee8fa, #1f7a8c 75%); border:2px solid #bdefff;
+    box-shadow:0 0 14px #7ee8fa88; animation:defbreath 2s ease-in-out infinite alternate; }
+  .defslot .mult { font-size:24px; font-weight:900; color:#04222b; font-family:Georgia,serif; text-shadow:0 1px 0 #bdefff66; }
+  .defslot.flash { animation:defflash .4s ease-out; }
+  @keyframes defbreath { from { filter:brightness(.9); } to { filter:brightness(1.1); } }
+  @keyframes defflash { 0% { filter:brightness(2.2); } 100% { filter:brightness(1); } }
 
   #resonantSvg { pointer-events:none; z-index:9; }
   .spark { position:absolute; width:10px; height:10px; border-radius:50%; background:#fff; z-index:20; pointer-events:none;
@@ -144,7 +152,6 @@
     <div class="charZone" id="heroZone">
       <div class="charHpWrap">
         <div class="hpbar"><div class="hpfill" id="pHpFill"></div><div class="hptext" id="pHpText"></div></div>
-        <div class="shieldChip" id="shieldChip"></div>
       </div>
       <div class="figure">📻</div>
       <div class="charName">老收音机</div>
@@ -178,8 +185,8 @@
         <div class="cardType">防 御</div>
         <div class="cardName">升阶曲</div>
         <div class="cardGlyph">🛡️</div>
-        <div class="cardDesc">升起 8 点护盾，抵挡本回合伤害（机制占位，待大爷细化）</div>
-        <div class="cardForce">护盾 8</div>
+        <div class="cardDesc">从低到高奏一遍音阶：全部 7 条音轨各 +1 层防御格，敌方音符到达时消耗 1 层格挡</div>
+        <div class="cardForce">防御层数上限 ×3，跨小节保留</div>
       </div>
     </div>
     <button id="endTurnBtn">结束小节</button>
@@ -237,12 +244,14 @@ const SONG = [
   { label:'小星星 · 第三句', notes:[['si',5],['do',6]] },
   { label:'小星星 · 第四句', notes:[['do',4],['sol',4],['la',5],['si',5]] },
 ];
-const ENEMY_HP = 66, PLAYER_HP = 50, SHIELD_VAL = 8;
+const ENEMY_HP = 66, PLAYER_HP = 50;
+const DEF_MAX = 3; // 防御层数上限（×N 乘数格）
 const NOTE_FORCE_UNUSED = 0, BASE_SPEED = 240; // px/s（设计稿坐标）
 
 /* ---------- 状态 ---------- */
 const S = {
-  php:PLAYER_HP, ehp:ENEMY_HP, shield:0,
+  php:PLAYER_HP, ehp:ENEMY_HP,
+  defense:Object.fromEntries(NOTES.map(n=>[n.id,0])), // 每轨防御层数（×N 乘数格）
   turn:1, phase:'play', // play | resolve | over
   blocks:[],            // 飞行中的音块
   pending:{ p:[], e:[] }, // 待发格（卷帘）：{note, force, step, slotEl}
@@ -402,8 +411,14 @@ function playCard(key){
     toast('🌸 四季·春：'+seg.map(n=>NMAP[n].cn).join('-')+' 蓄势待发');
   } else {
     S.cardsUsed.defense=true;
-    S.shield+=SHIELD_VAL;
-    toast('🛡️ 升阶曲：护盾 +'+SHIELD_VAL);
+    // 从低到高奏一遍音阶：七轨逐个点亮 +1 层防御（琶音演出，呼应「升阶」）
+    NOTES.forEach((n,i)=>setTimeout(()=>{
+      if(S.phase==='over') return;
+      if(S.defense[n.id]<DEF_MAX) S.defense[n.id]++;
+      renderDefense(n.id, true);
+      playNote(n.id,.32,.28);
+    }, i*110));
+    toast('🛡️ 升阶：do→si 全音阶各 +1 层防御格');
   }
   renderTop(); renderCards();
 }
@@ -414,7 +429,7 @@ function showPreview(key){
   const pv=$('cardPreview');
   const usable=S.phase==='play' && !S.cardsUsed[key];
   const name=key==='attack'?'四季·春':'升阶曲';
-  const desc=key==='attack'?'奏响维瓦尔第《春》下一句（6 音块×力度4）':`护盾 +${SHIELD_VAL}（占位机制，待细化）`;
+  const desc=key==='attack'?'奏响维瓦尔第《春》下一句（6 音块×力度4）':'从低到高奏一遍音阶，全部音轨 +1 层防御格（×N 挡音符）';
   pv.innerHTML=`【${name}】 ${desc} <span class="pvHint">${usable?'▸ 再点一次打出':'▸ '+(S.phase!=='play'?'等这小节结束':'本小节已用')}</span>`;
   pv.classList.add('show');
 }
@@ -432,14 +447,12 @@ lanesEl.addEventListener('pointerdown', ()=>{ if(selectedCard) clearSelection();
 function renderTop(){
   $('pHpFill').style.width=(S.php/PLAYER_HP*100)+'%'; $('pHpText').textContent=S.php+' / '+PLAYER_HP;
   $('eHpFill').style.width=(Math.max(0,S.ehp)/ENEMY_HP*100)+'%'; $('eHpText').textContent=Math.max(0,S.ehp)+' / '+ENEMY_HP;
-  const sc=$('shieldChip');
-  if(S.shield>0){ sc.textContent='🛡️ '+S.shield; sc.classList.add('has'); } else { sc.textContent=''; sc.classList.remove('has'); }
   $('turnBanner').textContent='第 '+S.turn+' 小节'+(S.phase==='resolve'?' · 交战中…':'');
   $('endTurnBtn').disabled = S.phase!=='play';
 }
 function renderIntent(){
   const bar=SONG[S.songIdx];
-  $('intentLabel').innerHTML=`结束本小节时它将唱：<br><b style="color:#ff9fc0">${bar.label}</b>${S.cycle>0?`（狂热+${S.cycle}）`:''}<br><span style="font-size:13px">（右侧菱形格=它的音块）</span>`;
+  $('intentLabel').innerHTML=`结束本小节时它将唱：<br><b style="color:#ff9fc0">${bar.label}</b>${S.cycle>0?`（狂热+${S.cycle}）`:''}<br><span style="font-size:13px">（右侧菱形格=它的音块，左侧蓝格=你的防御）</span>`;
 }
 
 /* ---------- 结束小节：双方齐射 ---------- */
@@ -463,7 +476,7 @@ function endResolveCheck(){
   if(S.blocks.length){ setTimeout(endResolveCheck,400); return; }
   if(S.php<=0) return gameOver(false);
   if(S.ehp<=0) return gameOver(true);
-  S.turn++; S.cardsUsed={attack:false,defense:false}; S.shield=0; S.phase='play';
+  S.turn++; S.cardsUsed={attack:false,defense:false}; S.phase='play'; // 防御层数跨小节保留
   S.songIdx++; if(S.songIdx>=SONG.length){ S.songIdx=0; S.cycle++; }
   queueEnemyIntent();
   renderTop(); renderCards(); renderIntent();
@@ -472,6 +485,25 @@ function endResolveCheck(){
 function queueEnemyIntent(){
   SONG[S.songIdx].notes.forEach(([n,f],i)=> queueBlock('e', n, f+S.cycle, i));
   refreshSlots('e');
+}
+
+/* ---------- 防御格（×N 乘数标记=层数，敌方音符到达消耗一层） ---------- */
+function renderDefense(laneId, flash){
+  if(laneId){
+    const z=zoneOf(laneId);
+    let el=z.querySelector('.defslot');
+    const n=S.defense[laneId];
+    if(n<=0){ if(el) el.remove(); return; }
+    if(!el){
+      el=document.createElement('div'); el.className='defslot';
+      el.innerHTML='<span class="mult"></span>';
+      z.appendChild(el);
+    }
+    el.querySelector('.mult').textContent='×'+n;
+    if(flash){ el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+  } else {
+    NOTES.forEach(x=>renderDefense(x.id,false));
+  }
 }
 
 /* ---------- 主循环：飞行 / 对撞 / 到达 ---------- */
@@ -489,10 +521,15 @@ function tick(t){
         renderTop();
         if(S.ehp<=0) return gameOver(true);
       } else if(b.side==='e' && b.x<=26){
-        let dmg=b.force;
-        if(S.shield>0){ const abs=Math.min(S.shield,dmg); S.shield-=abs; dmg-=abs; }
-        if(dmg>0){ S.php-=dmg; floatDmg('p',dmg); }
-        doSpark(b); playCrash(); killBlock(b,false);
+        if(S.defense[b.note]>0){ // 防御格：消耗一层，完全格挡
+          S.defense[b.note]--;
+          renderDefense(b.note, true);
+          doSpark(b); playNote(b.note,.3,.25); killBlock(b,false);
+          toast('🛡️ '+NMAP[b.note].cn+' 轨格挡！剩 ×'+S.defense[b.note]);
+        } else {
+          S.php-=b.force; floatDmg('p',b.force);
+          doSpark(b); playCrash(); killBlock(b,false);
+        }
         renderTop();
         if(S.php<=0) return gameOver(false);
       }
@@ -541,7 +578,7 @@ function toast(msg){ const t=$('toast'); t.textContent=msg; t.style.opacity=1;
 
 /* ---------- 开局 ---------- */
 queueEnemyIntent();
-renderTop(); renderCards(); renderIntent();
+renderDefense(); renderTop(); renderCards(); renderIntent();
 toast('📻 打出「四季·春」，音块排在音轨左端；点「结束小节」双方齐射对撞！');
 window.__game=S; window.__api={playCard, spawnBlock}; // 调试/测试钩子
 window.__touch=TOUCH;

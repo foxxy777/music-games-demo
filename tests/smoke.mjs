@@ -54,12 +54,13 @@ await sleep(1000);
 await send('Page.startScreencast', { format: 'jpeg', quality: 30, maxWidth: 900, maxHeight: 520, everyNthFrame: 2 });
 await sleep(1600);
 let st = await ev(`(function(){ const S=window.__game; if(!S) return null;
-  return { phase:S.phase, turn:S.turn, php:S.php, ehp:S.ehp, shield:S.shield,
+  return { phase:S.phase, turn:S.turn, php:S.php, ehp:S.ehp,
+    defSum:Object.values(S.defense).reduce((a,b)=>a+b,0),
     used:S.cardsUsed, pendP:S.pending.p.length, pendE:S.pending.e.length,
     slotEDOM: document.querySelectorAll('.slot.e').length, slotPDOM: document.querySelectorAll('.slot.p').length,
     intentTxt: document.getElementById('intentLabel').textContent.slice(0,12) }; })()`);
 check('鍒濆锛氭晫鎰忓浘3鏍煎湪闊宠建涓?, !!st && st.pendE === 3 && st.slotEDOM === 3 && st.pendP === 0, st);
-check('鍒濆锛氫袱鍗″彲鐢?鏃犳姢鐩?, st.phase === 'play' && st.used.attack === false && st.used.defense === false && st.shield === 0, st);
+check('鍒濆锛氫袱鍗″彲鐢?鏃犻槻寰℃牸', !!st && st.phase === 'play' && st.used.attack === false && st.used.defense === false && st.defSum === 0, st);
 let hpChk = await ev(`(function(){ return { hero: !!document.querySelector('#heroZone .hpbar'), enemy: !!document.querySelector('#enemyZone .hpbar') }; })()`);
 check('琛€鏉℃寕鍦ㄨ鑹插ご涓?瑙掕壊鍖哄唴)', hpChk.hero === true && hpChk.enemy === true, hpChk);
 await shot('01_initial');
@@ -77,11 +78,15 @@ check('鏄ヤ富棰樼涓€鍙?mi脳5+sol脳1', atk.lanes.mi === 5 && atk.la
 check('鍙戝皠搴?step 0-5', atk.steps === '0,1,2,3,4,5', atk);
 await shot('02_spring_queued');
 
-// ---- 3. 闃插尽鍗★細鎶ょ浘 8 ----
+// ---- 3. 闃插尽鍗★細鍗囬樁鐞堕煶锛屽叏杞?+1 灞?----
+await ev(`document.getElementById('cardDefense').click()`);
+await sleep(1100); // 鐞堕煶閫愯建鐐逛寒 7脳110ms
 st = await ev(`(function(){ const S=window.__game;
-  document.getElementById('cardDefense').click();
-  return { shield:S.shield, used:S.cardsUsed.defense }; })()`);
-check('闃插尽鍗♀啋鎶ょ浘8', st.shield === 8 && st.used === true, st);
+  return { used:S.cardsUsed.defense,
+    defAll1: Object.values(S.defense).every(v=>v===1),
+    defSum: Object.values(S.defense).reduce((a,b)=>a+b,0),
+    defDOM: document.querySelectorAll('.defslot').length }; })()`);
+check('鍗囬樁鍗♀啋涓冭建鍚?1灞傞槻寰?脳1钃濇牸)', st.used === true && st.defAll1 === true && st.defDOM === 7, st);
 
 // ---- 4. 缁撴潫灏忚妭锛氶綈灏勨啋sol瀵规挒鍚屽敖鈫抦i脳5鍏ㄤ腑鈫抎o脳2琚浘鎸?----
 await ev(`document.getElementById('endTurnBtn').click()`);
@@ -92,12 +97,14 @@ await shot('03_volley_flying');
 st = await ev(`(function(){ return new Promise(res=>{ const t0=Date.now();
   const iv=setInterval(()=>{ const S=window.__game;
     if(S.phase==='play'||S.phase==='over'||Date.now()-t0>25000){ clearInterval(iv);
-      res({turn:S.turn, phase:S.phase, php:S.php, ehp:S.ehp, shield:S.shield,
+      res({turn:S.turn, phase:S.phase, php:S.php, ehp:S.ehp,
+        defDo:S.defense.do, defOthers:Object.entries(S.defense).filter(([k])=>k!=='do').every(([,v])=>v===1),
         used:S.cardsUsed, pendE:S.pending.e.length}); } },300); }); })()`);
 check('缁撶畻鍥炵2灏忚妭', st.phase === 'play' && st.turn === 2, st);
 check('绮剧‘璐︾洰锛氭晫鏂?66-20=46锛坢i脳5脳4绌块€忥紝sol鍚屽敖锛?, st.ehp === 46, st);
-check('绮剧‘璐︾洰锛氭垜鏂?0 浼ゅ锛坉o脳2脳3=6 鍏ㄨ鎶ょ浘鍚告敹锛?, st.php === 50, st);
-check('鏂板皬鑺傦細鍗￠噸缃?鏂版剰鍥?鏍?鎶ょ浘娓呴浂', st.used.attack === false && st.used.defense === false && st.pendE === 3 && st.shield === 0, st);
+check('绮剧‘璐︾洰锛歞o脳2 鈫?绗?涓鏍兼尅锛岀2涓墦鑴?50-3=47', st.php === 47, st);
+check('闃插尽鏍兼畫鐣欙細do鑰楀敖=0锛屽叾浣欏叚杞?璺ㄥ皬鑺備繚鐣?, st.defDo === 0 && st.defOthers === true, st);
+check('鏂板皬鑺傦細鍗￠噸缃?鏂版剰鍥?鏍?, st.used.attack === false && st.used.defense === false && st.pendE === 3, st);
 await shot('04_bar2');
 
 // ---- 5. 鑳滃埄璺緞 ----

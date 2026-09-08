@@ -58,7 +58,7 @@
   const LANE_F = LANE_FREQ || [261.63, 293.66, 329.63, 349.23, 392, 440, 493.88];
   const SFX = {
     // 轨道唱名短音（放置/预演）
-    lane(lane, oct = 0) { tone(LANE_F[lane] * Math.pow(2, oct), 0.15, { vol: 0.22 }); },
+    lane(lane, oct = 0, dur = 0.15) { tone(LANE_F[lane] * Math.pow(2, oct), dur, { vol: 0.22, attack: dur > 0.3 ? 0.02 : 0.008 }); },
     // 对撞爆炸
     boom() { noise(0.18, { vol: 0.4, freq: 700 }); tone(90, 0.15, { type: 'square', vol: 0.12, slide: 40 }); },
     // 连锁 combo：上行音阶爬升

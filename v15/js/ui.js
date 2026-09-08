@@ -224,13 +224,13 @@
         if (skipPreview) break outer;
         const laneEl = laneFields[s.lane].parentElement;
         laneEl.classList.remove('flash'); void laneEl.offsetWidth; laneEl.classList.add('flash');
-        SFX.lane(s.lane, s.type === 'long' ? -1 : s.type === 'single' ? 1 : 0);
+        SFX.lane(s.lane, s.type === 'long' ? -1 : s.type === 'single' ? 1 : 0, 0.5);
         const dots = fpDots[s.lane];
         if (dots && idx[s.lane] < dots.length) {
           const d = dots[idx[s.lane]++];
           d.classList.add('lit'); d.style.background = typeColor[s.type] || '#888'; d.style.color = typeColor[s.type] || '#888';
         }
-        await delay(95);
+        await delay(620);
       }
     }
     $('preview-tip').style.display = 'none';

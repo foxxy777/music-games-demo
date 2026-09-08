@@ -1,0 +1,156 @@
+/* V17 实时波形二选一 —— P0 界面：两张卡 + 燃烧进度条 + 血量 + 分数 */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: #0d1117;
+  color: #e6edf3;
+  font-family: "Segoe UI", system-ui, "Microsoft YaHei", sans-serif;
+  overflow: hidden;
+}
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; }
+.hidden { display: none !important; }
+
+/* ---------- 受击红闪 / 震动 ---------- */
+#flash {
+  position: fixed; inset: 0; background: #e5484d; opacity: 0;
+  pointer-events: none; z-index: 90; transition: opacity .45s ease-out;
+}
+#flash.on { opacity: .32; transition: none; }
+@keyframes shake {
+  0%,100% { transform: translate(0,0); }
+  20% { transform: translate(-7px,3px); }
+  40% { transform: translate(6px,-4px); }
+  60% { transform: translate(-5px,-2px); }
+  80% { transform: translate(4px,3px); }
+}
+#stage.shake { animation: shake .32s linear; }
+
+/* ---------- 标题页 ---------- */
+#screen-title { justify-content: center; gap: 22px; }
+#logo { font-size: 40px; font-weight: 800; letter-spacing: 2px; }
+#logo b { color: #58a6ff; }
+#logo-sub { color: #8b949e; font-size: 14px; margin-top: -16px; }
+.songcard {
+  width: 560px; background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+  padding: 20px 24px; cursor: pointer; transition: border-color .15s, transform .15s;
+}
+.songcard:hover { border-color: #58a6ff; transform: translateY(-2px); }
+.songcard h2 { font-size: 24px; margin-bottom: 4px; }
+.songcard .meta { color: #8b949e; font-size: 13px; line-height: 1.7; }
+.songcard .ok { color: #3fb950; }
+#bestline { color: #d29922; font-size: 15px; min-height: 20px; }
+#rules { width: 560px; color: #8b949e; font-size: 13px; line-height: 1.9; }
+#rules b { color: #e6edf3; }
+#loadmsg { color: #58a6ff; font-size: 14px; min-height: 20px; }
+.bigbtn {
+  background: #1f6feb; color: #fff; border: 0; border-radius: 10px;
+  font-size: 20px; font-weight: 700; padding: 14px 64px; cursor: pointer;
+}
+.bigbtn:hover { background: #388bfd; }
+.bigbtn:disabled { background: #30363d; color: #8b949e; cursor: wait; }
+.ghostbtn {
+  background: transparent; color: #8b949e; border: 1px solid #30363d; border-radius: 8px;
+  font-size: 14px; padding: 9px 22px; cursor: pointer;
+}
+.ghostbtn:hover { color: #e6edf3; border-color: #8b949e; }
+#title-foot { position: absolute; bottom: 14px; color: #484f58; font-size: 12px; }
+
+/* ---------- 游戏页 ---------- */
+#screen-game { padding: 14px 18px; justify-content: center; }
+#hud {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  width: min(1160px, 96vw); display: flex; justify-content: space-between; align-items: center;
+  font-size: 17px; padding: 4px 6px 12px;
+}
+#hud .hp { color: #f85149; letter-spacing: 3px; font-size: 20px; }
+#hud .hp .off { color: #30363d; }
+#hud .song { color: #8b949e; font-size: 15px; }
+#hud .sc { font-variant-numeric: tabular-nums; }
+#hud .sc b { font-size: 22px; color: #58a6ff; }
+#hud .combo { color: #d29922; font-weight: 700; margin-left: 14px; }
+
+#stage {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px;
+  width: min(1160px, 96vw); margin-bottom: 26px;
+}
+#pair { display: flex; gap: 22px; }
+.cardwrap {
+  position: relative; border-radius: 10px; cursor: pointer; background: #fdfdfd;
+  border: 3px solid #30363d; padding: 0; line-height: 0;
+  transition: border-color .12s, transform .12s, opacity .3s;
+}
+.cardwrap:hover { border-color: #58a6ff; transform: translateY(-3px); }
+.cardwrap canvas { width: 560px; height: 315px; border-radius: 7px; }
+.cardwrap .cardtag {
+  position: absolute; top: 8px; right: 10px; line-height: 1;
+  font-size: 13px; font-weight: 700; color: #58a6ff;
+  background: rgba(13,17,23,.85); padding: 4px 9px; border-radius: 6px;
+}
+.cardwrap.pick-good { border-color: #3fb950; box-shadow: 0 0 22px rgba(63,185,80,.45); }
+.cardwrap.pick-bad { border-color: #f85149; box-shadow: 0 0 22px rgba(248,81,73,.4); }
+.cardwrap.reveal { border-color: #3fb950; border-style: dashed; }
+.cardwrap.dim { opacity: .42; }
+.cardwrap.noclick { cursor: default; pointer-events: none; }
+
+#rest {
+  position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px;
+  align-items: center; justify-content: center; text-align: center;
+}
+#rest .r1 { font-size: 30px; font-weight: 700; color: #58a6ff; }
+#rest .r1.bad { color: #f85149; }
+#rest .r2 { font-size: 15px; color: #8b949e; }
+
+#fb {
+  position: absolute; top: 8px; left: 0; right: 0; text-align: center;
+  font-size: 30px; font-weight: 800; opacity: 0; pointer-events: none; z-index: 5;
+}
+@keyframes fbrise { 0% {opacity:0; transform:translateY(14px);} 15% {opacity:1;} 75% {opacity:1;} 100% {opacity:0; transform:translateY(-18px);} }
+#fb.show { animation: fbrise 1.3s ease-out forwards; }
+#fb.good { color: #3fb950; text-shadow: 0 0 18px rgba(63,185,80,.6); }
+#fb.bad { color: #f85149; text-shadow: 0 0 18px rgba(248,81,73,.6); }
+
+/* ---------- 燃烧进度条 ---------- */
+#barzone { width: min(1160px, 96vw); display: flex; flex-direction: column; gap: 7px; }
+#bar {
+  position: relative; height: 16px; border-radius: 9px; background: #21262d;
+  border: 1px solid #30363d; overflow: hidden;
+}
+#barfill {
+  position: absolute; inset: 0; transform-origin: left center; transform: scaleX(0);
+  background: linear-gradient(90deg, #f7b733 0%, #fc4a1a 78%, #ff2d20 100%);
+}
+#barknob {
+  position: absolute; top: -3px; bottom: -3px; width: 7px; left: 0; border-radius: 3px;
+  background: #ffd29d; box-shadow: 0 0 12px 3px rgba(255,120,40,.9);
+}
+#barinfo { display: flex; justify-content: space-between; font-size: 13px; color: #8b949e; font-variant-numeric: tabular-nums; }
+
+#btn-quit { position: absolute; top: 14px; right: 18px; }
+
+/* ---------- 结算页 ---------- */
+#screen-end { justify-content: center; gap: 18px; }
+#end-title { font-size: 30px; font-weight: 800; }
+#rating {
+  font-size: 130px; font-weight: 900; line-height: 1;
+  color: #58a6ff; text-shadow: 0 0 40px rgba(88,166,255,.45);
+}
+#rating.A { color: #3fb950; text-shadow: 0 0 40px rgba(63,185,80,.45); }
+#rating.B { color: #d29922; text-shadow: 0 0 40px rgba(210,153,34,.45); }
+#rating.C { color: #8b949e; text-shadow: none; }
+#rating.lose { color: #f85149; text-shadow: 0 0 40px rgba(248,81,73,.4); }
+#end-stats { display: grid; grid-template-columns: auto auto; gap: 10px 28px; font-size: 18px; }
+#end-stats .k { color: #8b949e; text-align: right; }
+#end-stats .v { font-weight: 700; font-variant-numeric: tabular-nums; }
+#newrecord { color: #d29922; font-weight: 800; font-size: 16px; min-height: 22px; }
+#end-btns { display: flex; gap: 16px; }
+
+/* ---------- 调试面板（仅 ?debug=1） ---------- */
+#dbg {
+  position: fixed; right: 12px; bottom: 12px; z-index: 99;
+  background: rgba(22,27,34,.96); border: 1px dashed #d29922; border-radius: 8px;
+  padding: 10px 12px; font-size: 12px; color: #d29922; line-height: 1.7;
+}
+#dbg button, #dbg select {
+  background: #21262d; color: #d29922; border: 1px solid #d29922; border-radius: 5px;
+  padding: 3px 8px; margin: 2px 3px 2px 0; cursor: pointer; font-size: 12px;
+}

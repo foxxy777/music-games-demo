@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V16 防空版 · 听音防空</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#04050c; font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; user-select:none; }
+  #stage { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  #app { position:relative; width:1280px; height:720px; flex:none; transform-origin:center center;
+         background:radial-gradient(1100px 640px at 40% 35%, #12172e 0%, #0a0e1e 55%, #05070f 100%); color:#dfe6ff; overflow:hidden; }
+  .scr { position:absolute; inset:0; display:none; }
+  .scr.on { display:block; }
+  .shake { animation:appShake .3s; }
+  @keyframes appShake { 0%,100%{translate:0 0;} 25%{translate:-7px 3px;} 50%{translate:6px -3px;} 75%{translate:-3px 2px;} }
+
+  /* ===== 通用 ===== */
+  .btn { background:#20264a; border:1px solid #45508c; border-radius:10px; color:#dfe6ff; font-size:17px; padding:7px 16px; cursor:pointer; }
+  .btn:hover { background:#2a3160; border-color:#6d7cc0; }
+  .btn:disabled { opacity:.35; cursor:default; }
+  .btn.gold { background:linear-gradient(160deg,#a37c1c,#6d5210); border-color:#ffd54f; color:#fff6d8; font-weight:bold; }
+  .btn.danger { background:#5d1d28; border-color:#c04658; }
+  .btn.sel { background:#2c5a46; border-color:#4dd8a0; box-shadow:0 0 10px #4dd8a055; }
+  .chip { font-size:13px; color:#8f9ccf; }
+
+  /* ===== 主菜单 ===== */
+  #scr-menu { display:none; flex-direction:column; align-items:center; justify-content:center; gap:22px; }
+  #scr-menu.on { display:flex; }
+  #title { font-size:58px; font-weight:900; letter-spacing:12px; color:#ffe9b8; text-shadow:0 0 30px #ffb84d88, 0 0 90px #4dd8ff44; }
+  #subtitle { font-size:18px; color:#8f9ccf; letter-spacing:6px; }
+  #menu-box { display:flex; flex-direction:column; gap:12px; width:300px; margin-top:8px; }
+  #menu-box .btn { font-size:22px; padding:13px; }
+  #vol-row { display:flex; align-items:center; gap:10px; color:#8f9ccf; font-size:15px; }
+  #vol-row input { width:150px; accent-color:#4dd8ff; }
+  #record-line { color:#8f9ccf; font-size:15px; letter-spacing:1px; }
+
+  /* ===== 战场 ===== */
+  #scr-game { }
+  #hud { position:absolute; top:0; left:0; right:0; height:62px; display:flex; align-items:center; gap:14px; padding:0 16px;
+         background:linear-gradient(180deg,#0c1024ee,#0c102400); z-index:5; }
+  #hud .hgroup { display:flex; align-items:center; gap:8px; }
+  #hud .hlabel { font-size:13px; color:#8f9ccf; }
+  #hud .hval { font-size:20px; font-weight:bold; color:#ffe9b8; }
+  #hp-val { color:#ff9a76; }
+  #wave-name { font-size:16px; color:#dfe6ff; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .boss-tag { color:#ff7a7a; font-weight:bold; }
+  #hud .spacer { flex:1; }
+  #field { position:absolute; top:0; left:0; }
+
+  /* ===== 部署面板 ===== */
+  #deploy-panel { position:absolute; left:0; right:0; bottom:0; height:86px; display:flex; align-items:center; gap:10px; padding:0 14px;
+    background:linear-gradient(0deg,#0a0d1cf2,#0a0d1c00); z-index:5; font-size:15px; }
+  #deploy-panel .pgroup { display:flex; align-items:center; gap:5px; }
+  #deploy-panel .ptitle { color:#8f9ccf; font-size:13px; margin-right:2px; }
+  #seg-label { min-width:74px; text-align:center; color:#4dd8ff; font-weight:bold; }
+  #intercept-panel { position:absolute; left:0; right:0; bottom:0; height:86px; display:none; align-items:center; gap:14px; padding:0 16px;
+    background:linear-gradient(0deg,#0a0d1cf2,#0a0d1c00); z-index:5; }
+  #intercept-panel .stat { font-size:17px; color:#dfe6ff; }
+  #listen-timer { color:#ffd54f; font-weight:bold; font-size:17px; min-width:56px; }
+  #sweep-chips { display:flex; gap:4px; }
+  .swchip { font-size:12px; padding:2px 7px; border-radius:8px; border:1px solid #45508c; color:#8f9ccf; cursor:pointer; }
+  .swchip:hover { color:#ff9a9a; border-color:#c04658; }
+
+  /* ===== 商店 ===== */
+  #scr-shop { padding:20px 26px; }
+  #shop-head { display:flex; align-items:center; gap:18px; margin-bottom:14px; }
+  #shop-head h2 { font-size:26px; color:#ffe9b8; letter-spacing:4px; }
+  #shop-gold { font-size:20px; color:#ffd54f; font-weight:bold; }
+  #shop-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .shop-item { background:#111631aa; border:1px solid #2c3560; border-radius:12px; padding:12px 14px; cursor:pointer; transition:all .12s; }
+  .shop-item:hover { border-color:#6d7cc0; transform:translateY(-2px); }
+  .shop-item.sold { opacity:.35; pointer-events:none; }
+  .shop-item.poor { opacity:.55; }
+  .shop-item .nm { font-size:18px; font-weight:bold; color:#dfe6ff; }
+  .shop-item .ds { font-size:13px; color:#8f9ccf; margin:5px 0 8px; min-height:32px; }
+  .shop-item .pr { font-size:17px; color:#ffd54f; font-weight:bold; }
+  .shop-item .lv { float:right; font-size:13px; color:#4dd8a0; }
+  #shop-foot { margin-top:16px; display:flex; align-items:center; gap:16px; }
+
+  /* ===== 结算 ===== */
+  #scr-end { display:none; flex-direction:column; align-items:center; justify-content:center; gap:18px; }
+  #scr-end.on { display:flex; }
+  #end-title { font-size:56px; font-weight:900; letter-spacing:10px; }
+  #end-title.v { color:#ffe9b8; text-shadow:0 0 40px #ffb84daa; }
+  #end-title.d { color:#ff7a7a; text-shadow:0 0 40px #c04658aa; }
+  #end-stats { color:#8f9ccf; font-size:17px; line-height:1.9; text-align:center; }
+  #end-record { color:#dfe6ff; font-size:16px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="app">
+    <!-- 主菜单 -->
+    <div class="scr on" id="scr-menu">
+      <div id="title">听音防空</div>
+      <div id="subtitle">敌弹即音符 · 探测波照亮 · 高潮扫频雷达</div>
+      <div id="menu-box">
+        <button class="btn gold" id="btn-start">开始布防</button>
+        <div id="vol-row">音量 <input type="range" id="vol" min="0" max="100" value="70"></div>
+        <div id="record-line">战绩 —</div>
+      </div>
+    </div>
+
+    <!-- 战场 -->
+    <div class="scr" id="scr-game">
+      <canvas id="field" width="1280" height="720"></canvas>
+      <div id="hud">
+        <div class="hgroup"><span class="hlabel">波次</span><span class="hval" id="wave-n">1/4</span></div>
+        <div class="hgroup"><span id="wave-name">—</span></div>
+        <div class="hgroup"><span class="hlabel">基地</span><span class="hval" id="hp-val">10</span></div>
+        <div class="hgroup"><span class="hlabel">资金</span><span class="hval" id="gold-val" style="color:#ffd54f">3</span></div>
+        <div class="hgroup"><span class="hlabel">移调</span><span class="hval" id="tier-val" style="color:#4dd8ff">D</span></div>
+        <div class="spacer"></div>
+        <button class="btn" id="btn-replay">重听 ×1</button>
+        <button class="btn" id="btn-speed">速度 ×1</button>
+        <button class="btn danger" id="btn-menu">撤退</button>
+      </div>
+      <div id="intercept-panel">
+        <span class="stat" id="stat-kills">击落 0</span>
+        <span class="stat" id="stat-leaks">漏网 0</span>
+        <span class="stat" id="listen-timer" style="display:none"></span>
+        <div class="spacer"></div>
+        <span class="chip" id="phase-hint">拦截中 —— 探测波扫到才会显形，炮火只打显形目标</span>
+      </div>
+      <div id="deploy-panel">
+        <div class="pgroup"><span class="ptitle">图样</span>
+          <button class="btn shape" data-shape="wave">波浪</button>
+          <button class="btn shape" data-shape="rise">上升</button>
+          <button class="btn shape" data-shape="fall">下降</button>
+          <button class="btn shape" data-shape="mountain">山峰</button>
+          <button class="btn shape" data-shape="valley">山谷</button>
+        </div>
+        <div class="pgroup"><span class="ptitle">模式</span>
+          <button class="btn mode sel" data-mode="search">搜索型</button>
+          <button class="btn mode" data-mode="track">跟踪型</button>
+        </div>
+        <div class="pgroup"><span class="ptitle">音高段</span><span id="seg-label">点左轴</span></div>
+        <button class="btn gold" id="btn-deploy">部署 −1费</button>
+        <div class="pgroup"><span class="ptitle">在扫</span><div id="sweep-chips"></div></div>
+        <div class="pgroup"><span class="ptitle">炮</span>
+          <button class="btn gun" data-gun="0">炮1·格4</button>
+          <button class="btn gun" data-gun="1">炮2·格9</button>
+        </div>
+        <div class="spacer"></div>
+        <span id="listen-timer2" style="color:#ffd54f;font-weight:bold"></span>
+        <button class="btn gold" id="btn-go" style="font-size:20px;padding:10px 26px;">开打 ▶</button>
+      </div>
+    </div>
+
+    <!-- 商店 -->
+    <div class="scr" id="scr-shop">
+      <div id="shop-head">
+        <h2>补 给 站</h2>
+        <span id="shop-gold">资金 0</span>
+        <span class="chip">击落奖励已入账 · 买强化备战下一波</span>
+      </div>
+      <div id="shop-grid"></div>
+      <div id="shop-foot">
+        <button class="btn gold" id="btn-next-wave" style="font-size:20px;padding:11px 30px;">出击下一波 ▶</button>
+        <span class="chip" id="shop-hint"></span>
+      </div>
+    </div>
+
+    <!-- 结算 -->
+    <div class="scr" id="scr-end">
+      <div id="end-title">胜 利</div>
+      <div id="end-stats"></div>
+      <div id="end-record"></div>
+      <div style="display:flex;gap:14px;">
+        <button class="btn gold" id="btn-again" style="font-size:19px;padding:11px 26px;">再来一局</button>
+        <button class="btn" id="btn-back">回主菜单</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/core.js"></script>
+<script src="js/battle.js"></script>
+<script src="js/song.js"></script>
+<script src="js/meta.js"></script>
+<script src="assets/songs/canghai.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

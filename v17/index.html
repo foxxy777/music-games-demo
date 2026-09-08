@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>V17 实时波形二选一</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d1117'/%3E%3Cpath d='M4 16 C8 6, 12 26, 16 16 S 24 6, 28 16' stroke='%23d4557a' stroke-width='2.5' fill='none'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="flash"></div>
+
+<!-- ============ 标题页 ============ -->
+<section id="screen-title" class="screen">
+  <div id="logo">实时波形<b>二选一</b></div>
+  <div id="logo-sub">V17 P0 · 歌不停 卡不断 · 燃烧进度条内听唱认形</div>
+  <div class="songcard" id="songcard">
+    <h2>♪ 七里香 <small style="color:#8b949e;font-size:14px;font-weight:400">周杰伦</small></h2>
+    <div class="meta">
+      官方 MV 版 297s · 38 卡 / 3 唱段 · 间奏自动跳过<br>
+      简谱对账 <span class="ok">✓ 1=E♭ 主/属音吻合</span> · F0: harvest 整轨 · demucs 人声
+    </div>
+  </div>
+  <div id="bestline"></div>
+  <div id="rules">
+    <b>玩法</b>：歌从头到尾连续播放。有唱词的小节并排出现两张曲线卡（1 真 1 假），进度条烧完前点出「这段唱的真身」——
+    选对加分连击升级，选错/超时扣 1 血；间奏不出卡。血 5 点，尽则败。评级 S≥95% / A≥85% / B≥70%。<br>
+    <b>操作</b>：点卡片，或键盘 ←→（A/D）。
+  </div>
+  <div id="loadmsg"></div>
+  <button class="bigbtn" id="btn-start">开始游戏</button>
+  <div id="title-foot">V17 P0 · 本地单页 · 音画同步铁律：卡面曲线窗口 ≡ 播放窗口</div>
+</section>
+
+<!-- ============ 游戏页 ============ -->
+<section id="screen-game" class="screen hidden">
+  <header id="hud">
+    <span class="hp" id="hp"></span>
+    <span class="song">♪ 七里香</span>
+    <span class="sc">得分 <b id="score">0</b><span class="combo hidden" id="combo"></span></span>
+  </header>
+
+  <div id="stage">
+    <div id="pair">
+      <div class="cardwrap" id="wrapL"><canvas id="cvL" width="640" height="360"></canvas><div class="cardtag">A</div></div>
+      <div class="cardwrap" id="wrapR"><canvas id="cvR" width="640" height="360"></canvas><div class="cardtag">B</div></div>
+    </div>
+    <div id="rest" class="hidden"><div class="r1" id="rest1"></div><div class="r2" id="rest2"></div></div>
+    <div id="fb"></div>
+  </div>
+
+  <div id="barzone">
+    <div id="bar"><div id="barfill"></div><div id="barknob"></div></div>
+    <div id="barinfo"><span id="bar-left"></span><span id="bar-right"></span></div>
+  </div>
+
+  <button class="ghostbtn" id="btn-quit">放弃</button>
+  <div id="dbg" class="hidden">
+    <div id="dbg-read">-</div>
+    <button id="dbg-seek10">+10s</button>
+    <button id="dbg-toend">跳至曲尾</button>
+    <button id="dbg-restart">重开</button>
+    <select id="dbg-auto">
+      <option value="">自动作答：关</option>
+      <option value="correct">自动作答：全对</option>
+      <option value="wrong">自动作答：全错</option>
+    </select>
+  </div>
+</section>
+
+<!-- ============ 结算页 ============ -->
+<section id="screen-end" class="screen hidden">
+  <div id="end-title"></div>
+  <div id="rating"></div>
+  <div id="end-stats"></div>
+  <div id="newrecord"></div>
+  <div id="end-btns">
+    <button class="bigbtn" id="btn-again">再来一次</button>
+    <button class="ghostbtn" id="btn-home">回到标题</button>
+  </div>
+</section>
+
+<script src="js/core.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

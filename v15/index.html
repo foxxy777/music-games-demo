@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V15 音浪尖塔 · 七轨对撞</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#05060d; font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; user-select:none; }
+  #stage { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  #app { position:relative; width:1280px; height:720px; flex:none; transform-origin:center center;
+         background:radial-gradient(1100px 650px at 42% 38%, #151b36 0%, #0d1122 55%, #070912 100%); color:#dfe6ff; overflow:hidden; }
+  .scr { position:absolute; inset:0; display:none; }
+  .scr.on { display:block; }
+  .shake { animation:appShake .3s; }
+  @keyframes appShake { 0%,100%{translate:0 0;} 25%{translate:-7px 3px;} 50%{translate:6px -3px;} 75%{translate:-3px 2px;} }
+
+  /* ===== 通用 ===== */
+  .btn { background:#232b4d; border:1px solid #4a568f; border-radius:12px; color:#dfe6ff; font-size:20px; padding:10px 22px; cursor:pointer; }
+  .btn:hover { background:#2e3866; border-color:#6d7cc0; }
+  .btn:disabled { opacity:.35; cursor:default; }
+  .btn.gold { background:linear-gradient(160deg,#a37c1c,#6d5210); border-color:#ffd54f; color:#fff6d8; font-weight:bold; }
+  .btn.danger { background:#5d1d28; border-color:#c04658; }
+  .hpbar { height:16px; background:#20264a; border:1px solid #3d4680; border-radius:8px; overflow:hidden; }
+  .hpfill { height:100%; background:linear-gradient(90deg,#ff5d6c,#ff9a76); transition:width .35s; border-radius:8px; }
+  .hpfill.enemy { background:linear-gradient(90deg,#c04658,#ff7a7a); }
+
+  /* ===== 主菜单 ===== */
+  #scr-menu { display:none; flex-direction:column; align-items:center; justify-content:center; gap:26px; }
+  #scr-menu.on { display:flex; }
+  #title { font-size:64px; font-weight:900; letter-spacing:10px; color:#ffe9b8; text-shadow:0 0 30px #ffb84d88, 0 0 80px #ff7ad955; }
+  #subtitle { font-size:20px; color:#8f9ccf; letter-spacing:4px; }
+  #menu-box { display:flex; flex-direction:column; gap:14px; width:300px; }
+  #menu-box .btn { font-size:24px; padding:14px; }
+  #vol-row { display:flex; align-items:center; gap:12px; color:#8f9ccf; font-size:16px; }
+  #vol-row input { width:160px; accent-color:#ffd54f; }
+
+  /* ===== 地图 ===== */
+  #scr-map { padding:10px 14px; }
+  #map-wrap { display:flex; gap:14px; height:100%; }
+  #map-side { width:210px; display:flex; flex-direction:column; gap:8px; padding:10px; background:#0d1128cc; border:1px solid #2c3560; border-radius:14px; font-size:16px; }
+  #map-side .row { display:flex; align-items:center; gap:8px; }
+  #map-side .big { font-size:22px; font-weight:bold; color:#ffe9b8; }
+  #map-view { flex:1; position:relative; background:#0a0e20aa; border:1px solid #2c3560; border-radius:14px; overflow:hidden; }
+  #map-lines { position:absolute; inset:0; }
+  .mrow { position:absolute; left:0; width:100%; height:38px; display:flex; align-items:center; justify-content:center; gap:80px; }
+  .mnode { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer;
+           background:#1b2140; border:2px solid #3d4680; transition:all .15s; position:relative; }
+  .mnode:hover { transform:scale(1.12); }
+  .mnode.fog { opacity:.28; pointer-events:none; filter:grayscale(.8); }
+  .mnode.walk { border-color:#7dffcf; box-shadow:0 0 14px #7dffcf66; }
+  .mnode.here { border-color:#ffd54f; box-shadow:0 0 18px #ffd54f99; }
+  .mnode .tlabel { position:absolute; top:42px; font-size:11px; color:#8f9ccf; white-space:nowrap; }
+  .mnode.elite { border-color:#c04658; } .mnode.boss { width:52px; height:52px; font-size:28px; border-color:#ffd54f; }
+  #deck-btn { cursor:pointer; }
+
+  /* ===== 战斗 ===== */
+  #scr-battle { display:none; flex-direction:column; }
+  #scr-battle.on { display:flex; }
+  #b-top { height:118px; display:flex; align-items:stretch; gap:8px; padding:8px 10px; }
+  .hero-box { width:230px; display:flex; gap:10px; align-items:center; background:#0d1128cc; border:1px solid #2c3560; border-radius:14px; padding:8px 12px; }
+  .hero-face { font-size:44px; filter:drop-shadow(0 0 10px #7d8aff88); }
+  .hero-info { flex:1; }
+  .hero-name { font-size:16px; color:#ffe9b8; margin-bottom:4px; }
+  .badge { display:inline-block; font-size:13px; padding:1px 8px; border-radius:9px; margin-right:4px; border:1px solid #3d4680; background:#181e3d; }
+  .badge.str { color:#ff9a76; border-color:#a35b3d; }
+  .badge.reso { color:#ffd54f; border-color:#a3881d; font-weight:bold; }
+  #b-mid { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; }
+  #turn-ind { font-size:15px; color:#8f9ccf; }
+  #b-hint { font-size:17px; color:#7dffcf; height:24px; text-align:center; }
+  #enemy-box { width:300px; display:flex; gap:10px; background:#0d1128cc; border:1px solid #2c3560; border-radius:14px; padding:8px 12px; align-items:center; }
+  #enemy-face { font-size:44px; filter:drop-shadow(0 0 12px #ffb84d88); transition:transform .15s; }
+  #enemy-face.hit { animation:enemyHit .3s; }
+  @keyframes enemyHit { 50% { transform:scale(.9) rotate(-5deg); } }
+  #enemy-info { flex:1; }
+  #enemy-name { font-size:14px; color:#ffe9b8; }
+  #fingerprint { display:flex; flex-direction:column-reverse; gap:1px; margin-top:4px; }
+  .fp-row { display:flex; gap:1px; align-items:center; height:6px; }
+  .fp-dot { width:6px; height:6px; border-radius:1.5px; background:#2c3560; }
+  .fp-dot.lit { box-shadow:0 0 5px currentColor; }
+
+  /* 七轨 */
+  #b-lanes { flex:1; margin:0 10px; display:flex; flex-direction:column; gap:4px; position:relative; }
+  .lane { flex:1; display:flex; align-items:center; border-radius:10px; position:relative;
+          background:linear-gradient(90deg, #ffffff05, #ffffff0a 50%, #ffffff05); border:1px solid #ffffff10; }
+  .lane.targetable { cursor:pointer; border-color:#7dffcf; box-shadow:inset 0 0 18px #7dffcf22; background:#7dffcf08; }
+  .lane.flash { animation:laneFlash .3s; }
+  @keyframes laneFlash { 30% { background:#ffffff22; } }
+  .lane-name { width:34px; text-align:center; font-size:17px; font-weight:bold; opacity:.9; text-shadow:0 0 10px currentColor; flex:none; }
+  .lane-field { flex:1; position:relative; height:100%; }
+  .lane-field::after { content:''; position:absolute; left:50%; top:5px; bottom:5px; width:2px; background:linear-gradient(#ffd54f44,#ffd54f18); }
+  .note-u { position:absolute; width:38px; height:38px; margin:-19px 0 0 -19px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+            font-size:14px; font-weight:bold; color:#14060a; transition:left .3s, top .2s; z-index:5;
+            background:radial-gradient(circle at 35% 30%, #ff9a9a, #e25555 60%, #8f2e2e); border:2px solid #ffd0d0; box-shadow:0 0 10px #ff5d6c66; }
+  .note-u.shield { background:radial-gradient(circle at 35% 30%, #9ad8ff, #4d8ae2 60%, #2e4a8f); border-color:#d0e8ff; box-shadow:0 0 10px #4dd8ff66; }
+  .note-u .num { text-shadow:0 1px 2px #fff8; }
+  .note-u.swept { border-color:#ffe97d; box-shadow:0 0 14px #ffd54faa; }
+  .note-e { position:absolute; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; color:#fff;
+            transition:left .3s, top .2s; z-index:5; background:radial-gradient(circle at 35% 30%, #b388ff, #7d4de0 60%, #3d2685); border:2px solid #e0c8ff; box-shadow:0 0 10px #b388ff77; }
+  .note-e.t-single { width:26px; height:26px; margin:-13px 0 0 -13px; font-size:11px; }
+  .note-e.t-std { width:34px; height:34px; margin:-17px 0 0 -17px; font-size:13px; }
+  .note-e.t-long { width:42px; height:42px; margin:-21px 0 0 -21px; font-size:15px; }
+  .note-e.t-elite { width:48px; height:48px; margin:-24px 0 0 -24px; font-size:16px; border-color:#ffd54f; box-shadow:0 0 16px #ffd54f88; }
+  .note-e.targetable { cursor:pointer; outline:3px solid #7dffcf; outline-offset:2px; }
+  .ntag { position:absolute; top:-13px; left:50%; transform:translateX(-50%); display:flex; gap:2px; }
+  .ntag span { font-size:10px; padding:0 3px; border-radius:6px; color:#0a0d18; font-weight:bold; }
+  .ntag .psn { background:#7dff8a; } .ntag .brn { background:#ff9a3d; }
+  .note-u.dead, .note-e.dead { transition:all .25s; opacity:0; transform:scale(.2); }
+  .float-txt { position:absolute; font-size:16px; font-weight:bold; pointer-events:none; z-index:30; animation:floatUp .8s forwards; text-shadow:0 0 8px currentColor; }
+  @keyframes floatUp { 0% { translate:0 0; opacity:1; } 100% { translate:0 -34px; opacity:0; } }
+  .particle { position:absolute; width:6px; height:6px; border-radius:50%; pointer-events:none; z-index:29; animation:pfly .5s forwards; }
+  @keyframes pfly { 0% { translate:0 0; opacity:1; } 100% { translate:var(--dx) var(--dy); opacity:0; } }
+  .bolt { position:absolute; height:3px; z-index:28; background:linear-gradient(90deg,#fff,#ffd54f,#fff); border-radius:2px; animation:boltFade .35s forwards; transform-origin:left center; }
+  @keyframes boltFade { 0% { opacity:1; } 100% { opacity:0; } }
+
+  /* 底栏：能量+手牌+结束 */
+  #b-bottom { height:172px; display:flex; align-items:center; gap:12px; padding:8px 14px; }
+  #energy-ball { width:72px; height:72px; flex:none; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+                 background:radial-gradient(circle at 35% 30%, #ffe08a, #f0a832 65%, #9c6410); color:#3d2a05; font-weight:900; box-shadow:0 0 18px #ffd54f66; }
+  #energy-ball .n { font-size:26px; line-height:1; } #energy-ball .m { font-size:12px; }
+  #hand { flex:1; display:flex; gap:8px; align-items:center; justify-content:center; height:100%; }
+  .card { position:relative; width:97px; height:136px; flex:none; border-radius:10px; cursor:pointer; overflow:hidden;
+          background:linear-gradient(165deg,#232a52,#151a38); border:2px solid var(--cc,#3d4680); transition:transform .1s; }
+  .card:hover { transform:translateY(-8px); }
+  .card.sel { outline:3px solid #ffd54f; transform:translateY(-10px); box-shadow:0 0 18px #ffd54f66; }
+  .card.poor { filter:grayscale(.85) brightness(.55); }
+  .card .cost { position:absolute; left:5px; top:5px; width:24px; height:24px; border-radius:50%; background:#181e3d; border:1px solid var(--cc);
+                display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:bold; color:#ffe9b8; }
+  .card .cname { margin:34px 4px 0; text-align:center; font-size:15px; font-weight:bold; }
+  .card .cdesc { margin:6px 6px 0; font-size:11px; line-height:1.45; color:#9fb0e8; text-align:center; }
+  .card .ctype { position:absolute; bottom:4px; left:0; right:0; text-align:center; font-size:10px; color:#5d6ba0; }
+  .card.upg { border-style:double; border-width:4px; }
+  #endturn { width:118px; height:66px; flex:none; font-size:20px; font-weight:bold; }
+  #speed-btn { width:118px; height:30px; flex:none; font-size:13px; padding:2px; }
+
+  /* 大字/横幅 */
+  #bigword { position:absolute; left:0; right:0; top:36%; text-align:center; font-size:56px; font-weight:900; pointer-events:none; opacity:0; z-index:50;
+             color:#ffd54f; text-shadow:0 0 30px #ffb84d, 0 0 80px #ff7ad9; }
+  #bigword.pop { animation:bigPop 1s forwards; }
+  @keyframes bigPop { 0% { opacity:0; transform:scale(.4); } 18% { opacity:1; transform:scale(1.15); } 30% { transform:scale(1); } 78% { opacity:1; } 100% { opacity:0; transform:scale(1.05) translateY(-16px); } }
+  #phase-banner { position:absolute; top:130px; left:0; right:0; text-align:center; z-index:49; opacity:0; pointer-events:none; }
+  #phase-banner.show { animation:bigPop 1.6s forwards; }
+  #phase-banner .p1 { font-size:34px; font-weight:bold; color:#ff7a7a; text-shadow:0 0 24px #ff5252; }
+  #phase-banner .p2 { font-size:16px; color:#ffb0b0; }
+
+  /* 预演遮罩 */
+  #preview-tip { position:absolute; top:120px; left:0; right:0; text-align:center; z-index:40; display:none; }
+  #preview-tip .t1 { font-size:22px; color:#ffe9b8; text-shadow:0 0 16px #ffb84d88; }
+
+  /* ===== 结算/节点通用面板 ===== */
+  .panel-scr { display:none; flex-direction:column; align-items:center; justify-content:center; gap:16px; background:#070a18ee; }
+  .panel-scr.on { display:flex; }
+  .panel-title { font-size:34px; font-weight:900; color:#ffe9b8; text-shadow:0 0 20px #ffb84d66; letter-spacing:4px; }
+  .card-row { display:flex; gap:14px; }
+  .gold-line { font-size:20px; color:#ffd54f; }
+  .opt-col { display:flex; flex-direction:column; gap:12px; width:520px; }
+  .opt-col .btn { font-size:18px; padding:14px; text-align:left; }
+
+  /* 商店 */
+  .price-tag { position:absolute; bottom:20px; left:0; right:0; text-align:center; font-size:13px; color:#ffd54f; font-weight:bold; }
+  .sold { opacity:.35; pointer-events:none; }
+
+  /* 卡组弹层 */
+  #overlay { position:absolute; inset:0; background:#05060dcc; z-index:90; display:none; align-items:center; justify-content:center; flex-direction:column; gap:14px; }
+  #overlay.on { display:flex; }
+  #overlay .card-row { flex-wrap:wrap; justify-content:center; max-width:1100px; max-height:560px; overflow:auto; }
+  #overlay h3 { font-size:24px; color:#ffe9b8; }
+  #toast { position:absolute; left:50%; bottom:190px; transform:translateX(-50%); background:#181e3dee; border:1px solid #4a568f; border-radius:10px;
+           padding:8px 20px; font-size:15px; z-index:99; opacity:0; pointer-events:none; transition:opacity .25s; }
+  #toast.on { opacity:1; }
+</style>
+</head>
+<body>
+<div id="stage"><div id="app">
+
+  <!-- 主菜单 -->
+  <div class="scr on" id="scr-menu">
+    <div id="title">音浪尖塔</div>
+    <div id="subtitle">七轨对撞 · 名曲当敌人 · 叠数值爽感</div>
+    <div id="menu-box">
+      <button class="btn gold" id="btn-new">新游戏</button>
+      <button class="btn" id="btn-continue">继续游戏</button>
+    </div>
+    <div id="vol-row">🔊 音量 <input type="range" id="vol" min="0" max="100" value="70"></div>
+  </div>
+
+  <!-- 地图 -->
+  <div class="scr" id="scr-map">
+    <div id="map-wrap">
+      <div id="map-side">
+        <div class="row big">🎼 第一幕 · 音之回廊</div>
+        <div class="row">❤️ 血量 <b id="ms-hp"></b></div>
+        <div class="row">💰 金币 <b id="ms-gold"></b></div>
+        <div class="row">🗂️ 卡组 <b id="ms-deck"></b>（点击查看）</div>
+        <div class="row" id="deck-btn">🗂️ 查看卡组</div>
+        <div class="row" id="ms-relics" style="flex-wrap:wrap"></div>
+        <div class="row">📍 层数 <b id="ms-floor"></b>/15</div>
+        <div class="row" style="margin-top:auto; font-size:13px; color:#8f9ccf" id="ms-tip">点击发光节点前进</div>
+        <button class="btn" id="btn-to-menu" style="font-size:14px">回到标题（自动存档）</button>
+      </div>
+      <div id="map-view"><svg id="map-lines"></svg></div>
+    </div>
+  </div>
+
+  <!-- 战斗 -->
+  <div class="scr" id="scr-battle">
+    <div id="b-top">
+      <div class="hero-box">
+        <div class="hero-face">🧑‍🎤</div>
+        <div class="hero-info">
+          <div class="hero-name">流浪乐手</div>
+          <div class="hpbar"><div class="hpfill" id="p-hpfill"></div></div>
+          <div style="font-size:13px; margin-top:3px" id="p-hptxt"></div>
+          <div style="margin-top:3px" id="p-badges"></div>
+        </div>
+      </div>
+      <div id="b-mid">
+        <div id="turn-ind"></div>
+        <div id="b-hint"></div>
+      </div>
+      <div id="enemy-box">
+        <div id="enemy-face">🎶</div>
+        <div id="enemy-info">
+          <div id="enemy-name"></div>
+          <div class="hpbar"><div class="hpfill enemy" id="e-hpfill"></div></div>
+          <div style="font-size:12px; margin-top:2px" id="e-hptxt"></div>
+          <div id="fingerprint"></div>
+        </div>
+      </div>
+    </div>
+    <div id="preview-tip"><div class="t1">🎵 曲牌预演中……</div><button class="btn" id="btn-skip-preview" style="margin-top:8px">跳过预演</button></div>
+    <div id="b-lanes"></div>
+    <div id="b-bottom">
+      <div id="energy-ball"><div class="n" id="en-n">3</div><div class="m" id="en-m">/3 能量</div></div>
+      <div id="hand"></div>
+      <div style="display:flex; flex-direction:column; gap:6px; flex:none">
+        <button class="btn gold" id="endturn">结束回合</button>
+        <button class="btn" id="speed-btn">加速 ×1</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 奖励 -->
+  <div class="scr panel-scr" id="scr-reward">
+    <div class="panel-title">战 斗 胜 利</div>
+    <div class="gold-line" id="rw-gold"></div>
+    <div id="rw-relic"></div>
+    <div style="color:#8f9ccf">选择一张卡加入卡组：</div>
+    <div class="card-row" id="rw-cards"></div>
+    <button class="btn" id="rw-skip">跳过</button>
+  </div>
+
+  <!-- 商店 -->
+  <div class="scr panel-scr" id="scr-shop">
+    <div class="panel-title">商 店</div>
+    <div class="gold-line" id="sh-gold"></div>
+    <div class="card-row" id="sh-cards"></div>
+    <div style="display:flex; gap:18px; align-items:center">
+      <div id="sh-relic"></div>
+      <button class="btn" id="sh-remove">删卡 75💰</button>
+    </div>
+    <button class="btn gold" id="sh-leave">离开</button>
+  </div>
+
+  <!-- 篝火 -->
+  <div class="scr panel-scr" id="scr-campfire">
+    <div style="font-size:70px">🔥</div>
+    <div class="panel-title">篝 火</div>
+    <div class="opt-col">
+      <button class="btn" id="cf-rest">🛌 休息：回血 35%（<span id="cf-heal"></span> 点）</button>
+      <button class="btn" id="cf-up">⬆️ 锻造：升级 1 张卡</button>
+    </div>
+  </div>
+
+  <!-- 事件 -->
+  <div class="scr panel-scr" id="scr-event">
+    <div style="font-size:64px" id="ev-emoji"></div>
+    <div class="panel-title" id="ev-name"></div>
+    <div style="color:#9fb0e8; font-size:17px; max-width:560px; text-align:center" id="ev-desc"></div>
+    <div class="opt-col" id="ev-opts"></div>
+  </div>
+
+  <!-- 结束（胜利/败北） -->
+  <div class="scr panel-scr" id="scr-end">
+    <div class="panel-title" id="end-title"></div>
+    <div id="end-stats" style="color:#9fb0e8; font-size:18px; line-height:2; text-align:center"></div>
+    <button class="btn gold" id="end-menu">回到标题</button>
+  </div>
+
+  <!-- 大字/横幅/弹层/提示 -->
+  <div id="bigword"></div>
+  <div id="phase-banner"><div class="p1"></div><div class="p2"></div></div>
+  <div id="overlay"></div>
+  <div id="toast"></div>
+</div></div>
+
+<script src="assets/waves/waves.js"></script>
+<script src="js/core.js"></script>
+<script src="js/cards.js"></script>
+<script src="js/battle.js"></script>
+<script src="js/meta.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

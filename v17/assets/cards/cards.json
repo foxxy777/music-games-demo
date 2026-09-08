@@ -1,0 +1,315 @@
+{
+ "summary": {
+  "song": "qilixiang",
+  "song_dur": 297.3,
+  "vox_segments": 3,
+  "total_vox_dur": 215.2,
+  "n_cards": 38
+ },
+ "cards": [
+  {
+   "start": 30.365,
+   "end": 35.442,
+   "med_midi": 62.1,
+   "med_name": "D4",
+   "span_st": 6.1,
+   "voiced_ratio": 0.92
+  },
+  {
+   "start": 35.442,
+   "end": 40.519,
+   "med_midi": 57.7,
+   "med_name": "A#3",
+   "span_st": 6.6,
+   "voiced_ratio": 0.92
+  },
+  {
+   "start": 40.519,
+   "end": 45.596,
+   "med_midi": 57.8,
+   "med_name": "A#3",
+   "span_st": 9.6,
+   "voiced_ratio": 0.92
+  },
+  {
+   "start": 45.596,
+   "end": 50.673,
+   "med_midi": 62.6,
+   "med_name": "D#4",
+   "span_st": 7.5,
+   "voiced_ratio": 0.93
+  },
+  {
+   "start": 50.673,
+   "end": 55.75,
+   "med_midi": 60.3,
+   "med_name": "C4",
+   "span_st": 5.6,
+   "voiced_ratio": 0.98
+  },
+  {
+   "start": 57.05,
+   "end": 62.827,
+   "med_midi": 58.3,
+   "med_name": "A#3",
+   "span_st": 12.1,
+   "voiced_ratio": 0.97
+  },
+  {
+   "start": 62.827,
+   "end": 68.604,
+   "med_midi": 54.3,
+   "med_name": "F#3",
+   "span_st": 7.0,
+   "voiced_ratio": 0.97
+  },
+  {
+   "start": 68.604,
+   "end": 74.38,
+   "med_midi": 57.8,
+   "med_name": "A#3",
+   "span_st": 10.3,
+   "voiced_ratio": 0.98
+  },
+  {
+   "start": 74.38,
+   "end": 80.157,
+   "med_midi": 57.2,
+   "med_name": "A3",
+   "span_st": 12.6,
+   "voiced_ratio": 0.74
+  },
+  {
+   "start": 80.157,
+   "end": 85.934,
+   "med_midi": 59.1,
+   "med_name": "B3",
+   "span_st": 16.9,
+   "voiced_ratio": 0.67
+  },
+  {
+   "start": 85.934,
+   "end": 91.711,
+   "med_midi": 51.3,
+   "med_name": "D#3",
+   "span_st": 14.1,
+   "voiced_ratio": 0.93
+  },
+  {
+   "start": 91.711,
+   "end": 97.488,
+   "med_midi": 57.8,
+   "med_name": "A#3",
+   "span_st": 17.5,
+   "voiced_ratio": 0.93
+  },
+  {
+   "start": 97.488,
+   "end": 103.264,
+   "med_midi": 59.8,
+   "med_name": "C4",
+   "span_st": 13.6,
+   "voiced_ratio": 0.9
+  },
+  {
+   "start": 103.264,
+   "end": 109.041,
+   "med_midi": 55.2,
+   "med_name": "G3",
+   "span_st": 13.3,
+   "voiced_ratio": 0.92
+  },
+  {
+   "start": 109.041,
+   "end": 114.818,
+   "med_midi": 61.7,
+   "med_name": "D4",
+   "span_st": 18.8,
+   "voiced_ratio": 0.85
+  },
+  {
+   "start": 114.818,
+   "end": 120.595,
+   "med_midi": 58.0,
+   "med_name": "A#3",
+   "span_st": 13.7,
+   "voiced_ratio": 0.86
+  },
+  {
+   "start": 120.595,
+   "end": 126.371,
+   "med_midi": 60.0,
+   "med_name": "C4",
+   "span_st": 17.0,
+   "voiced_ratio": 0.96
+  },
+  {
+   "start": 126.371,
+   "end": 132.148,
+   "med_midi": 59.3,
+   "med_name": "B3",
+   "span_st": 17.8,
+   "voiced_ratio": 0.91
+  },
+  {
+   "start": 132.148,
+   "end": 137.925,
+   "med_midi": 62.7,
+   "med_name": "D#4",
+   "span_st": 14.1,
+   "voiced_ratio": 0.96
+  },
+  {
+   "start": 165.04,
+   "end": 170.772,
+   "med_midi": 58.5,
+   "med_name": "A#3",
+   "span_st": 13.9,
+   "voiced_ratio": 0.92
+  },
+  {
+   "start": 170.772,
+   "end": 176.503,
+   "med_midi": 58.0,
+   "med_name": "A#3",
+   "span_st": 12.9,
+   "voiced_ratio": 0.91
+  },
+  {
+   "start": 176.503,
+   "end": 182.235,
+   "med_midi": 61.8,
+   "med_name": "D4",
+   "span_st": 17.8,
+   "voiced_ratio": 0.92
+  },
+  {
+   "start": 182.235,
+   "end": 187.966,
+   "med_midi": 62.4,
+   "med_name": "D4",
+   "span_st": 14.4,
+   "voiced_ratio": 0.96
+  },
+  {
+   "start": 187.966,
+   "end": 193.698,
+   "med_midi": 62.8,
+   "med_name": "D#4",
+   "span_st": 9.9,
+   "voiced_ratio": 0.92
+  },
+  {
+   "start": 193.698,
+   "end": 199.429,
+   "med_midi": 55.4,
+   "med_name": "G3",
+   "span_st": 13.3,
+   "voiced_ratio": 0.94
+  },
+  {
+   "start": 199.429,
+   "end": 205.161,
+   "med_midi": 54.2,
+   "med_name": "F#3",
+   "span_st": 6.4,
+   "voiced_ratio": 0.97
+  },
+  {
+   "start": 205.161,
+   "end": 210.893,
+   "med_midi": 59.7,
+   "med_name": "C4",
+   "span_st": 12.2,
+   "voiced_ratio": 0.96
+  },
+  {
+   "start": 210.893,
+   "end": 216.624,
+   "med_midi": 58.3,
+   "med_name": "A#3",
+   "span_st": 11.5,
+   "voiced_ratio": 0.64
+  },
+  {
+   "start": 216.624,
+   "end": 222.356,
+   "med_midi": 62.7,
+   "med_name": "D#4",
+   "span_st": 11.0,
+   "voiced_ratio": 0.75
+  },
+  {
+   "start": 222.356,
+   "end": 228.087,
+   "med_midi": 60.9,
+   "med_name": "C#4",
+   "span_st": 14.5,
+   "voiced_ratio": 0.93
+  },
+  {
+   "start": 228.087,
+   "end": 233.819,
+   "med_midi": 59.8,
+   "med_name": "C4",
+   "span_st": 16.7,
+   "voiced_ratio": 0.98
+  },
+  {
+   "start": 233.819,
+   "end": 239.551,
+   "med_midi": 60.6,
+   "med_name": "C#4",
+   "span_st": 13.8,
+   "voiced_ratio": 0.84
+  },
+  {
+   "start": 239.551,
+   "end": 245.282,
+   "med_midi": 62.9,
+   "med_name": "D#4",
+   "span_st": 15.9,
+   "voiced_ratio": 0.94
+  },
+  {
+   "start": 245.282,
+   "end": 251.014,
+   "med_midi": 57.0,
+   "med_name": "A3",
+   "span_st": 15.2,
+   "voiced_ratio": 0.87
+  },
+  {
+   "start": 251.014,
+   "end": 256.745,
+   "med_midi": 58.6,
+   "med_name": "B3",
+   "span_st": 16.2,
+   "voiced_ratio": 0.87
+  },
+  {
+   "start": 256.745,
+   "end": 262.477,
+   "med_midi": 63.2,
+   "med_name": "D#4",
+   "span_st": 13.7,
+   "voiced_ratio": 0.96
+  },
+  {
+   "start": 262.477,
+   "end": 268.208,
+   "med_midi": 57.6,
+   "med_name": "A#3",
+   "span_st": 16.8,
+   "voiced_ratio": 0.93
+  },
+  {
+   "start": 268.208,
+   "end": 273.94,
+   "med_midi": 62.0,
+   "med_name": "D4",
+   "span_st": 13.3,
+   "voiced_ratio": 0.91
+  }
+ ]
+}

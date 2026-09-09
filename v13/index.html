@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>坑道烽火 V13 · 音乐塔防</title>
+<link rel="icon" href="data:,">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; background: #0d0f14; overflow: hidden;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif; user-select: none; }
+  #stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px;
+    transform-origin: center center; background: #141821; }
+  #battle { position: absolute; left: 0; top: 0; }
+
+  /* ---- 顶 HUD (80px) ---- */
+  #hud { position: absolute; left: 0; top: 0; width: 1920px; height: 80px;
+    background: linear-gradient(#232a38, #1a1f2b); border-bottom: 2px solid #3a4356;
+    display: flex; align-items: center; color: #e8ecf4; z-index: 10; }
+  .hud-group { display: flex; align-items: center; gap: 14px; }
+  .hud-left { padding-left: 24px; width: 430px; }
+  .hud-center { flex: 1; flex-direction: column; gap: 4px; }
+  .hud-right { width: 430px; justify-content: flex-end; padding-right: 24px; }
+  .stat { font-size: 26px; font-weight: bold; white-space: nowrap; }
+  .stat small { font-size: 16px; color: #9aa5b8; font-weight: normal; }
+  #song-title { font-size: 20px; font-weight: bold; letter-spacing: 2px; }
+  #phase-label { font-size: 15px; color: #ffd54f; }
+  #seg-progress { width: 360px; height: 8px; background: #0d0f14; border-radius: 4px; overflow: hidden; }
+  #seg-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #43a047, #fdd835); }
+  #energy-wrap { width: 180px; height: 18px; background: #0d0f14; border: 1px solid #3a4356;
+    border-radius: 9px; overflow: hidden; position: relative; }
+  #energy-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff7043, #ffb74d); }
+  #energy-label { position: absolute; width: 100%; text-align: center; font-size: 12px;
+    line-height: 18px; color: #fff; text-shadow: 0 1px 2px #000; }
+  .hud-btn { width: 52px; height: 52px; border: 1px solid #3a4356; border-radius: 10px;
+    background: #232a38; color: #e8ecf4; font-size: 24px; cursor: pointer; }
+  .hud-btn:hover { background: #2e374a; }
+
+  /* ---- 底部分配栏 (~300px) ---- */
+  #bottombar { position: absolute; left: 0; bottom: 0; width: 1920px; height: 300px;
+    background: linear-gradient(#1a1f2b, #141821); border-top: 2px solid #3a4356;
+    display: flex; align-items: center; padding: 0 40px; gap: 28px; color: #e8ecf4; z-index: 10; }
+  #bottombar.hidden { display: none; }
+  #troop-pool { width: 200px; text-align: center; }
+  #troop-pool .num { font-size: 64px; font-weight: bold; color: #ffd54f; line-height: 1; }
+  #troop-pool .lbl { font-size: 16px; color: #9aa5b8; margin-top: 6px; }
+  .unit-card { width: 210px; height: 220px; border: 2px solid #3a4356; border-radius: 14px;
+    background: #1d2433; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 8px; cursor: pointer; }
+  .unit-card.selected { border-color: #ffd54f; background: #2a3040; box-shadow: 0 0 18px rgba(255,213,79,.35); }
+  .unit-card .icon { font-size: 58px; }
+  .unit-card .name { font-size: 22px; font-weight: bold; }
+  .unit-card .desc { font-size: 14px; color: #9aa5b8; text-align: center; line-height: 1.4; }
+  #reinforce-btn { width: 170px; height: 100px; border: 2px solid #3a4356; border-radius: 12px;
+    background: #1d2433; color: #e8ecf4; font-size: 18px; cursor: pointer; line-height: 1.5; }
+  #reinforce-btn:disabled { opacity: .4; cursor: default; }
+  #undo-btn { width: 170px; height: 100px; border: 2px solid #3a4356; border-radius: 12px;
+    background: #1d2433; color: #e8ecf4; font-size: 18px; cursor: pointer; }
+  #undo-btn.active { border-color: #ef5350; color: #ef5350; }
+  #start-battle { flex: 1; height: 160px; border: none; border-radius: 16px; cursor: pointer;
+    background: linear-gradient(#43a047, #2e7d32); color: #fff; font-size: 40px;
+    font-weight: bold; letter-spacing: 6px; box-shadow: 0 6px 0 #1b4d1e; }
+  #start-battle:active { transform: translateY(4px); box-shadow: 0 2px 0 #1b4d1e; }
+
+  /* ---- 提示 / 遮罩 ---- */
+  #banner { position: absolute; left: 50%; top: 420px; transform: translate(-50%,-50%);
+    text-align: center; color: #fff; z-index: 20; pointer-events: none; display: none; }
+  #banner .big { font-size: 52px; font-weight: bold; text-shadow: 0 4px 12px rgba(0,0,0,.85); }
+  #banner .small { font-size: 22px; color: #ffe082; margin-top: 14px; text-shadow: 0 2px 6px rgba(0,0,0,.9); }
+  #skip-listen { position: absolute; right: 60px; top: 120px; z-index: 21; display: none;
+    border: 1px solid #3a4356; border-radius: 10px; background: rgba(35,42,56,.9);
+    color: #e8ecf4; font-size: 18px; padding: 10px 20px; cursor: pointer; }
+  #portrait-block { position: fixed; inset: 0; background: #141821; z-index: 999;
+    display: none; align-items: center; justify-content: center;
+    color: #e8ecf4; font-size: 34px; flex-direction: column; gap: 16px; }
+  #toast { position: absolute; left: 50%; bottom: 320px; transform: translateX(-50%);
+    background: rgba(20,24,33,.92); border: 1px solid #3a4356; color: #ffd54f;
+    padding: 10px 22px; border-radius: 10px; font-size: 20px; z-index: 30;
+    opacity: 0; transition: opacity .25s; pointer-events: none; white-space: nowrap; }
+
+  /* ---- 开场菜单 ---- */
+  #menu { position: absolute; inset: 0; z-index: 50; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 28px;
+    background: radial-gradient(ellipse at center, #1c2331 0%, #0d0f14 75%); color: #e8ecf4; }
+  #menu h1 { font-size: 84px; letter-spacing: 14px; color: #ffd54f;
+    text-shadow: 0 6px 24px rgba(255,213,79,.25); }
+  #menu p { font-size: 22px; color: #9aa5b8; line-height: 1.8; text-align: center; }
+  #menu button { margin-top: 12px; padding: 22px 90px; font-size: 34px; font-weight: bold;
+    letter-spacing: 8px; color: #fff; border: none; border-radius: 16px; cursor: pointer;
+    background: linear-gradient(#43a047, #2e7d32); box-shadow: 0 6px 0 #1b4d1e; }
+
+  #dev-panel { position: absolute; right: 16px; bottom: 312px; z-index: 11; color: #9aa5b8;
+    font-size: 14px; display: flex; gap: 8px; align-items: center; }
+  #dev-panel select, #dev-panel button { background: #232a38; color: #e8ecf4;
+    border: 1px solid #3a4356; border-radius: 6px; padding: 4px 8px; font-size: 14px; }
+
+  /* ---- 节间升级面板 ---- */
+  #upgrade-panel { position: absolute; inset: 0; z-index: 40; display: none;
+    flex-direction: column; align-items: center; justify-content: center; gap: 40px;
+    background: rgba(10,12,18,.82); }
+  .up-title { font-size: 34px; color: #ffd54f; font-weight: bold; letter-spacing: 4px; }
+  .up-cards { display: flex; gap: 40px; }
+  .up-card { width: 360px; height: 300px; border: 2px solid #3a4356; border-radius: 18px;
+    background: linear-gradient(#232a38, #1a1f2b); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px; cursor: pointer; color: #e8ecf4; }
+  .up-card:hover { border-color: #ffd54f; box-shadow: 0 0 24px rgba(255,213,79,.3); }
+  .up-card .icon { font-size: 72px; }
+  .up-card .name { font-size: 26px; font-weight: bold; }
+  .up-card .desc { font-size: 17px; color: #9aa5b8; text-align: center; line-height: 1.5; }
+  .review-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .review-tip { font-size: 15px; color: #9aa5b8; }
+
+  /* ---- 结算面板 ---- */
+  #over-panel { position: absolute; inset: 0; z-index: 45; display: none;
+    flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+    background: rgba(10,12,18,.9); color: #e8ecf4; }
+  #over-title { font-size: 64px; font-weight: bold; letter-spacing: 10px; }
+  #over-stars { font-size: 54px; letter-spacing: 12px; color: #ffd54f; min-height: 60px; }
+  #over-stats { display: grid; grid-template-columns: auto auto; gap: 10px 34px;
+    font-size: 24px; background: rgba(35,42,56,.8); border: 1px solid #3a4356;
+    border-radius: 14px; padding: 26px 46px; }
+  #over-stats .k { color: #9aa5b8; }
+  #over-stats .v { text-align: right; font-weight: bold; }
+  #over-tip { font-size: 17px; color: #9aa5b8; }
+  .over-btns { display: flex; gap: 30px; margin-top: 8px; }
+  .over-btns button { padding: 16px 46px; font-size: 22px; font-weight: bold; color: #fff;
+    border: none; border-radius: 12px; cursor: pointer; letter-spacing: 3px; }
+  #btn-retry { background: linear-gradient(#43a047, #2e7d32); box-shadow: 0 5px 0 #1b4d1e; }
+  #btn-to-menu { background: #2e374a; box-shadow: 0 5px 0 #171c26; }
+  #per-seg-chart { margin-top: 4px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="battle" width="1920" height="1080"></canvas>
+
+  <div id="hud">
+    <div class="hud-group hud-left">
+      <div class="stat">🪙 <span id="hud-gold">0</span></div>
+      <div class="stat">❤️ <span id="hud-hp">100</span><small id="hud-hp-max">/100</small></div>
+    </div>
+    <div class="hud-group hud-center">
+      <div id="song-title">🎵 童话</div>
+      <div id="seg-progress"><div id="seg-progress-fill"></div></div>
+      <div id="phase-label">准备</div>
+    </div>
+    <div class="hud-group hud-right">
+      <div class="stat">🐉</div>
+      <div id="energy-wrap"><div id="energy-fill"></div><div id="energy-label">0/100</div></div>
+      <button class="hud-btn" id="btn-fire" title="火球术（能量≥60）">🔥</button>
+      <button class="hud-btn" id="btn-mute" title="静音">🔊</button>
+      <button class="hud-btn" id="btn-restart" title="重开">🔄</button>
+    </div>
+  </div>
+
+  <div id="bottombar" class="hidden">
+    <div id="troop-pool"><div class="num" id="pool-num">10</div><div class="lbl">本节兵力点数</div></div>
+    <div class="unit-card" id="card-sword">
+      <div class="icon">🗡️</div><div class="name">刀剑兵</div>
+      <div class="desc">放入坑道 · 每点 5 兵<br>DPS 高 · 只打本道</div>
+    </div>
+    <div class="unit-card" id="card-archer">
+      <div class="icon">🏹</div><div class="name">弓箭手</div>
+      <div class="desc">放入土包 · 每点 3 兵<br>DPS 低 · 覆盖相邻两道</div>
+    </div>
+    <button id="undo-btn">↩ 撤回<br><small>点后再点槽位</small></button>
+    <button id="reinforce-btn" disabled>⚔️ 战中补兵<br><small>🪙50/刀剑点 · 35/弓点</small></button>
+    <button id="start-battle">开始战斗 ▶</button>
+  </div>
+
+  <div id="banner"><div class="big"></div><div class="small"></div></div>
+  <button id="skip-listen">跳过试听 ▶</button>
+  <div id="toast"></div>
+
+  <!-- 节间升级面板 -->
+  <div id="upgrade-panel">
+    <div class="up-title">🎉 节间休整 · 三选二抽中两项，选一项强化</div>
+    <div class="up-cards">
+      <div class="up-card" id="up-card-0"></div>
+      <div class="up-card" id="up-card-1"></div>
+    </div>
+    <div class="review-wrap">
+      <canvas id="review-chart" width="760" height="170"></canvas>
+      <div class="review-tip">🎧 音准回顾：上=本节实际音分布 · 下=你的兵力分配（越接近说明听得越准）</div>
+    </div>
+  </div>
+
+  <!-- 结算面板 -->
+  <div id="over-panel">
+    <div id="over-title"></div>
+    <div id="over-stars"></div>
+    <div id="over-stats"></div>
+    <canvas id="per-seg-chart" width="900" height="150"></canvas>
+    <div id="over-tip"></div>
+    <div class="over-btns">
+      <button id="btn-retry">🔁 重开本曲</button>
+      <button id="btn-to-menu">🏠 主菜单</button>
+    </div>
+  </div>
+
+  <div id="dev-panel">DEV：
+    <select id="dev-seg"></select>
+    <button id="dev-jump">跳到此节(测试)</button>
+  </div>
+
+  <div id="menu">
+    <h1>坑道烽火</h1>
+    <p>音乐塔防 · 曲子驱动出兵<br>
+      🎧 试听判断每节的音落在哪几条<b style="color:#FDD835">坑道</b> → 🛡️ 分配刀剑兵与弓箭手 → ⚔️ 随曲作战<br>
+      低音在底道、高音在顶道。听准了，烽火不熄。</p>
+    <button id="btn-start-game">开始守城 ▶</button>
+  </div>
+</div>
+
+<div id="portrait-block"><div>📱↻</div><div>请把手机横过来</div></div>
+
+<script src="assets/notes.js"></script>
+<script src="assets/lanes_summary.js"></script>
+<script>
+/* ===LOGIC-BEGIN=== */
+// ============================================================
+// 坑道烽火 V13 · 纯逻辑层（无 DOM / 无 Audio，可被 tests/tb.mjs 加载）
+// 数值全部来自《V13坑道烽火_通宵任务书_2026-09-05.md》，收进 CONFIG
+// ============================================================
+const CONFIG = {
+  // 画布与布局
+  W: 1920, H: 1080, hudH: 80, bottomH: 300,
+  laneCount: 5, bunCount: 4,
+  // 坑道配色（道1 低音 → 道5 高音）
+  laneColors: ['#8D6E63', '#FB8C00', '#FDD835', '#43A047', '#1E88E5'],
+  // 敌方（音符兵）
+  enemySpeed: 40,          // px/s 向左匀速
+  enemyHP: 24,             // 1 层基准 HP（任务书未给，自定；见 devlog M2/M3 平衡）
+  enemyHPScale: 0.15,      // 每节敌兵 HP 成长 ×(1+segIdx×此值)——防后期碾压，保「中段最难」曲线
+  enemyDPS: 3,             // 每层对拦路我方兵的基准 DPS（自定；4 时集火秒杀刀剑兵，见 devlog M2）
+  enemyDPSScale: 0.1,      // 敌 DPS 每节成长 ×(1+segIdx×此值)——消耗我方存量兵力，防后期碾压
+  mergeWindow: 0.5,        // 限流合并窗口 500ms（同坑道同拍 → 合并叠层）
+  spawnLead: 0.4,          // 音符 t 时刻响，兵提前 0.4s 出生
+  leakDamage: 5,           // 1 层漏过扣基地 5 血
+  // 战场几何（1920×1080 设计画布；渲染层共用，逻辑层可独立运行）
+  baseX: 150,              // 基地大门右缘（敌兵 x ≤ 此值 = 漏）
+  spawnX: 1790,            // 出兵洞口出生点 x（洞口左缘，出生即可见）
+  // 我方单位
+  swordDPS: 8, swordHP: 30, swordPerPoint: 5,
+  archerDPS: 3, archerHP: 20, archerPerPoint: 3,
+  swordSlots: 3,           // 每道从右往左 3 个槽位
+  swordRange: 150,         // 刀剑兵攻击距离 px（本道，M2 平衡自定并记录）
+  meleeRange: 60,          // 敌兵与刀剑兵接战距离 px（接战后停下互殴）
+  // 战场几何（火球 AOE / 兵力槽位定位用）
+  fieldTop: 80, fieldBottom: 780, laneH: 128,
+  swordSlotGap: 150,       // 刀剑兵槽位间距（右→左）
+  swordSlotInset: 90,      // 首槽距出兵口
+  bunX: 800,               // 土包中心 x
+  // 节间升级（六节：随机 2 选 1）
+  upSwordAtkMult: 1.25,    // A 刀剑攻击 +25%
+  upArcherCoverAdd: 1,     // B 弓箭手覆盖 +1 道
+  upFireDmgMult: 1.5,      // C 火球伤害 +50%
+  upFireCostAfter: 50,     // C 耗能降到 50
+  // 兵力点数
+  troopsPerSeg: 10,        // 每节发放（不累积）
+  unusedPointGold: 2,      // 未用点数 2 金/点
+  // 阶段时长
+  segBreakSec: 3,          // 节间过场
+  battleEndPause: 1.2,     // 战斗结束到过场的停顿
+  listenGapSec: 1.0,       // 教学节连播两遍的间隔
+  // 骑龙英雄
+  heroMaxEnergy: 100, heroRegen: 6, heroFireCost: 60,
+  fireballRadius: 120, fireballDamage: 50,
+  // 经济
+  goldPerKillLayer: 5,     // 杀 1 层 +5，n 层 +5n
+  reinforceSwordCost: 50, reinforceArcherCost: 35,
+  // 基地
+  baseHP: 100,
+  // 曲与节
+  barsPerSeg: 8, emptySegMinNotes: 4,
+};
+const LANES_SUMMARY = globalThis.LANES_SUMMARY;
+const NOTES_DATA = globalThis.NOTES_DATA;
+
+const LANE_NAMES = ['道1·低', '道2', '道3·中', '道4', '道5·高'];
+const NOTE_CHARS = ['♪', '♫', '♩', '♬'];
+
+// ---------- 节数据 ----------
+// 返回本节音符（节内相对时间 t），严格用 LANES_SUMMARY 切节，不改动音符数据
+function segNotes(segIdx) {
+  const seg = LANES_SUMMARY.segs[segIdx];
+  const barSec = LANES_SUMMARY.barSeconds;
+  const tFrom = seg.barFrom * barSec;
+  const out = [];
+  for (const n of NOTES_DATA) {
+    if (n.bar >= seg.barFrom && n.bar < seg.barTo) {
+      out.push({ t: +(n.t - tFrom).toFixed(4), note: n.note, dur: n.dur, vel: n.vel, lane: n.lane, bar: n.bar });
+    }
+  }
+  out.sort((a, b) => a.t - b.t);
+  return out;
+}
+
+// ---------- 限流合并：同坑道同一拍（500ms 固定桶）→ 叠层 ----------
+// 返回 [{t, lane, layers, noteCount}]，t 为桶起点（出兵时刻）
+function mergeForSpawn(notes) {
+  const map = new Map();
+  for (const n of notes) {
+    const bucket = Math.floor(n.t / CONFIG.mergeWindow + 1e-9);
+    const key = n.lane * 1e6 + bucket;
+    let b = map.get(key);
+    if (!b) { b = { t: bucket * CONFIG.mergeWindow, lane: n.lane, layers: 0, noteCount: 0 }; map.set(key, b); }
+    b.layers++; b.noteCount++;
+  }
+  return [...map.values()].sort((a, b) => a.t - b.t || a.lane - b.lane);
+}
+
+function segDur(segIdx) {
+  const seg = LANES_SUMMARY.segs[segIdx];
+  return (seg.barTo - seg.barFrom) * LANES_SUMMARY.barSeconds;
+}
+
+// ---------- 游戏核心：状态机 ----------
+// MENU →(startGame)→ LISTEN →(到时/skipListen)→ DEPLOY →(startBattle)→ BATTLE
+//   →(曲终+场清)→ BATTLE_END →(pause+结算)→ SEG_BREAK →(3s)→ LISTEN(下一节)
+//   最后一节 → OVER('win')；BATTLE 中 hp≤0 → OVER('lose')
+//   空节（音<4）：SEG_BREAK 结束后跳过 LISTEN/DEPLOY 直通 BATTLE
+function createCore() {
+  const s = {
+    phase: 'MENU',
+    segIdx: -1,
+    tutorial: true,           // 第 1 节教学（播两遍+文字）
+    phaseT: 0,                // 当前阶段已进行时间
+    listenDur: 0, listenRepeats: 1,
+    hp: CONFIG.baseHP, gold: 0, energy: 0, fireCost: CONFIG.heroFireCost,
+    troopsLeft: 0,
+    units: [],                // 我方单位（跨节保留）：{id,kind,lane|bun,slot,points,hp,maxHp}
+    enemies: [],
+    spawnQueue: [], spawnIdx: 0,
+    lastSpawnT: 0,
+    upgradeOptions: [],       // UPGRADE 阶段可选的两个升级 key
+    upgradesTaken: [],        // 已选升级记录
+    placements: [0, 0, 0, 0, 0],  // 本节玩家分配直觉（M3 准确率用）
+    placementsHistory: [],        // 每节 placements 存档
+    segStats: { leaks: 0, leakedLayers: 0, spawns: 0 },
+    totalStats: { leaks: 0, leakedLayers: 0, kills: 0, goldEarned: 0, goldSpent: 0, perSeg: [] },
+    result: null,             // 'win' | 'lose'
+    events: [],
+  };
+  let nextId = 1;
+  function emit(type, extra) { s.events.push(Object.assign({ type }, extra)); }
+
+  const core = {
+    s, CONFIG, segNotes, mergeForSpawn,
+
+    // ---- 状态机转换（非法转换返回 {ok:false}，供 TB 断言）----
+    startGame() {
+      if (s.phase !== 'MENU') return { ok: false, err: 'startGame 仅限 MENU 阶段' };
+      s.phase = 'SEG_BREAK'; s.phaseT = CONFIG.segBreakSec;   // 立刻进入第 1 节
+      return { ok: true };
+    },
+
+    startListen(segIdx) {
+      if (s.phase !== 'SEG_BREAK') return { ok: false, err: `startListen 非法：当前 ${s.phase}` };
+      s.segIdx = segIdx;
+      s.tutorial = segIdx === 0;
+      s.listenRepeats = s.tutorial ? 2 : 1;
+      const onePass = CONFIG.spawnLead + segDur(segIdx);
+      s.listenDur = onePass * s.listenRepeats + CONFIG.listenGapSec * (s.listenRepeats - 1);
+      s.phase = 'LISTEN'; s.phaseT = 0;
+      s.troopsLeft = CONFIG.troopsPerSeg;
+      s.placements = [0, 0, 0, 0, 0];
+      s.segStats = { leaks: 0, leakedLayers: 0, spawns: 0 };
+      emit('listenStart', { segIdx, repeats: s.listenRepeats, dur: s.listenDur, tutorial: s.tutorial });
+      return { ok: true };
+    },
+
+    skipListen() {
+      if (s.phase !== 'LISTEN') return { ok: false, err: `skipListen 非法：当前 ${s.phase}` };
+      s.phase = 'DEPLOY'; s.phaseT = 0;
+      emit('deployStart', { segIdx: s.segIdx, tutorial: s.tutorial });
+      return { ok: true };
+    },
+
+    startBattle() {
+      if (s.phase !== 'DEPLOY') return { ok: false, err: `startBattle 非法：当前 ${s.phase}` };
+      s.phase = 'BATTLE'; s.phaseT = 0; s.battleT = 0;
+      s.spawnQueue = mergeForSpawn(segNotes(s.segIdx));
+      s.spawnIdx = 0;
+      s.lastSpawnT = s.spawnQueue.length ? s.spawnQueue[s.spawnQueue.length - 1].t : 0;
+      emit('battleStart', { segIdx: s.segIdx, spawns: s.spawnQueue.length });
+      return { ok: true };
+    },
+
+    // ---- 布防 ----
+    findUnit(kind, lane, bun, slot) {
+      return s.units.find(u => u.kind === kind && u.lane === lane && u.bun === bun && u.slot === slot);
+    },
+    placeSword(lane, slot) {
+      if (s.phase !== 'DEPLOY') return { ok: false, err: '布防阶段才能放兵' };
+      if (!(lane >= 0 && lane < CONFIG.laneCount)) return { ok: false, err: '坑道号非法' };
+      if (!(slot >= 0 && slot < CONFIG.swordSlots)) return { ok: false, err: '槽位号非法' };
+      if (s.troopsLeft < 1) return { ok: false, err: '兵力点数不足' };
+      let u = core.findUnit('sword', lane, -1, slot);
+      if (!u) {
+        u = { id: nextId++, kind: 'sword', lane, bun: -1, slot, points: 0,
+              hp: 0, maxHp: 0, bornSeg: s.segIdx };
+        s.units.push(u);
+      }
+      u.points += 1; u.maxHp += CONFIG.swordHP * CONFIG.swordPerPoint; u.hp += CONFIG.swordHP * CONFIG.swordPerPoint;
+      s.troopsLeft -= 1;
+      s.placements[lane] += 1;
+      emit('place', { kind: 'sword', lane, slot, points: u.points });
+      return { ok: true };
+    },
+    placeArcher(bun) {
+      if (s.phase !== 'DEPLOY') return { ok: false, err: '布防阶段才能放兵' };
+      if (!(bun >= 0 && bun < CONFIG.bunCount)) return { ok: false, err: '土包号非法' };
+      if (s.troopsLeft < 1) return { ok: false, err: '兵力点数不足' };
+      let u = core.findUnit('archer', -1, bun, -1);
+      if (!u) {
+        u = { id: nextId++, kind: 'archer', lane: -1, bun, slot: -1, points: 0,
+              hp: 0, maxHp: 0, bornSeg: s.segIdx };
+        s.units.push(u);
+      }
+      u.points += 1; u.maxHp += CONFIG.archerHP * CONFIG.archerPerPoint; u.hp += CONFIG.archerHP * CONFIG.archerPerPoint;
+      s.troopsLeft -= 1;
+      s.placements[bun] += 1; s.placements[bun + 1] += 1;   // 覆盖上下两道
+      emit('place', { kind: 'archer', bun, points: u.points });
+      return { ok: true };
+    },
+    // 撤回：整槽退点（DEPLOY 阶段）
+    removeUnit(kind, lane, bun, slot) {
+      if (s.phase !== 'DEPLOY') return { ok: false, err: '布防阶段才能撤回' };
+      const idx = s.units.findIndex(u => u.kind === kind && u.lane === lane && u.bun === bun && u.slot === slot);
+      if (idx < 0) return { ok: false, err: '该槽位没有兵力' };
+      const u = s.units[idx];
+      s.troopsLeft += u.points;
+      if (kind === 'sword') s.placements[lane] -= u.points;
+      else { s.placements[bun] -= u.points; s.placements[bun + 1] -= u.points; }
+      s.units.splice(idx, 1);
+      emit('remove', { kind, lane, bun, slot, points: u.points });
+      return { ok: true };
+    },
+    // 弓箭手覆盖的坑道（升级 B 可扩，M2 接入）
+    archerLanes(u) {
+      const add = core.upgrades.archerCover ? 1 : 0;
+      const out = [];
+      for (let l = u.bun; l <= u.bun + 1 + add && l < CONFIG.laneCount; l++) out.push(l);
+      return out;
+    },
+    upgrades: { swordAtk: 1, archerCover: 0, fireMult: 1 },   // M2 升级系数
+
+    // ---- 帧更新 ----
+    update(dt) {
+      if (s.phase === 'MENU' || s.phase === 'OVER') return;
+      s.phaseT += dt;
+      s.energy = Math.min(CONFIG.heroMaxEnergy, s.energy + CONFIG.heroRegen * dt);
+
+      if (s.phase === 'LISTEN') {
+        if (s.phaseT >= s.listenDur) core.skipListen();
+      } else if (s.phase === 'SEG_BREAK') {
+        if (s.phaseT >= CONFIG.segBreakSec) {
+          const next = s.segIdx + 1;
+          if (next >= LANES_SUMMARY.segCount) { core.finish('win'); return; }
+          const seg = LANES_SUMMARY.segs[next];
+          if (seg.total < CONFIG.emptySegMinNotes) {          // 空节直通战斗
+            s.phase = 'DEPLOY'; s.phaseT = 0; s.segIdx = next;
+            s.troopsLeft = 0;
+            core.startBattle();
+            emit('emptySeg', { segIdx: next });
+          } else core.startListen(next);
+        }
+      } else if (s.phase === 'BATTLE') {
+        core.updateBattle(dt);
+      } else if (s.phase === 'BATTLE_END') {
+        if (s.phaseT >= CONFIG.battleEndPause) core.settle();
+      }
+    },
+
+    updateBattle(dt) {
+      s.battleT += dt;
+      // 出兵
+      while (s.spawnIdx < s.spawnQueue.length && s.spawnQueue[s.spawnIdx].t <= s.battleT) {
+        const sp = s.spawnQueue[s.spawnIdx++];
+        const hpMult = 1 + s.segIdx * CONFIG.enemyHPScale;   // 节深度成长
+        s.enemies.push({
+          id: nextId++, lane: sp.lane, layers: sp.layers,
+          x: CONFIG.spawnX, hp: CONFIG.enemyHP * sp.layers * hpMult,
+          maxHp: CONFIG.enemyHP * sp.layers * hpMult, speed: CONFIG.enemySpeed,
+          char: NOTE_CHARS[(sp.t * 7 + sp.lane * 3) % NOTE_CHARS.length | 0],
+        });
+        s.segStats.spawns++;
+        emit('spawn', { lane: sp.lane, layers: sp.layers });
+      }
+
+      // ---- 我方攻击 ----
+      for (const u of s.units) {
+        if (u.hp <= 0) continue;
+        let target = null;
+        if (u.kind === 'sword') {
+          // 本道攻击范围内、位于兵右侧的最近敌兵
+          for (const e of s.enemies) {
+            if (e.lane !== u.lane) continue;
+            const d = e.x - core.unitX(u);
+            if (d >= -10 && d <= CONFIG.swordRange && (!target || e.x < target.x)) target = e;
+          }
+          if (target) target.hp -= CONFIG.swordDPS * u.points * core.upgrades.swordAtk * dt;
+        } else {
+          // 弓箭手：覆盖道整条横向射程，优先最靠左（最接近基地）
+          const lanes = core.archerLanes(u);
+          for (const e of s.enemies) {
+            if (!lanes.includes(e.lane)) continue;
+            if (!target || e.x < target.x) target = e;
+          }
+          if (target) target.hp -= CONFIG.archerDPS * u.points * dt;
+        }
+      }
+
+      // ---- 敌兵：接战互殴 / 移动 ----
+      for (const e of s.enemies) {
+        let blocker = null;
+        for (const u of s.units) {
+          if (u.kind !== 'sword' || u.lane !== e.lane || u.hp <= 0) continue;
+          const d = e.x - core.unitX(u);
+          if (d >= -10 && d <= CONFIG.meleeRange && (!blocker || core.unitX(u) > core.unitX(blocker))) blocker = u;
+        }
+        if (blocker) {
+          e.fighting = blocker.id;
+          blocker.hp -= CONFIG.enemyDPS * (1 + s.segIdx * CONFIG.enemyDPSScale) * e.layers * dt;
+          if (blocker.hp <= 0) emit('unitDown', { kind: 'sword', lane: blocker.lane, slot: blocker.slot });
+        } else {
+          e.fighting = null;
+          e.x -= e.speed * dt;
+        }
+      }
+
+      // ---- 敌兵死亡 → 金币 ----
+      const alive = [];
+      for (const e of s.enemies) {
+        if (e.hp <= 0) {
+          const g = CONFIG.goldPerKillLayer * e.layers;
+          s.gold += g; s.totalStats.goldEarned += g; s.totalStats.kills++;
+          emit('kill', { lane: e.lane, layers: e.layers, gold: g, x: e.x });
+        } else alive.push(e);
+      }
+      s.enemies = alive;
+      s.units = s.units.filter(u => u.hp > 0);
+
+      // 移动 + 漏兵
+      const survivors = [];
+      for (const e of s.enemies) {
+        if (e.x <= CONFIG.baseX) {
+          const dmg = CONFIG.leakDamage * e.layers;
+          s.hp -= dmg;
+          s.segStats.leaks++; s.segStats.leakedLayers += e.layers;
+          s.totalStats.leaks += e.layers;
+          emit('leak', { lane: e.lane, layers: e.layers, dmg });
+        } else survivors.push(e);
+      }
+      s.enemies = survivors;
+
+      // 失败判定
+      if (s.hp <= 0) { core.finish('lose'); return; }
+
+      // 本节结束：曲子放完且场上无敌兵
+      if (s.spawnIdx >= s.spawnQueue.length && s.enemies.length === 0 &&
+          s.battleT > s.lastSpawnT + CONFIG.spawnLead + 1) {
+        s.phase = 'BATTLE_END'; s.phaseT = 0;
+        emit('battleEnd', { segIdx: s.segIdx });
+      }
+    },
+
+    // ---- 骑龙英雄火球（布防+战斗阶段都可放）----
+    laneCenterY(lane) {
+      return CONFIG.fieldBottom - (lane + 1) * CONFIG.laneH + CONFIG.laneH / 2;
+    },
+    unitX(u) {
+      return u.kind === 'sword'
+        ? CONFIG.spawnX - CONFIG.swordSlotInset - u.slot * CONFIG.swordSlotGap
+        : CONFIG.bunX;
+    },
+    castFireball(x, y) {
+      if (s.phase !== 'DEPLOY' && s.phase !== 'BATTLE') return { ok: false, err: '仅布防/战斗阶段可放火球' };
+      if (s.energy < s.fireCost) return { ok: false, err: `能量不足（需 ${s.fireCost}）` };
+      s.energy -= s.fireCost;
+      const dmg = CONFIG.fireballDamage * core.upgrades.fireMult;
+      const r = CONFIG.fireballRadius, r2 = r * r;
+      let hits = 0;
+      for (const e of s.enemies) {
+        const dx = e.x - x, dy = core.laneCenterY(e.lane) - y;
+        if (dx * dx + dy * dy <= r2) { e.hp -= dmg; hits++; }
+      }
+      emit('fireball', { x, y, dmg, hits });
+      return { ok: true, hits };
+    },
+
+    // ---- 战中补兵（金币）----
+    reinforce(kind, lane, bun, slot) {
+      if (s.phase !== 'BATTLE') return { ok: false, err: '仅战斗阶段可补兵' };
+      if (kind === 'sword') {
+        if (!(lane >= 0 && lane < CONFIG.laneCount) || !(slot >= 0 && slot < CONFIG.swordSlots))
+          return { ok: false, err: '槽位非法' };
+        if (s.gold < CONFIG.reinforceSwordCost) return { ok: false, err: '金币不足' };
+        let u = core.findUnit('sword', lane, -1, slot);
+        if (!u) { u = { id: nextId++, kind: 'sword', lane, bun: -1, slot, points: 0, hp: 0, maxHp: 0, bornSeg: s.segIdx }; s.units.push(u); }
+        u.points += 1; u.maxHp += CONFIG.swordHP * CONFIG.swordPerPoint; u.hp += CONFIG.swordHP * CONFIG.swordPerPoint;
+        s.gold -= CONFIG.reinforceSwordCost; s.totalStats.goldSpent += CONFIG.reinforceSwordCost;
+        emit('reinforce', { kind: 'sword', lane, slot });
+        return { ok: true };
+      }
+      if (!(bun >= 0 && bun < CONFIG.bunCount)) return { ok: false, err: '土包号非法' };
+      if (s.gold < CONFIG.reinforceArcherCost) return { ok: false, err: '金币不足' };
+      let u = core.findUnit('archer', -1, bun, -1);
+      if (!u) { u = { id: nextId++, kind: 'archer', lane: -1, bun, slot: -1, points: 0, hp: 0, maxHp: 0, bornSeg: s.segIdx }; s.units.push(u); }
+      u.points += 1; u.maxHp += CONFIG.archerHP * CONFIG.archerPerPoint; u.hp += CONFIG.archerHP * CONFIG.archerPerPoint;
+      s.gold -= CONFIG.reinforceArcherCost; s.totalStats.goldSpent += CONFIG.reinforceArcherCost;
+      emit('reinforce', { kind: 'archer', bun });
+      return { ok: true };
+    },
+
+    // ---- 节间升级：随机 2 选 1 ----
+    offerUpgrades() {
+      const pool = ['A', 'B', 'C'];
+      s.upgradeOptions = [];
+      while (s.upgradeOptions.length < 2) {
+        const k = pool[Math.floor(Math.random() * 3)];
+        if (!s.upgradeOptions.includes(k)) s.upgradeOptions.push(k);
+      }
+      s.phase = 'UPGRADE'; s.phaseT = 0;
+      emit('upgradeOffer', { options: [...s.upgradeOptions] });
+    },
+    pickUpgrade(key) {
+      if (s.phase !== 'UPGRADE') return { ok: false, err: `pickUpgrade 非法：当前 ${s.phase}` };
+      if (!s.upgradeOptions.includes(key)) return { ok: false, err: '该升级不在本节选项中' };
+      if (key === 'A') core.upgrades.swordAtk *= CONFIG.upSwordAtkMult;
+      else if (key === 'B') core.upgrades.archerCover += CONFIG.upArcherCoverAdd;
+      else { core.upgrades.fireMult *= CONFIG.upFireDmgMult; s.fireCost = CONFIG.upFireCostAfter; }
+      s.upgradesTaken.push(key);
+      emit('upgradePicked', { key });
+      s.phase = 'SEG_BREAK'; s.phaseT = 0;
+      return { ok: true };
+    },
+
+    // 节末结算：未用点数折金币 → 升级面板 → 过场或通关
+    settle() {
+      if (s.troopsLeft > 0) {
+        const g = s.troopsLeft * CONFIG.unusedPointGold;
+        s.gold += g; s.totalStats.goldEarned += g;
+        emit('goldEarn', { reason: 'unused', points: s.troopsLeft, gold: g });
+        s.troopsLeft = 0;
+      }
+      s.totalStats.perSeg[s.segIdx] = { ...s.segStats };
+      s.placementsHistory[s.segIdx] = [...s.placements];
+      if (s.segIdx >= LANES_SUMMARY.segCount - 1) { core.finish('win'); return; }
+      core.offerUpgrades();
+    },
+
+    // ---- M3 结算：准确率（玩家分配 vs 实际分布的余弦相似度均值）----
+    accuracy() {
+      let sum = 0, cnt = 0;
+      for (let i = 0; i < LANES_SUMMARY.segCount; i++) {
+        const seg = LANES_SUMMARY.segs[i];
+        const pl = s.placementsHistory[i];
+        if (!pl || seg.total < CONFIG.emptySegMinNotes) continue;
+        let dot = 0, na = 0, nb = 0;
+        for (let l = 0; l < 5; l++) {
+          dot += seg.lanes[l] * pl[l];
+          na += seg.lanes[l] * seg.lanes[l];
+          nb += pl[l] * pl[l];
+        }
+        if (na === 0 || nb === 0) { sum += 0; cnt++; continue; }
+        sum += dot / (Math.sqrt(na) * Math.sqrt(nb));
+        cnt++;
+      }
+      return cnt ? sum / cnt : 0;
+    },
+    // 星级：3=准确率≥0.7 且 血≥60；2=通关且血≥25；1=通关；败=0
+    stars() {
+      if (s.result !== 'win') return 0;
+      const acc = core.accuracy();
+      if (acc >= 0.7 && s.hp >= 60) return 3;
+      if (s.hp >= 25) return 2;
+      return 1;
+    },
+
+    finish(result) {
+      s.result = result; s.phase = 'OVER';
+      emit('gameOver', { result });
+    },
+
+    takeEvents() { const ev = s.events; s.events = []; return ev; },
+  };
+  return core;
+}
+
+globalThis.GAME_LOGIC = { CONFIG, LANES_SUMMARY, NOTES_DATA, segNotes, mergeForSpawn, segDur, createCore, LANE_NAMES, NOTE_CHARS };
+/* ===LOGIC-END=== */
+
+// ============================================================
+// 渲染层（DOM + Canvas + WebAudio）
+// ============================================================
+const LG = globalThis.GAME_LOGIC;
+const C = LG.CONFIG;
+const SUM = LG.LANES_SUMMARY;
+
+// ---- 布局常量（几何值定义在 CONFIG，渲染层引用）----
+const FIELD_TOP = 80, FIELD_BOTTOM = 780;      // 战场区
+const LANE_H = 128;                            // 单坑道高
+const laneY = lane => FIELD_BOTTOM - (lane + 1) * LANE_H; // lane=0(道1,低)在底
+const BASE_X = C.baseX, SPAWN_X = C.spawnX;
+const BUN_X = C.bunX;                          // 土包中心 x（4 个，竖向分布在坑道交界）
+const swordSlotX = slot => SPAWN_X - C.swordSlotInset - slot * C.swordSlotGap;  // 刀剑兵槽位（右→左）
+
+// ---- 画布缩放适配 ----
+const stage = document.getElementById('stage');
+function fit() {
+  const sc = Math.min(innerWidth / C.W, innerHeight / C.H);
+  stage.style.transform = `translate(-50%,-50%) scale(${sc})`;
+  document.getElementById('portrait-block').style.display =
+    innerWidth / innerHeight < 1 ? 'flex' : 'none';
+}
+addEventListener('resize', fit); fit();
+
+// ---- WebAudio ----
+let actx = null, master = null, muted = false;
+function ensureAudio() {
+  if (actx) return;
+  actx = new (window.AudioContext || window.webkitAudioContext)();
+  master = actx.createGain(); master.gain.value = muted ? 0 : 0.22;
+  const comp = actx.createDynamicsCompressor();
+  comp.threshold.value = -18; comp.ratio.value = 6;
+  master.connect(comp).connect(actx.destination);
+}
+function freqOf(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
+// triangle + ADSR 逐音合成；repeats>1 时间隔 1s 重复（教学）
+function playSegAudio(segIdx, repeats) {
+  ensureAudio();
+  if (actx.state === 'suspended') actx.resume();
+  const notes = LG.segNotes(segIdx);
+  const onePass = C.spawnLead + LG.segDur(segIdx);
+  for (let r = 0; r < repeats; r++) {
+    const t0 = actx.currentTime + 0.08 + r * (onePass + C.listenGapSec);
+    for (const n of notes) {
+      const tS = t0 + C.spawnLead + n.t;
+      const dur = Math.min(Math.max(n.dur, 0.12), 1.4);
+      const vol = 0.35 + 0.65 * (n.vel / 127);
+      const osc = actx.createOscillator();
+      osc.type = 'triangle'; osc.frequency.value = freqOf(n.note);
+      const g = actx.createGain();
+      g.gain.setValueAtTime(0, tS);
+      g.gain.linearRampToValueAtTime(vol, tS + 0.012);
+      g.gain.exponentialRampToValueAtTime(Math.max(vol * 0.55, 0.01), tS + Math.min(0.08, dur));
+      g.gain.setValueAtTime(Math.max(vol * 0.55, 0.01), tS + dur - 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, tS + dur + 0.1);
+      osc.connect(g).connect(master);
+      osc.start(tS); osc.stop(tS + dur + 0.12);
+    }
+  }
+}
+function stopAllAudio() {
+  if (master) { try { master.disconnect(); } catch (e) {} }
+  master = null; actx = null;
+}
+
+// ---- 核心与主循环 ----
+let core = LG.createCore();
+let flashRed = 0;
+let fireballs = [];          // 爆炸特效 {x,y,r,life}
+let killFx = [];             // 击杀光点特效 {x,y,lane,life,char,col}
+let aimingFire = false;      // 火球瞄准模式
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function toast(msg) {
+  toastEl.textContent = msg; toastEl.style.opacity = 1;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.style.opacity = 0, 2200);
+}
+const $ = id => document.getElementById(id);
+
+const UPGRADE_INFO = {
+  A: { icon: '🗡️', name: '刀剑淬锋', desc: '刀剑兵攻击 +25%（可叠加）' },
+  B: { icon: '🏹', name: '强弓远射', desc: '弓箭手覆盖 +1 道（边缘包变 3 道）' },
+  C: { icon: '🔥', name: '龙炎精粹', desc: '火球伤害 +50%，耗能降到 50' },
+};
+
+// ---- UI 状态切换 ----
+function updateUI() {
+  const s = core.s, p = s.phase;
+  $('bottombar').classList.toggle('hidden', !(p === 'DEPLOY' || p === 'BATTLE'));
+  $('start-battle').style.display = p === 'DEPLOY' ? 'block' : 'none';
+  $('reinforce-btn').style.display = p === 'BATTLE' ? 'block' : 'none';
+  $('undo-btn').style.display = p === 'DEPLOY' ? 'block' : 'none';
+  $('skip-listen').style.display = p === 'LISTEN' ? 'block' : 'none';
+  $('menu').style.display = p === 'MENU' ? 'flex' : 'none';
+  $('upgrade-panel').style.display = p === 'UPGRADE' ? 'flex' : 'none';
+  $('card-sword').classList.toggle('selected', selKind === 'sword' && (p === 'DEPLOY' || (p === 'BATTLE' && reinforceKind === 'sword')));
+  $('card-archer').classList.toggle('selected', selKind === 'archer' && (p === 'DEPLOY' || (p === 'BATTLE' && reinforceKind === 'archer')));
+  $('undo-btn').classList.toggle('active', undoMode);
+  // 火球按钮可用态
+  const canFire = (p === 'DEPLOY' || p === 'BATTLE') && s.energy >= s.fireCost;
+  $('btn-fire').style.opacity = canFire ? 1 : 0.4;
+  $('btn-fire').style.borderColor = aimingFire ? '#ff7043' : '#3a4356';
+  stage.style.cursor = aimingFire ? 'crosshair' : 'default';
+}
+
+function banner(big, small) {
+  const b = $('banner');
+  if (!big && !small) { b.style.display = 'none'; return; }
+  b.style.display = 'block';
+  b.querySelector('.big').textContent = big || '';
+  b.querySelector('.small').textContent = small || '';
+}
+
+// ---- 事件处理（逻辑层 → 渲染/音频）----
+function handleEvents(evs) {
+  for (const ev of evs) {
+    if (ev.type === 'listenStart') {
+      playSegAudio(ev.segIdx, ev.repeats);
+      const seg = SUM.segs[ev.segIdx];
+      const pass = ev.tutorial ? `第 ${Math.min(1, Math.floor(core.s.phaseT / (C.spawnLead + LG.segDur(ev.segIdx)) + 1))}/${ev.repeats} 遍 · ` : '';
+      banner(`🎧 试听 · 第 ${ev.segIdx + 1} 节`,
+        (ev.tutorial ? '（教学：本节播两遍）' : '') + ' 听听：音主要落在哪几条坑道？');
+    } else if (ev.type === 'deployStart') {
+      banner('', ev.tutorial ? '🛡️ 布防：点坑道放刀剑兵，点土包放弓箭手' : '');
+      if (ev.tutorial) toast('教程：低音在底道、高音在顶道。10 点兵力，分完点「开始战斗」');
+      setTimeout(() => banner('', ''), 3500);
+    } else if (ev.type === 'battleStart') {
+      banner(`⚔️ 第 ${ev.segIdx + 1} 节`, '');
+      setTimeout(() => banner('', ''), 1500);
+    } else if (ev.type === 'emptySeg') {
+      toast(`第 ${ev.segIdx + 1} 节是间奏（音符过少），自动跳过布防`);
+    } else if (ev.type === 'leak') {
+      flashRed = 0.6;
+    } else if (ev.type === 'kill') {
+      killFx.push({ x: ev.x, lane: ev.lane, life: 0.7, layers: ev.layers });
+    } else if (ev.type === 'fireball') {
+      fireballs.push({ x: ev.x, y: ev.y, life: 0.5 });
+    } else if (ev.type === 'unitDown') {
+      toast('🗡️ 阵地陷落！刀剑兵全灭');
+    } else if (ev.type === 'upgradeOffer') {
+      stopAllAudio();          // 上一节音频已放完，重建总线
+      ev.options.forEach((k, i) => {
+        const card = $('up-card-' + i), info = UPGRADE_INFO[k];
+        card.innerHTML = `<div class="icon">${info.icon}</div><div class="name">${info.name}</div><div class="desc">${info.desc}</div>`;
+        card.onclick = () => core.pickUpgrade(k);
+      });
+      drawReviewChart(core.s.segIdx);   // 音准回顾（教学价值核心）
+    } else if (ev.type === 'upgradePicked') {
+      toast(`已强化：${UPGRADE_INFO[ev.key].name}`);
+    } else if (ev.type === 'goldEarn') {
+      toast(`💰 未用点数折算 +${ev.gold} 金币`);
+    } else if (ev.type === 'segBreak') {
+      stopAllAudio();          // 本节音频已放完，重建总线
+    } else if (ev.type === 'gameOver') {
+      stopAllAudio();
+      showOverPanel(ev.result);
+    }
+}
+
+// ---- M3 结算面板 ----
+function showOverPanel(result) {
+  const s = core.s;
+  const win = result === 'win';
+  const acc = core.accuracy();
+  const stars = core.stars();
+  $('over-title').textContent = win ? '🏆 通关！曲终烽火在' : '💔 曲终人散…';
+  $('over-title').style.color = win ? '#ffd54f' : '#ef5350';
+  $('over-stars').textContent = win ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '';
+  const keepGold = win ? s.gold : Math.floor(s.gold / 2);
+  $('over-stats').innerHTML = `
+    <div class="k">🎯 听音准确率</div><div class="v">${(acc * 100).toFixed(1)}%</div>
+    <div class="k">💧 漏兵层数</div><div class="v">${s.totalStats.leaks}</div>
+    <div class="k">⚔️ 击杀敌兵</div><div class="v">${s.totalStats.kills}</div>
+    <div class="k">❤️ 剩余血量</div><div class="v">${Math.max(0, Math.ceil(s.hp))} / ${C.baseHP}</div>
+    <div class="k">🪙 结算金币</div><div class="v">${s.gold}${win ? '' : `（重开保留 ${keepGold}）`}</div>`;
+  $('over-tip').textContent = win
+    ? (stars === 3 ? '完美守城！耳朵和策略都是满分的指挥官。' : '通关成功——试着听得更准、血剩更多，冲击 3 星！')
+    : `失败变奖励：重开本曲将携带 ${keepGold} 金币起手（金币半保留）。`;
+  drawPerSegChart();
+  $('btn-retry').textContent = win ? '🔁 再来一局' : `🔁 携带 🪙${keepGold} 重开`;
+  $('over-panel').style.display = 'flex';
+}
+
+// 各节漏兵柱状图（红=漏层，绿=守住）
+function drawPerSegChart() {
+  const cvs = $('per-seg-chart'), c2 = cvs.getContext('2d');
+  c2.clearRect(0, 0, cvs.width, cvs.height);
+  const per = core.s.totalStats.perSeg;
+  const n = SUM.segCount, w = cvs.width / n;
+  c2.font = '11px sans-serif'; c2.textAlign = 'center';
+  for (let i = 0; i < n; i++) {
+    const p = per[i];
+    const leaked = p ? p.leakedLayers : 0;
+    const h = Math.min(110, leaked * 6);
+    c2.fillStyle = leaked > 0 ? '#ef5350' : '#66bb6a';
+    c2.fillRect(i * w + 6, 130 - h, w - 12, h);
+    c2.fillStyle = '#9aa5b8';
+    c2.fillText(i + 1, i * w + w / 2, 146);
+  }
+  c2.fillStyle = '#9aa5b8'; c2.textAlign = 'left';
+  c2.fillText('各节漏兵层数（红）', 6, 12);
+}
+
+// M4 音准回顾：本节实际音分布 vs 玩家兵力分配（双行对比条）
+function drawReviewChart(segIdx) {
+  const cvs = $('review-chart'), c2 = cvs.getContext('2d');
+  c2.clearRect(0, 0, cvs.width, cvs.height);
+  const seg = SUM.segs[segIdx];
+  const pl = core.s.placementsHistory[segIdx] || [0, 0, 0, 0, 0];
+  const maxA = Math.max(...seg.lanes, 1), maxB = Math.max(...pl, 1);
+  const x0 = 130, w = 560, rowH = 24;
+  c2.font = '14px sans-serif'; c2.textBaseline = 'middle';
+  // 两行：实际（上）、分配（下）；每行 5 个道格（从上往下=道5→道1）
+  for (let row = 0; row < 2; row++) {
+    const y0 = 34 + row * (rowH * 5 + 18);
+    c2.fillStyle = row === 0 ? '#e8ecf4' : '#ffd54f';
+    c2.textAlign = 'right';
+    c2.fillText(row === 0 ? '实际分布' : '你的分配', x0 - 14, y0 + rowH * 5 / 2);
+    for (let lane = 4; lane >= 0; lane--) {
+      const y = y0 + (4 - lane) * rowH;
+      const val = row === 0 ? seg.lanes[lane] : pl[lane];
+      const bw = w * (val / (row === 0 ? maxA : maxB));
+      c2.fillStyle = 'rgba(255,255,255,.08)';
+      c2.fillRect(x0, y + 2, w, rowH - 4);
+      c2.fillStyle = hexA(C.laneColors[lane], 0.9);
+      c2.fillRect(x0, y + 2, Math.max(bw, val > 0 ? 3 : 0), rowH - 4);
+    }
+  }
+  c2.textBaseline = 'alphabetic';
+}
+}
+
+// ---- HUD ----
+const phaseNames = { MENU: '准备', LISTEN: '🎧 试听', DEPLOY: '🛡️ 布防', BATTLE: '⚔️ 战斗', BATTLE_END: '结算', SEG_BREAK: '过场', OVER: '结束' };
+function updateHUD() {
+  const s = core.s;
+  $('hud-gold').textContent = s.gold;
+  $('hud-hp').textContent = Math.max(0, Math.ceil(s.hp));
+  $('hud-hp-max').textContent = '/' + C.baseHP;
+  $('energy-fill').style.width = (s.energy / C.heroMaxEnergy * 100) + '%';
+  $('energy-label').textContent = `${Math.floor(s.energy)}/${C.heroMaxEnergy}`;
+  $('pool-num').textContent = s.troopsLeft;
+  const segNo = s.segIdx < 0 ? 0 : s.segIdx;
+  let prog = (segNo) / SUM.segCount;
+  if (s.phase === 'LISTEN') prog = (segNo + Math.min(1, s.phaseT / s.listenDur)) / SUM.segCount;
+  else if (s.phase === 'BATTLE') prog = (segNo + Math.min(1, s.battleT / (LG.segDur(segNo) + 4))) / SUM.segCount;
+  else if (s.phase === 'OVER') prog = s.result === 'win' ? 1 : prog;
+  $('seg-progress-fill').style.width = (prog * 100) + '%';
+  $('phase-label').textContent = s.segIdx < 0 ? phaseNames[s.phase] :
+    `第 ${segNo + 1} / ${SUM.segCount} 节 · ${phaseNames[s.phase]}`;
+}
+
+// ---- Canvas 绘制 ----
+const cv = $('battle'), ctx = cv.getContext('2d');
+function hexA(hex, a) {
+  const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function draw() {
+  const s = core.s;
+  ctx.clearRect(0, 0, C.W, C.H);
+  const bg = ctx.createLinearGradient(0, FIELD_TOP, 0, FIELD_BOTTOM);
+  bg.addColorStop(0, '#182030'); bg.addColorStop(1, '#101520');
+  ctx.fillStyle = bg; ctx.fillRect(0, FIELD_TOP, C.W, FIELD_BOTTOM - FIELD_TOP);
+
+  // 预览条（LISTEN / SEG_BREAK：色块面积，不显示数字）
+  if (s.phase === 'LISTEN' || s.phase === 'SEG_BREAK' || s.phase === 'DEPLOY') {
+    const showIdx = s.phase === 'SEG_BREAK' && s.segIdx + 1 < SUM.segCount ? s.segIdx + 1 : Math.max(0, s.segIdx);
+    if (s.phase !== 'SEG_BREAK' || showIdx < SUM.segCount) drawPreviewBar(showIdx);
+  }
+
+  // 五条坑道（细框淡底：道间留暗缝，顶线收细，保证道内变化可读）
+  for (let lane = C.laneCount - 1; lane >= 0; lane--) {
+    const y = laneY(lane), col = C.laneColors[lane];
+    ctx.fillStyle = hexA(col, 0.10);
+    ctx.fillRect(BASE_X, y, SPAWN_X - 40 - BASE_X, LANE_H - 10);
+    ctx.fillStyle = hexA(col, 0.5);
+    ctx.fillRect(BASE_X, y, SPAWN_X - 40 - BASE_X, 1.5);
+    ctx.fillStyle = hexA(col, 0.7); ctx.font = 'bold 17px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(LG.LANE_NAMES[lane], BASE_X + 12, y + 24);
+  }
+
+  // 土包 ×4
+  for (let i = 0; i < C.bunCount; i++) drawBun(BUN_X, laneY(i));
+
+  // 出兵洞口（背景层，画在单位之前避免遮挡刀剑兵）
+  drawSpawnHole();
+
+  // 我方单位（坑道兵画在道上、弓手画在包上）
+  for (const u of s.units) {
+    if (u.kind === 'sword') drawSwordUnit(u);
+    else drawArcherUnit(u);
+  }
+
+  drawBase();
+
+  // 敌兵（最上层：出生在洞口上可见，向左行进）
+  for (const e of s.enemies) drawEnemy(e, laneY(e.lane));
+
+  // 特效：火球爆炸 + 击杀花瓣绽放（cozy：音符碎成光瓣，不血腥）
+  for (const f of fireballs) {
+    const t = f.life / 0.5;
+    ctx.strokeStyle = `rgba(255,167,38,${t})`; ctx.lineWidth = 8 * t;
+    ctx.beginPath(); ctx.arc(f.x, f.y, CONFIG.fireballRadius * (1.25 - 0.25 * t), 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = `rgba(255,213,79,${t * 0.35})`;
+    ctx.beginPath(); ctx.arc(f.x, f.y, CONFIG.fireballRadius * 0.7, 0, Math.PI * 2); ctx.fill();
+  }
+  for (const k of killFx) {
+    const cy = laneY(k.lane) + LANE_H / 2, t = k.life / 0.7;
+    const col = C.laneColors[k.lane];
+    ctx.save();
+    ctx.translate(k.x, cy);
+    ctx.rotate((1 - t) * 1.2);
+    for (let i = 0; i < 6; i++) {            // 六瓣花绽放
+      ctx.rotate(Math.PI / 3);
+      ctx.fillStyle = hexA(col, t * 0.85);
+      ctx.beginPath();
+      ctx.ellipse(10 + (1 - t) * 34, 0, 11 * t + 3, 5 * t + 1.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = `rgba(255,255,255,${t})`;  // 中心闪
+    ctx.beginPath(); ctx.arc(0, 0, 7 * t + 2, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  // 火球瞄准圈
+  if (aimingFire && (s.phase === 'DEPLOY' || s.phase === 'BATTLE')) {
+    ctx.strokeStyle = 'rgba(255,112,67,.9)'; ctx.lineWidth = 3;
+    ctx.setLineDash([10, 8]);
+    ctx.beginPath(); ctx.arc(mouse.x, mouse.y, CONFIG.fireballRadius, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 6, 0, Math.PI * 2); ctx.fill();
+  }
+
+  if (flashRed > 0) {
+    ctx.fillStyle = `rgba(255,60,40,${flashRed * 0.35})`;
+    ctx.fillRect(0, FIELD_TOP, C.W, FIELD_BOTTOM - FIELD_TOP);
+  }
+}
+
+// 出兵预览条：每道独立一行，行间留缝，色块面积=音数占比（不显示数字）
+function drawPreviewBar(segIdx) {
+  const seg = SUM.segs[segIdx];
+  if (!seg || seg.total === 0) return;
+  const x0 = 470, y0 = FIELD_TOP + 7, w = 1120, rowH = 8, gap = 2;
+  ctx.font = '13px sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#9aa5b8';
+  ctx.fillText(segIdx === core.s.segIdx ? '本节出兵分布' : `第 ${segIdx + 1} 节出兵预览`, x0 - 14, y0 + 5 * (rowH + gap) / 2 - gap / 2);
+  const maxCnt = Math.max(...seg.lanes);
+  for (let lane = 4; lane >= 0; lane--) {          // 从上往下画：道5 在顶
+    const yy = y0 + (4 - lane) * (rowH + gap);
+    ctx.fillStyle = 'rgba(255,255,255,.07)';       // 全宽底槽
+    ctx.fillRect(x0, yy, w, rowH);
+    const bw = w * (seg.lanes[lane] / maxCnt);
+    if (bw > 0) {
+      ctx.fillStyle = hexA(C.laneColors[lane], 0.95);
+      ctx.fillRect(x0, yy, bw, rowH);
+    }
+    ctx.fillStyle = hexA(C.laneColors[lane], 0.75); // 行首道色标识块
+    ctx.fillRect(x0 - 10, yy, 5, rowH);
+  }
+  ctx.textBaseline = 'alphabetic';
+}
+
+function drawEnemy(e, laneTop) {
+  const size = 44 * Math.sqrt(e.layers);
+  const cy = laneTop + LANE_H / 2;
+  ctx.font = `${size}px serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const col = C.laneColors[e.lane];
+  ctx.strokeStyle = 'rgba(6,8,12,.65)'; ctx.lineWidth = 3;   // 深描边：轮廓干净不糊
+  ctx.strokeText(e.char, e.x, cy);
+  ctx.fillStyle = col;
+  ctx.fillText(e.char, e.x, cy);
+  if (e.layers > 1) {
+    ctx.font = 'bold 15px sans-serif'; ctx.fillStyle = '#fff';
+    ctx.strokeStyle = 'rgba(0,0,0,.75)'; ctx.lineWidth = 3;
+    ctx.strokeText('×' + e.layers, e.x, cy - size / 2 - 10);
+    ctx.fillText('×' + e.layers, e.x, cy - size / 2 - 10);
+  }
+  const w = Math.max(30, size * 0.9), bh = 5, by = cy - size / 2 - 8;
+  ctx.fillStyle = 'rgba(4,6,10,.72)'; ctx.fillRect(e.x - w / 2 - 1, by - 1, w + 2, bh + 2);
+  ctx.fillStyle = '#ff5252';
+  const hpw = w * Math.max(0, e.hp / e.maxHp);
+  if (hpw > 0) ctx.fillRect(e.x - w / 2, by, hpw, bh);
+}
+
+function drawSwordUnit(u) {
+  const x = swordSlotX(u.slot), cy = laneY(u.lane) + LANE_H / 2;
+  const r = 16 + u.points * 4;
+  ctx.fillStyle = 'rgba(4,6,10,.4)';
+  ctx.beginPath(); ctx.arc(x, cy, r, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = hexA(C.laneColors[u.lane], 0.6); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(x, cy, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.font = `${20 + u.points * 3}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('🗡️', x, cy);
+  ctx.font = 'bold 14px sans-serif'; ctx.fillStyle = '#ffe082';
+  ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.lineWidth = 3;
+  ctx.strokeText(`${u.points}点`, x, cy + r + 13);
+  ctx.fillText(`${u.points}点`, x, cy + r + 13);
+}
+
+function drawArcherUnit(u) {
+  const x = BUN_X, cy = laneY(u.bun) - 36;
+  ctx.font = '24px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('🏹', x - 10, cy - 3);
+  ctx.font = 'bold 14px sans-serif'; ctx.fillStyle = '#ffe082';
+  ctx.strokeStyle = 'rgba(0,0,0,.8)'; ctx.lineWidth = 3;
+  ctx.strokeText(`${u.points}点`, x + 26, cy - 2);
+  ctx.fillText(`${u.points}点`, x + 26, cy - 2);
+}
+
+function drawBun(cx, cy) {
+  ctx.fillStyle = 'rgba(72,57,44,.92)';
+  ctx.beginPath();
+  ctx.moveTo(cx - 96, cy + 8);
+  ctx.quadraticCurveTo(cx - 72, cy - 32, cx, cy - 36);
+  ctx.quadraticCurveTo(cx + 72, cy - 32, cx + 96, cy + 8);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(20,14,10,.5)'; ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(104,88,68,.85)';
+  ctx.beginPath();
+  ctx.moveTo(cx - 64, cy + 3);
+  ctx.quadraticCurveTo(cx - 48, cy - 22, cx, cy - 26);
+  ctx.quadraticCurveTo(cx + 48, cy - 22, cx + 64, cy + 3);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(154,165,184,.6)'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('土包', cx, cy - 13);
+}
+
+function drawBase() {
+  const bx = 10, bw = BASE_X - 20, by = laneY(4), bh = FIELD_BOTTOM - by;
+  ctx.fillStyle = '#37474f'; ctx.fillRect(bx, by, bw, bh);
+  ctx.fillStyle = '#546e7a';
+  for (let i = 0; i < 5; i++) ctx.fillRect(bx - 6, by + 8 + i * (bh - 20) / 4, bw + 12, 8);
+  ctx.fillStyle = '#263238';
+  ctx.fillRect(bx + bw / 2 - 26, FIELD_BOTTOM - 70, 52, 70);
+  ctx.fillStyle = '#ffb74d';
+  ctx.font = 'bold 20px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('烽火台', bx + bw / 2, by + 40);
+  const hpP = Math.max(0, core.s.hp / C.baseHP);
+  ctx.fillStyle = '#0d0f14'; ctx.fillRect(bx + 10, by + bh + 6, bw - 20, 10);
+  ctx.fillStyle = hpP > 0.5 ? '#66bb6a' : hpP > 0.25 ? '#ffa726' : '#ef5350';
+  ctx.fillRect(bx + 10, by + bh + 6, (bw - 20) * hpP, 10);
+}
+
+function drawSpawnHole() {
+  const cx = SPAWN_X + 40, cy = (FIELD_TOP + FIELD_BOTTOM) / 2, sh = FIELD_BOTTOM - FIELD_TOP;
+  ctx.fillStyle = '#0a0c10';
+  ctx.beginPath(); ctx.ellipse(cx, cy, 56, sh / 2 - 8, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#3a4356'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.ellipse(cx, cy, 56, sh / 2 - 8, 0, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = '#ef9a9a'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('出兵口', cx - 8, FIELD_TOP + 28);
+}
+
+// ---- 帧循环：逻辑 setInterval（后台不卡死），渲染 RAF ----
+let lastTick = performance.now();
+setInterval(() => {
+  const now = performance.now();
+  const dt = Math.min((now - lastTick) / 1000, 0.3);
+  lastTick = now;
+  core.update(dt);
+  handleEvents(core.takeEvents());
+  flashRed = Math.max(0, flashRed - dt * 1.6);
+}, 50);
+setInterval(() => {   // 特效衰减（纯视觉）
+  fireballs = fireballs.filter(f => (f.life -= 0.05) > 0);
+  killFx = killFx.filter(k => (k.life -= 0.05) > 0);
+}, 50);
+function frame() {
+  draw();
+  updateHUD();
+  updateUI();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// ---- 输入：兵种卡 / 布防点击 / 按钮 ----
+let selKind = 'sword';
+let undoMode = false;
+let reinforceKind = null;    // BATTLE 阶段补兵兵种
+const mouse = { x: C.W / 2, y: 500 };
+$('card-sword').onclick = () => {
+  selKind = 'sword'; undoMode = false;
+  if (core.s.phase === 'BATTLE') reinforceKind = 'sword';
+};
+$('card-archer').onclick = () => {
+  selKind = 'archer'; undoMode = false;
+  if (core.s.phase === 'BATTLE') reinforceKind = 'archer';
+};
+$('undo-btn').onclick = () => { undoMode = !undoMode; };
+$('start-battle').onclick = () => { if (core.s.phase === 'DEPLOY') core.startBattle(); };
+$('reinforce-btn').onclick = () => {
+  reinforceKind = reinforceKind === 'sword' ? 'archer' : 'sword';
+  toast(reinforceKind === 'sword'
+    ? `补兵模式：刀剑兵 🪙${C.reinforceSwordCost}/点 —— 点坑道槽位`
+    : `补兵模式：弓箭手 🪙${C.reinforceArcherCost}/点 —— 点土包`);
+};
+$('btn-fire').onclick = () => {
+  const s = core.s;
+  if (s.phase !== 'DEPLOY' && s.phase !== 'BATTLE') { toast('火球只能在布防/战斗阶段释放'); return; }
+  if (s.energy < s.fireCost) { toast(`能量不足：${Math.floor(s.energy)}/${s.fireCost}`); return; }
+  aimingFire = !aimingFire;
+  if (aimingFire) toast('🐉 火球瞄准：点战场任意位置释放');
+};
+
+// canvas 点击 → 设计坐标
+cv.addEventListener('pointermove', e => {
+  const rect = cv.getBoundingClientRect();
+  mouse.x = (e.clientX - rect.left) / rect.width * C.W;
+  mouse.y = (e.clientY - rect.top) / rect.height * C.H;
+});
+cv.addEventListener('pointerdown', e => {
+  const s = core.s;
+  const rect = cv.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width * C.W;
+  const y = (e.clientY - rect.top) / rect.height * C.H;
+  // 火球瞄准优先
+  if (aimingFire) {
+    if (s.phase === 'DEPLOY' || s.phase === 'BATTLE') {
+      const r = core.castFireball(x, y);
+      if (r.ok) { aimingFire = false; toast(r.hits > 0 ? `🔥 命中 ${r.hits} 个敌兵！` : '🔥 火球落空…'); }
+      else toast(r.err);
+    }
+    return;
+  }
+  if (s.phase === 'BATTLE') {           // 战中补兵
+    if (!reinforceKind) { toast('先点下方兵卡选择补兵兵种'); return; }
+    const r = hitSlot(x, y);
+    if (!r) return;
+    const rr = reinforceKind === 'sword' ? core.reinforce('sword', r.lane, -1, r.slot)
+      : core.reinforce('archer', -1, r.bun, -1);
+    if (!rr.ok) toast(rr.err);
+    return;
+  }
+  if (s.phase !== 'DEPLOY') return;
+  if (y < FIELD_TOP || y > FIELD_BOTTOM || x < BASE_X || x > SPAWN_X) return;
+  const r = hitSlot(x, y);
+  if (!r) return;
+  if (undoMode) {
+    const rr = r.bun >= 0 ? core.removeUnit('archer', -1, r.bun, -1) : core.removeUnit('sword', r.lane, -1, r.slot);
+    if (!rr.ok) toast(rr.err);
+    return;
+  }
+  if (selKind === 'archer' && r.bun < 0) { toast('弓箭手要点在土包上'); return; }
+  if (selKind === 'sword' && r.bun >= 0) { toast('刀剑兵要点在坑道上（土包是弓箭手的位置）'); return; }
+  const rr = selKind === 'sword' ? core.placeSword(r.lane, r.slot) : core.placeArcher(r.bun);
+  if (!rr.ok) toast(rr.err);
+});
+
+// 命中检测：先土包后坑道；返回 {lane,slot} 或 {bun}
+function hitSlot(x, y) {
+  if (y < FIELD_TOP || y > FIELD_BOTTOM || x < BASE_X || x > SPAWN_X) return null;
+  for (let i = 0; i < C.bunCount; i++) {
+    const by = laneY(i);
+    if (Math.abs(x - BUN_X) <= 100 && y >= by - 42 && y <= by + 12) return { bun: i, lane: -1, slot: -1 };
+  }
+  const lane = Math.min(C.laneCount - 1, Math.max(0, Math.floor((FIELD_BOTTOM - y) / LANE_H)));
+  const slot = x > BASE_X + (SPAWN_X - BASE_X) * 0.66 ? 0 : x > BASE_X + (SPAWN_X - BASE_X) * 0.33 ? 1 : 2;
+  return { bun: -1, lane, slot };
+}
+
+$('skip-listen').onclick = () => core.skipListen();
+$('btn-retry').onclick = () => {
+  const keepGold = core.s.result === 'win' ? core.s.gold : Math.floor(core.s.gold / 2);
+  startNewGame(keepGold);
+};
+$('btn-to-menu').onclick = () => {
+  $('over-panel').style.display = 'none';
+  core = LG.createCore();
+};
+$('btn-mute').onclick = () => {
+  muted = !muted;
+  if (master) master.gain.value = muted ? 0 : 0.22;
+  $('btn-mute').textContent = muted ? '🔇' : '🔊';
+};
+$('btn-restart').onclick = () => location.reload();
+$('btn-start-game').onclick = startNewGame;
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && core.s.phase === 'DEPLOY') core.startBattle();
+  if (e.key === 'Enter' && core.s.phase === 'MENU') startNewGame();
+});
+
+function startNewGame(startGold) {
+  ensureAudio();
+  core = LG.createCore();
+  if (startGold) {
+    core.s.gold = startGold;
+    core.s.totalStats.goldEarned = startGold;   // 结算面板口径：带入金币计入总收入
+  }
+  core.startGame();
+  $('over-panel').style.display = 'none';
+  if (autoDemo) startAutoDemo();
+}
+
+// ---- auto=1 演示模式：自动试听跳过/布防/开战（测试与展示用）；&seg=N 跳到第 N 节 ----
+const autoDemo = new URLSearchParams(location.search).has('auto');
+const autoSeg = parseInt(new URLSearchParams(location.search).get('seg') || '0', 10);
+let autoTimer = null;
+function startAutoDemo() {
+  if (autoSeg > 1 && autoSeg <= SUM.segCount) {
+    // 跳到第 autoSeg 节：SEG_BREAK 中 next=segIdx+1 落在目标节
+    core.s.segIdx = autoSeg - 2;
+    core.s.phase = 'SEG_BREAK'; core.s.phaseT = CONFIG.segBreakSec;
+  }
+  function step() {
+    const s = core.s;
+    if (s.phase === 'LISTEN') core.skipListen();
+    else if (s.phase === 'DEPLOY') {
+      const seg = SUM.segs[s.segIdx];
+      const lanes = seg.lanes;
+      const bunScore = [0, 1, 2, 3].map(i => lanes[i] + lanes[i + 1]);
+      const buns = [0, 1, 2, 3].sort((a, b) => bunScore[b] - bunScore[a]).slice(0, 2);
+      buns.forEach(b => core.placeArcher(b));
+      const total = lanes.reduce((a, b) => a + b, 0) || 1;
+      const quota = lanes.map(cnt => Math.floor(s.troopsLeft * cnt / total));
+      let left = s.troopsLeft - quota.reduce((a, b) => a + b, 0);
+      const order = [0, 1, 2, 3, 4].sort((a, b) => lanes[b] - lanes[a]);
+      for (let i = 0; left > 0; i++, left--) quota[order[i % 5]]++;
+      for (let lane = 0; lane < 5; lane++) for (let k = 0; k < quota[lane]; k++) core.placeSword(lane, k % 3);
+      core.startBattle();
+    } else if (s.phase === 'UPGRADE') {
+      const pick = ['A', 'C', 'B'].find(k => s.upgradeOptions.includes(k));
+      core.pickUpgrade(pick);
+    }
+  }
+  autoTimer = setInterval(step, 700);
+}
+if (autoDemo) {
+  const boot = setInterval(() => {
+    if (core.s.phase === 'MENU') { startNewGame(); clearInterval(boot); }
+  }, 300);
+}
+
+// DEV 面板：跳节测试
+const devSeg = $('dev-seg');
+for (let i = 0; i < SUM.segCount; i++) {
+  const opt = document.createElement('option');
+  opt.value = i; opt.textContent = `第 ${i + 1} 节（${SUM.segs[i].total} 音）`;
+  devSeg.appendChild(opt);
+}
+$('dev-jump').onclick = () => {
+  ensureAudio();
+  core = LG.createCore();
+  core.startGame();
+  core.s.phase = 'SEG_BREAK'; core.s.phaseT = CONFIG.segBreakSec; core.s.segIdx = +devSeg.value - 1;
+};
+</script>
+</body>
+</html>

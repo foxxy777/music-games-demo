@@ -467,7 +467,8 @@
     laneFields.forEach((f, i) => { if (cond(i)) f.parentElement.classList.add('targetable'); });
   }
   function onLaneClick(lane) {
-    if (!sel || busy) return;
+    if (!sel) { SFX.lane(lane, 0, 0.5); return; } // 未选卡：任何时候点车道=听该车道唱名（0.5s，与预演同口径，练耳用）
+    if (busy) return;
     if (sel.need === 'lane3' && (lane < 1 || lane > 5)) { toast('需选 2~6 轨为中心'); return; }
     SFX.lane(lane);
     sel.lanes.push(lane);

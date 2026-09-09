@@ -89,6 +89,18 @@
     // 蓝图判定：标对=短促上行双音；标错=低沉短音
     bpOk() { tone(523.25, 0.09, { vol: 0.22 }); setTimeout(() => tone(783.99, 0.14, { vol: 0.22 }), 70); },
     bpFail() { tone(110, 0.25, { type: 'square', vol: 0.2, slide: 70 }); },
+    // ===== 三音攻防（2026-09-09 任务书）=====
+    // 盖防：温和上行双音（叮~咚）
+    guard() { tone(392, 0.1, { vol: 0.2 }); setTimeout(() => tone(523.25, 0.16, { vol: 0.18 }), 60); },
+    // 攻击牌起飞：上滑琶音
+    attack() { tone(330, 0.16, { type: 'triangle', vol: 0.22, slide: 720 }); },
+    // 敌音漏网打玩家：复用 thud（低频闷响）
+    // 和弦齐鸣：三条攻击轨的唱名同时奏响（真实和声，加成听感）
+    chordAt(lanes) {
+      const fs = (lanes || []).map(l => (LANE_F[l] || 440) * 2);
+      for (const f of fs) tone(f, 0.6, { vol: 0.16 });
+      tone(fs.length ? fs[0] * 2 : 880, 0.6, { vol: 0.1 });
+    },
   };
 
   return { ensure, setVolume, getVolume, SFX };

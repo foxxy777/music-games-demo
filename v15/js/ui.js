@@ -267,7 +267,7 @@
         if (skipPreview) break outer;
         const laneEl = laneFields[s.lane].parentElement;
         laneEl.classList.remove('flash'); void laneEl.offsetWidth; laneEl.classList.add('flash');
-        SFX.lane(s.lane, s.type === 'long' ? -1 : s.type === 'single' ? 1 : 0, 0.5);
+        SFX.lane(s.lane, 0, 0.5); // 统一八度：旋律保真（type 八度跳变会毁旋律轮廓，type 只作数值差异）
         const dots = fpDots[s.lane];
         if (dots && idx[s.lane] < dots.length) {
           const d = dots[idx[s.lane]++];
@@ -304,7 +304,7 @@
       return;
     }
     // 点格先播该格预演音（单音高八度 / 长音低八度，与预演口径一致），再弹音名选择器
-    SFX.lane(c.lane, c.spawn.type === 'long' ? -1 : c.spawn.type === 'single' ? 1 : 0, 0.4);
+    SFX.lane(c.lane, 0, 0.4); // 与预演同口径：统一八度，听音辨车道
     openBpPop(c);
   }
   // 7 音名小选择器：玩家听预演音后辨名，选中即进入蓝图标记态

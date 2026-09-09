@@ -9,6 +9,7 @@
   const { LANES, LANE_NAMES } = V;
   const $ = id => document.getElementById(id);
   const LANE_COLORS = ['#ff5d6c', '#ff9a3d', '#ffd54f', '#7dff8a', '#4dd8ff', '#7d8aff', '#d17dff'];
+  const HINT_DEFAULT = '🛡 防御挡你听到的轨 · ⚔ 攻击放任意轨凑和弦 → 结束回合';
 
   let duel = null;
   let sel = null;          // {handIdx, kind:'def'|'atk'}
@@ -100,7 +101,7 @@
     busy = false;
     $('btn-replay').disabled = false;
     $('endturn').disabled = false;
-    setHint('🛡 防御牌盖敌音轨 · ⚔ 攻击牌放空轨 → 结束回合');
+    setHint('🛡 防御挡你听到的轨 · ⚔ 攻击放任意轨凑和弦 → 结束回合');
     renderAll();
   }
 
@@ -117,9 +118,10 @@
     });
   }
 
-  // ---------- 渲染 ----------
-  function markX(fieldW, k) { return Math.round(fieldW * 0.56) + k * 44; } // 第 k 个敌音标记横向位置
-  function atkX(idx) { return 64 + idx * 44; }                            // 第 idx 张攻击牌位置
+  // ---------- 渲染 ----------（大爷 00:21：攻防图标在横幅左端，敌音标记在右端小怪方向）
+  function defX(k) { return 24 + k * 44; }                 // 盾牌：横幅左端（该轨第 k 张）
+  function atkX() { return 170; }                          // 攻击图标：盾牌群右侧（1 轨限 1）
+  function markX(W, k) { return W - 48 - k * 44; }         // 敌音标记：横幅右端，向左叠排
 
   function renderLanes() {
     for (let i = 0; i < LANES; i++) {
@@ -127,7 +129,7 @@
       if (!field) continue;
       field.innerHTML = '';
       const W = field.clientWidth || 400, H = field.clientHeight || 54;
-      // 敌音标记（按播音顺序，同轨叠排）；被盖住的前 laneDefs 个叠盾
+      // 敌音标记（右端，按播音顺序同轨叠排）
       let k = 0;
       for (let n = 0; n < duel.notes.length; n++) {
         if (duel.notes[n] !== i) continue;
@@ -138,26 +140,26 @@
         m.style.top = H / 2 + 'px';
         if (k < duel.laneDefs[i]) m.classList.add('covered');
         field.appendChild(m);
-        if (k < duel.laneDefs[i]) {
-          const s = document.createElement('div');
-          s.className = 'shld';
-          s.textContent = '🛡';
-          s.style.left = markX(W, k) + 'px';
-          s.style.top = H / 2 + 'px';
-          field.appendChild(s);
-        }
         k++;
       }
-      // 攻击牌
-      duel.attackOrder.forEach((lane, idx) => {
-        if (lane !== i) return;
+      // 防御盾（左端，玩家放置即显示，同轨叠多张）
+      for (let s = 0; s < duel.laneDefs[i]; s++) {
+        const sh = document.createElement('div');
+        sh.className = 'shld';
+        sh.textContent = '🛡';
+        sh.style.left = defX(s) + 'px';
+        sh.style.top = H / 2 + 'px';
+        field.appendChild(sh);
+      }
+      // 攻击图标（盾群右侧）
+      if (duel.attacks[i]) {
         const a = document.createElement('div');
         a.className = 'atk-mark';
         a.textContent = '⚔';
-        a.style.left = atkX(idx) + 'px';
+        a.style.left = atkX() + 'px';
         a.style.top = H / 2 + 'px';
         field.appendChild(a);
-      });
+      }
     }
   }
 
@@ -191,21 +193,17 @@
   // ---------- 交互 ----------
   function clearSel() {
     sel = null;
-    document.querySelectorAll('.lane.t-def, .lane.t-atk').forEach(l => l.classList.remove('t-def', 't-atk'));
     renderHand();
   }
 
   function onCardClick(idx) {
     if (busy || !duel || duel.over) return;
     SFX.ui();
-    if (sel && sel.handIdx === idx) { clearSel(); setHint('🛡 防御牌盖敌音轨 · ⚔ 攻击牌放空轨 → 结束回合'); return; }
+    if (sel && sel.handIdx === idx) { clearSel(); setHint(HINT_DEFAULT); return; }
     clearSel();
     sel = { handIdx: idx, kind: duel.hand[idx].k };
-    for (let l = 0; l < LANES; l++) {
-      if (!D.canPlace(duel, idx, l).ok) continue;
-      laneEls[l].classList.add(sel.kind === 'def' ? 't-def' : 't-atk');
-    }
-    setHint(sel.kind === 'def' ? '点一条【发亮】的敌音轨盖住它' : '点一条【发亮】的空轨放置攻击');
+    // 00:21 大爷：不亮答案位置——任意轨都可放，纯练耳判断
+    setHint(sel.kind === 'def' ? '🛡 防御牌：放你听到敌音的那条轨（放错=白放）' : '⚔ 攻击牌：放任意一条轨 · 3 张凑成和弦总伤 ×2');
     renderHand();
   }
 
@@ -224,7 +222,7 @@
       } else if (ev.t === 'placeAtk' && ev.chord) {
         setHint('🎼 再放 1 张凑成 ' + chordName(ev.chord) + ' → ×' + duel.cfg.CHORD_MULT + '！', true);
       } else {
-        setHint('🛡 防御牌盖敌音轨 · ⚔ 攻击牌放空轨 → 结束回合');
+        setHint(HINT_DEFAULT);
       }
     } catch (e) { toast(e.message); return; }
     clearSel();
@@ -234,7 +232,7 @@
   function chordName(c) { return c ? (c.kind === 'major' ? '大三和弦' : '小三和弦') : ''; }
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && sel) { clearSel(); setHint('🛡 防御牌盖敌音轨 · ⚔ 攻击牌放空轨 → 结束回合'); }
+    if (e.key === 'Escape' && sel) { clearSel(); setHint(HINT_DEFAULT); }
   });
 
   // ---------- 结算演出 ----------
@@ -257,11 +255,11 @@
     const W = laneFields[0] ? (laneFields[0].clientWidth || 400) : 400;
     switch (ev.t) {
       case 'noteBlocked': {
-        // 该轨被盖住的敌音：标记划掉 + 盾消解
+        // 该轨被盖住的敌音：盾（左端）消解 + 标记（右端）划掉
         const field = laneFields[ev.lane];
         const k = sameLaneIndexBefore(ev.lane, ev.index);
-        const mark = field.children[k * 2]; // mark 与 shld 交替排列
-        const shld = field.children[k * 2 + 1];
+        const shld = field.querySelectorAll('.shld')[k];
+        const mark = field.querySelectorAll('.mark')[k];
         if (shld) shld.classList.add('dissolve');
         if (mark) mark.classList.add('blocked');
         if (chips[ev.index]) chips[ev.index].classList.add('blocked');
@@ -272,7 +270,7 @@
       case 'noteHit': {
         const field = laneFields[ev.lane];
         const k = sameLaneIndexBefore(ev.lane, ev.index);
-        const mark = field.children[k * 2];
+        const mark = field.querySelectorAll('.mark')[k];
         if (mark) { mark.classList.add('leak'); await delay(200); mark.classList.add('gone'); }
         if (chips[ev.index]) chips[ev.index].classList.add('leak');
         SFX.thud();
@@ -338,7 +336,7 @@
     }
     busy = false;
     $('btn-replay').disabled = false;
-    setHint('🛡 防御牌盖敌音轨 · ⚔ 攻击牌放空轨 → 结束回合');
+    setHint(HINT_DEFAULT);
   });
 
   // ---------- 胜负 ----------

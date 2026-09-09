@@ -1,9 +1,9 @@
 /* V15 音浪尖塔 · 三音攻防战斗内核（2026-09-09 任务书 · 纯逻辑，无 DOM，浏览器 + Node TB 双端）
  *
  * 核心循环：小怪每回合随机播 3 音（可重复）→ 玩家抽 5 张
- *   → 防御牌盖敌音轨（1 牌盖 1 音）/ 攻击牌放本回合无敌音的空轨（1 轨限 1 张）
- *   → 结束回合结算（先敌后我）：漏网敌音各打玩家 → 攻击牌飞打小怪各 10
- *   → 三张攻击牌落轨构成大/小三和弦 → 总伤 ×2 → 全弃手牌，下一回合
+ *   → 防御牌/攻击牌可放任意轨道（09-10 00:21 大爷：练耳不框死答案；攻击 1 轨限 1 张保和弦判定）
+ *   → 结算（先敌后我）：同轨前 N 张防御盖住 N 个敌音，漏网敌音各打玩家
+ *   → 攻击牌飞打小怪各 10；三张攻击落轨构成大/小三和弦 → 总伤 ×2 → 全弃，下一回合
  *
  * 旧「七轨对撞」battle.js 留档不再加载；卡组/地图/能量等系统本期停用。
  */
@@ -122,22 +122,15 @@
     return { turn: d.turn, notes: d.notes.slice(), hand: d.hand.length };
   }
 
-  // ---- 放置合法性（UI 高亮与放置前统一走这里；非法 reason 供 toast）----
+  // ---- 放置规则（大爷 09-10 00:21：牌可放任意轨道，练耳不框死答案）----
+  // 攻击仍 1 轨限 1 张（和弦判定需 3 条不同轨）；防御同轨可叠多张（do×2 需叠 2 张全盖）
   function canPlace(d, handIdx, lane) {
     if (d.over) return { ok: false, reason: '战斗已结束' };
     const card = d.hand[handIdx];
     if (!card) return { ok: false, reason: '手牌序号非法' };
     if (!(typeof lane === 'number' && lane >= 0 && lane < LANES)) return { ok: false, reason: '轨道非法' };
     if (d.notes.length < d.cfg.NOTES_PER_TURN) return { ok: false, reason: '敌音还没播完' };
-    if (card.k === 'def') {
-      const n = notesOnLane(d, lane);
-      if (!n) return { ok: false, reason: '防御牌只能盖住有敌音的轨道' };
-      if (d.laneDefs[lane] >= n) return { ok: false, reason: '这条轨的敌音已全部盖住' };
-      return { ok: true, reason: '' };
-    }
-    // atk
-    if (notesOnLane(d, lane) > 0) return { ok: false, reason: '攻击牌只能放本回合没有敌音的空轨' };
-    if (d.attacks[lane]) return { ok: false, reason: '这条轨已有攻击牌（1 轨限 1 张）' };
+    if (card.k === 'atk' && d.attacks[lane]) return { ok: false, reason: '这条轨已有攻击牌（1 轨限 1 张）' };
     return { ok: true, reason: '' };
   }
 
@@ -149,7 +142,7 @@
     if (card.k === 'def') {
       d.laneDefs[lane]++;
       d.discardPile.push(card);
-      d.log.push('防御盖 ' + LANE_NAMES[lane] + ' 轨（' + d.laneDefs[lane] + '/' + notesOnLane(d, lane) + '）');
+      d.log.push('防御放 ' + LANE_NAMES[lane] + ' 轨（盖 ' + Math.min(d.laneDefs[lane], notesOnLane(d, lane)) + '/' + notesOnLane(d, lane) + '）');
       return { t: 'placeDef', lane, covered: d.laneDefs[lane], total: notesOnLane(d, lane) };
     }
     d.attacks[lane] = card;

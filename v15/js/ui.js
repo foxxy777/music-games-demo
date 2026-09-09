@@ -257,7 +257,7 @@
     return { x: f.offsetLeft + laneEl.offsetLeft, y: laneEl.offsetTop, h: f.clientHeight };
   }
 
-  async function previewPerformance(wave) {
+  async function previewPerformance(wave, replay) {
     skipPreview = false;
     const groups = B.waveByTurn(wave);
     const typeColor = { single: '#b388ff', std: '#7d8aff', long: '#4dd8ff', elite: '#ffd54f' };
@@ -279,9 +279,18 @@
     $('preview-tip').style.display = 'none';
     previewDone = true;
     busy = false;
-    doStartTurn();
+    if (replay) renderHUD(); else doStartTurn(); // 重听只重放，不开新回合
   }
   $('btn-skip-preview').addEventListener('click', () => { skipPreview = true; SFX.ui(); });
+  // 重听敌曲：整波预演重播（不重置手牌/蓝图标记，仅重放音频+指纹点亮动画）
+  $('btn-replay-wave').addEventListener('click', () => {
+    if (busy || !battle || battle.over || !previewDone || sel) return;
+    SFX.ui();
+    busy = true; previewDone = false;
+    $('preview-tip').style.display = 'block';
+    renderHUD();
+    previewPerformance(battle.wave, true);
+  });
 
   // ---------- 蓝图格子交互（任务B：常驻交互，无开关） ----------
   function onCellClick(el) {

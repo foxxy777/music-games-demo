@@ -86,6 +86,9 @@
     phase() { tone(110, 0.6, { type: 'sawtooth', vol: 0.2 }); tone(220, 0.5, { type: 'square', vol: 0.1 }); },
     // 敌音起飞
     takeoff() { tone(500, 0.1, { type: 'sine', vol: 0.1, slide: 900 }); },
+    // 蓝图判定：标对=短促上行双音；标错=低沉短音
+    bpOk() { tone(523.25, 0.09, { vol: 0.22 }); setTimeout(() => tone(783.99, 0.14, { vol: 0.22 }), 70); },
+    bpFail() { tone(110, 0.25, { type: 'square', vol: 0.2, slide: 70 }); },
   };
 
   return { ensure, setVolume, getVolume, SFX };

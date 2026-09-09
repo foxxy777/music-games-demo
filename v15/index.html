@@ -106,6 +106,28 @@
   .ntag span { font-size:10px; padding:0 3px; border-radius:6px; color:#0a0d18; font-weight:bold; }
   .ntag .psn { background:#7dff8a; } .ntag .brn { background:#ff9a3d; }
   .note-u.dead, .note-e.dead { transition:all .25s; opacity:0; transform:scale(.2); }
+
+  /* 蓝图格子层（右半场敌方格子，覆盖在轨道上方；容器不拦点击，格子本身可点） */
+  #bp-layer { position:absolute; inset:0; z-index:12; pointer-events:none; }
+  .bp-cell { position:absolute; width:42px; height:42px; margin:-21px 0 0 -21px; border-radius:10px; z-index:6;
+             display:flex; align-items:center; justify-content:center; pointer-events:auto; cursor:pointer;
+             font-size:15px; font-weight:bold; color:#cfc0ff;
+             background:linear-gradient(160deg,#372d63,#221b47); border:2px solid #8f7ddf; box-shadow:0 0 8px #b388ff44;
+             transition:left .32s ease, top .25s ease, border-color .25s, box-shadow .25s; }
+  .bp-cell:hover { border-color:#c9b8ff; box-shadow:0 0 13px #b388ff88; }
+  .bp-cell .seq { text-shadow:0 1px 2px #0008; }
+  .bp-cell .bp-tag { position:absolute; top:-19px; left:0; right:0; text-align:center; font-size:11px; font-weight:bold;
+                     color:#4dd8ff; text-shadow:0 0 6px #4dd8ff88; pointer-events:none; }
+  .bp-cell.blueprint { border-style:dashed; border-color:#4dd8ff; background:linear-gradient(160deg,#28527a,#173a5c); box-shadow:0 0 12px #4dd8ff66; }
+  .bp-cell.bp-ok { border-style:solid; border-color:#7dff8a; background:linear-gradient(160deg,#2a6e42,#14401f); box-shadow:0 0 16px #7dff8aaa; }
+  .bp-cell.bp-bad { border-style:solid; border-color:#ff5d6c; background:linear-gradient(160deg,#6e2a35,#401419); box-shadow:0 0 16px #ff5d6caa; }
+  .bp-pop { position:absolute; pointer-events:auto; z-index:20; background:#10152cee; border:1px solid #4a568f; border-radius:12px; padding:8px 10px; width:158px; }
+  .bp-pop-t { font-size:12px; color:#8f9ccf; margin-bottom:6px; text-align:center; }
+  .bp-pop-g { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; }
+  .bp-opt { font-size:13px; font-weight:bold; padding:4px 0; background:#1b2140; border:1px solid #3d4680; border-radius:7px; cursor:pointer; color:#dfe6ff; }
+  .bp-opt:hover { background:#2e3866; }
+  .bp-cancel { margin-top:6px; width:100%; font-size:12px; padding:3px 0; background:#232b4d; color:#8f9ccf; border:1px solid #3d4680; border-radius:7px; cursor:pointer; }
+  .bp-cancel:hover { background:#2e3866; }
   .float-txt { position:absolute; font-size:16px; font-weight:bold; pointer-events:none; z-index:30; animation:floatUp .8s forwards; text-shadow:0 0 8px currentColor; }
   @keyframes floatUp { 0% { translate:0 0; opacity:1; } 100% { translate:0 -34px; opacity:0; } }
   .particle { position:absolute; width:6px; height:6px; border-radius:50%; pointer-events:none; z-index:29; animation:pfly .5s forwards; }

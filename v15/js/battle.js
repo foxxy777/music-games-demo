@@ -392,6 +392,7 @@
   return {
     createBattle, startTurn, playCard, endTurn, checkEnd,
     fingerprint, waveByTurn, bossPhaseOf, BOSS_PHASES,
+    drawCards, // 蓝图标对奖励抽牌用（UI 侧调用）
     // 内部导出仅供 TB 精细断言
     _clashPair: clashPair,
   };

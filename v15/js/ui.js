@@ -21,6 +21,8 @@
   let busy = false;        // 演出中
   let skipPreview = false, previewDone = false;
   let laneFields = [], fpDots = [];
+  let bpLayer = null;      // 蓝图格子层（右半场覆盖层，独立于轨道 field，renderBattle 清场不影响）
+  let bpCells = [];        // 本回合波次的蓝图格子 [{spawn, lane, el, marked, predicted, used}]
 
   // ---------- 基础 ----------
   function delay(ms) { return new Promise(r => setTimeout(r, ms / speed)); }
@@ -173,7 +175,7 @@
     $('enemy-face').textContent = (WAVE_META[cfg.waveId] || {}).face || '🎵';
     $('preview-tip').style.display = 'block';
     renderBattle();
-    toast('规则：清空轨道后我方音符冲线，对曲牌造成 剩余攻击×2 伤害；漏网敌音每回合敲 1 血');
+    toast('规则：清空轨道后我方音符冲线，对曲牌造成 剩余攻击×2 伤害；漏网敌音每回合敲 1 血。右半场格子可点开蓝图标记（听音辨名）');
     previewPerformance(wave);
   }
 
@@ -195,6 +197,9 @@
       wrap.appendChild(lane);
       laneFields.push(field);
     }
+    bpLayer = document.createElement('div');
+    bpLayer.id = 'bp-layer';
+    wrap.appendChild(bpLayer);
   }
 
   function buildFingerprint() {
@@ -212,6 +217,44 @@
       }
       box.appendChild(row); fpDots.push(dots);
     }
+  }
+
+  // ---------- 蓝图格子（任务A：敌方波次以格子序列展示在右半场） ----------
+  // 格子纵向落在本波次音轨上、从左到右按起飞顺序排列；不标注音名/音高/类型，玩家靠预演音判断
+  function renderBlueprintCells() {
+    if (!bpLayer) return;
+    bpLayer.innerHTML = '';
+    bpCells = [];
+    if (!battle || battle.over) return;
+    const wave = battle.spawns.filter(s => s.turn === battle.turn);
+    if (!wave.length) return;
+    const laneW = $('b-lanes').clientWidth;
+    let gap = 54;
+    const maxSpan = laneW * 0.42;
+    if (wave.length * gap > maxSpan) gap = maxSpan / wave.length;
+    const laneCenterY = lane => {
+      const laneEl = laneFields[lane].parentElement;
+      return laneEl.offsetTop + laneEl.clientHeight / 2;
+    };
+    wave.forEach((s, i) => {
+      const el = document.createElement('div');
+      el.className = 'bp-cell';
+      el.dataset.lane = s.lane;
+      el.dataset.seq = i + 1;
+      el.innerHTML = '<span class="seq">' + (i + 1) + '</span>';
+      // 右对齐靠右缘排开：第 1 个在最左，依次向右
+      el.style.left = (laneW - 44 - (wave.length - i) * gap) + 'px';
+      el.style.top = laneCenterY(s.lane) + 'px';
+      el.addEventListener('click', ev => { ev.stopPropagation(); onCellClick(el); });
+      bpLayer.appendChild(el);
+      bpCells.push({ spawn: s, lane: s.lane, el, marked: false, predicted: null, used: false });
+    });
+  }
+  // lane-field 在 bp-layer 坐标系里的偏移与尺寸（起飞飞行/移交坐标换算用）
+  function fieldBoxInLaneLayer(lane) {
+    const f = laneFields[lane];
+    const laneEl = f.parentElement;
+    return { x: f.offsetLeft + laneEl.offsetLeft, y: laneEl.offsetTop, h: f.clientHeight };
   }
 
   async function previewPerformance(wave) {
@@ -240,6 +283,60 @@
   }
   $('btn-skip-preview').addEventListener('click', () => { skipPreview = true; SFX.ui(); });
 
+  // ---------- 蓝图格子交互（任务B：常驻交互，无开关） ----------
+  function onCellClick(el) {
+    const c = bpCells.find(x => x.el === el);
+    if (!c || busy || !previewDone || !battle || battle.over || sel) return;
+    if (c.marked) { // 再点取消
+      c.marked = false; c.predicted = null;
+      el.classList.remove('blueprint');
+      const tag = el.querySelector('.bp-tag'); if (tag) tag.remove();
+      SFX.ui();
+      return;
+    }
+    // 点格先播该格预演音（单音高八度 / 长音低八度，与预演口径一致），再弹音名选择器
+    SFX.lane(c.lane, c.spawn.type === 'long' ? -1 : c.spawn.type === 'single' ? 1 : 0, 0.4);
+    openBpPop(c);
+  }
+  // 7 音名小选择器：玩家听预演音后辨名，选中即进入蓝图标记态
+  function openBpPop(c) {
+    closeBpPop();
+    const pop = document.createElement('div');
+    pop.className = 'bp-pop';
+    pop.innerHTML = '<div class="bp-pop-t">听到的音是？</div>';
+    const grid = document.createElement('div');
+    grid.className = 'bp-pop-g';
+    LANE_NAMES.forEach((nm, i) => {
+      const b = document.createElement('button');
+      b.className = 'bp-opt';
+      b.textContent = nm;
+      b.style.color = LANE_COLORS[i];
+      b.addEventListener('click', ev => {
+        ev.stopPropagation();
+        c.marked = true; c.predicted = nm;
+        c.el.classList.add('blueprint');
+        let tag = c.el.querySelector('.bp-tag');
+        if (!tag) { tag = document.createElement('div'); tag.className = 'bp-tag'; c.el.appendChild(tag); }
+        tag.textContent = nm;
+        SFX.ui();
+        closeBpPop();
+      });
+      grid.appendChild(b);
+    });
+    pop.appendChild(grid);
+    const cancel = document.createElement('button');
+    cancel.className = 'bp-cancel';
+    cancel.textContent = '取消';
+    cancel.addEventListener('click', ev => { ev.stopPropagation(); closeBpPop(); });
+    pop.appendChild(cancel);
+    // 弹在格子左侧（格子都在右半场，向左弹不溢出）
+    const cx = parseFloat(c.el.style.left), cy = parseFloat(c.el.style.top);
+    pop.style.left = Math.max(90, cx - 168) + 'px';
+    pop.style.top = Math.max(4, cy - 34) + 'px';
+    bpLayer.appendChild(pop);
+  }
+  function closeBpPop() { if (bpLayer) { const p = bpLayer.querySelector('.bp-pop'); if (p) p.remove(); } }
+
   // ---------- 战斗：渲染 ----------
   function posForP(lane, note) {
     const W = laneFields[lane].clientWidth;
@@ -247,9 +344,10 @@
     return 36 + Math.max(0, j) * 46;
   }
   function posForE(lane, note) {
+    // 敌音起飞后的驻留位：中偏右排开（蓝图格子起飞后向左飞入场内，与格子区错开）
     const W = laneFields[lane].clientWidth;
     const k = battle.lanes[lane].E.indexOf(note);
-    return W - 36 - Math.max(0, k) * 48;
+    return Math.round(W * 0.52) + Math.max(0, k) * 46;
   }
   function noteEl(n, lane) {
     const el = document.createElement('div');
@@ -384,19 +482,54 @@
     SFX.poison();
     playSelected(sel.handIdx, { noteId: note.id });
   });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { clearSel(); renderHUD(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeBpPop(); clearSel(); renderHUD(); } });
 
   function doStartTurn() {
     B.startTurn(battle);
     clearSel();
     renderBattle();
-    setHint('我方回合：出牌或结束回合');
+    renderBlueprintCells();
+    setHint('我方回合：出牌 / 结束回合 · 点右半场敌方格子做蓝图标记');
+  }
+
+  // ---------- 蓝图判定（任务C）：预测音名 vs 实际车道唱名，绿/红停留 1 秒后淡出 ----------
+  async function judgeBlueprintPhase() {
+    closeBpPop();
+    const marked = bpCells.filter(c => c.marked && !c.used);
+    if (!marked.length) return;
+    let okCount = 0;
+    for (const c of marked) {
+      c.ok = c.predicted === LANE_NAMES[c.spawn.lane];
+      c.el.classList.add(c.ok ? 'bp-ok' : 'bp-bad');
+      if (c.ok) { okCount++; SFX.bpOk(); } else SFX.bpFail();
+      await delay(120);
+    }
+    // 任务D 奖励：每标对 +1 抽牌（回合结算保留手牌，下回合即可用）
+    if (okCount > 0) {
+      B.drawCards(battle, okCount);
+      const fb0 = fieldBoxInLaneLayer(marked[0].lane);
+      floatText(marked[0].lane, fb0.x + 200, '蓝图命中 ×' + okCount + '，抽 ' + okCount, '#7dff8a');
+      // 蓝图之眼：每标对对敌英雄直伤 2（走冲线同通道，先于 endTurn 让 checkEnd 能读到）
+      if (V.hasRelic(battle, 'blueprinteye')) {
+        battle.enemyHP -= 2 * okCount;
+        battle.stats.damage += 2 * okCount;
+        battle.log.push('蓝图之眼：' + okCount + ' 个标对 → 敌方英雄 -' + (2 * okCount) + ' HP');
+        $('enemy-face').classList.add('hit');
+        setTimeout(() => $('enemy-face').classList.remove('hit'), 350);
+        setTimeout(() => floatText(marked[0].lane, fb0.x + 200, '👁️ 蓝图之眼 -' + (2 * okCount) + '!', '#ffd54f'), 480); // 错开抽牌浮字
+      }
+      renderHUD();
+    }
+    await delay(1000); // 判定结果显示 1 秒
+    for (const c of marked) c.el.classList.remove('bp-ok', 'bp-bad'); // 淡出（CSS 过渡），随后起飞依次飞出
+    await delay(260);
   }
 
   // ---------- 战斗：结算演出 ----------
   $('endturn').addEventListener('click', async () => {
     if (busy || !battle || battle.over || !previewDone) return;
     busy = true; renderHUD(); clearSel(); setHint('');
+    await judgeBlueprintPhase(); // 蓝图判定先于结算；判定完格子随 takeoff 事件依次飞出
     const evs = B.endTurn(battle);
     for (const ev of evs) await playEvent(ev);
     clearDeadEls();
@@ -444,12 +577,31 @@
     switch (ev.t) {
       case 'takeoff': {
         const lane = ev.lane, n = ev.note;
-        const el = ensureEl(n, lane);
-        const W = laneFields[lane].clientWidth;
-        el.style.left = (W + 40) + 'px';
         SFX.takeoff();
-        await raf(); placeEl(n, lane);
-        await delay(220);
+        // 蓝图格子制：敌音不再从右缘飞入，而是由本回合对应格子原地变形、沿车道向左飞入场内
+        const cell = bpCells.find(c => !c.used && c.lane === lane);
+        if (cell && cell.el.isConnected) {
+          cell.used = true;
+          const el = cell.el;
+          el.className = 'note-e t-' + n.type;
+          el.innerHTML = '<span class="num">' + n.hp + '</span>' + tagHtml(n);
+          el._note = n; n.el = el;
+          const fb = fieldBoxInLaneLayer(lane);
+          await raf();
+          el.style.left = (fb.x + posForE(lane, n)) + 'px';
+          el.style.top = (fb.y + fb.h / 2) + 'px';
+          await delay(420);
+          laneFields[lane].appendChild(el); // 移交给轨道 field 坐标系，此后走常规音符渲染
+          el.style.left = posForE(lane, n) + 'px';
+          el.style.top = fb.h / 2 + 'px';
+        } else {
+          // 兜底（无对应格子时保持旧入场，正常流程不会走到）
+          const el = ensureEl(n, lane);
+          const W = laneFields[lane].clientWidth;
+          el.style.left = (W + 40) + 'px';
+          await raf(); placeEl(n, lane);
+          await delay(220);
+        }
         break;
       }
       case 'poisonTick': {
@@ -744,6 +896,7 @@
   window.__dbg = {
     get battle() { return battle; }, get run() { return run; },
     get busy() { return busy; }, get speed() { return speed; }, set speed(v) { speed = v; },
+    get bpCells() { return bpCells; },
     playSelected, onEndTurnB: () => $('endturn').click(),
   };
 })();

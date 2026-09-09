@@ -367,6 +367,10 @@
       id: 'hammer', name: '调音锤', emoji: '🔨',
       desc: '共振乘数 +1（×2→×3，×3→×4）',
     },
+    blueprinteye: {
+      id: 'blueprinteye', name: '蓝图之眼', emoji: '👁️',
+      desc: '蓝图标记判定正确时，每个标对直接对敌方英雄造成 2 点伤害',
+    },
   };
   const RELIC_IDS = Object.keys(RELICS);
 

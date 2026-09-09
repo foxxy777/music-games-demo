@@ -1,0 +1,1462 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>音阶防线 V12 · 回合制音乐塔防</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#07080f; font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
+  #stage { position:fixed; inset:0; overflow:hidden; }
+  #app { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin:0 0;
+         background:radial-gradient(1200px 700px at 40% 40%, #141a33 0%, #0c0f1f 60%, #070912 100%); color:#dfe6ff; }
+  .flashRed { animation:flashRed .35s ease-out; }
+  @keyframes flashRed { 0%{box-shadow:inset 0 0 0 0 transparent;} 30%{box-shadow:inset 60px 0 80px -40px rgba(255,40,40,.55);} 100%{box-shadow:inset 0 0 0 0 transparent;} }
+  .shake { animation:appShake .3s; }
+  @keyframes appShake { 0%,100%{translate:0 0;} 25%{translate:-6px 2px;} 50%{translate:5px -2px;} 75%{translate:-3px 1px;} }
+
+  /* ===== 顶 HUD ===== */
+  #hud { position:absolute; left:0; top:0; width:1920px; height:80px; display:flex; align-items:center; gap:18px; padding:0 22px;
+         background:linear-gradient(#1b2140,#131734); border-bottom:2px solid #2c3560; z-index:10; }
+  .pill { display:flex; align-items:center; gap:8px; background:#0d1128cc; border:1px solid #363f6e; border-radius:20px; padding:7px 16px; font-size:25px; height:48px; }
+  .pill .ic { font-size:26px; }
+  #hpWrap { width:240px; }
+  #hpBar { flex:1; height:20px; background:#20264a; border-radius:10px; overflow:hidden; border:1px solid #363f6e; }
+  #hpFill { height:100%; width:100%; background:linear-gradient(90deg,#ff5d6c,#ff9a76); border-radius:10px; transition:width .3s; }
+  #hudTitle { flex:1; text-align:center; font-size:27px; letter-spacing:2px; color:#ffe9b8; text-shadow:0 0 14px #ffb84d55; white-space:nowrap; overflow:hidden; }
+  #progress { display:flex; gap:10px; align-items:center; margin-left:10px; }
+  .tick { width:16px; height:16px; transform:rotate(45deg); background:#252c52; border:1px solid #3d4680; }
+  .tick.on { background:#ffd54f; box-shadow:0 0 10px #ffd54f99; }
+  .tick.boss { border-radius:50%; }
+  .iconbtn { width:52px; height:48px; font-size:25px; background:#0d1128cc; border:1px solid #363f6e; border-radius:12px; cursor:pointer; color:#dfe6ff; }
+  .iconbtn:hover { background:#1c2450; }
+  .iconbtn:disabled { opacity:.35; cursor:default; }
+  .iconbtn.on { background:linear-gradient(160deg,#8a6d1d,#5d4a12); border-color:#ffd54f; box-shadow:0 0 12px #ffd54f55; }
+
+  /* ===== 三栏 ===== */
+  #cols { position:absolute; left:0; top:80px; width:1920px; height:1000px; display:flex; }
+
+  /* --- 左卡槽 --- */
+  #cardbar { width:230px; padding:12px 10px; display:flex; flex-direction:column; gap:10px; background:linear-gradient(180deg,#141a38,#0e1226); border-right:2px solid #2c3560; z-index:5; }
+  .card { position:relative; height:148px; border-radius:14px; border:2px solid #3d4680; cursor:pointer; overflow:hidden;
+          background:linear-gradient(160deg,#232a52,#171c3c); transition:transform .08s, box-shadow .08s; }
+  .card:hover { transform:translateY(-2px); }
+  .card.sel { border-color:#ffd54f; box-shadow:0 0 16px #ffd54f66; }
+  .card.poor { filter:grayscale(.9) brightness(.6); }
+  .card .em { font-size:42px; line-height:1; margin:12px 0 4px 14px; }
+  .card .cname { font-size:21px; font-weight:bold; margin-left:14px; }
+  .card .csub { font-size:16px; color:#9fb0e8; margin:3px 0 0 14px; line-height:1.45; }
+  .card .mirror { position:absolute; left:10px; right:10px; bottom:8px; height:9px; background:#111634; border-radius:5px; overflow:hidden; border:1px solid #363f6e; }
+  .card .mfill { height:100%; width:0%; background:linear-gradient(90deg,#ff7ad9,#b388ff); transition:width .15s; }
+  .tool { height:76px; display:flex; align-items:center; gap:10px; padding:0 14px; }
+  .tool .em { font-size:36px; }
+  .tool .tname { font-size:20px; font-weight:bold; }
+  .tool .tsub { font-size:15px; color:#9fb0e8; }
+  #hint { margin-top:auto; font-size:15px; color:#7f8ec4; line-height:1.55; padding:4px 6px 8px; }
+
+  /* --- 战斗区 --- */
+  #battle { position:relative; width:950px; height:1000px; overflow:hidden; }
+  .lane { position:absolute; left:0; width:950px; height:112px; border-top:1px solid #ffffff0d; cursor:pointer; }
+  .lane .lbl { position:absolute; left:6px; top:50%; transform:translateY(-50%); width:74px; text-align:center; font-size:30px; font-weight:bold; opacity:.92; text-shadow:0 0 12px currentColor; pointer-events:none; }
+  .lane .zoneL { position:absolute; left:0; top:0; bottom:0; width:64px; }
+  .slot { position:absolute; width:120px; height:92px; top:10px; border:2px dashed #ffffff26; border-radius:12px; background:#ffffff05; }
+  .slot.ok { border-color:#7dffcf; background:#7dffcf14; box-shadow:0 0 12px #7dffcf44; }
+  .slot.deny { border-color:#ff6b6b; background:#ff6b6b10; }
+  .unit { position:absolute; width:96px; height:96px; margin-left:-48px; margin-top:-48px; border-radius:50%; cursor:pointer; z-index:6;
+          display:flex; align-items:center; justify-content:center; font-size:52px;
+          background:radial-gradient(circle at 35% 30%, #ff9ad5 0%, #e2559f 55%, #8f2e63 100%);
+          border:3px solid #ffd0ec; box-shadow:0 0 18px #ff7ad966, 0 4px 10px #000a; }
+  .unit.general { background:radial-gradient(circle at 35% 30%, #cf9aff 0%, #8a4fe0 55%, #4a2685 100%); border-color:#e0c8ff; box-shadow:0 0 18px #b388ff88, 0 4px 10px #000a; }
+  .unit.earner { background:radial-gradient(circle at 35% 30%, #ffe08a 0%, #f0a832 55%, #9c6410 100%); border-color:#ffedb8; box-shadow:0 0 16px #ffd54f66, 0 4px 10px #000a; }
+  .unit .ering { position:absolute; inset:-7px; border-radius:50%; pointer-events:none; }
+  .note { position:absolute; width:46px; height:46px; margin-left:-23px; margin-top:-23px; border-radius:50%; z-index:7;
+          display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:bold; color:#1a1208;
+          box-shadow:0 0 16px currentColor; will-change:transform; }
+  #listenBar { position:absolute; left:10px; top:2px; width:930px; height:78px; display:flex; align-items:center; gap:12px; z-index:8; }
+  .btn { background:#232b4d; border:1px solid #4a568f; border-radius:12px; color:#dfe6ff; font-size:23px; padding:10px 22px; cursor:pointer; white-space:nowrap; }
+  .btn:hover { background:#2e3866; }
+  .btn:disabled { opacity:.4; cursor:default; }
+  .btn.gold { background:linear-gradient(160deg,#8a6d1d,#5d4a12); border-color:#ffd54f; }
+  #counter { font-size:24px; color:#ffe9b8; min-width:230px; }
+  #endDeploy { position:absolute; left:275px; top:880px; width:400px; height:64px; font-size:30px; font-weight:bold; border-radius:16px; display:none; z-index:9;
+               background:linear-gradient(160deg,#c79a1f,#7c5e0e); border:2px solid #ffd54f; color:#fff8e0; box-shadow:0 0 22px #ffd54f55; cursor:pointer; }
+  #endDeploy:hover { filter:brightness(1.15); }
+  #skipListen { display:none; }
+  #enemy { position:absolute; right:8px; top:330px; width:212px; text-align:center; z-index:6; }
+  #enemyFace { font-size:130px; line-height:1.15; filter:drop-shadow(0 0 18px #ffb84d88); transition:transform .2s; }
+  #enemyName { font-size:22px; color:#ffe9b8; margin-top:2px; }
+  #enemyHp { width:190px; height:16px; margin:6px auto 0; background:#20264a; border:1px solid #4a568f; border-radius:8px; overflow:hidden; }
+  #enemyHpFill { height:100%; width:100%; background:linear-gradient(90deg,#ff5252,#ff8a80); transition:width .3s; }
+  .enemyHit { animation:enemyHit .3s; }
+  @keyframes enemyHit { 50% { transform:scale(.92) rotate(-4deg); } }
+  .bossmode #enemyFace { font-size:150px; }
+  #warnText { position:absolute; top:300px; left:0; width:950px; text-align:center; font-size:44px; color:#ff5252; text-shadow:0 0 24px #ff5252; z-index:9; display:none; }
+
+  /* --- 蓝图区 --- */
+  #bp { position:relative; width:740px; height:1000px; background:linear-gradient(180deg,#11162e,#0c0f22); border-left:2px solid #2c3560; }
+  #bpHead { position:absolute; left:0; top:0; width:740px; height:76px; display:flex; align-items:center; gap:10px; padding:0 16px; z-index:3; }
+  #bpTitle { font-size:24px; font-weight:bold; color:#ffe9b8; }
+  #bpAcc { font-size:18px; color:#9fb0e8; margin-left:auto; }
+  .bpCell { position:absolute; border-radius:10px; background:#ffffff07; border:1px solid #ffffff12; }
+  .bpCell.rowhover { background:#ffffff12; }
+  .bpMark { position:absolute; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:bold; color:#141017; z-index:2; pointer-events:none; }
+  .bpGhost { position:absolute; border-radius:50%; border:3px solid; background:transparent; z-index:1; animation:ghostPulse 1s infinite; opacity:.85; pointer-events:none; }
+  @keyframes ghostPulse { 50% { transform:scale(1.25); opacity:.45; } }
+  .bpCell.cCorrect { background:#43a04730; border-color:#43a047aa; }
+  .bpCell.cWrong { background:#e5393530; border-color:#e53935aa; }
+  .bpMark.mWrong { animation:markShake .4s 2; }
+  @keyframes markShake { 25%{ translate:-4px 0;} 75%{ translate:4px 0;} }
+  .bpIdx { position:absolute; font-size:13px; color:#7f8ec4; text-align:center; }
+  #bpFoot { position:absolute; left:0; bottom:0; width:740px; height:104px; padding:10px 18px; font-size:17px; color:#9fb0e8; line-height:1.6; }
+  #pulseCol { }
+
+  /* ===== 特效 ===== */
+  .fxRing { position:absolute; border-radius:50%; border:4px solid; pointer-events:none; z-index:20; animation:fxRing .8s ease-out forwards; }
+  @keyframes fxRing { 0%{ transform:scale(.2); opacity:1; } 100%{ transform:scale(3.2); opacity:0; } }
+  .fxPetal { position:absolute; width:14px; height:14px; border-radius:50% 0 50% 50%; pointer-events:none; z-index:20; animation:petal .8s ease-out forwards; }
+  @keyframes petal { 0%{ transform:translate(0,0) rotate(0deg) scale(1); opacity:1; } 100%{ transform:translate(var(--dx),var(--dy)) rotate(300deg) scale(.3); opacity:0; } }
+  .fxSpark { position:absolute; width:8px; height:8px; border-radius:50%; pointer-events:none; z-index:20; animation:spark .4s ease-out forwards; }
+  @keyframes spark { 0%{ transform:translate(0,0); opacity:1; } 100%{ transform:translate(var(--dx),var(--dy)); opacity:0; } }
+  .float { position:absolute; font-size:26px; font-weight:bold; pointer-events:none; z-index:25; animation:floatUp 1.1s ease-out forwards; text-shadow:0 2px 6px #000c; white-space:nowrap; }
+  @keyframes floatUp { 0%{ transform:translateY(0); opacity:0; } 15%{ opacity:1; } 100%{ transform:translateY(-70px); opacity:0; } }
+  .float.warm { color:#ff9ecb; font-size:30px; animation:bounceIn 1.4s ease-out forwards; }
+  @keyframes bounceIn { 0%{ transform:scale(.4); opacity:0;} 30%{ transform:scale(1.3); opacity:1;} 55%{ transform:scale(1);} 100%{ transform:translateY(-40px); opacity:0;} }
+  .dmgFloat { position:absolute; font-size:34px; font-weight:bold; color:#ffcf5e; z-index:25; pointer-events:none; animation:floatUp 1s ease-out forwards; text-shadow:0 0 10px #ff880088; }
+
+  /* ===== 覆盖层 ===== */
+  .ovl { position:absolute; inset:0; background:#05060cd9; backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; flex-direction:column; z-index:60; text-align:center; }
+  .ovl.show { display:flex; }
+  #startOvl h1 { font-size:84px; color:#ffe9b8; text-shadow:0 0 30px #ffb84d66; letter-spacing:8px; }
+  #startOvl .sub { font-size:26px; color:#9fb0e8; margin:14px 0 30px; }
+  #startOvl .howto { font-size:22px; color:#c6d2ff; line-height:2; background:#12172fdd; border:1px solid #363f6e; border-radius:16px; padding:20px 46px; margin-bottom:36px; text-align:left; }
+  #startBtn { font-size:34px; padding:18px 70px; }
+  #interOvl { background:#05060cb8; }
+  #interText { font-size:64px; color:#ffe9b8; text-shadow:0 0 26px #ffb84d55; letter-spacing:4px; }
+  #upgOvl h2 { font-size:44px; color:#ffe9b8; margin-bottom:30px; }
+  .upgRow { display:flex; gap:40px; }
+  .upgCard { width:430px; padding:34px 26px; background:linear-gradient(160deg,#232a52,#151a38); border:2px solid #4a568f; border-radius:20px; cursor:pointer; transition:transform .1s, box-shadow .1s; }
+  .upgCard:hover { transform:translateY(-6px); box-shadow:0 8px 30px #000a, 0 0 20px #ffd54f44; border-color:#ffd54f; }
+  .upgCard .uem { font-size:64px; }
+  .upgCard .ut { font-size:30px; font-weight:bold; margin:12px 0 8px; }
+  .upgCard .ud { font-size:20px; color:#9fb0e8; line-height:1.6; }
+  #resultOvl .rTitle { font-size:72px; letter-spacing:6px; }
+  #resultOvl .rStars { font-size:60px; margin:10px 0 20px; }
+  #resultOvl .rStats { display:grid; grid-template-columns:auto auto; gap:8px 34px; font-size:24px; background:#12172fdd; border:1px solid #363f6e; border-radius:16px; padding:22px 44px; margin-bottom:34px; text-align:left; }
+  #resultOvl .rStats b { color:#ffe9b8; }
+  #pauseOvl { position:absolute; top:92px; left:50%; transform:translateX(-50%); background:#1b2148f2; border:2px solid #ffd54f; border-radius:16px; padding:14px 42px; font-size:32px; color:#ffe9b8; display:none; z-index:60; pointer-events:none; box-shadow:0 4px 24px #000d; animation:pausePulse 1.6s infinite; white-space:nowrap; }
+  #pauseOvl span { font-size:18px; color:#9fb0e8; margin-left:14px; }
+  @keyframes pausePulse { 50% { box-shadow:0 4px 24px #000d, 0 0 30px #ffd54f44; } }
+  .spin { display:inline-block; animation:spin 0.9s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  #portraitMask { position:fixed; inset:0; background:#05060c; z-index:999; display:none; align-items:center; justify-content:center; flex-direction:column; color:#ffe9b8; font-size:40px; gap:16px; }
+  #portraitMask .ph { font-size:110px; animation:rot 1.6s infinite; }
+  @keyframes rot { 0%,20%{ transform:rotate(0);} 60%,100%{ transform:rotate(90deg);} }
+  #toasts { position:absolute; left:260px; bottom:16px; z-index:70; display:flex; flex-direction:column; gap:8px; }
+  .toast { background:#1b2148ee; border:1px solid #4a568f; border-radius:12px; padding:10px 20px; font-size:20px; animation:toastIn 2.2s forwards; }
+  @keyframes toastIn { 0%{ opacity:0; translate:0 12px;} 12%{ opacity:1; translate:0 0;} 80%{ opacity:1;} 100%{ opacity:0;} }
+  #bubble { position:absolute; display:none; background:#151a38f2; border:2px solid #ffd54f88; border-radius:14px; padding:12px 18px; font-size:18px; line-height:1.7; z-index:65; pointer-events:none; color:#e6ecff; }
+  #bubble b { color:#ffe9b8; }
+  #bossIntroOvl { background:#05060cf0; }
+  #bossIntroOvl .bface { font-size:220px; animation:bossIn 1s ease-out; filter:drop-shadow(0 0 40px #ff2f6e); }
+  @keyframes bossIn { 0%{ transform:scale(3) rotate(-20deg); opacity:0;} 60%{ transform:scale(.9); opacity:1;} 100%{ transform:scale(1);} }
+  #bossIntroOvl .bname { font-size:56px; color:#ff9ecb; letter-spacing:10px; margin-top:10px; }
+  #bossIntroOvl .bline { font-size:24px; color:#c6d2ff; margin-top:18px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="app">
+    <!-- 顶 HUD -->
+    <div id="hud">
+      <div class="pill"><span class="ic">💰</span><span id="goldV">2000</span></div>
+      <div class="pill" id="hpWrap"><span class="ic">❤️</span><div id="hpBar"><div id="hpFill"></div></div><span id="hpV" style="font-size:20px;margin-left:6px">100</span></div>
+      <div class="pill"><span class="ic">🩸</span><span id="bloodV">0</span></div>
+      <div class="pill"><span class="ic">💎</span><span id="feeV">3/3</span></div>
+      <div id="hudTitle">《小星星》 · 第 1 段 / 共 4 段 <span id="progress"></span></div>
+      <button class="iconbtn" id="debugBtn" title="调试·无限金钱">🛠</button>
+      <button class="iconbtn" id="pauseBtn" title="暂停：冻结音符飞行与游戏时钟">⏸</button>
+      <button class="iconbtn" id="muteBtn" title="静音">🔊</button>
+      <button class="iconbtn" id="restartBtn" title="重开">🔄</button>
+    </div>
+
+    <div id="cols">
+      <!-- 左卡槽 -->
+      <div id="cardbar">
+        <div class="card" id="card-pawn"><div class="em">🩷</div><div class="cname">魅魔小兵</div><div class="csub">💰50 · 免能量费<br>吸2轨 · 容量8 · 爆20</div><div class="mirror"><div class="mfill"></div></div></div>
+        <div class="card" id="card-general"><div class="em">💜</div><div class="cname">魅魔将领</div><div class="csub">💰150 · 💎1<br>吸4轨 · 容量20 · 爆50</div><div class="mirror"><div class="mfill"></div></div></div>
+        <div class="card" id="card-earner"><div class="em">💰</div><div class="cname">产钱娘</div><div class="csub">💰50 · 免能量费<br>结算期每4s产15金<br>场上限 3</div><div class="mirror" style="visibility:hidden"><div class="mfill"></div></div></div>
+        <div class="card tool" id="card-shovel"><div class="em">🪏</div><div><div class="tname">铲子</div><div class="tsub">移除单位·全额返还</div></div></div>
+        <div class="card tool" id="card-aid"><div class="em">❤️</div><div><div class="tname">急救</div><div class="tsub">🩸5 → 回血20</div></div></div>
+        <div id="hint">点卡后可连续点格放置 · Esc/右键取消选卡<br>Enter 结束部署 · 点击轨道/谱线可听音</div>
+      </div>
+
+      <!-- 战斗区 -->
+      <div id="battle">
+        <div id="listenBar">
+          <button class="btn" id="replayBtn">🔁 重听</button>
+          <button class="btn" id="skipListen">开始布防 →</button>
+          <span id="counter"></span>
+        </div>
+        <div id="laneWrap"></div>
+        <div id="fxLayer" style="position:absolute;inset:0;pointer-events:none;z-index:20;"></div>
+        <div id="enemy">
+          <div id="enemyFace">🎵</div>
+          <div id="enemyName">八音盒</div>
+          <div id="enemyHp"><div id="enemyHpFill"></div></div>
+        </div>
+        <button id="endDeploy">结束部署 ▶</button>
+        <div id="warnText">⚠ 最终段 · 高速波来袭 ⚠</div>
+      </div>
+
+      <!-- 蓝图区 -->
+      <div id="bp">
+        <div id="bpHead">
+          <span id="bpTitle">📜 蓝图记谱</span>
+          <button class="btn" id="bpPlay" style="font-size:19px;padding:7px 16px">▶ 回放标注</button>
+          <button class="btn" id="bpClear" style="font-size:19px;padding:7px 16px">🗑 清空</button>
+          <span id="bpAcc">标注 0/0</span>
+        </div>
+        <div id="bpGrid"></div>
+        <div id="bpFoot">听旋律 → 在对应谱线上点下你听到的音（从左到右逐列）。<br>同一列可叠多个音（和弦/双音），回放时会齐鸣；再点一次同一个音=移除。结算判定要求"恰好点中那个音"。</div>
+      </div>
+    </div>
+
+    <!-- 覆盖层 -->
+    <div class="ovl show" id="startOvl">
+      <h1>音阶防线</h1>
+      <div class="sub">回合制音乐塔防 · 玩法验证 demo —— 用你的耳朵布防</div>
+      <div class="howto">
+        🎧 <b>听</b>：每段先听一遍《小星星》的旋律片段<br>
+        📜 <b>记</b>：在右侧蓝图上点出你听到的音高走向<br>
+        🩷 <b>防</b>：部署魅魔在 7 条音轨上吸收音符能量，吸满绽放反击<br>
+        🩸 <b>错</b>：漏音会扣血，但血会变成血币——错误也是资源<br>
+        👿 <b>终局</b>：撑过 4 段，迎战湘菲的真实高潮声波
+      </div>
+      <button class="btn gold" id="startBtn">点击开始 ♪</button>
+    </div>
+    <div class="ovl" id="interOvl"><div id="interText"></div></div>
+    <div class="ovl" id="upgOvl"><h2 id="upgTitle">波间强化 · 二选一</h2><div class="upgRow" id="upgRow"></div></div>
+    <div class="ovl" id="bossIntroOvl"><div class="bface" id="bossFace">👿</div><div class="bname">湘 菲</div><div class="bline" id="bossLine">「听出来了吗？这可是我的……真实的声音哦。」</div><div class="bline" style="margin-top:30px"><button class="btn gold" id="bossGoBtn">迎战 (Enter)</button></div></div>
+    <div class="ovl" id="resultOvl"></div>
+    <div id="pauseOvl">⏸ 已暂停<span>按 ⏸ 或 P 继续</span></div>
+    <div id="toasts"></div>
+    <div id="bubble"></div>
+  </div>
+</div>
+<div id="portraitMask"><div class="ph">📱</div><div>请把手机横过来 ↻</div></div>
+
+<script>
+"use strict";
+// 调试挂钩：错误收集（供自动化测试断言 console 零报错）+ 全局状态句柄 + 倍速快进
+window.addEventListener('error', e => { (window.__errs = window.__errs || []).push(e.message + ' @' + (e.lineno || '?')); });
+window.__GAME = { fast: 1 };
+/* ============================================================
+   音阶防线 · 玩法验证 demo
+   逻辑层（本标记内）不依赖 DOM，可被 tests/tb.mjs 提取单测。
+   ============================================================ */
+
+/* ===LOGIC-BEGIN=== */
+(function () {
+  // —— 数值总表（与任务书第五节一一对应）——
+  const CONFIG = {
+    initGold: 2000, initHP: 100,   // 老板拍板：初始金币 2000（原 100），布防期放开手脚
+    feePerRound: 3, cardFee: { pawn: 0, general: 1, earner: 0 },   // 老板拍板：基础单位免能量费，将领 1 费（原 小兵1/将领2/产钱1）
+    leakDamage: 5, leakBlood: 2, absorbGold: 2,
+    earner: { cost: 50, cd: 8, earn: 15, period: 4, max: 3 },   // cd 字段保留仅为与任务书 CONFIG 表一致；部署 CD 已按老板拍板停用（布防阶段不应等待）
+    pawn:   { cost: 50, cd: 5,  cover: 2, cap: 8,  dmg: 20 },
+    general:{ cost: 150, cd: 12, cover: 4, cap: 20, dmg: 50 },
+    succMax: 6, boxHP: 150, bossHP: 200,
+    firstAid: { blood: 5, heal: 20 }, shovelRefund: 1,   // 老板拍板：铲除全额返还（原 0.5），拆错不亏钱
+    flightSec: 10, spawnGap: 1.2, spawnGapSeg4: 0.9,
+    bossFreeListens: 3, bossListenCost: 25,
+    upgA: { capAdd: 4 }, upgA2: { coverAdd: 1 }, upgB: { dmgAdd: 8 }, upgB2: { dmgAdd: 15 },
+    // —— 补充参数（任务书未定值，自行补充并记录于 devlog）——
+    absorbTick: 0.5,     // 吸能节流：每 0.5s 吸 1 个
+    pullSec: 0.35,       // 音符被拉向魅魔的时长
+    bloomSec: 0.8,       // 绽放演出时长（纯演出，逻辑瞬时）
+    interludeSec: 3,     // 段间过场
+    listenGap: 0.85,     // 试听阶段逐音间隔（秒）
+    deploySlots: 5,      // 每轨部署格
+    bpPerfectBonus: 30,  // 蓝图全对金币奖励（第九节鼓励的增强项）
+  };
+
+  const TRACK_NAMES = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
+  // 斯克里亚宾配色：Do=#E53935 Re=#FDD835 Mi=#4FC3F7 Fa=#B71C1C Sol=#FB8C00 La=#43A047 Si=#1E88E5
+  const TRACK_BRIGHT = ['#E53935', '#FDD835', '#4FC3F7', '#B71C1C', '#FB8C00', '#43A047', '#1E88E5'];
+  function hexMixBlack(hex, k) { // 暗色版 = 混 78% 黑
+    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    const f = v => Math.round(v * (1 - k)).toString(16).padStart(2, '0');
+    return '#' + f(r) + f(g) + f(b);
+  }
+  const TRACK_DARK = TRACK_BRIGHT.map(c => hexMixBlack(c, 0.78));
+
+  // 《小星星》C 大调 6 句 36 音（0=Do 1=Re 2=Mi 3=Fa 4=Sol 5=La；本曲无 Si）
+  const PHRASES = [
+    [0, 0, 4, 4, 5, 5, 4],
+    [3, 3, 2, 2, 1, 1, 0],
+    [4, 4, 3, 3, 2, 2, 1],
+    [4, 4, 3, 3, 2, 2, 1],
+    [0, 0, 4, 4, 5, 5, 4],
+    [3, 3, 2, 2, 1, 1, 0],
+  ];
+  // 4 段：段1=句1+句2(12) 段2=句3+句4(12) 段3=句5(6) 段4=句6(6)
+  const MELODY_SEGS = [
+    [...PHRASES[0], ...PHRASES[1]],
+    [...PHRASES[2], ...PHRASES[3]],
+    [...PHRASES[4]],
+    [...PHRASES[5]],
+  ];
+
+  // 湘菲 Boss 音符波：assets/boss_voice.wav 经 YIN 归轨产出（tools/boss_track.py，记录见 devlog M4）
+  const BOSS_NOTES = [
+    { track: 6, t: 0.1,  dur: 0.54 }, { track: 5, t: 0.64, dur: 0.6  }, { track: 4, t: 1.24, dur: 0.52 },
+    { track: 1, t: 1.76, dur: 0.34 }, { track: 5, t: 2.1,  dur: 0.34 }, { track: 1, t: 2.54, dur: 0.34 },
+    { track: 4, t: 2.88, dur: 0.58 }, { track: 1, t: 3.74, dur: 0.62 }, { track: 6, t: 4.64, dur: 0.36 },
+    { track: 5, t: 5.0,  dur: 0.46 }, { track: 4, t: 5.46, dur: 0.32 }, { track: 0, t: 5.78, dur: 0.36 },
+    { track: 4, t: 6.14, dur: 0.34 }, { track: 5, t: 6.48, dur: 0.44 }, { track: 5, t: 7.04, dur: 0.32 },
+    { track: 4, t: 8.02, dur: 0.7  }, { track: 5, t: 8.72, dur: 0.38 }, { track: 4, t: 9.1,  dur: 0.42 },
+    { track: 3, t: 9.96, dur: 0.52 }, { track: 1, t: 10.48, dur: 0.42 }, { track: 3, t: 12.04, dur: 0.6 },
+    { track: 3, t: 12.7, dur: 0.6  }, { track: 2, t: 13.88, dur: 0.42 }, { track: 1, t: 15.22, dur: 0.48 },
+    { track: 1, t: 15.98, dur: 0.5 }, { track: 3, t: 16.48, dur: 0.4 }, { track: 4, t: 17.0, dur: 0.44 },
+    { track: 1, t: 17.8, dur: 0.88 }, { track: 1, t: 19.54, dur: 0.38 },
+  ];
+
+  function createCore(opts) {
+    opts = opts || {};
+    const geo = Object.assign({
+      spawnX: 718, leakX: -30,          // 战斗区局部坐标（0=战斗区左缘）
+      slotX0: 90, slotGap: 140,          // 部署格中心 x（局部）
+      absorbRange: 150,                  // 锚点左右各 150px
+    }, opts.geometry || {});
+
+    const S = {
+      phase: 'TITLE', segIdx: 0, isBoss: false, bossRound: 0,
+      gold: CONFIG.initGold, hp: CONFIG.initHP, blood: 0, fee: CONFIG.feePerRound,
+      boxHP: CONFIG.boxHP, bossHP: CONFIG.bossHP,
+      upg: { capAdd: 0, dmgAdd: 0, coverAdd: 0 },
+      units: [], notes: [], nextId: 1,
+      marks: [], markResults: null, bpPerfectThisSeg: false,
+      resolveT: 0, spawnTimes: [], spawnIdx: 0, lastSpawnT: 0, earnerT: 0,
+      interT: 0, interNext: null,
+      freeListens: CONFIG.bossFreeListens,
+      listenCount: 0,
+      stats: { absorbed: 0, blooms: 0, leaks: 0, bpCorrect: 0, bpTotal: 0, timeSec: 0 },
+      over: null, tutorialDone: false,
+    };
+    const EV = [];
+    // type 必须最后合入：payload 里任何同名键（如 bloom 事件的 unit type）都不得覆盖事件名
+    const emit = (type, data) => { EV.push(Object.assign({}, data || {}, { type })); };
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+    function segTracks() { return S.isBoss ? BOSS_NOTES.map(n => n.track) : MELODY_SEGS[S.segIdx]; }
+    function noteCount() { return segTracks().length; }
+    function unitAt(lane, slot) { return S.units.find(u => !u.gone && u.lane === lane && u.slot === slot) || null; }
+    function succubiCount() { return S.units.filter(u => !u.gone && u.type !== 'earner').length; }
+    function earnerCount() { return S.units.filter(u => !u.gone && u.type === 'earner').length; }
+    function slotX(slot) { return geo.slotX0 + slot * geo.slotGap; }
+    function noteSpeed() { return (geo.spawnX - geo.leakX) / CONFIG.flightSec; }
+
+    // —— cover 计算：小兵=锚点+上1（无上取下）；将领=锚点+上2+下1；越界省略；coverAdd 优先向上扩展 ——
+    function coverOf(type, lane) {
+      const add = S.upg.coverAdd;
+      let prefs;
+      if (type === 'pawn') prefs = [lane, lane + 1, lane - 1, lane + 2, lane - 2, lane + 3, lane - 3];
+      else prefs = [lane, lane + 1, lane + 2, lane - 1, lane + 3, lane - 2, lane + 4, lane - 3];
+      const base = type === 'pawn' ? CONFIG.pawn.cover : CONFIG.general.cover;
+      const n = base + add;
+      const out = [];
+      for (const t of prefs) { if (t >= 0 && t <= 6 && !out.includes(t) && out.length < n) out.push(t); }
+      return out.sort((a, b) => a - b);
+    }
+
+    function startSegment(idx, isBoss, bossRound) {
+      S.segIdx = idx; S.isBoss = !!isBoss; S.bossRound = bossRound || 0;
+      S.fee = CONFIG.feePerRound;
+      S.marks = new Array(noteCount()).fill(null).map(() => []);   // 每列可叠多个标记（和弦/双音）
+      S.markResults = null; S.bpPerfectThisSeg = false;
+      S.phase = 'LISTEN'; S.listenCount = 0;
+      emit('feeRefill', { fee: S.fee });
+      emit('listenStart', { seg: idx + 1, isBoss: S.isBoss, count: noteCount(), bossRound: S.bossRound, notes: segTracks() });
+    }
+
+    function buildSpawnTimes() {
+      const n = noteCount(), times = [];
+      if (!S.isBoss) {
+        const gap = S.segIdx === 3 ? CONFIG.spawnGapSeg4 : CONFIG.spawnGap;
+        for (let k = 0; k < n; k++) times.push(0.6 + k * gap);
+      } else {
+        // 自适应：按前一音时长，密集段 0.6s、平缓段 1.2s
+        times.push(0.6);
+        for (let k = 1; k < n; k++) times.push(times[k - 1] + clamp(BOSS_NOTES[k - 1].dur + 0.3, 0.6, 1.2));
+      }
+      return times;
+    }
+
+    function startResolve() {
+      if (S.phase !== 'DEPLOY') return { ok: false, err: 'phase' };
+      // 蓝图对照（结算开始即锁定）：整列判定 = 恰好只点中那一个真音（和弦/多标/漏标都算错）
+      const tracks = segTracks();
+      S.markResults = tracks.map((tr, k) => {
+        const m = S.marks[k];
+        return m.length === 1 && m[0] === tr;
+      });
+      const correct = S.markResults.filter(Boolean).length;
+      S.stats.bpCorrect += correct; S.stats.bpTotal += tracks.length;
+      const allMarked = S.marks.every(a => a.length > 0);
+      if (allMarked && correct === tracks.length) {
+        S.bpPerfectThisSeg = true; S.gold += CONFIG.bpPerfectBonus;
+        emit('bpPerfect', { bonus: CONFIG.bpPerfectBonus });
+      }
+      S.spawnTimes = buildSpawnTimes();
+      S.spawnIdx = 0; S.resolveT = 0; S.earnerT = 0; S.lastSpawnT = S.spawnTimes[S.spawnTimes.length - 1] || 0;
+      S.notes = [];
+      S.phase = 'RESOLVE';
+      emit('resolveStart', { results: S.markResults, count: tracks.length });
+      return { ok: true };
+    }
+
+    function spawnNote(k) {
+      const track = segTracks()[k];
+      const note = { id: S.nextId++, track, k, x: geo.spawnX, state: 'fly', pull: null };
+      S.notes.push(note);
+      const bn = S.isBoss ? BOSS_NOTES[k] : null;
+      emit('spawn', { id: note.id, track, k, x: note.x, bossT: bn ? bn.t : null, bossDur: bn ? bn.dur : null });
+    }
+
+    function bloom(u) {
+      u.gone = true;
+      S.stats.blooms++;
+      if (!S.isBoss) {
+        S.boxHP -= u.dmg;
+        emit('bloom', { unitId: u.id, unitType: u.type, lane: u.lane, x: u.x, dmg: u.dmg, target: 'box', hp: S.boxHP });
+        if (S.boxHP <= 0) { doGameOver('speedkill'); return; }
+      } else {
+        S.bossHP -= u.dmg;
+        emit('bloom', { unitId: u.id, unitType: u.type, lane: u.lane, x: u.x, dmg: u.dmg, target: 'boss', hp: S.bossHP });
+        if (S.bossHP <= 0) { doGameOver('perfect'); return; }
+      }
+    }
+
+    function leak(note) {
+      note.state = 'gone';
+      S.hp -= CONFIG.leakDamage; S.blood += CONFIG.leakBlood; S.stats.leaks++;
+      emit('leak', { hp: S.hp, blood: S.blood, track: note.track });
+      if (S.hp <= 0) doGameOver('fail');
+    }
+
+    function doGameOver(ending) {
+      if (S.over) return;
+      S.over = { ending };
+      S.phase = 'OVER';
+      emit('gameover', { ending, stats: Object.assign({}, S.stats) });
+    }
+
+    function endResolve() {
+      if (S.isBoss) {
+        S.bossRound++;
+        if (S.bossRound >= 3) { doGameOver('normal'); return; }
+        S.phase = 'INTERLUDE'; S.interT = CONFIG.interludeSec; S.interNext = 'boss';
+        emit('interlude', { text: `湘菲 · 第 ${S.bossRound + 1} / 3 轮` });
+      } else if (S.segIdx === 1) {
+        S.phase = 'UPGRADE'; emit('upgradeOffer', { tier: 1 });
+      } else if (S.segIdx === 3) {
+        S.phase = 'UPGRADE'; emit('upgradeOffer', { tier: 2 });
+      } else {
+        S.phase = 'INTERLUDE'; S.interT = CONFIG.interludeSec; S.interNext = 'seg';
+        emit('interlude', { text: `第 ${S.segIdx + 2} 段 / 共 4 段` });
+      }
+    }
+
+    // ———— 对外 API ————
+    const api = {
+      get s() { return S; }, get events() { return EV; }, get geo() { return geo; },
+      segTracks, noteCount, unitAt, slotX, noteSpeed, coverOf,
+      CONFIG, MELODY_SEGS, BOSS_NOTES, TRACK_NAMES, TRACK_BRIGHT, TRACK_DARK,
+
+      start() { startSegment(0, false, 0); },
+
+      // 试听（普通段免费；Boss 限次）——可在 LISTEN / DEPLOY 阶段反复调用
+      requestListen() {
+        if (S.phase !== 'LISTEN' && S.phase !== 'DEPLOY') return { ok: false, err: 'phase' };
+        let cost = 0;
+        if (S.isBoss) {
+          if (S.freeListens > 0) { S.freeListens--; cost = 0; }
+          else if (S.gold >= CONFIG.bossListenCost) { S.gold -= CONFIG.bossListenCost; cost = CONFIG.bossListenCost; }
+          else return { ok: false, err: '金币不足（试听 💰' + CONFIG.bossListenCost + '）' };
+          emit('listenCost', { cost, freeLeft: S.freeListens });
+        }
+        S.listenCount++;
+        emit('listenPlay', { isBoss: S.isBoss, count: S.listenCount, cost });
+        return { ok: true, cost };
+      },
+
+      startDeploy() {
+        if (S.phase !== 'LISTEN') return { ok: false, err: 'phase' };
+        S.phase = 'DEPLOY';
+        S.tutorialDone = true;
+        emit('deployStart', {});
+        return { ok: true };
+      },
+
+      endDeploy() { return startResolve(); },
+
+      deploy(type, lane, slot) {
+        if (S.phase !== 'DEPLOY') return { ok: false, err: '只能在布防阶段部署' };
+        if (!['pawn', 'general', 'earner'].includes(type)) return { ok: false, err: '未知单位' };
+        if (!(lane >= 0 && lane <= 6)) return { ok: false, err: '轨道越界' };
+        if (!(slot >= 0 && slot < CONFIG.deploySlots)) return { ok: false, err: '部署格越界' };
+        if (unitAt(lane, slot)) return { ok: false, err: '该格已有单位' };
+        const def = CONFIG[type];
+        if (S.gold < def.cost) return { ok: false, err: '金币不足' };
+        if (S.fee < CONFIG.cardFee[type]) return { ok: false, err: '能量费不足' };
+        if (type === 'earner') { if (earnerCount() >= CONFIG.earner.max) return { ok: false, err: '产钱娘已达上限(3)' }; }
+        else if (succubiCount() >= CONFIG.succMax) return { ok: false, err: '魅魔已达上限(6)' };
+        S.gold -= def.cost; S.fee -= CONFIG.cardFee[type];
+        const u = {
+          id: S.nextId++, type, lane, slot, x: slotX(slot),
+          cap: def.cap + (type !== 'earner' ? S.upg.capAdd : 0),
+          dmg: def.dmg + (type !== 'earner' ? S.upg.dmgAdd : 0),
+          cover: type !== 'earner' ? coverOf(type, lane) : [],
+          energy: 0, absorbCd: 0, gone: false,
+        };
+        S.units.push(u);
+        emit('place', { unit: u });
+        return { ok: true };
+      },
+
+      shovel(lane, slot) {
+        if (S.phase !== 'DEPLOY') return { ok: false, err: '只能在布防阶段铲除' };
+        const u = unitAt(lane, slot);
+        if (!u) return { ok: false, err: '这里没有单位' };
+        const cost = CONFIG[u.type].cost;
+        const refund = Math.floor(cost * CONFIG.shovelRefund);
+        S.gold += refund; u.gone = true;
+        emit('shovel', { refund, lane, slot });
+        return { ok: true, refund };
+      },
+
+      firstAid() {
+        if (S.phase !== 'LISTEN' && S.phase !== 'DEPLOY') return { ok: false, err: '现在不能用急救' };
+        if (S.blood < CONFIG.firstAid.blood) return { ok: false, err: '血币不足' };
+        if (S.hp >= CONFIG.initHP) return { ok: false, err: '生命已满' };
+        S.blood -= CONFIG.firstAid.blood;
+        S.hp = Math.min(CONFIG.initHP, S.hp + CONFIG.firstAid.heal);
+        emit('firstAid', { heal: CONFIG.firstAid.heal, hp: S.hp });
+        return { ok: true };
+      },
+
+      pickUpgrade(key) {
+        if (S.phase !== 'UPGRADE') return { ok: false, err: 'phase' };
+        const tier1 = ['A', 'B'], tier2 = ['A2', 'B2'];
+        const tier = S.segIdx === 1 ? 1 : 2;
+        const allow = tier === 1 ? tier1 : tier2;
+        if (!allow.includes(key)) return { ok: false, err: 'invalid' };
+        if (key === 'A') S.upg.capAdd += CONFIG.upgA.capAdd;
+        if (key === 'B') S.upg.dmgAdd += CONFIG.upgB.dmgAdd;
+        if (key === 'A2') S.upg.coverAdd += CONFIG.upgA2.coverAdd;
+        if (key === 'B2') S.upg.dmgAdd += CONFIG.upgB2.dmgAdd;
+        emit('upgradePick', { key, tier });
+        // 已部署单位的属性同步成长
+        for (const u of S.units) {
+          if (u.gone || u.type === 'earner') continue;
+          u.cap = CONFIG[u.type].cap + S.upg.capAdd;
+          u.dmg = CONFIG[u.type].dmg + S.upg.dmgAdd;
+          u.cover = coverOf(u.type, u.lane);
+        }
+        if (tier === 1) {
+          S.phase = 'INTERLUDE'; S.interT = CONFIG.interludeSec; S.interNext = 'seg';
+          emit('interlude', { text: `第 3 段 / 共 4 段` });
+        } else {
+          S.phase = 'BOSS_INTRO';
+          emit('bossIntro', {});
+        }
+        return { ok: true };
+      },
+
+      beginBossRound() {
+        if (S.phase !== 'BOSS_INTRO' && S.phase !== 'LISTEN') return { ok: false, err: 'phase' };
+        startSegment(4, true, S.bossRound);
+        return { ok: true };
+      },
+
+      // Boss 过场后由视图调用进入下一轮（interNext==='boss' 由 update 自动流转，无需额外接口）
+
+      setMark(col, lane) {
+        if (S.phase !== 'LISTEN' && S.phase !== 'DEPLOY') return { ok: false, err: 'phase' };
+        if (!(col >= 0 && col < S.marks.length)) return { ok: false, err: 'col' };
+        if (!(lane >= 0 && lane <= 6)) return { ok: false, err: 'lane' };
+        // 切换式：同列同音再点一次 = 移除；不同音 = 叠加（和弦/双音）
+        const arr = S.marks[col];
+        const i = arr.indexOf(lane);
+        if (i >= 0) arr.splice(i, 1); else arr.push(lane);
+        emit('mark', { col, lane });
+        return { ok: true };
+      },
+      unsetMark(col) {
+        if (S.phase !== 'LISTEN' && S.phase !== 'DEPLOY') return { ok: false, err: 'phase' };
+        if (!(col >= 0 && col < S.marks.length)) return { ok: false, err: 'col' };
+        S.marks[col] = [];
+        emit('unmark', { col });
+        return { ok: true };
+      },
+
+      setTime(sec) { S.stats.timeSec = sec; },
+
+      update(dt) {
+        if (S.over || S.phase === 'TITLE' || S.phase === 'UPGRADE' || S.phase === 'BOSS_INTRO') return;
+        if (S.phase === 'INTERLUDE') {
+          S.interT -= dt;
+          if (S.interT <= 0) {
+            if (S.interNext === 'seg') startSegment(S.segIdx + 1, false, 0);
+            else if (S.interNext === 'boss') startSegment(4, true, S.bossRound);
+          }
+          return;
+        }
+        if (S.phase !== 'RESOLVE') return;
+
+        S.resolveT += dt;
+        // 出音
+        while (S.spawnIdx < S.spawnTimes.length && S.resolveT >= S.spawnTimes[S.spawnIdx]) {
+          spawnNote(S.spawnIdx++);
+        }
+        const speed = noteSpeed();
+        // 吸能扫描
+        for (const u of S.units) {
+          if (u.gone || u.type === 'earner') continue;
+          u.absorbCd -= dt;
+          if (u.absorbCd > 0) continue;
+          let best = null;
+          for (const nt of S.notes) {
+            if (nt.state !== 'fly') continue;
+            if (!u.cover.includes(nt.track)) continue;
+            if (Math.abs(nt.x - u.x) > geo.absorbRange) continue;
+            if (!best || nt.x < best.x) best = nt;
+          }
+          if (best) {
+            best.state = 'pull';
+            best.pull = { fromX: best.x, t: 0, dur: CONFIG.pullSec, unitId: u.id };
+            u.absorbCd = CONFIG.absorbTick;
+            emit('claim', { noteId: best.id, unitId: u.id });
+          }
+        }
+        // 音符运动
+        for (const nt of S.notes) {
+          if (nt.state === 'fly') {
+            nt.x -= speed * dt;
+            if (nt.x <= geo.leakX) leak(nt);
+          } else if (nt.state === 'pull') {
+            const u = S.units.find(v => v.id === nt.pull.unitId);
+            nt.pull.t += dt;
+            if (u && !u.gone) {
+              const p = Math.min(1, nt.pull.t / nt.pull.dur);
+              nt.x = nt.pull.fromX + (u.x - nt.pull.fromX) * p;
+              if (p >= 1) {
+                nt.state = 'gone';
+                u.energy++;
+                S.gold += CONFIG.absorbGold; S.stats.absorbed++;
+                emit('absorb', { unitId: u.id, unitType: u.type, energy: u.energy, cap: u.cap, gold: CONFIG.absorbGold, noteId: nt.id, noteTrack: nt.track });
+                if (u.energy >= u.cap) bloom(u);
+              }
+            } else { nt.state = 'gone'; } // 吸收者已绽放消失：音符随之消散
+          }
+        }
+        // 产钱娘（仅结算阶段计时）
+        S.earnerT += dt;
+        while (S.earnerT >= CONFIG.earner.period) {
+          S.earnerT -= CONFIG.earner.period;
+          const n = earnerCount();
+          if (n > 0) { S.gold += CONFIG.earner.earn * n; emit('earn', { gold: CONFIG.earner.earn * n, count: n }); }
+        }
+        // 清场检测（若本帧内已分出胜负则不再流转）
+        if (!S.over && S.spawnIdx >= S.spawnTimes.length && S.notes.every(n => n.state === 'gone') && S.resolveT > S.lastSpawnT + 0.6) {
+          endResolve();
+        }
+      },
+    };
+    return api;
+  }
+
+  globalThis.GAME_LOGIC = { CONFIG, TRACK_NAMES, TRACK_BRIGHT, TRACK_DARK, MELODY_SEGS, BOSS_NOTES, createCore };
+})();
+/* ===LOGIC-END=== */
+
+/* ============================================================
+   视图层（DOM / 音频 / 输入 / 特效）
+   ============================================================ */
+(function () {
+  const L = globalThis.GAME_LOGIC;
+  const $ = id => document.getElementById(id);
+  const core = L.createCore();
+  const S = () => core.s;
+  // 变更检测写：每帧无条件写 DOM 会导致持续重排重绘（耗电+妨碍自动化），值不变则跳过
+  const _last = new Map();
+  function setIf(key, apply, v) { if (_last.get(key) !== v) { _last.set(key, v); apply(v); } }
+  const setTxt = (id, v) => setIf('t:' + id, v => { document.getElementById(id).textContent = v; }, v);
+  const setSty = (el, prop, v) => { const k = 's:' + (el.id || el.className) + ':' + prop; if (_last.get(k) !== v) { _last.set(k, v); el.style[prop] = v; } };
+
+  // ---------- 画布缩放 + 竖屏遮罩 ----------
+  const app = $('app'), portrait = $('portraitMask');
+  function rescale() {
+    const w = window.innerWidth, h = window.innerHeight;
+    const sc = Math.min(w / 1920, h / 1080);
+    app.style.transform = `scale(${sc})`;
+    app.style.left = Math.max(0, (w - 1920 * sc) / 2) + 'px';
+    app.style.top = Math.max(0, (h - 1080 * sc) / 2) + 'px';
+    portrait.style.display = (w / h < 1) ? 'flex' : 'none';
+  }
+  window.addEventListener('resize', rescale); rescale();
+
+  // ---------- 常量 ----------
+  const LANE_TOP = 84, LANE_H = 112;
+  const laneY = t => LANE_TOP + (6 - t) * LANE_H;           // 轨道顶（Do 在最下）
+  const laneCY = t => laneY(t) + LANE_H / 2;
+  const slotCX = s => core.geo.slotX0 + s * core.geo.slotGap;
+
+  // ---------- 音频引擎 ----------
+  const AU = {
+    ctx: null, master: null, muted: false, _rr: {},
+    voice: [], climaxP: [], climaxG: [], boss: null, allEls: [],
+    VOICE_FILES: ['4C.wav', '4D.wav', '4E.wav', '4F.wav', '4G.wav', '4A.wav'], // Do..La（Si 用 4A 变调）
+    CLIMAX_P: ['climax_xiaoxiao.mp3', 'climax_en.mp3'],
+    CLIMAX_G: ['climax_scream.mp3', 'climax_excited_zh.mp3', 'climax_xiaoyi_fast.mp3', 'climax_ja.mp3'],
+    SI_RATE: Math.pow(2, 2 / 12), // 4A → 4B（Si）
+    init() {
+      if (this.ctx) return;
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      this.master = this.ctx.createGain(); this.master.gain.value = 1; this.master.connect(this.ctx.destination);
+      // 人声池：每轨 3 个复用元素
+      for (let t = 0; t < 7; t++) {
+        const arr = [];
+        const file = t === 6 ? '4A.wav' : this.VOICE_FILES[t];
+        for (let i = 0; i < 3; i++) {
+          const el = new Audio('assets/' + file);
+          if (t === 6) el.playbackRate = this.SI_RATE;
+          el.preload = 'auto'; el.volume = 0.9;
+          el.addEventListener('error', () => { el._broken = true; console.warn('[audio] 加载失败，回退合成音: ' + file); });
+          this.allEls.push(el); arr.push(el);
+        }
+        this.voice.push(arr);
+      }
+      const mk = (list, vol) => list.map(f => { const el = new Audio('assets/' + f); el.preload = 'auto'; el.volume = vol; el.addEventListener('error', () => { el._broken = true; console.warn('[audio] 加载失败: ' + f); }); this.allEls.push(el); return el; });
+      this.climaxP = mk(this.CLIMAX_P, 0.5);
+      this.climaxG = mk(this.CLIMAX_G, 0.5);
+      this.boss = new Audio('assets/boss_voice.wav'); this.boss.preload = 'auto'; this.boss.volume = 0.8;
+      this.boss.addEventListener('error', () => { this.boss._broken = true; console.warn('[audio] boss_voice.wav 加载失败'); });
+      this.allEls.push(this.boss);
+    },
+    rrPick(arr) { if (!arr.length) return null; const el = arr[(this._rr[arr[0].src] = (this._rr[arr[0].src] || 0) + 1) % arr.length]; return el; },
+    playVoice(track) {
+      if (this.muted) return;
+      const arr = this.voice[track] || [];
+      const el = this.rrPick(arr);
+      if (el && !el._broken) {
+        try { el.currentTime = 0; el.play().catch(() => {}); } catch (e) {}
+        clearTimeout(el._stopT);
+        el._stopT = setTimeout(() => { el.pause(); }, 620 / (el.playbackRate || 1));
+      } else this.synthVoice(track);
+    },
+    synthVoice(track) { // 缺素材回退：sine+triangle，ADSR 0.01/0.1/0.5/0.3，gain 0.2
+      if (!this.ctx || this.muted) return;
+      const base = [261.63, 293.66, 329.63, 349.23, 392.0, 440.0, 493.88][track];
+      const t0 = this.ctx.currentTime;
+      for (const [type, g] of [['sine', 0.14], ['triangle', 0.06]]) {
+        const o = this.ctx.createOscillator(), gn = this.ctx.createGain();
+        o.type = type; o.frequency.value = base;
+        gn.gain.setValueAtTime(0, t0);
+        gn.gain.linearRampToValueAtTime(g, t0 + 0.01);
+        gn.gain.linearRampToValueAtTime(g, t0 + 0.11);
+        gn.gain.exponentialRampToValueAtTime(0.001, t0 + 0.61);
+        o.connect(gn); gn.connect(this.master); o.start(t0); o.stop(t0 + 0.65);
+      }
+    },
+    playClimax(kind, track, withArp = true) {
+      if (this.muted) return;
+      const pool = kind === 'general' ? this.climaxG : this.climaxP;
+      const el = this.rrPick(pool);
+      if (el && !el._broken) {
+        el.playbackRate = 0.85 + track * (0.3 / 6); // 按锚点轨变调（可选增强）
+        try { el.currentTime = 0; el.play().catch(() => {}); } catch (e) {}
+      }
+      // 琶音：小兵 3 音 / 将领 5 音，sawtooth+lowpass 2kHz（仅绽放时叠，吸收时只出人声）
+      if (withArp) this.arp(kind === 'general' ? 5 : 3);
+    },
+    arp(n) {
+      if (!this.ctx || this.muted) return;
+      const t0 = this.ctx.currentTime, base = 523.25; // C5 起
+      const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2000; lp.connect(this.master);
+      for (let i = 0; i < n; i++) {
+        const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+        o.type = 'sawtooth'; o.frequency.value = base * Math.pow(2, i * 2 / 12);
+        const st = t0 + i * 0.07;
+        g.gain.setValueAtTime(0, st); g.gain.linearRampToValueAtTime(0.35 / n * 2, st + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, st + 0.3);
+        o.connect(g); g.connect(lp); o.start(st); o.stop(st + 0.32);
+      }
+    },
+    blip(freq, dur, type, gain) {
+      if (!this.ctx || this.muted) return;
+      const t0 = this.ctx.currentTime;
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = type || 'sine'; o.frequency.value = freq;
+      g.gain.setValueAtTime(gain || 0.1, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+      o.connect(g); g.connect(this.master); o.start(t0); o.stop(t0 + dur + 0.02);
+    },
+    absorb() { this.blip(880, 0.08, 'sine', 0.1); },
+    leakSnd() { this.blip(150, 0.25, 'square', 0.12); },
+    warn() { let k = 0; const iv = setInterval(() => { this.blip(k % 2 ? 880 : 659.26, 0.18, 'sine', 0.16); if (++k >= 6) clearInterval(iv); }, 260); },
+    win() { if (!this.ctx || this.muted) return; [523.25, 659.26, 783.99, 1046.5].forEach((f, i) => setTimeout(() => this.blip(f, 0.35, 'triangle', 0.18), i * 160)); },
+    lose() { this.blip(392, 0.5, 'sawtooth', 0.12); setTimeout(() => this.blip(370, 0.7, 'sawtooth', 0.12), 350); },
+    bossSlice(t, dur) {
+      if (this.muted || !this.boss || this.boss._broken) return;
+      try { this.boss.currentTime = t; this.boss.play().catch(() => {}); } catch (e) {}
+      clearTimeout(this.boss._stopT);
+      this.boss._stopT = setTimeout(() => this.boss.pause(), dur * 1000 + 60);
+    },
+    stopBoss() { try { this.boss.pause(); } catch (e) {} clearTimeout(this.boss._stopT); },
+    setMuted(m) {
+      this.muted = m;
+      for (const el of this.allEls) el.muted = m;
+      if (this.master) this.master.gain.value = m ? 0 : 1;
+    },
+    pauseAll() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend(); for (const el of this.allEls) { if (!el.paused) el.pause(); } },
+    resumeAll() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
+  };
+
+  // ---------- DOM 构建 ----------
+  const battle = $('battle'), laneWrap = $('laneWrap'), fx = $('fxLayer');
+  const laneEls = [];
+  for (let t = 0; t < 7; t++) {
+    const d = document.createElement('div');
+    d.className = 'lane'; d.style.top = laneY(t) + 'px'; d.style.height = LANE_H + 'px';
+    d.style.background = `linear-gradient(180deg, ${L.TRACK_DARK[t]} 0%, #0a0c18 130%)`;
+    d.innerHTML = `<div class="lbl" style="color:${L.TRACK_BRIGHT[t]}">${L.TRACK_NAMES[t]}</div><div class="zoneL"></div>`;
+    d.addEventListener('click', e => { if (e.target.closest('.slot') || e.target.closest('.unit')) return; AU.playVoice(t); });
+    laneWrap.appendChild(d); laneEls.push(d);
+  }
+  // 部署格
+  const slotEls = [];
+  for (let t = 0; t < 7; t++) for (let s = 0; s < core.CONFIG.deploySlots; s++) {
+    const d = document.createElement('div');
+    d.className = 'slot';
+    d.style.left = (slotCX(s) - 60) + 'px'; d.style.top = (laneY(t) + 10) + 'px';
+    d.dataset.lane = t; d.dataset.slot = s;
+    laneWrap.appendChild(d); slotEls.push(d);
+  }
+  // HUD 进度刻度
+  const progress = $('progress');
+  for (let i = 0; i < 5; i++) { const d = document.createElement('div'); d.className = 'tick' + (i === 4 ? ' boss' : ''); progress.appendChild(d); }
+
+  // 蓝图格
+  const bpGrid = $('bpGrid');
+  let bpCells = [], bpMarkDots = new Map(), bpGhosts = [], bpIdxEls = [], bpColW = 54, bpCount = 0;
+  function buildBlueprint(n) {
+    bpGrid.innerHTML = ''; bpCells = []; bpMarkDots = new Map(); bpGhosts = []; bpIdxEls = [];
+    bpCount = n;
+    bpColW = Math.min(54, Math.floor(660 / n));
+    const gridW = bpColW * n, gx0 = 44 + (660 - gridW) / 2;
+    for (let t = 0; t < 7; t++) {
+      const lbl = document.createElement('div');
+      lbl.className = 'bpIdx'; lbl.style.cssText = `left:6px;top:${laneY(t) + LANE_H / 2 - 10}px;width:32px;font-size:15px;color:${L.TRACK_BRIGHT[t]};font-weight:bold`;
+      lbl.textContent = L.TRACK_NAMES[t]; bpGrid.appendChild(lbl);
+    }
+    for (let k = 0; k < n; k++) {
+      const col = [];
+      for (let t = 0; t < 7; t++) {
+        const c = document.createElement('div');
+        c.className = 'bpCell';
+        c.style.cssText = `left:${gx0 + k * bpColW + 2}px;top:${laneY(t) + 14}px;width:${bpColW - 4}px;height:${LANE_H - 28}px;`;
+        c.dataset.col = k; c.dataset.lane = t;
+        bpGrid.appendChild(c); col.push(c);
+      }
+      bpCells.push(col);
+      if (n <= 14) {
+        const ix = document.createElement('div');
+        ix.className = 'bpIdx'; ix.style.cssText = `left:${gx0 + k * bpColW}px;top:${laneY(0) + LANE_H + 4}px;width:${bpColW}px;`;
+        ix.textContent = k + 1; bpGrid.appendChild(ix); bpIdxEls.push(ix);
+      }
+    }
+    updateBpAcc();
+  }
+  function updateBpAcc() {
+    const st = S();
+    const done = st.marks.filter(m => m.length).length;
+    $('bpAcc').textContent = `标注 ${done}/${bpCount}` + (st.stats.bpTotal ? ` · 累计正确率 ${Math.round(st.stats.bpCorrect / st.stats.bpTotal * 100)}%` : '');
+  }
+  function renderMarks() {
+    const st = S();
+    // 移除已不存在的标记点
+    for (const [key, el] of [...bpMarkDots]) {
+      const [c, l] = key.split(':').map(Number);
+      if (!st.marks[c] || !st.marks[c].includes(l)) { el.remove(); bpMarkDots.delete(key); }
+    }
+    // 新增标记点（同列可叠多个 = 和弦/双音）
+    for (let k = 0; k < bpCount; k++) {
+      for (const t of (st.marks[k] || [])) {
+        const key = k + ':' + t;
+        if (bpMarkDots.has(key)) continue;
+        const cell = bpCells[k] && bpCells[k][t]; if (!cell) continue;
+        const m = document.createElement('div');
+        m.className = 'bpMark'; m.dataset.col = k;
+        const sz = Math.min(30, bpColW - 6);
+        m.style.cssText += `width:${sz}px;height:${sz}px;background:${L.TRACK_BRIGHT[t]};box-shadow:0 0 10px ${L.TRACK_BRIGHT[t]}`;
+        m.textContent = bpColW >= 30 ? L.TRACK_NAMES[t][0] : '';
+        m.style.left = (parseFloat(cell.style.left) + (parseFloat(cell.style.width) - sz) / 2) + 'px';
+        m.style.top = (parseFloat(cell.style.top) + (parseFloat(cell.style.height) - sz) / 2) + 'px';
+        bpGrid.appendChild(m); bpMarkDots.set(key, m);
+      }
+    }
+    updateBpAcc();
+  }
+  function addGhost(k, track) {
+    const cell = bpCells[k] && bpCells[k][track]; if (!cell || cell._ghost) return;
+    const g = document.createElement('div');
+    g.className = 'bpGhost';
+    const sz = Math.min(30, bpColW - 6);
+    g.style.cssText += `border-color:${L.TRACK_BRIGHT[track]};width:${sz}px;height:${sz}px;`;
+    g.style.left = (parseFloat(cell.style.left) + (parseFloat(cell.style.width) - sz) / 2) + 'px';
+    g.style.top = (parseFloat(cell.style.top) + (parseFloat(cell.style.height) - sz) / 2) + 'px';
+    bpGrid.appendChild(g); cell._ghost = g;
+  }
+  function showBpResults() {
+    const res = S().markResults || [];
+    for (let k = 0; k < bpCount; k++) {
+      const lanes = S().marks[k] || [];
+      for (let t = 0; t < 7; t++) {
+        const cell = bpCells[k] && bpCells[k][t]; if (!cell) continue;
+        if (lanes.includes(t)) {
+          cell.classList.add(res[k] ? 'cCorrect' : 'cWrong');
+          if (!res[k]) for (const [key, el] of bpMarkDots) {
+            if (key.startsWith(k + ':')) el.classList.add('mWrong');
+          }
+        }
+      }
+    }
+  }
+  function clearBpResults() {
+    bpGrid.querySelectorAll('.cCorrect,.cWrong').forEach(e => e.classList.remove('cCorrect', 'cWrong'));
+    bpGrid.querySelectorAll('.mWrong').forEach(e => e.classList.remove('mWrong'));
+  }
+
+  // ---------- 单位 / 音符 DOM ----------
+  const unitEls = new Map(), noteEls = new Map();
+  function unitEl(u) {
+    let el = unitEls.get(u.id);
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'unit ' + u.type;
+      el.innerHTML = `<div class="ering"></div><span class="uface">${u.type === 'pawn' ? '🩷' : u.type === 'general' ? '💜' : '💰'}</span>`;
+      el.style.left = (core.geo.slotX0 + u.slot * core.geo.slotGap) + 'px';
+      el.style.top = laneCY(u.lane) + 'px';
+      el.addEventListener('click', e => { e.stopPropagation(); showBubble(u.id, el); });
+      laneWrap.appendChild(el); unitEls.set(u.id, el);
+    }
+    const ring = el.querySelector('.ering');
+    if (u.type !== 'earner') {
+      // 能量环 = 绽放进度暗示（每吸 1 音立即出声，环满自动大爆发；数字徽标已按老板反馈移除）
+      const pct = Math.min(1, u.energy / u.cap) * 100;
+      setIf('u:' + u.id + ':ring', v => {
+        ring.style.background = `conic-gradient(#ffe9b8 ${v}%, transparent 0)`;
+        ring.style.mask = 'radial-gradient(circle, transparent 58%, #000 60%)';
+        ring.style.webkitMask = 'radial-gradient(circle, transparent 58%, #000 60%)';
+      }, pct);
+    } else setIf('u:' + u.id + ':ring', () => { ring.style.background = 'none'; }, 'none');
+    return el;
+  }
+  function noteEl(n) {
+    let el = noteEls.get(n.id);
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'note';
+      el.style.background = L.TRACK_BRIGHT[n.track];
+      el.style.color = L.TRACK_BRIGHT[n.track];
+      el.textContent = L.TRACK_NAMES[n.track][0];
+      el.addEventListener('click', e => { e.stopPropagation(); AU.playVoice(n.track); });
+      laneWrap.appendChild(el); noteEls.set(n.id, el);
+    }
+    el.style.transform = `translate(${n.x}px, ${laneCY(n.track)}px)`;
+    return el;
+  }
+  function sweepDom() {
+    const st = S();
+    for (const [id, el] of unitEls) if (!st.units.find(u => u.id === id && !u.gone)) { el.remove(); unitEls.delete(id); hideBubble(); }
+    for (const [id, el] of noteEls) if (!st.notes.find(n => n.id === id) ) { el.remove(); noteEls.delete(id); }
+  }
+
+  // ---------- HUD ----------
+  function renderHud() {
+    const st = S();
+    setTxt('goldV', st.gold);
+    setTxt('hpV', Math.max(0, st.hp));
+    setSty($('hpFill'), 'width', Math.max(0, st.hp) + '%');
+    setTxt('bloodV', st.blood);
+    setTxt('feeV', `${st.fee}/${core.CONFIG.feePerRound}`);
+    setSty($('enemyHpFill'), 'width', (st.isBoss ? Math.max(0, st.bossHP) / core.CONFIG.bossHP : Math.max(0, st.boxHP) / core.CONFIG.boxHP) * 100 + '%');
+    // 卡片状态（部署 CD 已移除：卡面亮/灰只看金币、能量费、场上限）
+    for (const type of ['pawn', 'general', 'earner']) {
+      const card = $('card-' + type), def = core.CONFIG[type];
+      const fee = core.CONFIG.cardFee[type];
+      const limitOk = type === 'earner' ? st.units.filter(u => !u.gone && u.type === 'earner').length < def.max
+                                      : st.units.filter(u => !u.gone && u.type !== 'earner').length < core.CONFIG.succMax;
+      const afford = st.gold >= def.cost && st.fee >= fee && limitOk;   // 不再掺"布防阶段"条件：资源够卡就亮，阶段由点格时的提示兜底
+      setIf('c:' + type + ':poor', v => card.classList.toggle('poor', v), !afford);   // 注意取反：afford=买得起 → 不加 poor 灰罩（此处在渲染优化重写时曾被写反）
+      if (type !== 'earner') {
+        const mine = st.units.filter(u => !u.gone && u.type === type);
+        const best = mine.reduce((m, u) => Math.max(m, u.energy / u.cap), 0);
+        setSty(card.querySelector('.mfill'), 'width', best * 100 + '%');
+      }
+    }
+  }
+  function renderHudTitle() {
+    const st = S();
+    const ticks = progress.children;
+    if (!st.isBoss) {
+      setIf('title', v => { $('hudTitle').firstChild.textContent = v; }, `《小星星》 · 第 ${st.segIdx + 1} 段 / 共 4 段 `);
+      for (let i = 0; i < 4; i++) setIf('tick' + i, v => ticks[i].classList.toggle('on', v), i < st.segIdx + (st.phase === 'RESOLVE' || st.phase === 'UPGRADE' ? 1 : 0));
+      setIf('tick4', v => ticks[4].classList.toggle('on', v), false);
+    } else {
+      setIf('title', v => { $('hudTitle').firstChild.textContent = v; }, `《湘菲的高潮声》 · Boss 战 第 ${st.bossRound + 1} / 3 轮 `);
+      for (let i = 0; i < 4; i++) setIf('tick' + i, v => ticks[i].classList.toggle('on', v), true);
+      setIf('tick4', v => ticks[4].classList.toggle('on', v), true);
+    }
+  }
+
+  // ---------- 特效 ----------
+  function fxRing(x, y, color) {
+    const d = document.createElement('div'); d.className = 'fxRing';
+    d.style.cssText = `left:${x - 40}px;top:${y - 40}px;width:80px;height:80px;border-color:${color}`;
+    fx.appendChild(d); setTimeout(() => d.remove(), 850);
+  }
+  function fxPetals(x, y, color) {
+    for (let i = 0; i < 8; i++) {
+      const p = document.createElement('div'); p.className = 'fxPetal';
+      const a = i / 8 * Math.PI * 2, r = 70 + Math.random() * 50;
+      p.style.cssText = `left:${x - 7}px;top:${y - 7}px;background:${color};--dx:${Math.cos(a) * r}px;--dy:${Math.sin(a) * r}px`;
+      fx.appendChild(p); setTimeout(() => p.remove(), 850);
+    }
+  }
+  function fxSparks(x, y, color) {
+    for (let i = 0; i < 4; i++) {
+      const p = document.createElement('div'); p.className = 'fxSpark';
+      p.style.cssText = `left:${x - 4}px;top:${y - 4}px;background:${color};--dx:${(Math.random() - .5) * 60}px;--dy:${(Math.random() - .5) * 60}px`;
+      fx.appendChild(p); setTimeout(() => p.remove(), 450);
+    }
+  }
+  function floatText(x, y, text, cls, color) {
+    const d = document.createElement('div'); d.className = 'float ' + (cls || '');
+    d.style.cssText = `left:${x}px;top:${y}px;${color ? 'color:' + color : ''}`;
+    d.textContent = text; fx.appendChild(d); setTimeout(() => d.remove(), 1500);
+  }
+  function dmgToEnemy(dmg) {
+    const r = $('enemy').getBoundingClientRect(), b = battle.getBoundingClientRect();
+    const x = (r.left - b.left) / curScale + 40, y = (r.top - b.top) / curScale;
+    const d = document.createElement('div'); d.className = 'dmgFloat';
+    d.style.cssText = `left:${x}px;top:${y}px`; d.textContent = '-' + dmg;
+    fx.appendChild(d); setTimeout(() => d.remove(), 1100);
+    const f = $('enemyFace'); f.classList.remove('enemyHit'); void f.offsetWidth; f.classList.add('enemyHit');
+  }
+  function leftFlash() {
+    battle.classList.remove('flashRed'); void battle.offsetWidth; battle.classList.add('flashRed');
+    app.classList.remove('shake'); void app.offsetWidth; app.classList.add('shake');
+  }
+
+  // ---------- 信息气泡 ----------
+  let bubbleFor = null;
+  function showBubble(uid, el) {
+    const u = S().units.find(v => v.id === uid); if (!u) return;
+    bubbleFor = uid;
+    const b = $('bubble');
+    const coverTxt = u.cover.length ? u.cover.map(t => L.TRACK_NAMES[t]).join(' / ') : '—';
+    b.innerHTML = `<b>${u.type === 'pawn' ? '魅魔小兵' : u.type === 'general' ? '魅魔将领' : '产钱娘'}</b><br>` +
+      (u.type !== 'earner' ? `每吸 1 音立即出声 · 已吸 ${u.energy}/${u.cap}（环满自动大爆发）<br>绽放伤害 ${u.dmg} · 覆盖：${coverTxt}<br>锚点：${L.TRACK_NAMES[u.lane]} 轨` : `结算期每 4s 产 15 金<br>不参与拦截`) +
+      `<br><span style="color:#7f8ec4">铲掉可全额返还 💰${Math.floor(core.CONFIG[u.type].cost * core.CONFIG.shovelRefund)}</span>`;
+    b.style.display = 'block';
+    const r = el.getBoundingClientRect(), a = app.getBoundingClientRect();
+    b.style.left = Math.min(1500, (r.left - a.left) / curScale + 110) + 'px';
+    b.style.top = ((r.top - a.top) / curScale - 20) + 'px';
+  }
+  function hideBubble() { bubbleFor = null; $('bubble').style.display = 'none'; }
+  document.addEventListener('click', e => { if (!e.target.closest('.unit')) hideBubble(); });
+
+  // ---------- Toast ----------
+  function toast(msg) {
+    const d = document.createElement('div'); d.className = 'toast'; d.textContent = msg;
+    $('toasts').appendChild(d); setTimeout(() => d.remove(), 2300);
+  }
+
+  // ---------- 试听播放 ----------
+  let listenTimers = [];
+  function clearListenTimers() { listenTimers.forEach(t => { clearTimeout(t); clearInterval(t); }); listenTimers = []; AU.stopBoss(); setListenSpin(false); }
+  // 重听按钮的两种形态：闲置（含 Boss 免费次数文案）/ 播放中（箭头转圈 + 「停止」）
+  function updateReplayBtnIdle() {
+    const st = S();
+    $('replayBtn').innerHTML = st.isBoss
+      ? (st.freeListens > 0 ? `🔁 试听 (免费${st.freeListens})` : '🔁 试听 (💰25)')
+      : '🔁 重听';
+  }
+  function setListenSpin(on) {
+    const b = $('replayBtn');
+    b._spin = on;
+    if (on) b.innerHTML = '<span class="spin">🔁</span> 停止';
+    else updateReplayBtnIdle();
+  }
+  function playMelodyListen(tracks) {
+    clearListenTimers();
+    setListenSpin(true);
+    const gap = core.CONFIG.listenGap * 1000;
+    $('counter').textContent = `🎧 本段第 1 音 / 共 ${tracks.length} 音（再点「停止」可中断）`;
+    tracks.forEach((tr, k) => {
+      listenTimers.push(setTimeout(() => {
+        AU.playVoice(tr); pulseCol(k);
+        $('counter').textContent = `🎧 本段第 ${k + 1} 音 / 共 ${tracks.length} 音`;
+        if (k === tracks.length - 1) listenTimers.push(setTimeout(() => { $('counter').textContent = `✅ 试听完毕 · 共 ${tracks.length} 音（可重听）`; listenTimers = []; setListenSpin(false); }, gap));
+      }, k * gap));
+    });
+  }
+  function playBossListen() {
+    clearListenTimers();
+    setListenSpin(true);
+    const notes = core.BOSS_NOTES;
+    if (AU.boss && !AU.boss._broken) {
+      try { AU.boss.currentTime = 0; AU.boss.play().catch(() => {}); } catch (e) {}
+      listenTimers.push(setTimeout(() => AU.stopBoss(), 20500));
+    } else {
+      notes.forEach(n => listenTimers.push(setTimeout(() => AU.synthVoice(n.track), n.t * 1000)));
+    }
+    notes.forEach((n, k) => {
+      listenTimers.push(setTimeout(() => {
+        pulseCol(k);
+        $('counter').textContent = `🎧 湘菲 · 第 ${k + 1} 音 / 共 ${notes.length} 音`;
+      }, n.t * 1000));
+    });
+    listenTimers.push(setTimeout(() => { $('counter').textContent = `✅ 试听完毕（可重听${S().freeListens > 0 ? ` · 免费剩 ${S().freeListens} 次` : ' · 💰25/次'}）`; listenTimers = []; setListenSpin(false); }, 20600));
+  }
+  function pulseCol(k) {
+    for (let t = 0; t < 7; t++) {
+      const c = bpCells[k] && bpCells[k][t]; if (!c) continue;
+      c.style.boxShadow = `0 0 14px ${L.TRACK_BRIGHT[t]}88`;
+      setTimeout(() => { c.style.boxShadow = ''; }, 300);
+    }
+  }
+
+  // ---------- 阶段 UI ----------
+  function renderPhaseUI() {
+    const st = S();
+    $('endDeploy').style.display = st.phase === 'DEPLOY' ? 'block' : 'none';
+    $('skipListen').style.display = st.phase === 'LISTEN' ? 'block' : 'none';
+    $('replayBtn').disabled = !(st.phase === 'LISTEN' || st.phase === 'DEPLOY');
+    setListenSpin(!!$('replayBtn')._spin);
+    $('bpPlay').disabled = $('bpClear').disabled = !(st.phase === 'LISTEN' || st.phase === 'DEPLOY');
+    document.body.classList.toggle('bossmode', st.isBoss);
+    $('enemyFace').textContent = st.isBoss ? '👿' : '🎵';
+    $('enemyName').textContent = st.isBoss ? '湘菲' : '八音盒';
+    $('warnText').style.display = 'none';
+  }
+
+  // ---------- 事件消费 ----------
+  function consumeEvents() {
+    const evs = core.events.splice(0);
+    for (const e of evs) {
+      switch (e.type) {
+        case 'listenStart': {
+          buildBlueprint(e.count); clearBpResults(); hideBubble();
+          renderPhaseUI(); renderHudTitle();
+          if (!e.isBoss) {
+            playMelodyListen(e.notes);
+            if (e.seg === 4) { AU.warn(); $('warnText').style.display = 'block'; setTimeout(() => $('warnText').style.display = 'none', 2400); }
+            if (e.seg === 1 && !S().tutorialDone) toast('第 1 段：先听旋律，再在右侧蓝图点出你听到的音');
+          } else {
+            clearListenTimers();
+            $('counter').textContent = `湘菲 · 第 ${e.bossRound + 1}/3 轮 —— 点「试听」听她的声音`;
+          }
+          break;
+        }
+        case 'listenPlay': e.isBoss ? playBossListen() : playMelodyListen(core.segTracks()); break;
+        case 'deployStart': renderPhaseUI(); $('counter').textContent = '布防中 —— 点卡 → 点格放置'; break;
+        case 'resolveStart': clearListenTimers(); showBpResults(); renderPhaseUI(); renderHudTitle();
+          $('counter').textContent = e.isBoss ? '😈 湘菲的声音袭来 ——' : '🎶 结算中 —— 音符来袭！'; break;
+        case 'spawn': {
+          const n = S().notes.find(v => v.id === e.id);
+          if (n) noteEl(n);
+          addGhost(e.k, e.track);
+          if (e.bossT != null) AU.bossSlice(e.bossT, e.bossDur);
+          break;
+        }
+        case 'claim': { const n = S().notes.find(v => v.id === e.noteId); if (n) { const el = noteEls.get(n.id); if (el) el.style.zIndex = 12; } break; }
+        case 'absorb': {
+          const u = S().units.find(v => v.id === e.unitId);
+          // 老板拍板：吸到音符就立即发出该魅魔的高潮音（不等攒满绽放），绽放时另叠琶音
+          AU.playClimax(e.unitType === 'general' ? 'general' : 'pawn', e.noteTrack ?? 0, false);
+          AU.absorb();
+          if (u) { fxSparks(u.x, laneCY(u.lane), '#ffe9b8'); floatText(u.x, laneCY(u.lane) - 40, '+2💰', '', '#ffe08a'); }
+          break;
+        }
+        case 'bloom': {
+          const y = laneCY(e.lane);
+          fxRing(e.x, y, L.TRACK_BRIGHT[e.lane]);
+          fxPetals(e.x, y, L.TRACK_BRIGHT[e.lane]);
+          AU.playClimax(e.unitType === 'general' ? 'general' : 'pawn', e.lane);
+          dmgToEnemy(e.dmg);
+          floatText(e.x, y - 60, '绽放!', 'warm', L.TRACK_BRIGHT[e.lane]);
+          break;
+        }
+        case 'leak': {
+          AU.leakSnd(); leftFlash();
+          floatText(20, laneCY(e.track) - 20, `-5❤️  +2🩸`, 'warm', '#ff9ecb');
+          break;
+        }
+        case 'earn': floatText(660, laneCY(3) - 80, `+${e.gold}💰`, '', '#ffe08a'); AU.blip(1318.5, 0.1, 'sine', 0.08); break;
+        case 'place': { const u = S().units.find(v => v.id === e.unit.id); if (u) unitEl(u); AU.blip(660, 0.08, 'triangle', 0.08); break; }   // 保持选卡：可连续放置（Esc/右键/再点卡取消）
+        case 'shovel': toast(`铲除返还 💰${e.refund}`); break;
+        case 'firstAid': toast(`急救 +${e.heal}❤️`); AU.win(); break;
+        case 'bpPerfect': toast(`蓝图全对！奖励 💰${e.bonus} ⭐`); AU.win(); break;
+        case 'mark': case 'unmark': renderMarks(); break;
+        case 'listenCost': renderPhaseUI(); break;
+        case 'interlude': showInterlude(e.text); break;
+        case 'upgradeOffer': showUpgrade(e.tier); break;
+        case 'bossIntro': showBossIntro(); break;
+        case 'gameover': onGameOver(e.ending); break;
+      }
+    }
+    return evs.length > 0;
+  }
+
+  // ---------- 覆盖层 ----------
+  let curScale = 1;
+  function showInterlude(text) {
+    $('interText').textContent = text;
+    $('interOvl').classList.add('show');
+    setTimeout(() => $('interOvl').classList.remove('show'), core.CONFIG.interludeSec * 1000 - 200);
+  }
+  function showUpgrade(tier) {
+    const row = $('upgRow'); row.innerHTML = '';
+    const opts = tier === 1
+      ? [{ k: 'A', em: '🫙', t: '深壑魅魔', d: '所有魅魔能量容量 +4（小兵 8→12，将领 20→24）' },
+         { k: 'B', em: '💥', t: '爆燃魅魔', d: '所有魅魔绽放伤害 +8（小兵 20→28，将领 50→58）' }]
+      : [{ k: 'A2', em: '🕸️', t: '广域魅魔', d: '所有魅魔 cover +1 轨（小兵吸 3 轨，将领吸 5 轨）' },
+         { k: 'B2', em: '☄️', t: '天灾魅魔', d: '所有魅魔绽放伤害 +15（小兵 35，将领 65）' }];
+    $('upgTitle').textContent = tier === 1 ? '第 2 段结束 · 波间强化 二选一' : '最终段结束 · 出击前强化 二选一';
+    for (const o of opts) {
+      const c = document.createElement('div'); c.className = 'upgCard';
+      c.innerHTML = `<div class="uem">${o.em}</div><div class="ut">${o.t}</div><div class="ud">${o.d}</div>`;
+      c.addEventListener('click', () => { core.pickUpgrade(o.k); $('upgOvl').classList.remove('show'); });
+      row.appendChild(c);
+    }
+    $('upgOvl').classList.add('show');
+  }
+  function showBossIntro() {
+    renderPhaseUI(); renderHudTitle();
+    $('bossIntroOvl').classList.add('show');
+    AU.playClimax('general', 5);
+  }
+  $('bossGoBtn').addEventListener('click', () => {
+    $('bossIntroOvl').classList.remove('show');
+    core.beginBossRound();
+  });
+  function onGameOver(ending) {
+    const st = S();
+    clearListenTimers();
+    let title, stars, color;
+    if (ending === 'perfect') { title = '完美胜利'; stars = '⭐⭐⭐'; color = '#ffd54f'; AU.win(); }
+    else if (ending === 'speedkill') { title = '速杀结局'; stars = '⭐⭐⭐'; color = '#ffd54f'; }
+    else if (ending === 'normal') { title = '普通胜利'; stars = '⭐⭐'; color = '#b388ff'; AU.win(); }
+    else { title = '败北 …'; stars = '💀'; color = '#ff5252'; AU.lose(); }
+    const acc = st.stats.bpTotal ? Math.round(st.stats.bpCorrect / st.stats.bpTotal * 100) : 0;
+    const line = ending === 'speedkill' ? '「你甚至没给她变身的机会。」' :
+                 ending === 'perfect' ? '「能把我的声音全部吸走……你这家伙，耳朵很行嘛。」' :
+                 ending === 'normal' ? '「哼，撑下来了，但你没能唱完我的歌。」' : '「听不出来就回家练耳朵吧～」';
+    $('resultOvl').innerHTML =
+      `<div class="rTitle" style="color:${color}">${title}</div><div class="rStars">${stars}</div>` +
+      (ending === 'speedkill' ? `<div style="font-size:24px;color:#ffe9b8;margin-bottom:16px">小星星阶段就击碎了八音盒</div>` : '') +
+      `<div style="font-size:22px;color:#c6d2ff;margin-bottom:22px">${line}</div>` +
+      `<div class="rStats">
+         <span>吸收音符</span><b>${st.stats.absorbed}</b>
+         <span>绽放次数</span><b>${st.stats.blooms}</b>
+         <span>漏音</span><b>${st.stats.leaks}</b>
+         <span>蓝图准确率</span><b>${acc}%</b>
+         <span>剩余生命</span><b>${Math.max(0, st.hp)}</b>
+         <span>用时</span><b>${fmtTime(st.stats.timeSec)}</b>
+       </div><button class="btn gold" id="againBtn" style="font-size:28px;padding:14px 60px">再来一局 🔄</button>`;
+    $('resultOvl').classList.add('show');
+    $('againBtn').addEventListener('click', () => location.reload());
+    if (ending === 'fail') { const f = $('enemyFace'); f.style.transition = 'transform .15s'; let k = 0; const iv = setInterval(() => { f.style.transform = `rotate(${(k++ % 2 ? 8 : -8)}deg) scale(1.1)`; if (k > 8) { clearInterval(iv); f.style.transform = ''; } }, 140); }
+  }
+  function fmtTime(s) { s = Math.floor(s); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
+
+  // ---------- 输入 ----------
+  let selected = null; // 'pawn'|'general'|'earner'|'shovel'
+  function selectCard(t) {
+    selected = t;
+    for (const c of ['pawn', 'general', 'earner', 'shovel']) $('card-' + c).classList.toggle('sel', c === t);
+  }
+  $('card-pawn').addEventListener('click', () => selectCard(selected === 'pawn' ? null : 'pawn'));
+  $('card-general').addEventListener('click', () => selectCard(selected === 'general' ? null : 'general'));
+  $('card-earner').addEventListener('click', () => selectCard(selected === 'earner' ? null : 'earner'));
+  $('card-shovel').addEventListener('click', () => selectCard(selected === 'shovel' ? null : 'shovel'));
+  $('card-aid').addEventListener('click', () => { const r = core.firstAid(); if (!r.ok) toast(r.err); });
+
+  for (const sl of slotEls) {
+    sl.addEventListener('mouseenter', () => {
+      if (!selected || S().phase !== 'DEPLOY') return;
+      const lane = +sl.dataset.lane, slot = +sl.dataset.slot;
+      const occupied = !!core.unitAt(lane, slot);
+      sl.classList.add(selected === 'shovel' ? (occupied ? 'ok' : 'deny') : (occupied ? 'deny' : 'ok'));
+    });
+    sl.addEventListener('mouseleave', () => sl.classList.remove('ok', 'deny'));
+    sl.addEventListener('click', e => {
+      e.stopPropagation();
+      const lane = +sl.dataset.lane, slot = +sl.dataset.slot;
+      if (!selected) { toast('先点一张卡（1/2/3 键或点卡槽）'); return; }
+      // 试听阶段带着选卡直接点格子 = 自动进入布防（免去找「开始布防」按钮的摩擦）
+      if (S().phase === 'LISTEN') { clearListenTimers(); core.startDeploy(); }
+      if (S().phase !== 'DEPLOY') { toast(S().over ? '本局已结束 · 点「再来一局」重开' : '现在不能布防'); return; }
+      if (selected === 'shovel') {
+        const r = core.shovel(lane, slot);
+        if (!r.ok) toast(r.err);
+      } else {
+        const r = core.deploy(selected, lane, slot);
+        if (!r.ok) toast(r.err);
+      }
+      sl.classList.remove('ok', 'deny');
+    });
+  }
+
+  $('replayBtn').addEventListener('click', () => {
+    if ($('replayBtn')._spin) {           // 播放中：再点一次 = 停止重听
+      clearListenTimers();
+      $('counter').textContent = '⏹ 已停止试听（想听再点「重听」）';
+      return;
+    }
+    const r = core.requestListen(); if (!r.ok) toast(r.err);
+  });
+  $('skipListen').addEventListener('click', () => { clearListenTimers(); core.startDeploy(); });
+  $('endDeploy').addEventListener('click', () => { const r = core.endDeploy(); if (!r.ok) toast(r.err); });
+  $('bpClear').addEventListener('click', () => {
+    for (let k = 0; k < bpCount; k++) if (S().marks[k].length) core.unsetMark(k);
+    clearBpResults();
+  });
+  $('bpPlay').addEventListener('click', () => {
+    const marks = S().marks;
+    clearListenTimers();
+    marks.forEach((lanes, k) => {
+      if (!lanes.length) return;
+      listenTimers.push(setTimeout(() => {
+        [...new Set(lanes)].forEach(l => AU.playVoice(l));  // 同列多标记 = 和弦齐鸣
+        pulseCol(k);
+      }, k * 700));
+    });
+  });
+  bpGrid.addEventListener('click', e => {
+    const cell = e.target.closest('.bpCell'); if (!cell) return;
+    const col = +cell.dataset.col, lane = +cell.dataset.lane;
+    AU.playVoice(lane);
+    if (S().phase !== 'LISTEN' && S().phase !== 'DEPLOY') return;
+    core.setMark(col, lane);   // 切换式：再点同音=移除；同列点别的音=叠加（和弦）
+  });
+  bpGrid.addEventListener('mouseover', e => {
+    const cell = e.target.closest('.bpCell'); if (!cell) return;
+    const col = +cell.dataset.col;
+    for (let t = 0; t < 7; t++) bpCells[col] && bpCells[col][t] && bpCells[col][t].classList.toggle('rowhover', +cell.dataset.lane === t);
+  });
+  bpGrid.addEventListener('mouseout', () => bpGrid.querySelectorAll('.rowhover').forEach(c => c.classList.remove('rowhover')));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === '1') selectCard(selected === 'pawn' ? null : 'pawn');
+    if (e.key === '2') selectCard(selected === 'general' ? null : 'general');
+    if (e.key === '3') selectCard(selected === 'earner' ? null : 'earner');
+    if (e.key === '4') selectCard(selected === 'shovel' ? null : 'shovel');
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (S().phase === 'DEPLOY') { const r = core.endDeploy(); if (!r.ok) toast(r.err); }
+      else if (S().phase === 'LISTEN') { clearListenTimers(); core.startDeploy(); }
+      else if ($('bossIntroOvl').classList.contains('show')) $('bossGoBtn').click();
+    }
+    if (e.key === 'Escape') selectCard(null);
+    if (e.key === 'm' || e.key === 'M') $('muteBtn').click();
+    if (e.key === 'p' || e.key === 'P') if (!$('pauseBtn').disabled) $('pauseBtn').click();
+  });
+  app.addEventListener('contextmenu', e => { e.preventDefault(); selectCard(null); });
+
+  $('muteBtn').addEventListener('click', () => { AU.setMuted(!AU.muted); $('muteBtn').textContent = AU.muted ? '🔇' : '🔊'; });
+  $('debugBtn').addEventListener('click', () => {
+    debugGold = !debugGold;
+    $('debugBtn').classList.toggle('on', debugGold);
+    $('debugBtn').textContent = debugGold ? '♾️' : '🛠';
+    if (debugGold) S().gold = Math.max(S().gold, 9999);
+    toast(debugGold ? '调试模式：💰 无限金钱（锁定 9999）' : '调试模式已关闭');
+  });
+  $('restartBtn').addEventListener('click', () => location.reload());
+  $('pauseBtn').addEventListener('click', () => {
+    const ov = $('pauseOvl');
+    if (!started) { toast('先点击「开始」进入游戏'); return; }
+    if (paused) { paused = false; ov.style.display = 'none'; AU.resumeAll(); return; }
+    // 暂停在任何阶段都可用；若试听正在播放，先停止播放（普通段重听免费，Boss 已扣费不退）
+    const wasListening = listenTimers.length > 0;
+    clearListenTimers();
+    if (wasListening) $('counter').textContent = '⏸ 已暂停（试听已停止，想听再点「重听」）';
+    paused = true; ov.style.display = 'block'; AU.pauseAll();
+  });
+
+  // ---------- 主循环 ----------
+  let paused = false, lastT = 0, startClock = null, debugGold = false;
+  function tickBody(dt) {
+    if (debugGold && started) S().gold = Math.max(S().gold, 9999); // 调试：金钱锁定（视图层，不进 CONFIG）
+    core.update(dt);
+    if (startClock !== null && !S().over) core.setTime((performance.now() - startClock) / 1000);
+    consumeEvents();
+    // 渲染同步
+    const st = S();
+    for (const u of st.units) if (!u.gone) unitEl(u);
+    for (const n of st.notes) if (n.state !== 'gone') noteEl(n);
+    sweepDom();
+    renderHud(); renderHudTitle();
+  }
+  function loop(t) {
+    requestAnimationFrame(loop);
+    const raw = Math.min(0.05, (t - lastT) / 1000 || 0.016); lastT = t;
+    if (!paused && started) tickBody(raw * (window.__GAME.fast || 1));
+  }
+  let started = false;
+  $('startBtn').addEventListener('click', () => {
+    AU.init(); AU.resumeAll();
+    $('startOvl').classList.remove('show');
+    started = true; startClock = performance.now();
+    core.start();
+  });
+  window.__GAME.core = core; window.__GAME.AU = AU; window.__GAME.setFast = f => { window.__GAME.fast = f; };
+  // 手动泵帧（后台标签页 rAF 冻结时供自动化测试驱动；玩家侧不使用）
+  window.__GAME.tick = n => { if (!paused && started) for (let i = 0; i < n; i++) tickBody(0.016); };
+  // 纯逻辑快进：跳过逐帧渲染，末尾统一消费事件+渲染一次（测试用，速度比 tick 快百倍）
+  window.__GAME.tickSim = sec => {
+    if (paused || !started) return;
+    const steps = Math.round(sec / 0.016);
+    for (let i = 0; i < steps && !S().over; i++) {
+      if (debugGold) S().gold = Math.max(S().gold, 9999);
+      core.update(0.016);
+      if (startClock !== null) S().stats.timeSec += 0.016;
+    }
+    consumeEvents();
+    const st = S();
+    for (const u of st.units) if (!u.gone) unitEl(u);
+    for (const n of st.notes) if (n.state !== 'gone') noteEl(n);
+    sweepDom(); renderHud(); renderHudTitle();
+  };
+  window.__GAME.pumpUntil = (phase, maxSec) => {
+    let t = 0;
+    while (__GAME.core.s.phase !== phase && !__GAME.core.s.over && t < maxSec) { core.update(0.016); t += 0.016; }
+    consumeEvents();
+    const st = S();
+    for (const u of st.units) if (!u.gone) unitEl(u);
+    for (const n of st.notes) if (n.state !== 'gone') noteEl(n);
+    sweepDom(); renderHud(); renderHudTitle();
+    return __GAME.core.s.phase;
+  };
+
+  // 窗口尺寸用于气泡定位
+  function updScale() { const r = app.getBoundingClientRect(); curScale = r.width / 1920; }
+  window.addEventListener('resize', updScale); updScale();
+  requestAnimationFrame(t => { lastT = t; loop(t); });
+})();
+</script>
+</body>
+</html>

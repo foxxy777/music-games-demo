@@ -676,40 +676,78 @@ document.getElementById('btn-again').addEventListener('click', () => {
   newRound();
 });
 
-// ===== 强制横屏 =====
-let _lockAutoAttempted = false;
-function autoTryLockLandscape() {
-  if (_lockAutoAttempted) return;
-  _lockAutoAttempted = true;
-  if (screen.orientation && screen.orientation.lock) {
-    screen.orientation.lock('landscape').catch(err => {});
+// ===== 强制横屏（多角度重试版）=====
+async function robustLockLandscape() {
+  if (!screen.orientation || !screen.orientation.lock) {
+    return {ok: false, reason: '浏览器不支持 Orientation Lock API'};
   }
+  // 按顺序尝试三个横屏角度
+  const angles = ['landscape', 'landscape-primary', 'landscape-secondary'];
+  for (const angle of angles) {
+    try {
+      await screen.orientation.lock(angle);
+      console.log(`Locked to ${angle}`);
+      return {ok: true, angle};
+    } catch (err) {
+      console.log(`Lock ${angle} failed:`, err.message);
+    }
+  }
+  return {ok: false, reason: '三种横屏角度都失败（手机旋转感应未开启/被锁定/权限不足）'};
 }
 
-function manualTryLockLandscape() {
-  if (screen.orientation && screen.orientation.lock) {
-    return screen.orientation.lock('landscape');
-  }
-  return Promise.reject(new Error('Orientation lock API not available'));
+// 首次启动：显示全屏引导浮层
+function showOrientationOverlay() {
+  if (document.getElementById('orient-overlay')) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'orient-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:radial-gradient(800px 600px at 50% 40%, #1a2247 0%, #0d1122 60%, #050714 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:9999;color:#dfe6ff;font-family:inherit;text-align:center;padding:24px;';
+  overlay.innerHTML = `
+    <div style="font-size:56px">📱↻</div>
+    <div style="font-size:22px;font-weight:bold;color:#ffd54f;letter-spacing:2px">V18 扑克牌玩法</div>
+    <div style="font-size:15px;color:#dfe6ff;line-height:1.7;max-width:340px">点击下方按钮，浏览器会把屏幕<strong style="color:#ffd54f">强制转成横屏</strong></div>
+    <div style="font-size:12px;color:#8f9ccf;line-height:1.6;max-width:320px">若未自动转，请检查手机<strong style="color:#ffd54f">"自动旋转/屏幕旋转"</strong>是否开启</div>
+    <button id="orient-go" style="padding:14px 36px;margin-top:8px;background:linear-gradient(160deg,#a37c1c,#6d5210);border:2px solid #ffd54f;border-radius:10px;color:#fff6d8;font-size:18px;font-weight:bold;cursor:pointer;font-family:inherit;">🚀 进入横屏</button>
+    <button id="orient-skip" style="padding:8px 20px;background:transparent;border:1px solid #5d6ba0;border-radius:8px;color:#8f9ccf;font-size:13px;cursor:pointer;margin-top:4px;font-family:inherit;">跳过（竖屏玩）</button>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#orient-go').addEventListener('click', async (e) => {
+    e.stopPropagation();
+    overlay.querySelector('#orient-go').textContent = '⏳ 锁定中...';
+    overlay.querySelector('#orient-go').disabled = true;
+    const result = await robustLockLandscape();
+    overlay.remove();
+    if (!result.ok) {
+      alert('❌ 锁定横屏失败\n\n原因：' + result.reason + '\n\n建议：\n1. 下拉手机控制中心，打开"自动旋转/屏幕旋转"开关\n2. 锁定后刷新本页再试\n3. 如果还是不行，点"跳过（竖屏玩）"用竖屏版');
+    } else {
+      // 成功 - 设备会旋转，页面重排为 landscape
+      console.log('横屏锁定成功:', result.angle);
+    }
+  });
+  overlay.querySelector('#orient-skip').addEventListener('click', (e) => {
+    e.stopPropagation();
+    overlay.remove();
+  });
 }
 
-document.getElementById('lock-btn').addEventListener('click', (e) => {
+// "🔒 锁定横屏" 按钮的点击处理
+document.getElementById('lock-btn').addEventListener('click', async (e) => {
   e.stopPropagation();
-  manualTryLockLandscape()
-    .then(() => {
-      // 成功 - 设备会旋转，画面重新布局
-      const btn = document.getElementById('lock-btn');
-      btn.textContent = '✅ 已横屏';
-    })
-    .catch(err => {
-      alert('锁定横屏失败\n\n可能原因：\n• 手机旋转感应未开启\n• 屏幕方向锁定\n• 浏览器不支持此 API\n\n当前显示：竖屏适配版（内容缩小）');
-    });
+  const btn = document.getElementById('lock-btn');
+  const oldText = btn.textContent;
+  btn.textContent = '⏳ 锁定中...';
+  btn.disabled = true;
+  const result = await robustLockLandscape();
+  btn.disabled = false;
+  if (result.ok) {
+    btn.textContent = '✅ 已横屏';
+  } else {
+    btn.textContent = oldText;
+    alert('❌ 锁定横屏失败\n\n' + result.reason);
+  }
 });
-// 首次点击 / 触摸时自动尝试锁横屏
-document.addEventListener('click', autoTryLockLandscape, {once: true});
-document.addEventListener('touchstart', autoTryLockLandscape, {once: true});
 
 // ===== 启动 =====
+showOrientationOverlay();   // 显示引导浮层
 newRound();
 updateMiniScore();
 document.addEventListener('click', () => ensureAudio(), {once:true});

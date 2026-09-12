@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1000, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>V19 防御能量高潮 · MVP</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; padding:0; background:#050714; font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; user-select:none; color:#dfe6ff; overflow-x:auto; overflow-y:hidden; }
+
+  #app {
+    width: 1000px;
+    height: 560px;
+    margin: 0 auto;
+    background: radial-gradient(900px 560px at 50% 50%, #1a2247 0%, #0d1122 60%, #050714 100%);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* ===== Status bar ===== */
+  #status {
+    flex: 0 0 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background: linear-gradient(180deg, #0d1128, #070912);
+    border-bottom: 1px solid #2c3560;
+    font-size: 13px;
+  }
+  #status .energy { color: #ffd54f; font-weight: bold; }
+  #status .climax-len { color: #ff7a7a; }
+  #status .round { color: #8f9ccf; }
+
+  /* ===== Enemy area ===== */
+  #enemy-area {
+    flex: 0 0 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-bottom: 1px solid #2c3560;
+    background: linear-gradient(180deg, #0d1128, transparent);
+  }
+  #enemy-label { font-size: 12px; color: #8f9ccf; margin-bottom: 4px; letter-spacing: 2px; }
+  #enemy-notes { display: flex; gap: 10px; }
+  .enemy-note {
+    width: 50px; height: 50px;
+    border-radius: 8px;
+    border: 2px solid #4a568f;
+    background: #161c39;
+    color: #ffd54f;
+    font-size: 22px; font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s;
+  }
+  .enemy-note.playing { transform: scale(1.15); box-shadow: 0 0 16px #ffd54f88; border-color: #ffd54f; }
+  .enemy-note.blocked { border-color: #5dff7a; box-shadow: 0 0 12px #5dff7a66; }
+  .enemy-note.leaked { border-color: #ff5d6c; opacity: 0.5; }
+  .enemy-note.missed { border-color: #5d6ba0; opacity: 0.5; }
+
+  #audio-btn {
+    margin-top: 4px;
+    padding: 3px 12px;
+    font-size: 11px;
+    background: #232b4d; border: 1px solid #4a568f;
+    border-radius: 6px; color: #dfe6ff;
+    cursor: pointer;
+  }
+
+  /* ===== Lanes (7) ===== */
+  #mid {
+    flex: 1;
+    padding: 6px 12px 4px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  #lanes {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .lane {
+    flex: 1;
+    display: flex; align-items: center;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #ffffff05, #ffffff0a 50%, #ffffff05);
+    border: 1px solid #ffffff15;
+    padding: 0 10px;
+    min-height: 0;
+    cursor: pointer;
+    transition: all .15s;
+    position: relative;
+  }
+  .lane:hover { background: linear-gradient(90deg, #ffffff0a, #ffffff15 50%, #ffffff0a); border-color: #ffffff30; }
+  .lane-name {
+    width: 44px; flex: none;
+    text-align: center; font-size: 15px; font-weight: bold;
+    color: #dfe6ff;
+    text-shadow: 0 0 8px currentColor;
+    padding: 0 4px;
+  }
+  .lane-counter {
+    flex: 1;
+    display: flex; gap: 4px; align-items: center;
+    font-size: 11px; color: #5d6ba0;
+    padding-left: 8px;
+  }
+  .lane-counter .count {
+    font-size: 18px; font-weight: bold; color: #ffd54f;
+    min-width: 24px; text-align: center;
+  }
+  .lane-counter .count.zero { color: #5d6ba0; }
+  .lane-counter .hint {
+    font-size: 11px; color: #5d6ba0; font-style: italic;
+  }
+  .lane.win { background: linear-gradient(90deg, #5dff7a15, #5dff7a30 50%, #5dff7a15); border-color: #5dff7a; }
+  .lane.lose { background: linear-gradient(90deg, #ff5d6c10, #ff5d6c20 50%, #ff5d6c20); border-color: #ff5d6c; opacity: 0.6; }
+
+  /* ===== Bottom: hand + controls ===== */
+  #bottom {
+    flex: 0 0 200px;
+    display: flex; flex-direction: column;
+    padding: 4px 8px 6px;
+    border-top: 1px solid #2c3560;
+  }
+  #hand-label { font-size: 11px; color: #8f9ccf; text-align: center; margin-bottom: 3px; }
+  #hand {
+    flex: 1;
+    display: flex; gap: 5px; flex-wrap: nowrap;
+    justify-content: center; align-items: center;
+    overflow-x: auto;
+    min-height: 0;
+  }
+  .pcard {
+    width: 56px; height: 78px; flex: none;
+    border-radius: 6px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-weight: bold; line-height: 1.05;
+    border: 2px solid;
+    cursor: pointer;
+    transition: transform .1s, box-shadow .1s;
+    position: relative;
+  }
+  .pcard.red { color: #ff7a7a; border-color: #c04658; background: linear-gradient(165deg, #2a1820, #160c10); }
+  .pcard.black { color: #dfe6ff; border-color: #4a568f; background: linear-gradient(165deg, #1a2042, #0d1128); }
+  .pcard.joker { color: #ffd54f; border-color: #ffd54f; background: linear-gradient(165deg, #3a2e10, #1a1408); }
+  .pcard:active { transform: scale(0.95); }
+  .pcard.selected { transform: translateY(-8px); box-shadow: 0 0 14px #ffd54f88; }
+  .pcard.used { opacity: 0.3; }
+  .pcard .prank { font-size: 18px; }
+  .pcard .psuit { font-size: 14px; margin-top: 1px; }
+  .pcard .pfee { position: absolute; top: 2px; right: 4px; font-size: 9px; color: #ffd54f; background: #181e3dee; padding: 1px 3px; border-radius: 3px; }
+
+  #controls {
+    flex: 0 0 auto;
+    display: flex; gap: 8px; align-items: center; justify-content: center;
+    padding-top: 4px;
+  }
+  .btn {
+    padding: 6px 14px;
+    background: #232b4d; border: 1px solid #4a568f;
+    border-radius: 7px; color: #dfe6ff; font-size: 12px;
+    cursor: pointer;
+  }
+  .btn.gold {
+    background: linear-gradient(160deg, #a37c1c, #6d5210);
+    border-color: #ffd54f; color: #fff6d8; font-weight: bold;
+  }
+  .btn:disabled { opacity: .35; cursor: default; }
+  #climax-btn {
+    padding: 6px 16px;
+    background: linear-gradient(160deg, #c04658, #6d1018);
+    border: 2px solid #ff7a7a; color: #fff; font-weight: bold;
+    border-radius: 7px;
+    cursor: pointer;
+  }
+  #climax-btn:disabled { opacity: .35; cursor: default; }
+
+  /* ===== Climax queue preview ===== */
+  #climax-queue {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: #181e3dee;
+    border: 1px solid #ff7a7a;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+    z-index: 10;
+    max-width: 280px;
+  }
+  #climax-queue .label { color: #ff7a7a; font-weight: bold; margin-bottom: 4px; }
+  #climax-queue .qcards { display: flex; gap: 3px; flex-wrap: wrap; }
+  #climax-queue .qcard {
+    width: 30px; height: 42px;
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: bold;
+    border: 1px solid;
+  }
+  #climax-queue .qcard.red { color: #ff7a7a; border-color: #c04658; background: #2a1820; }
+  #climax-queue .qcard.black { color: #dfe6ff; border-color: #4a568f; background: #151a38; }
+  #climax-queue .qcard.joker { color: #ffd54f; border-color: #ffd54f; background: #2a2010; }
+  #climax-queue .total { color: #ffd54f; margin-top: 4px; text-align: right; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="status">
+    <span class="round">第 <b id="round-num">1</b> 回合</span>
+    <span class="energy">能量 <b id="energy-val">0</b> / 10</span>
+    <span class="climax-len">高潮序列 <b id="climax-segments">0</b> 段 / <b id="climax-secs">0</b> 秒</span>
+  </div>
+
+  <div id="enemy-area">
+    <div id="enemy-label">敌人本回合播 3 音（可重复）</div>
+    <div id="enemy-notes">
+      <div class="enemy-note" data-idx="0">?</div>
+      <div class="enemy-note" data-idx="1">?</div>
+      <div class="enemy-note" data-idx="2">?</div>
+    </div>
+    <button id="audio-btn">▶ 重听 3 音</button>
+  </div>
+
+  <div id="mid">
+    <div id="lanes"></div>
+  </div>
+
+  <div id="bottom">
+    <div id="hand-label">我的手牌 (10 张) - 点选加入高潮序列（费用=秒数）</div>
+    <div id="hand"></div>
+    <div id="controls">
+      <button class="btn" id="btn-clear-lanes">清除点选</button>
+      <button class="btn gold" id="btn-confirm">确认防御</button>
+      <button id="climax-btn">🎵 高潮演奏 (0秒)</button>
+      <button class="btn" id="btn-new-round">新回合</button>
+    </div>
+  </div>
+
+  <div id="climax-queue">
+    <div class="label">🎵 高潮序列</div>
+    <div class="qcards" id="qcards"><i style="color:#5d6ba0">（打赢了选卡加入）</i></div>
+    <div class="total">总长: <b id="qtotal">0</b> 秒</div>
+  </div>
+</div>
+
+<script>
+const SUITS = ['♠', '♥', '♦', '♣'];
+const SUIT_COLOR = {'♠':'black', '♥':'red', '♦':'red', '♣':'black'};
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const RANK_VALUE = {'A':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13};
+
+const LANE_NOTES = ['do','re','mi','fa','sol','la','si'];
+// 13 半音：A4=1 起到 A5=13 (V18 同款)
+const ENEMY_NOTES_PER_LANE = [1, 3, 5, 6, 8, 10, 12]; // do=1(C), re=3(D), mi=5(E), fa=6(F), sol=8(G), la=10(A), si=12(B) → 半音位置
+
+const ENERGY_MAX = 10;
+const HAND_SIZE = 10;
+
+function rankToFreq(rankValue) {
+  return 440 * Math.pow(2, (rankValue - 1) / 12);
+}
+
+// 半音值 → 频率（每个 lane 用 ENEMY_NOTES_PER_LANE 里的 rankValue）
+function laneToFreq(laneIdx) {
+  return rankToFreq(ENEMY_NOTES_PER_LANE[laneIdx]);
+}
+
+function makeDeck() {
+  const deck = [];
+  for (const suit of SUITS) {
+    for (const rank of RANKS) {
+      deck.push({
+        id: suit + rank,
+        rank, suit,
+        value: RANK_VALUE[rank],
+        color: SUIT_COLOR[suit],
+        isJoker: false,
+        fee: RANK_VALUE[rank]
+      });
+    }
+  }
+  deck.push({id:'JK1', rank:'JK', suit:'★', value:14, color:'joker', isJoker:true, fee: 20});
+  deck.push({id:'JK2', rank:'JK', suit:'★', value:14, color:'joker', isJoker:true, fee: 20});
+  return deck;
+}
+function shuffle(deck) {
+  for (let i=deck.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  return deck;
+}
+
+// ===== State =====
+let state = {
+  round: 1,
+  deck: [],
+  enemyLanes: [], // 3 个 laneIdx（可重复）
+  playerPicks: {}, // {laneIdx: count}
+  playerHand: [],
+  energy: 0,
+  climaxQueue: [], // [{card, laneIdx, freq}, ...]
+  judged: false,
+  success: false
+};
+
+function newRound() {
+  state.deck = shuffle(makeDeck());
+  // 敌人随机选 3 个 lane（可重复）
+  state.enemyLanes = [];
+  for (let i=0; i<3; i++) state.enemyLanes.push(Math.floor(Math.random() * 7));
+  // 玩家发 10 张手牌
+  state.playerHand = state.deck.splice(0, HAND_SIZE);
+  state.playerPicks = {};
+  state.judged = false;
+  state.success = false;
+  state.round++;
+  renderAll();
+  // 自动播放敌人 3 音
+  setTimeout(() => playEnemySequence(), 400);
+}
+
+// ===== Web Audio =====
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playTone(freq, when=0, dur=0.45, type='triangle') {
+  ensureAudio();
+  const t = audioCtx.currentTime + when;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(0.3, t + 0.03);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.start(t);
+  osc.stop(t + dur + 0.05);
+}
+function playEnemySequence() {
+  if (!audioCtx) return;
+  state.enemyLanes.forEach((laneIdx, i) => {
+    const freq = laneToFreq(laneIdx);
+    playTone(freq, i * 0.55, 0.45);
+    // 同时高亮 UI
+    setTimeout(() => {
+      const node = document.querySelector(`.enemy-note[data-idx="${i}"]`);
+      if (node) {
+        node.classList.add('playing');
+        node.textContent = LANE_NOTES[laneIdx];
+        setTimeout(() => node.classList.remove('playing'), 400);
+      }
+    }, i * 550);
+  });
+}
+function playClimaxSequence() {
+  // 播放高潮序列：每张卡的 freq 接续播放，duration = fee 秒
+  let cumulativeTime = 0;
+  state.climaxQueue.forEach((entry, i) => {
+    const dur = entry.card.fee * 0.4; // MVP: 1 fee = 0.4 秒（可调）
+    playTone(entry.freq, cumulativeTime, dur, 'sine');
+    cumulativeTime += dur * 0.85; // 重叠一点做拼接
+  });
+}
+
+// ===== Card HTML =====
+function cardHTML(c, opts={}) {
+  const {small=false, inQueue=false} = opts;
+  if (c.isJoker) {
+    return `<div class="${small||inQueue?'qcard':'pcard'} joker"><div class="${inQueue?'':'prank'}">JK</div><div class="${inQueue?'':'psuit'}">★</div>${!small && !inQueue ? `<div class="pfee">${c.fee}s</div>` : ''}</div>`;
+  }
+  const feeLabel = !small && !inQueue ? `<div class="pfee">${c.fee}s</div>` : '';
+  return `<div class="${small||inQueue?'qcard':'pcard'} ${c.color}"><div class="${inQueue?'':'prank'}">${c.rank}</div><div class="${inQueue?'':'psuit'}">${c.suit}</div>${feeLabel}</div>`;
+}
+
+function handCardHTML(c, idx) {
+  let cls = 'pcard ' + c.color;
+  if (state.selectedCardIdx === idx) cls += ' selected';
+  if (c.used) cls += ' used';
+  const rank = c.isJoker ? 'JOKER' : c.rank;
+  const suit = c.isJoker ? '★' : c.suit;
+  return `<div class="${cls}" data-idx="${idx}"><div class="prank">${rank}</div><div class="psuit">${suit}</div><div class="pfee">${c.fee}s</div></div>`;
+}
+
+// ===== Render =====
+function renderStatus() {
+  document.getElementById('round-num').textContent = state.round;
+  document.getElementById('energy-val').textContent = state.energy;
+  document.getElementById('climax-segments').textContent = state.climaxQueue.length;
+  const totalSecs = state.climaxQueue.reduce((s,e) => s + e.card.fee, 0);
+  document.getElementById('climax-secs').textContent = totalSecs;
+  document.getElementById('climax-btn').textContent = `🎵 高潮演奏 (${totalSecs}秒)`;
+  document.getElementById('climax-btn').disabled = state.climaxQueue.length === 0;
+}
+
+function renderEnemy() {
+  const nodes = document.querySelectorAll('.enemy-note');
+  nodes.forEach((node, i) => {
+    node.classList.remove('playing','blocked','leaked','missed');
+    if (state.judged) {
+      node.classList.add('blocked'); // 敌人播的音已挡下/未挡用 lane result 标
+    }
+    node.textContent = state.judged ? LANE_NOTES[state.enemyLanes[i]] : '?';
+  });
+  // 渲染结算结果（每个 enemy-note 用对应 lane 的状态染色）
+  if (state.judged) {
+    state.enemyLanes.forEach((laneIdx, i) => {
+      const node = document.querySelector(`.enemy-note[data-idx="${i}"]`);
+      if (!node) return;
+      const picks = state.playerPicks[laneIdx] || 0;
+      if (picks > 0) node.classList.add('blocked');
+      else node.classList.add('leaked');
+    });
+  }
+}
+
+function renderLanes() {
+  const el = document.getElementById('lanes');
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const count = state.playerPicks[i] || 0;
+    let cls = 'lane';
+    if (state.judged) {
+      // 结算后：挡对 = green，没挡对（点的）= red，没点 = 灰色
+      const enemyHit = state.enemyLanes.filter(l => l === i).length;
+      if (count > 0 && enemyHit > 0) cls += ' win';
+      else if (count > 0 && enemyHit === 0) cls += ' lose';
+    }
+    const displayCount = count > 0 ? `${count} 次` : '<span class="hint">点+1</span>';
+    html += `<div class="${cls}" data-lane="${i}">
+      <div class="lane-name">${LANE_NOTES[i]}</div>
+      <div class="lane-counter">
+        <span class="count ${count===0?'zero':''}">${count}</span>
+        ${count > 0 ? '' : '<span class="hint">点 +1</span>'}
+      </div>
+    </div>`;
+  }
+  el.innerHTML = html;
+  el.querySelectorAll('.lane').forEach(node => {
+    node.addEventListener('click', () => {
+      if (state.judged) return;
+      const laneIdx = +node.dataset.lane;
+      state.playerPicks[laneIdx] = (state.playerPicks[laneIdx] || 0) + 1;
+      renderLanes();
+    });
+  });
+}
+
+function renderHand() {
+  const el = document.getElementById('hand');
+  el.innerHTML = state.playerHand.map((c, idx) => handCardHTML(c, idx)).join('');
+  el.querySelectorAll('.pcard').forEach(node => {
+    node.addEventListener('click', () => {
+      if (state.judged) return;
+      const idx = +node.dataset.idx;
+      const card = state.playerHand[idx];
+      if (card.used) return;
+      state.selectedCardIdx = (state.selectedCardIdx === idx) ? null : idx;
+      renderHand();
+    });
+  });
+}
+
+function renderQueue() {
+  const el = document.getElementById('qcards');
+  if (state.climaxQueue.length === 0) {
+    el.innerHTML = '<i style="color:#5d6ba0">（打赢了选卡加入）</i>';
+  } else {
+    el.innerHTML = state.climaxQueue.map(e => cardHTML(e.card, {inQueue:true})).join('');
+  }
+  document.getElementById('qtotal').textContent = state.climaxQueue.reduce((s,e) => s + e.card.fee, 0);
+}
+
+function renderAll() {
+  renderStatus();
+  renderEnemy();
+  renderLanes();
+  renderHand();
+  renderQueue();
+}
+
+// ===== Confirm defense =====
+function confirmDefense() {
+  if (state.judged) return;
+  // 计算匹配的音：每个 enemy lane，玩家对应 laneIdx 的 pick count ≥ 1 算挡下
+  let blocks = 0;
+  const matchedLanes = new Set();
+  for (const enemyLane of state.enemyLanes) {
+    const picks = state.playerPicks[enemyLane] || 0;
+    if (picks > 0) {
+      blocks++;
+      matchedLanes.add(enemyLane);
+    }
+  }
+  const oldEnergy = state.energy;
+  state.energy = Math.min(ENERGY_MAX, state.energy + blocks);
+  state.judged = true;
+  state.success = blocks > 0;
+  state.blocks = blocks;
+  renderAll();
+  // 反馈
+  if (blocks > 0) {
+    showToast(`✅ 挡下 ${blocks} / 3 音 +${blocks} 能量！${state.energy === ENERGY_MAX ? ' (能量已满!)' : ''}`);
+  } else {
+    showToast(`❌ 没挡到任何音，0 能量`);
+  }
+}
+
+// ===== Toast =====
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:absolute;left:50%;top:80px;transform:translateX(-50%);background:#181e3dee;border:1px solid #ffd54f;border-radius:8px;padding:10px 20px;font-size:14px;z-index:99;opacity:0;transition:opacity .25s;white-space:nowrap;color:#ffd54f;';
+    document.getElementById('app').appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  setTimeout(() => t.style.opacity = '0', 2500);
+}
+
+// ===== Add card to climax queue =====
+function addSelectedToQueue() {
+  if (state.selectedCardIdx === null) {
+    showToast('先从手牌选一张加入高潮');
+    return;
+  }
+  if (!state.success) {
+    showToast('⚠️ 这回合还没打中（要挡下 1+ 才能拼接）');
+    return;
+  }
+  const card = state.playerHand[state.selectedCardIdx];
+  if (card.used) return;
+  // 给每个卡分配 lane（用卡牌的 value 决定 lane，或者随机）
+  const laneIdx = (card.value - 1) % 7; // 1→0, 2→1, ..., 7→6, 8→0, ..., K(13)→5, Joker→6
+  state.climaxQueue.push({card, laneIdx, freq: laneToFreq(laneIdx)});
+  card.used = true;
+  state.selectedCardIdx = null;
+  renderAll();
+  showToast(`✨ ${card.isJoker?'JOKER':card.rank+card.suit} 加入高潮 (+${card.fee}秒)`);
+}
+
+// ===== Climax playback =====
+function playClimax() {
+  if (state.climaxQueue.length === 0) return;
+  const totalSecs = state.climaxQueue.reduce((s,e) => s + e.card.fee, 0);
+  showToast(`🎵 演奏高潮序列 (${totalSecs}秒, ${state.climaxQueue.length}段)`);
+  playClimaxSequence();
+}
+
+// ===== Event bindings =====
+document.getElementById('audio-btn').addEventListener('click', () => {
+  ensureAudio();
+  playEnemySequence();
+});
+document.getElementById('btn-clear-lanes').addEventListener('click', () => {
+  if (state.judged) return;
+  state.playerPicks = {};
+  renderLanes();
+});
+document.getElementById('btn-confirm').addEventListener('click', confirmDefense);
+document.getElementById('climax-btn').addEventListener('click', playClimax);
+document.getElementById('btn-new-round').addEventListener('click', newRound);
+// 双击手牌 → 加入高潮
+document.getElementById('hand').addEventListener('dblclick', (e) => {
+  const node = e.target.closest('.pcard');
+  if (!node) return;
+  const idx = +node.dataset.idx;
+  state.selectedCardIdx = idx;
+  addSelectedToQueue();
+});
+// 单击手牌 → 选中/取消
+// (在 renderHand() 里已绑定)
+
+// ===== Start =====
+newRound();
+renderAll();
+
+document.addEventListener('click', () => ensureAudio(), {once:true});
+document.addEventListener('touchstart', () => ensureAudio(), {once:true});
+</script>
+</body>
+</html>

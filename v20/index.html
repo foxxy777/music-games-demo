@@ -58,7 +58,12 @@ html,body{background:#050714;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .slot.atkc{color:#ff9a8a;border-color:#ff5d6c;background:#2a1220;font-weight:bold;font-size:14px}
 .ldmg{font-size:11px;color:#ff7a7a;padding:0 4px;flex-shrink:0}
 #bottom{flex:0 0 30%;display:flex;flex-direction:column;padding:6px 14px 8px;border-top:1px solid #2c3560;background:linear-gradient(0deg,#0d1128,transparent)}
-#p-status{display:flex;gap:10px;font-size:11px;color:#9fb0e8;padding-bottom:3px;align-items:center;flex-wrap:wrap}
+#p-status{display:flex;gap:6px;font-size:11px;color:#9fb0e8;padding-bottom:3px;align-items:center;flex-wrap:wrap}
+#hp-big{display:flex;align-items:center;gap:8px;width:100%;margin-bottom:2px}
+#hp-big .hicon{font-size:16px;flex:none}
+#hp-big .bar{flex:1;height:18px;background:#20264a;border:1.5px solid #ff5d6c88;border-radius:9px;overflow:hidden;position:relative}
+#hp-big .fill{height:100%;background:linear-gradient(90deg,#ff5d6c,#ff9a76);transition:width .3s}
+#hp-big .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;color:#fff;text-shadow:0 1px 2px #000}
 #p-status .tag{padding:2px 7px;border-radius:5px}
 .tag.hp{background:#3a1220;color:#ff9a8a}
 .tag.gold{background:#3a2e10;color:#ffd54f}
@@ -235,7 +240,7 @@ function renderMap(){
   document.getElementById('map-screen').classList.add('on');
   document.getElementById('battle-screen').classList.remove('on');
   document.getElementById('map-stats').innerHTML=
-    `❤️ HP <b>${S.hp}</b>/${P_MAXHP} · 💰 <b>${S.gold}</b> · 🃏 <b>${S.deck.length}</b> 张 · 第 <b>${S.curLayer+1}</b>/15 层`;
+    `❤️ HP <b>${S.hp}</b>/${P_MAXHP} · 💰 <b>${S.gold}</b> · 🃏 <b>${S.deck.length}</b> 张 · 第 <b>${S.curLayer+1}</b>/15 层<br>⚔️ 战士天赋：多余防御留存为备用盾（维持 1 回合）`;
   const el=document.getElementById('map-layers');el.innerHTML='';
   S.layers.forEach((row,li)=>{
     const div=document.createElement('div');div.className='map-layer';
@@ -285,7 +290,7 @@ function startBattle(kind){
   S.bt={
     m,eHP:m.hp,eMax:m.hp,eBlock:m.sh||0,vuln:0, // vuln=音膜破损回合数
     turn:0,placements:[],picks:{},
-    vol:0,block:0,metal:0,barricade:false,tempAtk:0,
+    vol:0,block:0,metal:0,barricade:false,tempAtk:0,reserve:0,
     energy:3,maxE:3,
     draw:[],hand:[],discard:[],exhaust:[],
     charging:0,cycleIdx:0,reflect:m.reflect||0,
@@ -389,11 +394,13 @@ function renderBattle(){
   el.querySelectorAll('.lane').forEach(n=>{
     n.onclick=()=>{if(S.selCard!=null)placeCard(+n.dataset.l)};
   });
-  // player status
+  // 玩家状态: 大血条 + 标签
   document.getElementById('p-status').innerHTML=
-    `<span class="tag hp">❤️ ${S.hp}/${P_MAXHP}</span><span class="tag gold">💰 ${S.gold}</span>`+
+    `<div id="hp-big"><span class="hicon">❤️</span><div class="bar"><div class="fill" style="width:${S.hp/P_MAXHP*100}%"></div><span class="num">铁音武士 &nbsp;${S.hp} / ${P_MAXHP}</span></div></div>`+
+    `<span class="tag gold">💰 ${S.gold}</span>`+
     `<span class="tag vol">🔊 音量 +${b.vol}</span>`+
     (b.block>0?`<span class="tag block">🛡 音盾 ${b.block}</span>`:'')+
+    (b.reserve>0?`<span class="tag block" style="border-color:#ffd54f;color:#ffd54f">🛡 备用盾 ${b.reserve} ⚔️天赋</span>`:'')+
     (b.metal>0?`<span class="tag metal">⚙ 金属音甲 +${b.metal}/回合</span>`:'')+
     (b.barricade?`<span class="tag barricade">🏰 壁垒(盾不清)</span>`:'');
   document.getElementById('energy').textContent=`♪ ${b.energy}/${b.maxE}`;
@@ -502,9 +509,14 @@ function endTurn(){
   if(hasWeak){b.vol=Math.max(0,b.vol-1);toast('⇩ 被削弱！音量-1')}
   // 音盾抵扣
   if(b.block>0){const abs=Math.min(b.block,dmgTaken);b.block-=abs;dmgTaken-=abs}
+  // ⚔️战士天赋: 备用盾抵扣漏伤(上回合留存,只维持这一回合)
+  let reserveUsed=0;
+  if(dmgTaken>0&&b.reserve>0){const abs=Math.min(b.reserve,dmgTaken);b.reserve-=abs;dmgTaken-=abs;reserveUsed=abs}
   if(dmgTaken>0)S.hp=Math.max(0,S.hp-dmgTaken);
-  // 回合末:音盾清空(壁垒除外),金属音甲在清空后累积(下回合生效)
-  if(!b.barricade)b.block=0;
+  if(reserveUsed>0)toast(`🛡 战士天赋:备用盾抵了 ${reserveUsed} 伤`)
+  // 回合末:音盾清空,多余部分留存为备用盾(天赋,维持1回合);壁垒则不清;金属音甲在清空后累积
+  if(!b.barricade){b.reserve=b.block;b.block=0}
+  else b.reserve=0;
   if(b.metal>0)b.block+=b.metal;
   // 弃手牌
   b.discard.push(...b.hand);b.hand=[];

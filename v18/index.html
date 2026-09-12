@@ -2,35 +2,42 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=1000, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>V18 扑克牌玩法 · MVP</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { width:100%; height:100%; overflow:hidden; background:#050714; font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; user-select:none; color:#dfe6ff; }
+  html, body { margin:0; padding:0; background:#050714; font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; user-select:none; color:#dfe6ff; overflow-x:auto; overflow-y:hidden; }
 
   #app {
     width: 1000px;
     height: 500px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    margin-top: -250px;
-    margin-left: -500px;
-    transform-origin: center center;
+    margin: 0 auto;
     background: radial-gradient(900px 500px at 50% 50%, #1a2247 0%, #0d1122 60%, #050714 100%);
-    overflow: hidden;
     display: flex;
     flex-direction: column;
+    position: relative;
   }
 
-  /* Scale to fit. JS will try screen.orientation.lock('landscape') for true landscape. */
-  /* In portrait (if lock fails): landscape content is shown scaled-down with letterbox. */
-  @media (orientation: landscape), (orientation: portrait) {
-    #app {
-      transform: scale(min(calc(100vw / 1000), calc(100vh / 500)));
-    }
+  /* 上下扫动提示（仅竖屏手机显示） */
+  #scroll-hint {
+    display: none;
+    position: fixed;
+    bottom: 8px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: #ffd54f;
+    font-size: 12px;
+    padding: 6px;
+    background: linear-gradient(180deg, transparent, #07091eee 80%);
+    pointer-events: none;
+    z-index: 50;
+    letter-spacing: 2px;
+  }
+  @media (max-width: 700px) {
+    #scroll-hint { display: block; }
   }
 
   /* ===== Top: enemy 5 cards ===== */
@@ -282,6 +289,8 @@
 </head>
 <body>
 
+<div id="scroll-hint">← 左右滑动查看完整游戏 →</div>
+
 <div id="app">
   <div id="top">
     <div id="enemy-label">敌人 5 张</div>
@@ -297,7 +306,6 @@
     <div id="hand-label">我的手牌 (10 张) - 点选 → 点对应横幅放置 (任意 5 个)</div>
     <div id="hand"></div>
     <div id="controls">
-      <button class="btn" id="lock-btn">🔒 锁定横屏</button>
       <span id="score-mini">chips 0 × mult 1 = 0</span>
       <button class="btn" id="btn-clear">清除</button>
       <button class="btn gold" id="btn-judge">判定</button>
@@ -676,78 +684,7 @@ document.getElementById('btn-again').addEventListener('click', () => {
   newRound();
 });
 
-// ===== 强制横屏（多角度重试版）=====
-async function robustLockLandscape() {
-  if (!screen.orientation || !screen.orientation.lock) {
-    return {ok: false, reason: '浏览器不支持 Orientation Lock API'};
-  }
-  // 按顺序尝试三个横屏角度
-  const angles = ['landscape', 'landscape-primary', 'landscape-secondary'];
-  for (const angle of angles) {
-    try {
-      await screen.orientation.lock(angle);
-      console.log(`Locked to ${angle}`);
-      return {ok: true, angle};
-    } catch (err) {
-      console.log(`Lock ${angle} failed:`, err.message);
-    }
-  }
-  return {ok: false, reason: '三种横屏角度都失败（手机旋转感应未开启/被锁定/权限不足）'};
-}
-
-// 首次启动：显示全屏引导浮层
-function showOrientationOverlay() {
-  if (document.getElementById('orient-overlay')) return;
-  const overlay = document.createElement('div');
-  overlay.id = 'orient-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:radial-gradient(800px 600px at 50% 40%, #1a2247 0%, #0d1122 60%, #050714 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:9999;color:#dfe6ff;font-family:inherit;text-align:center;padding:24px;';
-  overlay.innerHTML = `
-    <div style="font-size:56px">📱↻</div>
-    <div style="font-size:22px;font-weight:bold;color:#ffd54f;letter-spacing:2px">V18 扑克牌玩法</div>
-    <div style="font-size:15px;color:#dfe6ff;line-height:1.7;max-width:340px">点击下方按钮，浏览器会把屏幕<strong style="color:#ffd54f">强制转成横屏</strong></div>
-    <div style="font-size:12px;color:#8f9ccf;line-height:1.6;max-width:320px">若未自动转，请检查手机<strong style="color:#ffd54f">"自动旋转/屏幕旋转"</strong>是否开启</div>
-    <button id="orient-go" style="padding:14px 36px;margin-top:8px;background:linear-gradient(160deg,#a37c1c,#6d5210);border:2px solid #ffd54f;border-radius:10px;color:#fff6d8;font-size:18px;font-weight:bold;cursor:pointer;font-family:inherit;">🚀 进入横屏</button>
-    <button id="orient-skip" style="padding:8px 20px;background:transparent;border:1px solid #5d6ba0;border-radius:8px;color:#8f9ccf;font-size:13px;cursor:pointer;margin-top:4px;font-family:inherit;">跳过（竖屏玩）</button>
-  `;
-  document.body.appendChild(overlay);
-  overlay.querySelector('#orient-go').addEventListener('click', async (e) => {
-    e.stopPropagation();
-    overlay.querySelector('#orient-go').textContent = '⏳ 锁定中...';
-    overlay.querySelector('#orient-go').disabled = true;
-    const result = await robustLockLandscape();
-    overlay.remove();
-    if (!result.ok) {
-      alert('❌ 锁定横屏失败\n\n原因：' + result.reason + '\n\n建议：\n1. 下拉手机控制中心，打开"自动旋转/屏幕旋转"开关\n2. 锁定后刷新本页再试\n3. 如果还是不行，点"跳过（竖屏玩）"用竖屏版');
-    } else {
-      // 成功 - 设备会旋转，页面重排为 landscape
-      console.log('横屏锁定成功:', result.angle);
-    }
-  });
-  overlay.querySelector('#orient-skip').addEventListener('click', (e) => {
-    e.stopPropagation();
-    overlay.remove();
-  });
-}
-
-// "🔒 锁定横屏" 按钮的点击处理
-document.getElementById('lock-btn').addEventListener('click', async (e) => {
-  e.stopPropagation();
-  const btn = document.getElementById('lock-btn');
-  const oldText = btn.textContent;
-  btn.textContent = '⏳ 锁定中...';
-  btn.disabled = true;
-  const result = await robustLockLandscape();
-  btn.disabled = false;
-  if (result.ok) {
-    btn.textContent = '✅ 已横屏';
-  } else {
-    btn.textContent = oldText;
-    alert('❌ 锁定横屏失败\n\n' + result.reason);
-  }
-});
-
 // ===== 启动 =====
-showOrientationOverlay();   // 显示引导浮层
 newRound();
 updateMiniScore();
 document.addEventListener('click', () => ensureAudio(), {once:true});

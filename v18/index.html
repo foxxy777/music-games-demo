@@ -8,185 +8,287 @@
 <title>V18 扑克牌玩法 · MVP</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { width:100%; height:100%; overflow:hidden; background:#0a0e1a; font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; user-select:none; color:#dfe6ff; }
-  body { display:flex; align-items:center; justify-content:center; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#050714; font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; user-select:none; color:#dfe6ff; }
 
-  #stage {
-    position:fixed; inset:0;
-    display:flex; align-items:center; justify-content:center;
-    overflow:hidden;
-  }
   #app {
-    position:relative;
-    width:1000px; height:500px;
-    flex:none;
-    transform-origin:center center;
-    background:radial-gradient(800px 500px at 50% 40%, #1a2247 0%, #0d1122 60%, #050714 100%);
-    overflow:hidden;
-    display:flex; flex-direction:column;
+    width: 1000px;
+    height: 500px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -250px;
+    margin-left: -500px;
+    transform-origin: center center;
+    background: radial-gradient(900px 500px at 50% 50%, #1a2247 0%, #0d1122 60%, #050714 100%);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
-  /* ===== Top: enemy area ===== */
+  /* Landscape mode: fit directly */
+  @media (orientation: landscape) {
+    #app {
+      transform: scale(min(calc(100vw / 1000), calc(100vh / 500)));
+    }
+  }
+
+  /* Portrait mode: rotate 90deg to appear landscape */
+  @media (orientation: portrait) {
+    #app {
+      transform: rotate(90deg) scale(min(calc(100vw / 500), calc(100vh / 1000)));
+    }
+  }
+
+  /* ===== Top: enemy 5 cards ===== */
   #top {
-    flex: 0 0 28%;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    padding: 8px 12px;
+    flex: 0 0 24%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
     border-bottom: 1px solid #2c3560;
   }
-  #enemy-label { font-size:13px; color:#8f9ccf; margin-bottom:6px; letter-spacing:2px; }
-  #enemy-cards { display:flex; gap:6px; flex-wrap:nowrap; justify-content:center; }
+  #enemy-label {
+    font-size: 12px;
+    color: #8f9ccf;
+    margin-bottom: 3px;
+    letter-spacing: 2px;
+  }
+  #enemy-cards {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+    justify-content: center;
+  }
   .ecard {
-    width:54px; height:78px; border-radius:6px;
-    background:linear-gradient(165deg,#2a3260,#161c39);
-    border:2px solid #4a568f;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    font-weight:bold; font-size:18px; line-height:1.1;
-    transition:transform .2s, box-shadow .2s;
+    width: 56px;
+    height: 78px;
+    border-radius: 7px;
+    background: linear-gradient(165deg, #2a3260, #161c39);
+    border: 2px solid #4a568f;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    line-height: 1.05;
+    transition: transform .2s, box-shadow .2s;
   }
-  .ecard.red { color:#ff7a7a; border-color:#c04658; }
-  .ecard.black { color:#dfe6ff; border-color:#4a568f; }
-  .ecard.joker { color:#ffd54f; border-color:#ffd54f; background:linear-gradient(165deg,#5a4a10,#3a2e08); }
-  .ecard.playing { transform:scale(1.08); box-shadow:0 0 14px #ffd54f88; }
-  .ecard .esuit { font-size:16px; margin-top:2px; }
-  .ecard .erank { font-size:20px; }
+  .ecard.red { color: #ff7a7a; border-color: #c04658; background: linear-gradient(165deg, #3a1820, #1a0c10); }
+  .ecard.black { color: #dfe6ff; border-color: #4a568f; }
+  .ecard.joker { color: #ffd54f; border-color: #ffd54f; background: linear-gradient(165deg, #5a4a10, #3a2e08); }
+  .ecard.playing { transform: scale(1.08); box-shadow: 0 0 14px #ffd54f88; }
+  .ecard .erank { font-size: 18px; }
+  .ecard .esuit { font-size: 16px; margin-top: 1px; }
   #audio-btn {
-    margin-top:6px;
-    padding: 4px 14px; font-size:12px;
-    background:#232b4d; border:1px solid #4a568f; border-radius:8px; color:#dfe6ff;
-    cursor:pointer;
+    margin-top: 4px;
+    padding: 3px 12px;
+    font-size: 11px;
+    background: #232b4d;
+    border: 1px solid #4a568f;
+    border-radius: 6px;
+    color: #dfe6ff;
+    cursor: pointer;
   }
-  #audio-btn:disabled { opacity:.4; }
 
-  /* ===== Middle: lanes ===== */
+  /* ===== Middle: 7 lanes (V15 style) ===== */
   #mid {
     flex: 1;
-    display:flex; flex-direction:column;
-    padding: 6px 12px;
-    overflow:hidden;
+    padding: 4px 10px 2px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
-  #mid-label { font-size:11px; color:#8f9ccf; text-align:center; margin-bottom:4px; }
+  #lanes {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    position: relative;
+  }
   .lane {
-    flex:1;
-    display:flex; align-items:center; gap:4px;
-    margin-bottom:3px;
-    background:linear-gradient(90deg, #ffffff05, #ffffff0a 50%, #ffffff05);
-    border:1px solid #ffffff15; border-radius:6px;
-    padding: 0 8px;
-    min-height:0;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #ffffff05, #ffffff0a 50%, #ffffff05);
+    border: 1px solid #ffffff15;
+    padding: 0 6px;
+    min-height: 0;
+    position: relative;
   }
-  .lane:last-child { margin-bottom:0; }
-  .lane.empty { border-style:dashed; border-color:#ffffff25; }
-  .lane.win { background:linear-gradient(90deg, #5dff7a10, #5dff7a20 50%, #5dff7a10); border-color:#5dff7a; }
-  .lane.lose { background:linear-gradient(90deg, #ff5d6c10, #ff5d6c20 50%, #ff5d6c10); border-color:#ff5d6c; }
-  .lane.tie { background:linear-gradient(90deg, #ffd54f10, #ffd54f20 50%, #ffd54f10); border-color:#ffd54f; }
-  .lane-num {
-    width:24px; flex:none;
-    text-align:center; font-size:12px; font-weight:bold; color:#8f9ccf;
+  .lane.active { border-color: #ffffff30; }
+  .lane.inactive { opacity: 0.5; border-style: dashed; }
+  .lane.win { background: linear-gradient(90deg, #5dff7a15, #5dff7a30 50%, #5dff7a15); border-color: #5dff7a; }
+  .lane.lose { background: linear-gradient(90deg, #ff5d6c15, #ff5d6c30 50%, #ff5d6c30); border-color: #ff5d6c; }
+  .lane.tie { background: linear-gradient(90deg, #ffd54f15, #ffd54f30 50%, #ffd54f15); border-color: #ffd54f; }
+  .lane-name {
+    width: 44px;
+    flex: none;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: #8f9ccf;
+    text-shadow: 0 0 8px currentColor;
+    padding: 0 4px;
   }
-  .lane-ecard, .lane-pcard {
-    width:48px; height:64px; flex:none;
-    border-radius:5px;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    font-size:14px; font-weight:bold; line-height:1.05;
-    border:1.5px solid;
+  .lane.active .lane-name { color: #dfe6ff; }
+  .lane-field {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    padding: 0 4px;
+    cursor: pointer;
   }
-  .lane-ecard.red { color:#ff7a7a; border-color:#c04658; background:#1a1220; }
-  .lane-ecard.black { color:#dfe6ff; border-color:#4a568f; background:#151a38; }
-  .lane-ecard.joker { color:#ffd54f; border-color:#ffd54f; background:#2a2010; }
-  .lane-pcard.red { color:#ff7a7a; border-color:#c04658; background:#2a1220; }
-  .lane-pcard.black { color:#dfe6ff; border-color:#4a568f; background:#151a38; }
-  .lane-pcard.joker { color:#ffd54f; border-color:#ffd54f; background:#2a2010; }
-  .lane-arrow { font-size:14px; color:#8f9ccf; padding:0 2px; }
-  .lane.empty .lane-pcard { color:#5d6ba0; border-color:#5d6ba050; background:#0d1128; font-size:11px; }
+  .lane-placeholder {
+    color: #5d6ba0;
+    font-size: 12px;
+    font-style: italic;
+  }
+  .lane-card {
+    width: 44px;
+    height: 60px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    line-height: 1.05;
+    border: 1.5px solid;
+  }
+  .lane-card.red { color: #ff7a7a; border-color: #c04658; background: #2a1820; }
+  .lane-card.black { color: #dfe6ff; border-color: #4a568f; background: #151a38; }
+  .lane-card.joker { color: #ffd54f; border-color: #ffd54f; background: #2a2010; }
+  .lane-card .lrank { font-size: 13px; }
+  .lane-card .lsuit { font-size: 12px; margin-top: 1px; }
 
-  /* ===== Bottom: player hand + controls ===== */
+  /* ===== Bottom: 10 player cards + controls ===== */
   #bottom {
-    flex: 0 0 32%;
-    display:flex; flex-direction:column;
-    padding: 6px 8px;
+    flex: 0 0 30%;
+    display: flex;
+    flex-direction: column;
+    padding: 4px 8px;
     border-top: 1px solid #2c3560;
   }
-  #hand-label { font-size:11px; color:#8f9ccf; text-align:center; margin-bottom:4px; }
+  #hand-label {
+    font-size: 11px;
+    color: #8f9ccf;
+    text-align: center;
+    margin-bottom: 3px;
+  }
   #hand {
-    flex:1;
-    display:flex; gap:4px; flex-wrap:nowrap;
-    justify-content:center; align-items:center;
-    overflow-x:auto;
-    min-height:0;
+    flex: 1;
+    display: flex;
+    gap: 5px;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    overflow-x: auto;
+    min-height: 0;
   }
   .pcard {
-    width:50px; height:74px; flex:none;
-    border-radius:6px;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    font-weight:bold; font-size:15px; line-height:1.05;
-    border:2px solid;
-    cursor:pointer;
-    transition:transform .1s, box-shadow .1s;
+    width: 56px;
+    height: 78px;
+    flex: none;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    line-height: 1.05;
+    border: 2px solid;
+    cursor: pointer;
+    transition: transform .1s, box-shadow .1s;
   }
-  .pcard.red { color:#ff7a7a; border-color:#c04658; background:linear-gradient(165deg,#2a1820,#160c10); }
-  .pcard.black { color:#dfe6ff; border-color:#4a568f; background:linear-gradient(165deg,#1a2042,#0d1128); }
-  .pcard.joker { color:#ffd54f; border-color:#ffd54f; background:linear-gradient(165deg,#3a2e10,#1a1408); }
-  .pcard:active { transform:scale(0.95); }
-  .pcard.selected { transform:translateY(-6px); box-shadow:0 0 14px #ffd54f88; }
-  .pcard.used { opacity:0.3; }
-  .pcard .psuit { font-size:14px; margin-top:1px; }
-  .pcard .prank { font-size:18px; }
+  .pcard.red { color: #ff7a7a; border-color: #c04658; background: linear-gradient(165deg, #2a1820, #160c10); }
+  .pcard.black { color: #dfe6ff; border-color: #4a568f; background: linear-gradient(165deg, #1a2042, #0d1128); }
+  .pcard.joker { color: #ffd54f; border-color: #ffd54f; background: linear-gradient(165deg, #3a2e10, #1a1408); }
+  .pcard:active { transform: scale(0.95); }
+  .pcard.selected { transform: translateY(-8px); box-shadow: 0 0 14px #ffd54f88; }
+  .pcard.used { opacity: 0.3; }
+  .pcard .prank { font-size: 18px; }
+  .pcard .psuit { font-size: 14px; margin-top: 1px; }
 
   #controls {
     flex: 0 0 auto;
-    display:flex; gap:6px; align-items:center; justify-content:center;
-    padding-top: 6px;
-    font-size:11px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    padding-top: 4px;
   }
   .btn {
-    padding: 6px 14px;
-    background:#232b4d; border:1px solid #4a568f; border-radius:8px;
-    color:#dfe6ff; font-size:13px;
-    cursor:pointer;
+    padding: 5px 14px;
+    background: #232b4d;
+    border: 1px solid #4a568f;
+    border-radius: 7px;
+    color: #dfe6ff;
+    font-size: 12px;
+    cursor: pointer;
   }
-  .btn.gold { background:linear-gradient(160deg,#a37c1c,#6d5210); border-color:#ffd54f; color:#fff6d8; font-weight:bold; }
-  .btn:disabled { opacity:.35; cursor:default; }
-  #score-mini { color:#8f9ccf; font-size:12px; padding:0 6px; }
+  .btn.gold {
+    background: linear-gradient(160deg, #a37c1c, #6d5210);
+    border-color: #ffd54f;
+    color: #fff6d8;
+    font-weight: bold;
+  }
+  .btn:disabled { opacity: .35; cursor: default; }
+  #score-mini {
+    color: #8f9ccf;
+    font-size: 11px;
+    padding: 0 6px;
+  }
 
   /* ===== Result overlay ===== */
   #result {
-    position:absolute; inset:0;
-    background:#07091eee;
-    display:none;
-    flex-direction:column; align-items:center; justify-content:center;
-    gap:14px;
-    z-index:99;
+    position: absolute;
+    inset: 0;
+    background: #07091eee;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 99;
+    padding: 14px;
   }
-  #result.on { display:flex; }
-  #r-title { font-size:32px; font-weight:900; letter-spacing:4px; }
-  #r-title.win { color:#5dff7a; text-shadow:0 0 20px #5dff7a88; }
-  #r-title.lose { color:#ff5d6c; text-shadow:0 0 20px #ff5d6c88; }
-  #r-title.tie { color:#ffd54f; text-shadow:0 0 20px #ffd54f88; }
-  #r-stats { color:#9fb0e8; font-size:14px; line-height:1.8; text-align:center; }
-  #r-stats b { color:#ffd54f; }
-  #r-cards { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; max-width:90%; }
-  #r-cards .grp { display:flex; flex-direction:column; align-items:center; gap:4px; }
-  #r-cards .grp-label { font-size:11px; color:#8f9ccf; }
-  #r-cards .grp-cards { display:flex; gap:3px; }
+  #result.on { display: flex; }
+  #r-title { font-size: 32px; font-weight: 900; letter-spacing: 4px; }
+  #r-title.win { color: #5dff7a; text-shadow: 0 0 20px #5dff7a88; }
+  #r-title.lose { color: #ff5d6c; text-shadow: 0 0 20px #ff5d6c88; }
+  #r-title.tie { color: #ffd54f; text-shadow: 0 0 20px #ffd54f88; }
+  #r-stats { color: #9fb0e8; font-size: 13px; line-height: 1.8; text-align: center; }
+  #r-stats b { color: #ffd54f; }
+  #r-cards { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; max-width: 90%; }
+  #r-cards .grp { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  #r-cards .grp-label { font-size: 11px; color: #8f9ccf; }
+  #r-cards .grp-cards { display: flex; gap: 3px; }
   #r-cards .rcard {
-    width:42px; height:60px; border-radius:5px;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    font-weight:bold; font-size:13px;
-    border:1.5px solid;
+    width: 40px;
+    height: 56px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 12px;
+    border: 1.5px solid;
   }
-  #r-cards .rcard.red { color:#ff7a7a; border-color:#c04658; background:#2a1820; }
-  #r-cards .rcard.black { color:#dfe6ff; border-color:#4a568f; background:#151a38; }
-  #r-cards .rcard.joker { color:#ffd54f; border-color:#ffd54f; background:#2a2010; }
-  #r-btns { display:flex; gap:10px; }
-
-  /* ===== Portrait hint (removed - use auto-scale instead) ===== */
+  #r-cards .rcard.red { color: #ff7a7a; border-color: #c04658; background: #2a1820; }
+  #r-cards .rcard.black { color: #dfe6ff; border-color: #4a568f; background: #151a38; }
+  #r-cards .rcard.joker { color: #ffd54f; border-color: #ffd54f; background: #2a2010; }
+  #r-btns { display: flex; gap: 10px; }
 </style>
 </head>
 <body>
 
-<div id="stage">
 <div id="app">
-
   <div id="top">
     <div id="enemy-label">敌人 5 张</div>
     <div id="enemy-cards"></div>
@@ -194,15 +296,14 @@
   </div>
 
   <div id="mid">
-    <div id="mid-label">7 横幅 · 5 激活（点手牌→对应横幅顺序放置）</div>
     <div id="lanes"></div>
   </div>
 
   <div id="bottom">
-    <div id="hand-label">我的手牌（点选 → 点对应位置横幅）</div>
+    <div id="hand-label">我的手牌 (10 张) - 点选 → 点对应横幅放置 (任意 5 个)</div>
     <div id="hand"></div>
     <div id="controls">
-      <span id="score-mini">本回合：chips 0 × mult 1 = <b id="mini-total">0</b></span>
+      <span id="score-mini">chips 0 × mult 1 = 0</span>
       <button class="btn" id="btn-clear">清除</button>
       <button class="btn gold" id="btn-judge">判定</button>
     </div>
@@ -216,39 +317,31 @@
       <button class="btn gold" id="btn-again">再来一局</button>
     </div>
   </div>
-
-</div>
 </div>
 
 <script>
-// ===== 常量 =====
 const SUITS = ['♠', '♥', '♦', '♣'];
 const SUIT_COLOR = {'♠':'black', '♥':'red', '♦':'red', '♣':'black'};
 const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 const RANK_VALUE = {'A':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13};
 
-const HAND_TYPES = [
-  '高牌','对子','两对','三条','顺子','同花','葫芦','四条','同花顺','皇家同花顺'
-];
-const HAND_CHIPS = [5, 10, 20, 30, 40, 50, 60, 80, 100, 120];
+const LANE_NOTES = ['do','re','mi','fa','sol','la','si'];
+const ENEMY_LANE_INDICES = [0,1,2,3,4]; // 前 5 个横幅放敌人牌
 
-// 13 数字 → 13 半音：A4 (440Hz) 起，A4=1, A#4=2, ..., A5=13
+const HAND_TYPES = ['高牌','对子','两对','三条','顺子','同花','葫芦','四条','同花顺','皇家同花顺'];
+const HAND_CHIPS = [5,10,20,30,40,50,60,80,100,120];
+
 function rankToFreq(rankValue) {
-  // rank 1 = A4 (440Hz), rank 13 = A5 (880Hz)
-  // semitones above A4 = rankValue - 1
   return 440 * Math.pow(2, (rankValue - 1) / 12);
 }
 
-// ===== 牌组 =====
 function makeDeck() {
   const deck = [];
   for (const suit of SUITS) {
     for (const rank of RANKS) {
       deck.push({
-        id: suit+rank,
-        rank, suit,
-        value: RANK_VALUE[rank],
-        color: SUIT_COLOR[suit],
+        id: suit+rank, rank, suit,
+        value: RANK_VALUE[rank], color: SUIT_COLOR[suit],
         isJoker: false
       });
     }
@@ -265,42 +358,24 @@ function shuffle(deck) {
   return deck;
 }
 
-// ===== 牌型判定（含 joker 通配）=====
 function evaluateHand(cards) {
-  // cards: 5 张
-  // joker 当万能牌：枚举 joker 可替代的 rank+suit 组合，找最大牌型
-  // 简化：对无 joker 的牌走标准逻辑；对含 joker 的，枚举 joker 当作每个 rank
-
   const jokers = cards.filter(c => c.isJoker);
   const normals = cards.filter(c => !c.isJoker);
-
   if (jokers.length === 0) {
-    return evalStandard(normalSort(normals));
+    return evalStandard(normals.slice().sort((a,b)=>a.value-b.value));
   }
-
-  // 含 joker：枚举 joker 能"凑成"的最佳 rank
-  // 简单做法：joker 取最优 rank（让最终牌型最大化）
-  // 我们对每张 joker，逐一尝试它可以成为的 rank（1-13）和 suit
-  // 但组合爆炸，简化：枚举 joker rank（1-13），找能让牌型最大化的组合
-
   let best = {type:0, rank:0, chips:HAND_CHIPS[0], name:HAND_TYPES[0]};
-
-  function tryWithJokerRanks(jokerRankAssignments) {
-    // jokerRankAssignments: array of ranks for each joker
+  function tryWithJokerRanks(ranks) {
     const allCards = normals.map(c => ({...c}));
-    jokerRankAssignments.forEach(r => {
+    ranks.forEach(r => {
       allCards.push({
         rank: RANKS[r-1], suit: normals[0]?.suit || '♠',
         value: r, color: normals[0]?.color || 'black', isJoker:false
       });
     });
-    const evalRes = evalStandard(allCards);
-    if (evalRes.type > best.type || (evalRes.type === best.type && evalRes.rank > best.rank)) {
-      best = evalRes;
-    }
+    const ev = evalStandard(allCards);
+    if (ev.type > best.type || (ev.type === best.type && ev.rank > best.rank)) best = ev;
   }
-
-  // 暴力枚举：每张 joker 尝试 1-13
   if (jokers.length === 1) {
     for (let r=1; r<=13; r++) tryWithJokerRanks([r]);
   } else if (jokers.length === 2) {
@@ -308,12 +383,7 @@ function evaluateHand(cards) {
       for (let r2=1; r2<=13; r2++)
         tryWithJokerRanks([r1, r2]);
   }
-
   return best;
-}
-
-function normalSort(cards) {
-  return cards.slice().sort((a,b) => a.value - b.value);
 }
 
 function evalStandard(cards) {
@@ -323,66 +393,45 @@ function evalStandard(cards) {
   const counts = {};
   values.forEach(v => counts[v] = (counts[v]||0)+1);
   const countVals = Object.values(counts).sort((a,b)=>b-a);
-
   const isFlush = new Set(suits).size === 1;
-  // 顺子判断（含 A-2-3-4-5 低顺：A=1,2,3,4,5 → 特殊处理）
   let isStraight = false;
-  let straightHigh = 0;
   if (new Set(values).size === 5) {
-    if (values[4] - values[0] === 4) { isStraight = true; straightHigh = values[4]; }
-    else if (values.join(',') === '1,2,3,4,13') { isStraight = true; straightHigh = 5; } // A-2-3-4-5
+    if (values[4] - values[0] === 4) isStraight = true;
+    else if (values.join(',') === '1,2,3,4,13') isStraight = true;
   }
-  // 皇家同花顺：10-J-Q-K-A 同花
   const isRoyal = isFlush && values.join(',') === '1,10,11,12,13';
-
-  let type = 0; // 高牌
-  if (countVals[0] === 4) type = 7; // 四条
-  else if (countVals[0] === 3 && countVals[1] === 2) type = 6; // 葫芦
-  else if (isFlush && isStraight && isRoyal) type = 9; // 皇家同花顺
-  else if (isFlush && isStraight) type = 8; // 同花顺
-  else if (isFlush) type = 5; // 同花
-  else if (isStraight) type = 4; // 顺子
-  else if (countVals[0] === 3) type = 3; // 三条
-  else if (countVals[0] === 2 && countVals[1] === 2) type = 2; // 两对
-  else if (countVals[0] === 2) type = 1; // 对子
-
-  // 同 rank 比较：取最大牌值作 tiebreaker
+  let type = 0;
+  if (countVals[0] === 4) type = 7;
+  else if (countVals[0] === 3 && countVals[1] === 2) type = 6;
+  else if (isFlush && isStraight && isRoyal) type = 9;
+  else if (isFlush && isStraight) type = 8;
+  else if (isFlush) type = 5;
+  else if (isStraight) type = 4;
+  else if (countVals[0] === 3) type = 3;
+  else if (countVals[0] === 2 && countVals[1] === 2) type = 2;
+  else if (countVals[0] === 2) type = 1;
   const highRank = Math.max(...values);
-
-  return {
-    type,
-    rank: highRank,
-    chips: HAND_CHIPS[type],
-    name: HAND_TYPES[type]
-  };
+  return {type, rank:highRank, chips:HAND_CHIPS[type], name:HAND_TYPES[type]};
 }
 
 function handCompare(a, b) {
-  // 返回 1 if a>b, -1 if a<b, 0 if tie
   if (a.type !== b.type) return a.type > b.type ? 1 : -1;
   if (a.rank !== b.rank) return a.rank > b.rank ? 1 : -1;
   return 0;
 }
 
-// ===== 敌人 AI：抽 5 张，挑最大牌型 =====
 function enemyPickBest(deck) {
-  // 简化：从剩余牌池随机抽 10 张，选其中最佳的 5 张
-  // 真正的 best-of-C(10,5)=252，对 MVP 不必要
   const sampleSize = Math.min(10, deck.length);
   const sample = [];
   for (let i=0; i<sampleSize; i++) sample.push(deck[i]);
-
   let bestCombo = null, bestEval = {type:0, rank:0};
-  // C(sampleSize, 5)
   const n = sample.length;
   if (n < 5) return sample.slice(0, 5);
   for (let i=0;i<n-4;i++) for (let j=i+1;j<n-3;j++) for (let k=j+1;k<n-2;k++)
     for (let l=k+1;l<n-1;l++) for (let m=l+1;m<n;m++) {
       const combo = [sample[i], sample[j], sample[k], sample[l], sample[m]];
       const ev = evaluateHand(combo);
-      if (handCompare(ev, bestEval) > 0) {
-        bestEval = ev; bestCombo = combo;
-      }
+      if (handCompare(ev, bestEval) > 0) { bestEval = ev; bestCombo = combo; }
     }
   return bestCombo || sample.slice(0, 5);
 }
@@ -390,9 +439,7 @@ function enemyPickBest(deck) {
 // ===== Web Audio =====
 let audioCtx = null;
 function ensureAudio() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 function playNote(rankValue, when=0, dur=0.45) {
@@ -412,114 +459,105 @@ function playNote(rankValue, when=0, dur=0.45) {
 }
 function playSequence(cards, gap=0.5) {
   cards.forEach((c, i) => {
-    if (c.isJoker) {
-      // joker 弹一个泛音
-      playNote(7, i * gap, 0.6);
-    } else {
-      playNote(c.value, i * gap, 0.45);
-    }
+    if (c.isJoker) playNote(7, i*gap, 0.6);
+    else playNote(c.value, i*gap, 0.45);
   });
 }
 
-// ===== 游戏状态 =====
+// ===== 状态 =====
 let state = {
   deck: [],
-  enemyCards: [],
+  enemyCards: [],     // 5 张，按 laneIdx 顺序
   enemyHandEval: null,
-  playerHand: [],
-  playerPicks: [], // [{card, laneIdx}, ...]
+  playerHand: [],     // 10 张
+  playerPicks: [],    // [{card, laneIdx}, ...]
   selectedCardIdx: null,
-  audioPlayed: false,
-  judged: false,
+  judged: false
 };
 
 function newRound() {
   state.deck = shuffle(makeDeck());
   state.enemyCards = enemyPickBest(state.deck);
-  // 把 enemyCards 从 deck 中去掉
   state.enemyCards.forEach(c => {
     const idx = state.deck.findIndex(d => d.id === c.id);
     if (idx >= 0) state.deck.splice(idx, 1);
   });
   state.enemyHandEval = evaluateHand(state.enemyCards);
-  // 玩家发 8 张
-  state.playerHand = state.deck.splice(0, 8);
+  state.playerHand = state.deck.splice(0, 10);
   state.playerPicks = [];
   state.selectedCardIdx = null;
-  state.audioPlayed = false;
   state.judged = false;
   renderAll();
-  // 自动播一次 5 音
-  setTimeout(() => {
-    playSequence(state.enemyCards);
-    state.audioPlayed = true;
-  }, 400);
+  setTimeout(() => playSequence(state.enemyCards), 400);
+}
+
+// ===== 卡片 HTML =====
+function enemyCardHTML(c) {
+  if (c.isJoker) return `<div class="ecard joker"><div class="erank">JOKER</div><div class="esuit">★</div></div>`;
+  return `<div class="ecard ${c.color}"><div class="erank">${c.rank}</div><div class="esuit">${c.suit}</div></div>`;
+}
+function laneCardHTML(c) {
+  if (c.isJoker) return `<div class="lane-card joker"><div class="lrank">JK</div><div class="lsuit">★</div></div>`;
+  return `<div class="lane-card ${c.color}"><div class="lrank">${c.rank}</div><div class="lsuit">${c.suit}</div></div>`;
+}
+function handCardHTML(c, idx) {
+  let cls = 'pcard ' + c.color;
+  if (state.selectedCardIdx === idx) cls += ' selected';
+  if (c.used) cls += ' used';
+  const rank = c.isJoker ? 'JOKER' : c.rank;
+  const suit = c.isJoker ? '★' : c.suit;
+  return `<div class="${cls}" data-idx="${idx}"><div class="prank">${rank}</div><div class="psuit">${suit}</div></div>`;
+}
+function resultCardHTML(c) {
+  if (c.isJoker) return `<div class="rcard joker">JK<div style="font-size:10px">★</div></div>`;
+  return `<div class="rcard ${c.color}">${c.rank}<div style="font-size:10px">${c.suit}</div></div>`;
 }
 
 // ===== 渲染 =====
-function cardHTML(c, opts={}) {
-  const {small=false} = opts;
-  if (c.isJoker) {
-    return `<div class="${small?'rcard':'pcard'} joker"><div class="prank">JOKER</div><div class="psuit">★</div></div>`;
-  }
-  return `<div class="${small?'rcard':'pcard'} ${c.color}"><div class="prank">${c.rank}</div><div class="psuit">${c.suit}</div></div>`;
-}
-function cardHTMLmini(c) {
-  return cardHTML(c, {small:true});
-}
-
 function renderEnemy() {
   const el = document.getElementById('enemy-cards');
-  el.innerHTML = state.enemyCards.map(c => cardHTML(c)).join('');
+  el.innerHTML = state.enemyCards.map(c => enemyCardHTML(c)).join('');
 }
+
 function renderLanes() {
   const el = document.getElementById('lanes');
   let html = '';
-  for (let i=0; i<7; i++) {
-    const isActive = i < 5; // 5 激活横幅
-    const pcard = state.playerPicks.find(p => p.laneIdx === i);
-    const ecard = state.enemyCards[i];
+  for (let i = 0; i < 7; i++) {
+    const isActive = i < 5;
+    const enemyCard = isActive ? state.enemyCards[i] : null;
+    const playerPick = state.playerPicks.find(p => p.laneIdx === i);
     let cls = 'lane';
-    if (state.judged) {
-      if (pcard && ecard) {
-        if (pcard.card.isJoker || ecard.isJoker) cls += ' win'; // joker 算赢（MVP 简化）
-        else if (pcard.card.value > ecard.value) cls += ' win';
-        else if (pcard.card.value < ecard.value) cls += ' lose';
-        else cls += ' tie';
-      }
-    } else if (!pcard && isActive) {
-      cls += ' empty';
+    if (!isActive) cls += ' inactive';
+    else cls += ' active';
+    if (state.judged && playerPick && enemyCard) {
+      const pv = playerPick.card.isJoker ? 14 : playerPick.card.value;
+      const ev = enemyCard.isJoker ? 14 : enemyCard.value;
+      if (pv > ev) cls += ' win';
+      else if (pv < ev) cls += ' lose';
+      else cls += ' tie';
     }
     html += `<div class="${cls}" data-lane="${i}">
-      <div class="lane-num">${i+1}</div>
-      <div class="lane-ecard ${ecard.color}">${ecard.rank}<br><span style="font-size:11px">${ecard.suit}</span></div>
-      <div class="lane-arrow">←</div>
-      ${pcard ? cardHTMLmini(pcard.card) : (isActive ? `<div class="lane-pcard">·</div>` : '')}
+      <div class="lane-name">${LANE_NOTES[i]}</div>
+      <div class="lane-field" data-lane="${i}">
+        ${playerPick ? laneCardHTML(playerPick.card) : '<span class="lane-placeholder">点手牌后点这里</span>'}
+      </div>
     </div>`;
   }
   el.innerHTML = html;
-  // 绑定 lane 点击（清除该 lane 的牌）
-  el.querySelectorAll('.lane').forEach(node => {
+  // 绑定 lane-field 点击
+  el.querySelectorAll('.lane-field').forEach(node => {
     node.addEventListener('click', () => {
       if (state.judged) return;
       const laneIdx = +node.dataset.lane;
-      if (laneIdx >= 5) return; // 只能放前 5 个
-      // 如果已选牌 → 放到该 lane
       if (state.selectedCardIdx !== null) {
         const card = state.playerHand[state.selectedCardIdx];
         if (card.used) return;
-        // 该 lane 已放？替换
+        // 替换
         const existing = state.playerPicks.find(p => p.laneIdx === laneIdx);
         if (existing) existing.card.used = false;
-        if (card.used && existing && existing.card.id === card.id) {
-          // 取消该 lane
-          state.playerPicks = state.playerPicks.filter(p => p.laneIdx !== laneIdx);
-        } else {
-          state.playerPicks = state.playerPicks.filter(p => p.laneIdx !== laneIdx);
-          state.playerPicks.push({card, laneIdx});
-          card.used = true;
-        }
-        // 清除选择
+        state.playerPicks = state.playerPicks.filter(p => p.laneIdx !== laneIdx);
+        state.playerPicks.push({card, laneIdx});
+        card.used = true;
         state.selectedCardIdx = null;
         renderAll();
         updateMiniScore();
@@ -536,17 +574,10 @@ function renderLanes() {
     });
   });
 }
+
 function renderHand() {
   const el = document.getElementById('hand');
-  el.innerHTML = state.playerHand.map((c, idx) => {
-    let cls = 'pcard ' + c.color;
-    if (state.selectedCardIdx === idx) cls += ' selected';
-    if (c.used) cls += ' used';
-    return `<div class="${cls}" data-idx="${idx}">
-      <div class="prank">${c.isJoker ? 'JOKER' : c.rank}</div>
-      <div class="psuit">${c.suit}</div>
-    </div>`;
-  }).join('');
+  el.innerHTML = state.playerHand.map((c, idx) => handCardHTML(c, idx)).join('');
   el.querySelectorAll('.pcard').forEach(node => {
     node.addEventListener('click', () => {
       if (state.judged) return;
@@ -558,6 +589,7 @@ function renderHand() {
     });
   });
 }
+
 function renderAll() {
   renderEnemy();
   renderLanes();
@@ -565,9 +597,8 @@ function renderAll() {
 }
 
 function updateMiniScore() {
-  // 实时算一下"如果现在判定"的分数（不含牌型 bonus）
   let chips = 0;
-  for (let i=0; i<5; i++) {
+  for (let i = 0; i < 5; i++) {
     const p = state.playerPicks.find(pk => pk.laneIdx === i);
     const e = state.enemyCards[i];
     if (p && e) {
@@ -576,57 +607,56 @@ function updateMiniScore() {
       if (pv > ev) chips++;
     }
   }
-  document.getElementById('score-mini').innerHTML = `本回合：chips ${chips} × mult 1 = <b>${chips}</b>（不含牌型 bonus，按"判定"看完整）`;
+  document.getElementById('score-mini').innerHTML = `chips ${chips} × mult 1 = <b>${chips}</b>`;
 }
 
 function doJudge() {
   if (state.playerPicks.length < 5) {
-    alert('请先在 5 个横幅都放上牌！');
+    alert('请先在 5 个横幅上各放一张牌！');
     return;
   }
   state.judged = true;
-  // 算分
   let chips = 0;
-  let laneResults = []; // 'win'|'lose'|'tie'
-  for (let i=0; i<5; i++) {
-    const p = state.playerPicks.find(pk => pk.laneIdx === i).card;
+  let laneResults = [];
+  for (let i = 0; i < 5; i++) {
+    const p = state.playerPicks.find(pk => pk.laneIdx === i);
+    if (!p) { laneResults.push('empty'); continue; }
     const e = state.enemyCards[i];
-    const pv = p.isJoker ? 14 : p.value;
+    const pv = p.card.isJoker ? 14 : p.card.value;
     const ev = e.isJoker ? 14 : e.value;
-    if (pv > ev) { chips++; laneResults.push('win'); }
-    else if (pv < ev) { laneResults.push('lose'); }
-    else { laneResults.push('tie'); }
+    if (pv > ev) { chips++; laneResults.push('胜'); }
+    else if (pv < ev) { laneResults.push('负'); }
+    else { laneResults.push('平'); }
   }
-  // 牌型
   const playerCards = [];
-  for (let i=0; i<5; i++) playerCards.push(state.playerPicks.find(pk => pk.laneIdx === i).card);
-  const pEval = evaluateHand(playerCards);
+  for (let i = 0; i < 5; i++) {
+    const p = state.playerPicks.find(pk => pk.laneIdx === i);
+    if (p) playerCards.push(p.card);
+  }
+  const pEval = playerCards.length === 5 ? evaluateHand(playerCards) : {name:'未完成', type:0, chips:0};
   const eEval = state.enemyHandEval;
   const cmp = handCompare(pEval, eEval);
   if (cmp > 0) chips += pEval.chips;
-  else if (cmp < 0) chips += 0; // 敌人牌型大不给 bonus
-  // 平局 chips × mult 中 mult=1，chips 就是 chips
   const mult = 1;
   const total = chips * mult;
 
-  // 显示结果
   renderLanes();
   document.getElementById('r-title').textContent = cmp > 0 ? '你赢了！' : (cmp < 0 ? '你输了' : '平局');
   document.getElementById('r-title').className = cmp > 0 ? 'win' : (cmp < 0 ? 'lose' : 'tie');
   document.getElementById('r-stats').innerHTML = `
-    横幅比大小：${laneResults.map((r,i) => `${i+1}:${r==='win'?'胜':r==='lose'?'负':'平'}`).join(' · ')} = ${laneResults.filter(r=>r==='win').length} chips<br>
+    横幅：${laneResults.map((r,i) => `${LANE_NOTES[i]}:${r}`).join(' · ')} = ${laneResults.filter(r=>r==='胜').length} chips<br>
     你的牌型：<b>${pEval.name}</b>（+${cmp>0?pEval.chips:0} chips）<br>
     敌人牌型：<b>${eEval.name}</b><br>
-    合计 chips：<b>${chips}</b> × mult ${mult} = <b style="color:#ffd54f;font-size:18px">${total}</b>
+    合计 <b>${chips}</b> chips × ${mult} = <b style="color:#ffd54f;font-size:18px">${total}</b>
   `;
   document.getElementById('r-cards').innerHTML = `
     <div class="grp">
       <div class="grp-label">你 ${pEval.name}</div>
-      <div class="grp-cards">${playerCards.map(c => cardHTML(c, {small:true})).join('')}</div>
+      <div class="grp-cards">${playerCards.map(c => resultCardHTML(c)).join('')}</div>
     </div>
     <div class="grp">
       <div class="grp-label">敌人 ${eEval.name}</div>
-      <div class="grp-cards">${state.enemyCards.map(c => cardHTML(c, {small:true})).join('')}</div>
+      <div class="grp-cards">${state.enemyCards.map(c => resultCardHTML(c)).join('')}</div>
     </div>
   `;
   document.getElementById('result').classList.add('on');
@@ -654,25 +684,8 @@ document.getElementById('btn-again').addEventListener('click', () => {
 // ===== 启动 =====
 newRound();
 updateMiniScore();
-
-// 首次点击解锁音频
 document.addEventListener('click', () => ensureAudio(), {once:true});
 document.addEventListener('touchstart', () => ensureAudio(), {once:true});
-
-// ===== 自动缩放：画布固定 1000x500，适配任何 viewport 形状 =====
-function fitStage() {
-  const stage = document.getElementById('stage');
-  const app = document.getElementById('app');
-  const W = 1000, H = 500;
-  const sw = window.innerWidth, sh = window.innerHeight;
-  const scale = Math.min(sw / W, sh / H);
-  app.style.transform = `scale(${scale})`;
-  // 背景填充整个屏幕（避免画布外露黑边）
-  stage.style.background = 'radial-gradient(' + (800*scale) + 'px ' + (500*scale) + 'px at 50% 50%, #1a2247 0%, #0d1122 60%, #050714 100%)';
-}
-window.addEventListener('resize', fitStage);
-window.addEventListener('orientationchange', fitStage);
-fitStage();
 </script>
 </body>
 </html>

@@ -25,17 +25,11 @@
     flex-direction: column;
   }
 
-  /* Landscape mode: fit directly */
-  @media (orientation: landscape) {
+  /* Scale to fit. JS will try screen.orientation.lock('landscape') for true landscape. */
+  /* In portrait (if lock fails): landscape content is shown scaled-down with letterbox. */
+  @media (orientation: landscape), (orientation: portrait) {
     #app {
       transform: scale(min(calc(100vw / 1000), calc(100vh / 500)));
-    }
-  }
-
-  /* Portrait mode: rotate 90deg to appear landscape */
-  @media (orientation: portrait) {
-    #app {
-      transform: rotate(90deg) scale(min(calc(100vw / 500), calc(100vh / 1000)));
     }
   }
 
@@ -303,6 +297,7 @@
     <div id="hand-label">我的手牌 (10 张) - 点选 → 点对应横幅放置 (任意 5 个)</div>
     <div id="hand"></div>
     <div id="controls">
+      <button class="btn" id="lock-btn">🔒 锁定横屏</button>
       <span id="score-mini">chips 0 × mult 1 = 0</span>
       <button class="btn" id="btn-clear">清除</button>
       <button class="btn gold" id="btn-judge">判定</button>
@@ -680,6 +675,39 @@ document.getElementById('btn-again').addEventListener('click', () => {
   document.getElementById('result').classList.remove('on');
   newRound();
 });
+
+// ===== 强制横屏 =====
+let _lockAutoAttempted = false;
+function autoTryLockLandscape() {
+  if (_lockAutoAttempted) return;
+  _lockAutoAttempted = true;
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('landscape').catch(err => {});
+  }
+}
+
+function manualTryLockLandscape() {
+  if (screen.orientation && screen.orientation.lock) {
+    return screen.orientation.lock('landscape');
+  }
+  return Promise.reject(new Error('Orientation lock API not available'));
+}
+
+document.getElementById('lock-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  manualTryLockLandscape()
+    .then(() => {
+      // 成功 - 设备会旋转，画面重新布局
+      const btn = document.getElementById('lock-btn');
+      btn.textContent = '✅ 已横屏';
+    })
+    .catch(err => {
+      alert('锁定横屏失败\n\n可能原因：\n• 手机旋转感应未开启\n• 屏幕方向锁定\n• 浏览器不支持此 API\n\n当前显示：竖屏适配版（内容缩小）');
+    });
+});
+// 首次点击 / 触摸时自动尝试锁横屏
+document.addEventListener('click', autoTryLockLandscape, {once: true});
+document.addEventListener('touchstart', autoTryLockLandscape, {once: true});
 
 // ===== 启动 =====
 newRound();

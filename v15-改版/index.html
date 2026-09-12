@@ -193,7 +193,7 @@
         <div style="font-size:12px; margin-top:3px" id="hp-text"></div>
       </div>
     </div>
-    <div id="enemy-turn-label">敌人出招 (3-5 攻击点 · 可选 1 状态牌)</div>
+    <div id="enemy-turn-label">敌人出招 (3-5 攻击点 + 1 状态牌)</</div>
     <div id="enemy-placements"></div>
     <div id="audio-row">
       <button id="replay-btn">▶ 重听 3 音</button>
@@ -278,13 +278,10 @@ function newTurn() {
       points: 1 + Math.floor(Math.random() * 10), // 1-10
     });
   }
-  // 1/3 概率放状态牌（削弱或增强）
-  if (Math.random() < 0.34) {
-    let statusLane;
-    do { statusLane = Math.floor(Math.random() * 7); } while (false);
-    const statusType = Math.random() < 0.5 ? 'weaken' : 'buff';
-    state.placements.push({ type: 'status', lane: statusLane, statusType });
-  }
+  // 19:19 大爷：状态卡太少看不到 → 改成每回合必有 1 张，weaken/buff 轮流出
+  let statusLane = Math.floor(Math.random() * 7);
+  // 避开已有的攻击点（可选，让状态牌可同攻击点同横幅 = Q5 决策）
+  state.placements.push({ type: 'status', lane: statusLane, statusType: state.turn % 2 === 0 ? 'weaken' : 'buff' });
   // 重置玩家本回合 picks
   state.lanePicks = {};
   state.selectedCard = null;

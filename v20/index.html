@@ -312,7 +312,7 @@ function enemyTurn(){
   const b=S.bt,m=b.m;
   b.turn++;
   b.placements=[];b.picks={};b.tempAtk=0;
-  if(!b.barricade)b.block=0;
+  // 注意:音盾清空已移到 endTurn 结算后(金属音甲需要在清空后累积),这里不清
   // 敌方回盾
   if(m.sh)b.eBlock=m.sh;
   if(m.id==='metro')b.eBlock=m.sh; // 简化
@@ -375,10 +375,10 @@ function renderBattle(){
   // lanes
   const el=document.getElementById('lanes');let html='';
   for(let i=6;i>=0;i--){
-    const pk=b.picks[i]||{d:0,a:0};
+    const pk=b.picks[i]||{d:0,a:0,cards:[]};
     const atk=b.placements.filter(p=>p.type==='atk'&&p.lane===i);
     const atkPts=atk.reduce((s,p)=>s+p.pts,0);
-    const covered=pk.d*(5); // 每张防御牌基础挡5(音壁) 实际按牌算 见endTurn
+    const covered=((pk.cards)||[]).reduce((s,c)=>s+(c.def||5),0); // 按实际卡面防御算
     let cls='lane';
     if(atkPts>0&&covered>=atkPts)cls+=' win';else if(atkPts>0&&covered<atkPts)cls+=' lose';
     const slot=pk.a>0?`<div class="slot atkc">⚔×${pk.a}</div>`:(pk.d>0?`<div class="slot def">🛡×${pk.d}</div>`:`<div class="slot">放牌</div>`);
@@ -439,7 +439,15 @@ function placeCard(lane){
     let dmg=(c.atk||0)+b.vol+b.tempAtk;
     if(c.multi)dmg=(c.atk||0)+b.vol; // 简化双段
     if(c.slam)dmg=b.block+b.vol; // 音浪崩击=音盾值
-    if(c.whirl)dmg=c.atk+b.vol; // 每段
+    if(c.whirl){ // 无双回旋:耗尽全部♪,每♪一段
+      const seg=b.energy+1;b.energy=0;
+      dmg=(c.atk||5)+b.vol;
+      if(b.vuln>0)dmg=Math.floor(dmg*1.5);
+      dealToEnemy(dmg*seg,c);
+      toast(`🌀 无双回旋 ×${seg} 段！`);
+      renderBattle();
+      return;
+    }
     if(b.vuln>0)dmg=Math.floor(dmg*1.5);
     dealToEnemy(dmg,c);
   }else if(c.t==='skill'){
@@ -485,7 +493,7 @@ function endTurn(){
   for(let i=0;i<7;i++){
     const atk=b.placements.filter(p=>p.type==='atk'&&p.lane===i);
     const atkPts=atk.reduce((s,p)=>s+p.pts,0);
-    const pk=b.picks[i];const covered=pk?pk.d*5:0;
+    const pk=b.picks[i];const covered=pk?((pk.cards||[]).reduce((s,c)=>s+(c.def||5),0)):0;
     const leak=Math.max(0,atkPts-covered);
     dmgTaken+=leak;
   }
@@ -495,7 +503,8 @@ function endTurn(){
   // 音盾抵扣
   if(b.block>0){const abs=Math.min(b.block,dmgTaken);b.block-=abs;dmgTaken-=abs}
   if(dmgTaken>0)S.hp=Math.max(0,S.hp-dmgTaken);
-  // 金属音甲
+  // 回合末:音盾清空(壁垒除外),金属音甲在清空后累积(下回合生效)
+  if(!b.barricade)b.block=0;
   if(b.metal>0)b.block+=b.metal;
   // 弃手牌
   b.discard.push(...b.hand);b.hand=[];

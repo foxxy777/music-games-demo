@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>V15 改版 MVP · 一关测试</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; padding:0; background:#050714; font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; user-select:none; color:#dfe6ff; overflow-x:hidden; overflow-y:hidden; }
+
+  #stage { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+
+  #app {
+    width: 1280px;
+    height: 720px;
+    flex: none;
+    transform-origin: center center;
+    background: radial-gradient(1100px 650px at 42% 38%, #151b36 0%, #0d1122 55%, #070912 100%);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ===== Top: enemy ===== */
+  #top {
+    flex: 0 0 30%;
+    display: flex; flex-direction:column;
+    padding: 12px 16px;
+    border-bottom: 1px solid #2c3560;
+    background: linear-gradient(180deg, #0d1128, transparent);
+  }
+  #enemy-row { display:flex; align-items:center; gap:14px; margin-bottom:8px; }
+  #enemy-face { font-size:46px; filter:drop-shadow(0 0 12px #ffb84d88); }
+  #enemy-info { flex:1; }
+  #enemy-name { font-size:16px; color:#ffe9b8; margin-bottom:4px; }
+  #hp-bar { height:14px; background:#20264a; border:1px solid #3d4680; border-radius:7px; overflow:hidden; }
+  #hp-fill { height:100%; background:linear-gradient(90deg,#ff5d6c,#ff9a76); transition:width .35s; border-radius:7px; }
+  #hp-text { font-size:12px; margin-top:3px; color:#9fb0e8; }
+  #enemy-turn-label { font-size:13px; color:#ffd54f; margin-bottom:6px; letter-spacing:2px; }
+  #enemy-placements {
+    display: flex; gap: 4px; flex-wrap: wrap;
+    min-height: 50px;
+    padding: 6px;
+    background: #0d1128aa;
+    border: 1px solid #2c3560;
+    border-radius: 8px;
+  }
+  .placement {
+    width: 80px;
+    height: 56px;
+    border-radius: 6px;
+    border: 2px solid;
+    display: flex; flex-direction:column;
+    align-items: center; justify-content: center;
+    font-weight: bold;
+    line-height: 1.05;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .placement.attack { color: #ff5d6c; border-color: #c04658; background: linear-gradient(165deg, #3a1218, #1a0c10); }
+  .placement.attack .p-lane { font-size: 10px; color: #9fb0e8; margin-bottom: 2px; }
+  .placement.attack .p-points { font-size: 18px; }
+  .placement.status-weaken { color: #b88aff; border-color: #7d4de0; background: linear-gradient(165deg, #2a1240, #160c20); }
+  .placement.status-weaken .p-label { font-size: 11px; }
+  .placement.status-weaken .p-icon { font-size: 20px; }
+  .placement.status-buff { color: #ffd54f; border-color: #ffd54f; background: linear-gradient(165deg, #3a2e10, #1a1408); }
+  .placement.status-buff .p-label { font-size: 11px; }
+  .placement.status-buff .p-icon { font-size: 20px; }
+  #audio-row { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+  #replay-btn { padding: 3px 10px; font-size: 11px; background: #232b4d; border: 1px solid #4a568f; border-radius: 6px; color: #dfe6ff; cursor: pointer; }
+
+  /* ===== Middle: lanes ===== */
+  #mid {
+    flex: 1;
+    padding: 8px 12px;
+    display: flex; flex-direction:column; gap: 4px;
+    overflow: hidden;
+  }
+  .lane {
+    flex: 1;
+    display: flex; align-items: center;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #ffffff05, #ffffff0a 50%, #ffffff05);
+    border: 1px solid #ffffff15;
+    padding: 0 10px;
+    min-height: 0;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+    position: relative;
+  }
+  .lane:hover { background: linear-gradient(90deg, #ffffff0a, #ffffff18 50%, #ffffff0a); border-color: #ffffff30; }
+  .lane.win { background: linear-gradient(90deg, #5dff7a15, #5dff7a30 50%, #5dff7a15); border-color: #5dff7a; }
+  .lane.lose { background: linear-gradient(90deg, #ff5d6c15, #ff5d6c30 50%, #ff5d6c30); border-color: #ff5d6c; }
+  .lane.tie { background: linear-gradient(90deg, #ffd54f10, #ffd54f25 50%, #ffd54f10); border-color: #ffd54f; }
+  .lane-name {
+    width: 50px; flex: none;
+    text-align: center; font-size: 18px; font-weight: bold;
+    color: #dfe6ff;
+    text-shadow: 0 0 8px currentColor;
+    padding: 0 4px;
+  }
+  .lane-content { flex: 1; display: flex; gap: 6px; align-items: center; }
+  .lane-card-slot {
+    width: 70px; height: 56px;
+    border: 1.5px dashed #5d6ba0;
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    color: #5d6ba0; font-size: 11px;
+    flex-shrink: 0;
+  }
+  .lane-card-slot.defense { color: #9ad8ff; border-color: #4d8ae2; background: #12203a; font-weight: bold; font-size: 16px; }
+  .lane-card-slot.attack { color: #ff9a8a; border-color: #ff5d6c; background: #2a1220; font-weight: bold; font-size: 16px; }
+  .lane-card-slot.empty { color: #5d6ba0; }
+  .lane-damage { font-size: 11px; color: #ff7a7a; padding: 0 4px; flex-shrink: 0; }
+
+  /* ===== Bottom: hand ===== */
+  #bottom {
+    flex: 0 0 25%;
+    display: flex; flex-direction:column;
+    padding: 6px 14px 8px;
+    border-top: 1px solid #2c3560;
+    background: linear-gradient(0deg, #0d1128, transparent);
+  }
+  #status-row { display:flex; gap:10px; font-size:12px; color:#9fb0e8; padding-bottom:4px; align-items:center; }
+  #status-row .weaken-cnt, #status-row .buff-cnt { padding: 2px 8px; border-radius: 6px; }
+  #status-row .weaken-cnt { background: #2a1240; color: #b88aff; }
+  #status-row .buff-cnt { background: #3a2e10; color: #ffd54f; }
+  #hand-label { font-size: 12px; color: #8f9ccf; text-align: center; margin-bottom: 4px; }
+  #hand {
+    flex: 1;
+    display: flex; gap: 8px;
+    justify-content: center; align-items: center;
+    overflow-x: auto;
+    min-height: 0;
+  }
+  .card {
+    width: 78px; height: 100px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    border: 2px solid;
+    display: flex; flex-direction:column;
+    align-items: center; justify-content: center;
+    font-weight: bold;
+    line-height: 1.1;
+    cursor: pointer;
+    transition: transform .1s, box-shadow .1s;
+    position: relative;
+  }
+  .card:active { transform: scale(0.95); }
+  .card.selected { transform: translateY(-10px); box-shadow: 0 0 16px #ffd54f88; }
+  .card.used { opacity: 0.3; }
+  .card.defense { color: #9ad8ff; border-color: #4d8ae2; background: linear-gradient(165deg, #1a2042, #0d1128); }
+  .card.defense .c-type { color: #9ad8ff; font-size: 12px; }
+  .card.attack { color: #ff9a8a; border-color: #ff5d6c; background: linear-gradient(165deg, #3a1218, #1a0c10); }
+  .card.attack .c-type { color: #ff9a8a; font-size: 12px; }
+  .card .c-points { font-size: 22px; }
+  .card .c-action { font-size: 9px; color: #9fb0e8; margin-top: 2px; }
+
+  #controls { display: flex; gap: 10px; align-items: center; justify-content: center; padding-top: 6px; }
+  .btn { padding: 6px 18px; background: #232b4d; border: 1px solid #4a568f; border-radius: 8px; color: #dfe6ff; font-size: 13px; cursor: pointer; }
+  .btn.gold { background: linear-gradient(160deg, #a37c1c, #6d5210); border-color: #ffd54f; color: #fff6d8; font-weight: bold; }
+  .btn:disabled { opacity: .35; cursor: default; }
+
+  /* ===== Result ===== */
+  #result {
+    position: absolute; inset: 0;
+    background: #07091eee;
+    display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; z-index: 99;
+  }
+  #result.on { display: flex; }
+  #r-title { font-size: 48px; font-weight: 900; letter-spacing: 6px; }
+  #r-title.win { color: #5dff7a; text-shadow: 0 0 24px #5dff7a88; }
+  #r-title.lose { color: #ff5d6c; text-shadow: 0 0 24px #ff5d6c88; }
+  #r-stats { color: #9fb0e8; font-size: 16px; line-height: 2; text-align: center; }
+  #r-stats b { color: #ffd54f; }
+</style>
+</head>
+<body>
+
+<div id="stage">
+<div id="app">
+
+  <div id="top">
+    <div id="enemy-row">
+      <div id="enemy-face">🎵</div>
+      <div id="enemy-info">
+        <div id="enemy-name">音符小怪 · 一幕第一关</div>
+        <div class="hp-bar" id="hp-bar"><div class="hp-fill" id="hp-fill"></div></div>
+        <div style="font-size:12px; margin-top:3px" id="hp-text"></div>
+      </div>
+    </div>
+    <div id="enemy-turn-label">敌人出招 (3-5 攻击点 · 可选 1 状态牌)</div>
+    <div id="enemy-placements"></div>
+    <div id="audio-row">
+      <button id="replay-btn">▶ 重听 3 音</button>
+      <span style="font-size:11px;color:#8f9ccf">每点 1-10 随机 · 总点数 = 玩家扣血</span>
+    </div>
+  </div>
+
+  <div id="mid">
+    <div id="lanes"></div>
+  </div>
+
+  <div id="bottom">
+    <div id="status-row">
+      <span>状态:</span>
+      <span class="weaken-cnt">⇩ 削弱 <b id="weaken-cnt">0</b></span>
+      <span class="buff-cnt">⇧ 增强 <b id="buff-cnt">0</b></span>
+      <span style="margin-left:auto">玩家 HP: <b id="player-hp">80</b>/80</span>
+    </div>
+    <div id="hand-label">我的手牌 (6 张) - 点选 → 点横幅放置</div>
+    <div id="hand"></div>
+    <div id="controls">
+      <button class="btn" id="btn-clear">清除</button>
+      <button class="btn gold" id="btn-end">结束回合</button>
+      <button class="btn" id="btn-new">新关卡</button>
+    </div>
+  </div>
+
+  <div id="result">
+    <div id="r-title"></div>
+    <div id="r-stats"></div>
+    <button class="btn gold" id="btn-again">再来一次</button>
+  </div>
+
+</div>
+</div>
+
+<script>
+const LANES = ['do','re','mi','fa','sol','la','si'];
+const LANE_FREQ = [262, 294, 330, 349, 392, 440, 494]; // C4 D4 E4 F4 G4 A4 B4
+const ENEMY_MAX_HP = 60;
+const PLAYER_MAX_HP = 80;
+const HAND_SIZE = 6;
+
+// 4 个默认决策（18:27 大爷说"go"后柠檬茶自定）
+// Q5 状态牌占位：可同攻击点同横幅
+// Q11 覆盖范围点数（MVP 单点版）：防御 5 / 攻击 8
+// Q12 双音和弦：连续 2 张形成 3 度 = ×2 伤害
+// Q13 覆盖牌可获得性：MVP 给单点（双/三点后续阶段解锁）
+
+let state = {
+  enemyHP: ENEMY_MAX_HP,
+  playerHP: PLAYER_MAX_HP,
+  weaken: 0,   // -30% 攻击 per stack
+  buff: 0,     // +30% 攻击 per stack
+  placements: [], // [{type, lane, points/status, statusType}]
+  hand: [],
+  selectedCard: null,
+  lanePicks: {}, // {laneIdx: {defense: count, attack: count}}
+  turn: 0,
+  over: false,
+  audioPlayed: false,
+};
+
+function makeCard(type) {
+  // 防御 5 点 / 攻击 8 点（MVP 单点版）
+  return { type, points: type==='defense' ? 5 : 8 };
+}
+
+function newTurn() {
+  state.turn++;
+  // 生成敌人攻击点 3-5 个
+  const attackCount = 3 + Math.floor(Math.random() * 3); // 3, 4, or 5
+  state.placements = [];
+  const usedLanes = new Set();
+  for (let i = 0; i < attackCount; i++) {
+    let lane;
+    do { lane = Math.floor(Math.random() * 7); } while (usedLanes.has(lane));
+    usedLanes.add(lane);
+    state.placements.push({
+      type: 'attack',
+      lane,
+      points: 1 + Math.floor(Math.random() * 10), // 1-10
+    });
+  }
+  // 1/3 概率放状态牌（削弱或增强）
+  if (Math.random() < 0.34) {
+    let statusLane;
+    do { statusLane = Math.floor(Math.random() * 7); } while (false);
+    const statusType = Math.random() < 0.5 ? 'weaken' : 'buff';
+    state.placements.push({ type: 'status', lane: statusLane, statusType });
+  }
+  // 重置玩家本回合 picks
+  state.lanePicks = {};
+  state.selectedCard = null;
+  state.audioPlayed = false;
+  // 发 6 张手牌
+  state.hand = [];
+  for (let i = 0; i < HAND_SIZE; i++) {
+    state.hand.push(makeCard(Math.random() < 0.5 ? 'defense' : 'attack'));
+  }
+  renderAll();
+  // 自动播放攻击点对应音频（仅攻击点）
+  setTimeout(() => playAttackSounds(), 400);
+}
+
+function playAttackSounds() {
+  const attacks = state.placements.filter(p => p.type === 'attack');
+  attacks.forEach((p, i) => {
+    playTone(LANE_FREQ[p.lane], i * 0.5, 0.4);
+    setTimeout(() => flashLane(p.lane), i * 500);
+  });
+  state.audioPlayed = true;
+}
+
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playTone(freq, when, dur) {
+  ensureAudio();
+  const t = audioCtx.currentTime + when;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.value = freq;
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(0.3, t + 0.03);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.start(t);
+  osc.stop(t + dur + 0.05);
+}
+function flashLane(laneIdx) {
+  // 视觉反馈（暂时未做，留位）
+}
+
+// ===== Render =====
+function renderTop() {
+  document.getElementById('enemy-name').textContent = `音符小怪 · 第 ${state.turn} 回合`;
+  document.getElementById('hp-text').textContent = `${state.enemyHP} / ${ENEMY_MAX_HP}`;
+  document.getElementById('hp-fill').style.width = (state.enemyHP / ENEMY_MAX_HP * 100) + '%';
+  const pEl = document.getElementById('enemy-placements');
+  pEl.innerHTML = state.placements.map(p => {
+    if (p.type === 'attack') {
+      return `<div class="placement attack"><div class="p-lane">${LANES[p.lane]}</div><div class="p-points">${p.points}</div></div>`;
+    } else if (p.statusType === 'weaken') {
+      return `<div class="placement status-weaken"><div class="p-icon">⇩</div><div class="p-label">削弱-${LANES[p.lane]}</div></div>`;
+    } else {
+      return `<div class="placement status-buff"><div class="p-icon">⇧</div><div class="p-label">增强-${LANES[p.lane]}</div></div>`;
+    }
+  }).join('');
+}
+
+function renderLanes() {
+  const el = document.getElementById('lanes');
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const picks = state.lanePicks[i] || {defense:0, attack:0};
+    // 该 lane 上的敌人攻击点
+    const attackOnLane = state.placements.filter(p => p.type === 'attack' && p.lane === i);
+    const attackPts = attackOnLane.reduce((s,p) => s + p.points, 0);
+    // 玩家覆盖
+    const coveredPts = picks.defense * 5; // 防御 5 点/张（MVP 单点版）
+    const damage = Math.max(0, attackPts - coveredPts);
+    // 显示状态：lane win/lose
+    let cls = 'lane';
+    if (damage === 0 && attackPts > 0) cls += ' win';
+    else if (damage > 0) cls += ' lose';
+    else if (attackPts === 0) cls += ' tie';
+    // 卡槽
+    let slot = '';
+    if (picks.attack > 0) {
+      slot = `<div class="lane-card-slot attack">⚔ ×${picks.attack}</div>`;
+    } else {
+      slot = `<div class="lane-card-slot empty">点击放牌</div>`;
+    }
+    let damageBadge = '';
+    if (damage > 0) {
+      damageBadge = `<div class="lane-damage">-${damage}</div>`;
+    }
+    html += `<div class="${cls}" data-lane="${i}">
+      <div class="lane-name">${LANES[i]}</div>
+      <div class="lane-content">${slot}${damageBadge}</div>
+    </div>`;
+  }
+  el.innerHTML = html;
+  // 绑定 lane 点击
+  el.querySelectorAll('.lane').forEach(node => {
+    node.addEventListener('click', () => {
+      if (state.over) return;
+      if (state.selectedCard === null) return;
+      const laneIdx = +node.dataset.lane;
+      const card = state.hand[state.selectedCard];
+      if (!card || card.used) return;
+      // 替换已有
+      if (!state.lanePicks[laneIdx]) state.lanePicks[laneIdx] = {defense:0, attack:0};
+      state.lanePicks[laneIdx][card.type]++;
+      card.used = true;
+      state.selectedCard = null;
+      renderAll();
+    });
+  });
+}
+
+function renderHand() {
+  const el = document.getElementById('hand');
+  el.innerHTML = state.hand.map((c, idx) => {
+    let cls = 'card ' + c.type;
+    if (state.selectedCard === idx) cls += ' selected';
+    if (c.used) cls += ' used';
+    const actionLabel = c.type === 'defense' ? '挡' : '打';
+    return `<div class="${cls}" data-idx="${idx}">
+      <div class="c-type">${c.type==='defense' ? '🛡 防御' : '⚔ 攻击'}</div>
+      <div class="c-points">${c.points}</div>
+      <div class="c-action">${actionLabel}音</div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.card').forEach(node => {
+    node.addEventListener('click', () => {
+      if (state.over) return;
+      const idx = +node.dataset.idx;
+      const card = state.hand[idx];
+      if (card.used) return;
+      state.selectedCard = (state.selectedCard === idx) ? null : idx;
+      renderHand();
+    });
+  });
+}
+
+function renderStatus() {
+  document.getElementById('weaken-cnt').textContent = state.weaken;
+  document.getElementById('buff-cnt').textContent = state.buff;
+  document.getElementById('player-hp').textContent = state.playerHP;
+}
+
+function renderAll() {
+  renderTop();
+  renderLanes();
+  renderHand();
+  renderStatus();
+}
+
+// ===== End turn / resolution =====
+function endTurn() {
+  if (state.over) return;
+  // 计算每个 lane 的玩家攻击数（按 laneIdx）
+  const playerAttackByLane = {};
+  for (let i = 0; i < 7; i++) {
+    const picks = state.lanePicks[i] || {defense:0, attack:0};
+    if (picks.attack > 0) playerAttackByLane[i] = picks.attack;
+  }
+  // 找和弦（三连音 lane）
+  const chordLanes = [];
+  for (let i = 0; i <= 4; i++) {
+    if (playerAttackByLane[i] && playerAttackByLane[i+1] && playerAttackByLane[i+2]) {
+      chordLanes.push(i);
+    }
+  }
+  // 状态牌效果
+  if (state.placements.some(p => p.type==='status' && p.statusType==='weaken')) {
+    state.weaken += state.placements.filter(p => p.type==='status' && p.statusType==='weaken').length;
+  }
+  if (state.placements.some(p => p.type==='status' && p.statusType==='buff')) {
+    state.buff += state.placements.filter(p => p.type==='status' && p.statusType==='buff').length;
+  }
+  // 攻击牌可打掉状态牌
+  const statusLanes = new Set(state.placements.filter(p => p.type==='status').map(p => p.lane));
+  // 计算总攻击伤害
+  let totalAttackDamage = 0;
+  const weakenFactor = Math.max(0, 1 - state.weaken * 0.3); // -30%/stack
+  // 基础攻击点 8，chord ×2，状态牌吃了少 8
+  for (let i = 0; i < 7; i++) {
+    const picks = state.lanePicks[i] || {defense:0, attack:0};
+    if (picks.attack > 0) {
+      let dmg = picks.attack * 8 * weakenFactor;
+      if (chordLanes.includes(i)) dmg *= 2; // 和弦 ×2
+      if (statusLanes.has(i)) dmg -= 8; // 状态牌打了 -8
+      totalAttackDamage += Math.max(0, dmg);
+    }
+  }
+  state.enemyHP = Math.max(0, state.enemyHP - Math.floor(totalAttackDamage));
+  // 计算玩家受攻击伤害（每个 lane 未覆盖的攻击点扣血）
+  let totalPlayerDamage = 0;
+  for (let i = 0; i < 7; i++) {
+    const picks = state.lanePicks[i] || {defense:0, attack:0};
+    const attackOnLane = state.placements.filter(p => p.type === 'attack' && p.lane === i);
+    const attackPts = attackOnLane.reduce((s,p) => s + p.points, 0);
+    const coveredPts = picks.defense * 5;
+    totalPlayerDamage += Math.max(0, attackPts - coveredPts);
+  }
+  // 增强 boss 让玩家受更多伤害？不——buff 是 boss 攻击+。简化：buff 算到下次攻击
+  // MVP 简化为 buff 累积但本回合不影响（后续实现）
+  state.playerHP = Math.max(0, state.playerHP - totalPlayerDamage);
+  // 状态牌持续 1 回合 → 本回合已生效，下回合自动消失
+  // 削弱/增强持续到下回合
+  // 判定胜负
+  state.over = true;
+  if (state.enemyHP <= 0) {
+    showResult('win', totalAttackDamage, totalPlayerDamage, chordLanes.length);
+  } else if (state.playerHP <= 0) {
+    showResult('lose', totalAttackDamage, totalPlayerDamage, chordLanes.length);
+  } else {
+    showResult('continue', totalAttackDamage, totalPlayerDamage, chordLanes.length);
+  }
+  renderAll();
+}
+
+function showResult(result, atkDmg, plyDmg, chordCount) {
+  document.getElementById('r-title').textContent = result==='win'?'你赢了！':result==='lose'?'你输了':'继续战斗';
+  document.getElementById('r-title').className = result==='win'?'win':result==='lose'?'lose':'tie';
+  document.getElementById('r-stats').innerHTML = `
+    玩家攻击伤害: <b>${Math.floor(atkDmg)}</b> ${chordCount>0?`(<b>${chordCount}个和弦×2</b>)`:''}<br>
+    玩家受伤: <b>${plyDmg}</b><br>
+    削弱 ${state.weaken} / 增强 ${state.buff}<br>
+    敌人HP: <b>${state.enemyHP}</b> / 玩家HP: <b>${state.playerHP}</b>
+  `;
+  document.getElementById('result').classList.add('on');
+}
+
+// ===== Events =====
+document.getElementById('replay-btn').addEventListener('click', () => {
+  ensureAudio();
+  const attacks = state.placements.filter(p => p.type === 'attack');
+  attacks.forEach((p, i) => {
+    playTone(LANE_FREQ[p.lane], i * 0.5, 0.4);
+  });
+});
+document.getElementById('btn-clear').addEventListener('click', () => {
+  if (state.over) return;
+  state.hand.forEach(c => c.used = false);
+  state.lanePicks = {};
+  state.selectedCard = null;
+  renderAll();
+});
+document.getElementById('btn-end').addEventListener('click', () => {
+  endTurn();
+});
+document.getElementById('btn-new').addEventListener('click', () => {
+  state.enemyHP = ENEMY_MAX_HP;
+  state.playerHP = PLAYER_MAX_HP;
+  state.weaken = 0;
+  state.buff = 0;
+  state.turn = 0;
+  state.over = false;
+  document.getElementById('result').classList.remove('on');
+  newTurn();
+});
+document.getElementById('btn-again').addEventListener('click', () => {
+  state.enemyHP = ENEMY_MAX_HP;
+  state.playerHP = PLAYER_MAX_HP;
+  state.weaken = 0;
+  state.buff = 0;
+  state.turn = 0;
+  state.over = false;
+  document.getElementById('result').classList.remove('on');
+  newTurn();
+});
+
+// ===== Init =====
+function fit() {
+  const s = Math.min(innerWidth / 1280, innerHeight / 720);
+  document.getElementById('app').style.transform = `scale(${s})`;
+}
+addEventListener('resize', fit);
+fit();
+newTurn();
+document.addEventListener('click', () => ensureAudio(), {once:true});
+document.addEventListener('touchstart', () => ensureAudio(), {once:true});
+</script>
+</body>
+</html>

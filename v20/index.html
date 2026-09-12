@@ -3,565 +3,676 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<title>V15 改版 MVP · 一关测试</title>
+<title>V20 · 第一幕 声之原野 · 铁音武士</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { margin:0; padding:0; background:#050714; font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; user-select:none; color:#dfe6ff; overflow-x:hidden; overflow-y:hidden; }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#050714;font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;user-select:none;color:#dfe6ff;overflow:hidden}
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#app{width:1280px;height:720px;flex:none;transform-origin:center center;background:radial-gradient(1100px 650px at 42% 38%,#151b36 0%,#0d1122 55%,#070912 100%);display:flex;flex-direction:column;overflow:hidden;position:relative}
 
-  #stage { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+/* ===== MAP ===== */
+#map-screen{flex:1;display:none;flex-direction:column;padding:14px 20px;overflow:auto}
+#map-screen.on{display:flex}
+#map-title{font-size:20px;color:#ffe9b8;text-align:center;margin-bottom:6px;letter-spacing:2px}
+#map-stats{display:flex;gap:14px;justify-content:center;font-size:13px;color:#9fb0e8;margin-bottom:10px}
+#map-stats b{color:#ffd54f}
+#map-layers{flex:1;display:flex;flex-direction:column-reverse;gap:8px;justify-content:flex-end}
+.map-layer{display:flex;gap:10px;justify-content:center;align-items:center;min-height:56px}
+.node{width:64px;height:52px;border-radius:8px;border:2px solid #3d4680;background:#11162e;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;cursor:pointer;transition:all .15s;position:relative}
+.node .ni{font-size:20px;line-height:1}
+.node.locked{opacity:.28;cursor:default}
+.node.done{opacity:.45;border-color:#2c3560}
+.node.next{border-color:#ffd54f;box-shadow:0 0 14px #ffd54f66;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 22px #ffd54faa}}
+.node.boss{border-color:#ff5d6c;width:76px;height:60px}
+.node.elite{border-color:#b88aff}
 
-  #app {
-    width: 1280px;
-    height: 720px;
-    flex: none;
-    transform-origin: center center;
-    background: radial-gradient(1100px 650px at 42% 38%, #151b36 0%, #0d1122 55%, #070912 100%);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+/* ===== BATTLE ===== */
+#battle-screen{flex:1;display:none;flex-direction:column}
+#battle-screen.on{display:flex}
+#top{flex:0 0 27%;display:flex;flex-direction:column;padding:10px 16px;border-bottom:1px solid #2c3560;background:linear-gradient(180deg,#0d1128,transparent)}
+#enemy-row{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+#enemy-face{font-size:44px;filter:drop-shadow(0 0 12px #ffb84d88)}
+#enemy-info{flex:1}
+#enemy-name{font-size:15px;color:#ffe9b8;margin-bottom:3px}
+.hpbar{height:13px;background:#20264a;border:1px solid #3d4680;border-radius:7px;overflow:hidden}
+.hpfill{height:100%;background:linear-gradient(90deg,#ff5d6c,#ff9a76);transition:width .3s;border-radius:7px}
+#hp-text{font-size:11px;margin-top:2px;color:#9fb0e8}
+#enemy-debuffs{font-size:11px;color:#b88aff;min-height:15px}
+#enemy-placements{display:flex;gap:4px;flex-wrap:wrap;min-height:48px;padding:5px;background:#0d1128aa;border:1px solid #2c3560;border-radius:8px}
+.placement{width:74px;height:44px;border-radius:6px;border:2px solid;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0}
+.placement.atk{color:#ff5d6c;border-color:#c04658;background:linear-gradient(165deg,#3a1218,#1a0c10)}
+.placement.atk .pl{font-size:9px;color:#9fb0e8}
+.placement.atk .pp{font-size:16px}
+.placement.st-w{color:#b88aff;border-color:#7d4de0;background:linear-gradient(165deg,#2a1240,#160c20);font-size:10px}
+.placement.st-b{color:#ffd54f;border-color:#ffd54f;background:linear-gradient(165deg,#3a2e10,#1a1408);font-size:10px}
+#mid{flex:1;padding:6px 12px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.lane{flex:1;display:flex;align-items:center;border-radius:8px;background:linear-gradient(90deg,#ffffff05,#ffffff0a 50%,#ffffff05);border:1px solid #ffffff15;padding:0 10px;min-height:0;cursor:pointer;transition:background .15s,border-color .15s}
+.lane:hover{background:linear-gradient(90deg,#ffffff0a,#ffffff18 50%,#ffffff0a);border-color:#ffffff30}
+.lane.win{background:linear-gradient(90deg,#5dff7a15,#5dff7a30 50%,#5dff7a15);border-color:#5dff7a}
+.lane.lose{background:linear-gradient(90deg,#ff5d6c15,#ff5d6c30 50%,#ff5d6c30);border-color:#ff5d6c}
+.lane-name{width:44px;flex:none;text-align:center;font-size:17px;font-weight:bold;text-shadow:0 0 8px currentColor}
+.lane-body{flex:1;display:flex;gap:6px;align-items:center}
+.slot{width:62px;height:44px;border:1.5px dashed #5d6ba0;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#5d6ba0;flex-shrink:0}
+.slot.def{color:#9ad8ff;border-color:#4d8ae2;background:#12203a;font-weight:bold;font-size:14px}
+.slot.atkc{color:#ff9a8a;border-color:#ff5d6c;background:#2a1220;font-weight:bold;font-size:14px}
+.ldmg{font-size:11px;color:#ff7a7a;padding:0 4px;flex-shrink:0}
+#bottom{flex:0 0 30%;display:flex;flex-direction:column;padding:6px 14px 8px;border-top:1px solid #2c3560;background:linear-gradient(0deg,#0d1128,transparent)}
+#p-status{display:flex;gap:10px;font-size:11px;color:#9fb0e8;padding-bottom:3px;align-items:center;flex-wrap:wrap}
+#p-status .tag{padding:2px 7px;border-radius:5px}
+.tag.hp{background:#3a1220;color:#ff9a8a}
+.tag.gold{background:#3a2e10;color:#ffd54f}
+.tag.vol{background:#3a1218;color:#ff9a8a}
+.tag.block{background:#12203a;color:#9ad8ff}
+.tag.metal{background:#12203a;color:#9ad8ff}
+.tag.barricade{background:#2a1240;color:#b88aff}
+#hand-row{display:flex;gap:8px;align-items:center;justify-content:center;flex:1;min-height:0}
+#hand{display:flex;gap:7px;flex:1;justify-content:center;align-items:center;overflow-x:auto}
+.card{width:80px;height:104px;flex-shrink:0;border-radius:9px;border:2px solid;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;transition:transform .1s;position:relative;padding:3px}
+.card:active{transform:scale(.95)}
+.card.sel{transform:translateY(-10px);box-shadow:0 0 16px #ffd54f88}
+.card.dis{opacity:.35;cursor:default}
+.card .cn{font-size:12px;text-align:center;line-height:1.15}
+.card .cc{font-size:10px;position:absolute;top:3px;right:5px;color:#ffd54f}
+.card .cd{font-size:9px;color:#9fb0e8;text-align:center;margin-top:3px;line-height:1.2}
+.card.attack{color:#ff9a8a;border-color:#ff5d6c;background:linear-gradient(165deg,#3a1218,#1a0c10)}
+.card.defense{color:#9ad8ff;border-color:#4d8ae2;background:linear-gradient(165deg,#1a2042,#0d1128)}
+.card.skill{color:#9de8a8;border-color:#4db86a;background:linear-gradient(165deg,#12301a,#0a1810)}
+.card.power{color:#ffd54f;border-color:#c9a227;background:linear-gradient(165deg,#3a2e10,#1a1408)}
+.card.curse{color:#888;border-color:#555;background:#16161a}
+.card.up{box-shadow:inset 0 0 0 1.5px #ffd54f88}
+#ctrl-row{display:flex;gap:10px;align-items:center;justify-content:center;padding-top:5px}
+#energy{font-size:18px;color:#ffd54f;font-weight:bold}
+.btn{padding:5px 16px;background:#232b4d;border:1px solid #4a568f;border-radius:8px;color:#dfe6ff;font-size:12px;cursor:pointer}
+.btn.gold{background:linear-gradient(160deg,#a37c1c,#6d5210);border-color:#ffd54f;color:#fff6d8;font-weight:bold}
+.btn.red{background:#3a1218;border-color:#ff5d6c;color:#ff9a8a}
+.btn:disabled{opacity:.3;cursor:default}
+#pile-info{font-size:10px;color:#8f9ccf}
 
-  /* ===== Top: enemy ===== */
-  #top {
-    flex: 0 0 30%;
-    display: flex; flex-direction:column;
-    padding: 12px 16px;
-    border-bottom: 1px solid #2c3560;
-    background: linear-gradient(180deg, #0d1128, transparent);
-  }
-  #enemy-row { display:flex; align-items:center; gap:14px; margin-bottom:8px; }
-  #enemy-face { font-size:46px; filter:drop-shadow(0 0 12px #ffb84d88); }
-  #enemy-info { flex:1; }
-  #enemy-name { font-size:16px; color:#ffe9b8; margin-bottom:4px; }
-  #hp-bar { height:14px; background:#20264a; border:1px solid #3d4680; border-radius:7px; overflow:hidden; }
-  #hp-fill { height:100%; background:linear-gradient(90deg,#ff5d6c,#ff9a76); transition:width .35s; border-radius:7px; }
-  #hp-text { font-size:12px; margin-top:3px; color:#9fb0e8; }
-  #enemy-turn-label { font-size:13px; color:#ffd54f; margin-bottom:6px; letter-spacing:2px; }
-  #enemy-placements {
-    display: flex; gap: 4px; flex-wrap: wrap;
-    min-height: 50px;
-    padding: 6px;
-    background: #0d1128aa;
-    border: 1px solid #2c3560;
-    border-radius: 8px;
-  }
-  .placement {
-    width: 80px;
-    height: 56px;
-    border-radius: 6px;
-    border: 2px solid;
-    display: flex; flex-direction:column;
-    align-items: center; justify-content: center;
-    font-weight: bold;
-    line-height: 1.05;
-    position: relative;
-    flex-shrink: 0;
-  }
-  .placement.attack { color: #ff5d6c; border-color: #c04658; background: linear-gradient(165deg, #3a1218, #1a0c10); }
-  .placement.attack .p-lane { font-size: 10px; color: #9fb0e8; margin-bottom: 2px; }
-  .placement.attack .p-points { font-size: 18px; }
-  .placement.status-weaken { color: #b88aff; border-color: #7d4de0; background: linear-gradient(165deg, #2a1240, #160c20); }
-  .placement.status-weaken .p-label { font-size: 11px; }
-  .placement.status-weaken .p-icon { font-size: 20px; }
-  .placement.status-buff { color: #ffd54f; border-color: #ffd54f; background: linear-gradient(165deg, #3a2e10, #1a1408); }
-  .placement.status-buff .p-label { font-size: 11px; }
-  .placement.status-buff .p-icon { font-size: 20px; }
-  #audio-row { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
-  #replay-btn { padding: 3px 10px; font-size: 11px; background: #232b4d; border: 1px solid #4a568f; border-radius: 6px; color: #dfe6ff; cursor: pointer; }
-
-  /* ===== Middle: lanes ===== */
-  #mid {
-    flex: 1;
-    padding: 8px 12px;
-    display: flex; flex-direction:column; gap: 4px;
-    overflow: hidden;
-  }
-  .lane {
-    flex: 1;
-    display: flex; align-items: center;
-    border-radius: 8px;
-    background: linear-gradient(90deg, #ffffff05, #ffffff0a 50%, #ffffff05);
-    border: 1px solid #ffffff15;
-    padding: 0 10px;
-    min-height: 0;
-    cursor: pointer;
-    transition: background .15s, border-color .15s;
-    position: relative;
-  }
-  .lane:hover { background: linear-gradient(90deg, #ffffff0a, #ffffff18 50%, #ffffff0a); border-color: #ffffff30; }
-  .lane.win { background: linear-gradient(90deg, #5dff7a15, #5dff7a30 50%, #5dff7a15); border-color: #5dff7a; }
-  .lane.lose { background: linear-gradient(90deg, #ff5d6c15, #ff5d6c30 50%, #ff5d6c30); border-color: #ff5d6c; }
-  .lane.tie { background: linear-gradient(90deg, #ffd54f10, #ffd54f25 50%, #ffd54f10); border-color: #ffd54f; }
-  .lane-name {
-    width: 50px; flex: none;
-    text-align: center; font-size: 18px; font-weight: bold;
-    color: #dfe6ff;
-    text-shadow: 0 0 8px currentColor;
-    padding: 0 4px;
-  }
-  .lane-content { flex: 1; display: flex; gap: 6px; align-items: center; }
-  .lane-card-slot {
-    width: 70px; height: 56px;
-    border: 1.5px dashed #5d6ba0;
-    border-radius: 5px;
-    display: flex; align-items: center; justify-content: center;
-    color: #5d6ba0; font-size: 11px;
-    flex-shrink: 0;
-  }
-  .lane-card-slot.defense { color: #9ad8ff; border-color: #4d8ae2; background: #12203a; font-weight: bold; font-size: 16px; }
-  .lane-card-slot.attack { color: #ff9a8a; border-color: #ff5d6c; background: #2a1220; font-weight: bold; font-size: 16px; }
-  .lane-card-slot.empty { color: #5d6ba0; }
-  .lane-damage { font-size: 11px; color: #ff7a7a; padding: 0 4px; flex-shrink: 0; }
-
-  /* ===== Bottom: hand ===== */
-  #bottom {
-    flex: 0 0 25%;
-    display: flex; flex-direction:column;
-    padding: 6px 14px 8px;
-    border-top: 1px solid #2c3560;
-    background: linear-gradient(0deg, #0d1128, transparent);
-  }
-  #status-row { display:flex; gap:10px; font-size:12px; color:#9fb0e8; padding-bottom:4px; align-items:center; }
-  #status-row .weaken-cnt, #status-row .buff-cnt { padding: 2px 8px; border-radius: 6px; }
-  #status-row .weaken-cnt { background: #2a1240; color: #b88aff; }
-  #status-row .buff-cnt { background: #3a2e10; color: #ffd54f; }
-  #hand-label { font-size: 12px; color: #8f9ccf; text-align: center; margin-bottom: 4px; }
-  #hand {
-    flex: 1;
-    display: flex; gap: 8px;
-    justify-content: center; align-items: center;
-    overflow-x: auto;
-    min-height: 0;
-  }
-  .card {
-    width: 78px; height: 100px;
-    flex-shrink: 0;
-    border-radius: 8px;
-    border: 2px solid;
-    display: flex; flex-direction:column;
-    align-items: center; justify-content: center;
-    font-weight: bold;
-    line-height: 1.1;
-    cursor: pointer;
-    transition: transform .1s, box-shadow .1s;
-    position: relative;
-  }
-  .card:active { transform: scale(0.95); }
-  .card.selected { transform: translateY(-10px); box-shadow: 0 0 16px #ffd54f88; }
-  .card.used { opacity: 0.3; }
-  .card.defense { color: #9ad8ff; border-color: #4d8ae2; background: linear-gradient(165deg, #1a2042, #0d1128); }
-  .card.defense .c-type { color: #9ad8ff; font-size: 12px; }
-  .card.attack { color: #ff9a8a; border-color: #ff5d6c; background: linear-gradient(165deg, #3a1218, #1a0c10); }
-  .card.attack .c-type { color: #ff9a8a; font-size: 12px; }
-  .card .c-points { font-size: 22px; }
-  .card .c-action { font-size: 9px; color: #9fb0e8; margin-top: 2px; }
-
-  #controls { display: flex; gap: 10px; align-items: center; justify-content: center; padding-top: 6px; }
-  .btn { padding: 6px 18px; background: #232b4d; border: 1px solid #4a568f; border-radius: 8px; color: #dfe6ff; font-size: 13px; cursor: pointer; }
-  .btn.gold { background: linear-gradient(160deg, #a37c1c, #6d5210); border-color: #ffd54f; color: #fff6d8; font-weight: bold; }
-  .btn:disabled { opacity: .35; cursor: default; }
-
-  /* ===== Result ===== */
-  #result {
-    position: absolute; inset: 0;
-    background: #07091eee;
-    display: none;
-    flex-direction: column; align-items: center; justify-content: center;
-    gap: 16px; z-index: 99;
-  }
-  #result.on { display: flex; }
-  #r-title { font-size: 48px; font-weight: 900; letter-spacing: 6px; }
-  #r-title.win { color: #5dff7a; text-shadow: 0 0 24px #5dff7a88; }
-  #r-title.lose { color: #ff5d6c; text-shadow: 0 0 24px #ff5d6c88; }
-  #r-stats { color: #9fb0e8; font-size: 16px; line-height: 2; text-align: center; }
-  #r-stats b { color: #ffd54f; }
+/* ===== MODAL ===== */
+#modal{position:absolute;inset:0;background:#07091eee;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:99;padding:30px}
+#modal.on{display:flex}
+#m-title{font-size:30px;font-weight:900;letter-spacing:3px}
+#m-body{color:#c9d4f5;font-size:14px;line-height:1.9;text-align:center;max-width:800px}
+#m-body b{color:#ffd54f}
+#m-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+#m-cards{display:flex;gap:10px}
+.mcard{cursor:pointer}
+.mcard:hover{transform:translateY(-6px)}
+#toast{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:#232b4dee;border:1px solid #ffd54f88;color:#ffe9b8;padding:8px 22px;border-radius:8px;font-size:14px;z-index:120;display:none}
+#toast.on{display:block}
 </style>
 </head>
 <body>
+<div id="stage"><div id="app">
 
-<div id="stage">
-<div id="app">
+<div id="map-screen">
+  <div id="map-title">🗺 第一幕 · 声之原野 · 铁音武士</div>
+  <div id="map-stats"></div>
+  <div id="map-layers"></div>
+</div>
 
+<div id="battle-screen">
   <div id="top">
     <div id="enemy-row">
       <div id="enemy-face">🎵</div>
       <div id="enemy-info">
-        <div id="enemy-name">音符小怪 · 一幕第一关</div>
-        <div class="hp-bar" id="hp-bar"><div class="hp-fill" id="hp-fill"></div></div>
-        <div style="font-size:12px; margin-top:3px" id="hp-text"></div>
+        <div id="enemy-name"></div>
+        <div class="hpbar"><div class="hpfill" id="ehp-fill"></div></div>
+        <div id="hp-text"></div>
+        <div id="enemy-debuffs"></div>
       </div>
     </div>
-    <div id="enemy-turn-label">敌人出招 (3-5 攻击点 + 1 状态牌)</</div>
     <div id="enemy-placements"></div>
-    <div id="audio-row">
-      <button id="replay-btn">▶ 重听 3 音</button>
-      <span style="font-size:11px;color:#8f9ccf">每点 1-10 随机 · 总点数 = 玩家扣血</span>
-    </div>
   </div>
-
-  <div id="mid">
-    <div id="lanes"></div>
-  </div>
-
+  <div id="mid"><div id="lanes"></div></div>
   <div id="bottom">
-    <div id="status-row">
-      <span>状态:</span>
-      <span class="weaken-cnt">⇩ 削弱 <b id="weaken-cnt">0</b></span>
-      <span class="buff-cnt">⇧ 增强 <b id="buff-cnt">0</b></span>
-      <span style="margin-left:auto">玩家 HP: <b id="player-hp">80</b>/80</span>
+    <div id="p-status"></div>
+    <div id="hand-row">
+      <div id="pile-info"></div>
+      <div id="hand"></div>
+      <button class="btn gold" id="btn-end">结束回合 ▶</button>
     </div>
-    <div id="hand-label">我的手牌 (6 张) - 点选 → 点横幅放置</div>
-    <div id="hand"></div>
-    <div id="controls">
-      <button class="btn" id="btn-clear">清除</button>
-      <button class="btn gold" id="btn-end">结束回合</button>
-      <button class="btn" id="btn-new">新关卡</button>
+    <div id="ctrl-row">
+      <div id="energy">♪ 3/3</div>
+      <button class="btn" id="btn-replay">🔊 重听</button>
+      <button class="btn" id="btn-clear">↺ 收回</button>
     </div>
   </div>
-
-  <div id="result">
-    <div id="r-title"></div>
-    <div id="r-stats"></div>
-    <button class="btn gold" id="btn-again">再来一次</button>
-  </div>
-
-</div>
 </div>
 
+<div id="modal">
+  <div id="m-title"></div>
+  <div id="m-body"></div>
+  <div id="m-cards"></div>
+  <div id="m-btns"></div>
+</div>
+<div id="toast"></div>
+
+</div></div>
 <script>
-const LANES = ['do','re','mi','fa','sol','la','si'];
-const LANE_FREQ = [262, 294, 330, 349, 392, 440, 494]; // C4 D4 E4 F4 G4 A4 B4
-const ENEMY_MAX_HP = 60;
-const PLAYER_MAX_HP = 80;
-const HAND_SIZE = 6;
+"use strict";
+/* ================= V20 第一幕 · 铁音武士 · 单文件版 =================
+ * 09-12 大爷 19:54 拍板：第一张地图，战士流派，小怪+地图+Boss，模仿 StS 卡牌节奏
+ * (抽5张/3♪能量/牌库循环/升级/商店/篝火/构筑筛选) */
 
-// 4 个默认决策（18:27 大爷说"go"后柠檬茶自定）
-// Q5 状态牌占位：可同攻击点同横幅
-// Q11 覆盖范围点数（MVP 单点版）：防御 5 / 攻击 8
-// Q12 双音和弦：连续 2 张形成 3 度 = ×2 伤害
-// Q13 覆盖牌可获得性：MVP 给单点（双/三点后续阶段解锁）
+const LANES=['do','re','mi','fa','sol','la','si'];
+const FREQ=[262,294,330,349,392,440,494];
+const P_MAXHP=80;
 
-let state = {
-  enemyHP: ENEMY_MAX_HP,
-  playerHP: PLAYER_MAX_HP,
-  weaken: 0,   // -30% 攻击 per stack
-  buff: 0,     // +30% 攻击 per stack
-  placements: [], // [{type, lane, points/status, statusType}]
-  hand: [],
-  selectedCard: null,
-  lanePicks: {}, // {laneIdx: {defense: count, attack: count}}
-  turn: 0,
-  over: false,
-  audioPlayed: false,
+/* ---------- 卡牌定义 ---------- */
+const CARDS={
+  hammer:{n:'重音锤',t:'attack',cost:1,atk:8,d:'攻击 8',up:{atk:11,d:'攻击 11'}},
+  wall:{n:'音壁',t:'defense',cost:1,def:5,d:'音盾 5',up:{def:8,d:'音盾 8'}},
+  twin:{n:'双锤连音',t:'attack',cost:1,atk:5,multi:2,d:'攻击 5×2 段',up:{atk:7,d:'攻击 7×2 段'}},
+  cry:{n:'战吼',t:'skill',cost:0,d:'本回合攻击牌 +2 点',up:{d:'本回合攻击牌 +3 点',bonus:3},bonus:2},
+  inflame:{n:'音量凝聚',t:'power',cost:1,d:'音量 +2 (攻击牌永久加成)',up:{vol:3,d:'音量 +3'},vol:2},
+  crack:{n:'音膜震裂',t:'skill',cost:0,d:'敌人音膜破损 2 回合 (受伤+50%)',up:{turns:3,d:'音膜破损 3 回合'},turns:2},
+  metal:{n:'金属音甲',t:'power',cost:1,d:'每回合末 +3 音盾',up:{val:4,d:'每回合末 +4 音盾'},val:3},
+  blood:{n:'血脉鼓动',t:'skill',cost:0,d:'失 3 HP，抽 2 张',up:{draw:3,d:'失 3 HP 抽 3 张'},draw:2},
+  insight:{n:'弱点洞察',t:'skill',cost:0,d:'敌人有攻击意图时音量 +3',up:{vol:4,d:'音量 +4'},vol:3},
+  slam:{n:'音浪崩击',t:'attack',cost:1,d:'伤害 = 当前音盾值',up:{cost:0,d:'(♪0) 伤害 = 音盾值'},slam:true},
+  barricade:{n:'壁垒音墙',t:'power',cost:3,d:'音盾回合末不再清空',up:{cost:2,d:'(♪2) 音盾不清空'}},
+  reaper:{n:'狂暴终乐',t:'attack',cost:2,d:'全体 5+音量 伤害，吸血 50%',up:{atk:7,d:'全体 7+音量 吸血'},atk:5,reaper:true},
+  whirl:{n:'无双回旋',t:'attack',cost:0,d:'消耗全部♪：5×段 跨道攻击',up:{atk:7,d:'消耗全部♪：7×段'},atk:5,whirl:true},
+  daze:{n:'喘息音符',t:'curse',cost:0,d:'无法打出',unplayable:true},
+  echo:{n:'战意残响',t:'skill',cost:0,d:'音量 +1，消耗',up:{vol:2,d:'音量 +2 消耗'},vol:1,exhaust:true},
 };
+function mkCard(id,up=false){const b=CARDS[id];return{id,up:up||(b&&false),...b,...(up?b.up:{}),uid:Math.random().toString(36).slice(2,8)}}
 
-function makeCard(type) {
-  // 防御 5 点 / 攻击 8 点（MVP 单点版）
-  return { type, points: type==='defense' ? 5 : 8 };
+/* ---------- 怪物定义（怪物表精选）---------- */
+const MONSTERS={
+  louse:{n:'小谱号·音符虱',e:'🐛',hp:60,sh:0,pool:[{t:'atk',min:3,max:5,c:1}]},
+  slime:{n:'节拍史莱姆·中',e:'🟢',hp:110,sh:0,pool:[{t:'atk',min:4,max:6,c:2}]},
+  star:{n:'星尘精灵',e:'✨',hp:90,sh:5,pool:[{t:'atk',min:5,max:8,c:2}],hideNames:2},
+  snow:{n:'雪晶人偶',e:'❄️',hp:100,sh:5,pool:[{t:'atk',min:8,max:8,c:1}],status:'weak',statusP:.5},
+  pup:{n:'鼓点幼犬',e:'🐶',hp:95,sh:0,pool:[{t:'atk',min:3,max:3,c:4}]},
+  frog:{n:'蓝调青蛙',e:'🐸',hp:105,sh:0,pool:[{t:'atk',min:5,max:7,c:1}],status:'weak',statusP:.7},
+  bear:{n:'大提琴熊',e:'🐻',hp:150,sh:5,charge:true,pool:[{t:'atk',min:12,max:14,c:1}]},
+  metro:{n:'节拍器骑士',e:'⏱',hp:135,sh:8,cycle:[5,8,11],pool:[{t:'atk',min:5,max:5,c:1}]},
+  worm:{n:'巨型音波蠕虫',e:'🪱',hp:240,sh:0,elite:true,pool:[{t:'atk',min:3,max:3,c:5}]},
+  golem:{n:'断弦魔像',e:'🗿',hp:220,sh:20,elite:true,reflect:8,pool:[{t:'atk',min:10,max:10,c:1}]},
+  tyrant:{n:'铜管暴君',e:'🎺',hp:400,sh:25,boss:true,pool:[{t:'atk',min:8,max:14,c:2}]},
+};
+const NORMAL_POOL=['louse','slime','star','snow','pup','frog','bear','metro'];
+const ELITE_POOL=['worm','golem'];
+
+/* ---------- 全局状态 ---------- */
+let S=null;
+function newRun(){
+  S={
+    screen:'map',hp:P_MAXHP,gold:99,floor:0,
+    deck:[],  // 所有卡
+    // 地图
+    layers:[],curLayer:0,reachable:[],
+    // 战斗
+    bt:null,
+  };
+  // 初始卡组 StS 式
+  for(let i=0;i<4;i++)S.deck.push(mkCard('hammer'));
+  for(let i=0;i<4;i++)S.deck.push(mkCard('wall'));
+  S.deck.push(mkCard('twin'));
+  S.deck.push(mkCard('cry'));
+  genMap();
+}
+function genMap(){
+  // 15 层: 1战斗 2战 3战/商 4战/精英 5事件 6战/精 7商/宝 8篝火 9战/精 10事件/战 11宝/商 12精/战 13战 14篝火 15Boss
+  const T={F:'⚔️战斗',E:'💀精英',S:'🛒商店',C:'🔥篝火',V:'❓事件',B:'🎁宝箱',X:'👑Boss'};
+  const plan=[
+    ['F'],['F'],['F','S'],['F','E'],['V','F'],['F','E'],['S','B2'],['C'],
+    ['F','E'],['V','F'],['B1','S'],['E','F'],['F'],['C'],['X']
+  ];
+  S.layers=plan.map((row,li)=>row.map((t,i)=>({
+    t:t==='B1'||t==='B2'?'B':t, done:false, li, ni:i,
+    key:t
+  })));
 }
 
-function newTurn() {
-  state.turn++;
-  // 生成敌人攻击点 3-5 个
-  const attackCount = 3 + Math.floor(Math.random() * 3); // 3, 4, or 5
-  state.placements = [];
-  const usedLanes = new Set();
-  for (let i = 0; i < attackCount; i++) {
-    let lane;
-    do { lane = Math.floor(Math.random() * 7); } while (usedLanes.has(lane));
-    usedLanes.add(lane);
-    state.placements.push({
-      type: 'attack',
-      lane,
-      points: 1 + Math.floor(Math.random() * 10), // 1-10
+/* ---------- 地图渲染 ---------- */
+const NODE_ICON={F:'⚔️',E:'💀',S:'🛒',C:'🔥',V:'❓',B:'🎁',X:'👑'};
+const NODE_NAME={F:'战斗',E:'精英',S:'商店',C:'篝火',V:'事件',B:'宝箱',X:'Boss'};
+function renderMap(){
+  document.getElementById('map-screen').classList.add('on');
+  document.getElementById('battle-screen').classList.remove('on');
+  document.getElementById('map-stats').innerHTML=
+    `❤️ HP <b>${S.hp}</b>/${P_MAXHP} · 💰 <b>${S.gold}</b> · 🃏 <b>${S.deck.length}</b> 张 · 第 <b>${S.curLayer+1}</b>/15 层`;
+  const el=document.getElementById('map-layers');el.innerHTML='';
+  S.layers.forEach((row,li)=>{
+    const div=document.createElement('div');div.className='map-layer';
+    row.forEach(node=>{
+      const b=document.createElement('div');
+      let cls='node';
+      if(node.t==='X')cls+=' boss';
+      if(node.t==='E')cls+=' elite';
+      if(node.done)cls+=' done';
+      if(li===S.curLayer&&!node.done)cls+=' next';
+      if(li>S.curLayer)cls+=' locked';
+      b.className=cls;
+      b.innerHTML=`<div class="ni">${NODE_ICON[node.t]}</div><div>${NODE_NAME[node.t]}</div>`;
+      if(li===S.curLayer&&!node.done){
+        b.onclick=()=>enterNode(node);
+      }
+      div.appendChild(b);
     });
-  }
-  // 19:19 大爷：状态卡太少看不到 → 改成每回合必有 1 张，weaken/buff 轮流出
-  let statusLane = Math.floor(Math.random() * 7);
-  // 避开已有的攻击点（可选，让状态牌可同攻击点同横幅 = Q5 决策）
-  state.placements.push({ type: 'status', lane: statusLane, statusType: state.turn % 2 === 0 ? 'weaken' : 'buff' });
-  // 重置玩家本回合 picks
-  state.lanePicks = {};
-  state.selectedCard = null;
-  state.audioPlayed = false;
-  // 发 6 张手牌
-  state.hand = [];
-  for (let i = 0; i < HAND_SIZE; i++) {
-    state.hand.push(makeCard(Math.random() < 0.5 ? 'defense' : 'attack'));
-  }
-  renderAll();
-  // 自动播放攻击点对应音频（仅攻击点）
-  setTimeout(() => playAttackSounds(), 400);
-}
-
-function playAttackSounds() {
-  const attacks = state.placements.filter(p => p.type === 'attack');
-  attacks.forEach((p, i) => {
-    playTone(LANE_FREQ[p.lane], i * 0.5, 0.4);
-    setTimeout(() => flashLane(p.lane), i * 500);
+    el.appendChild(div);
   });
-  state.audioPlayed = true;
 }
 
-let audioCtx = null;
-function ensureAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-}
-function playTone(freq, when, dur) {
-  ensureAudio();
-  const t = audioCtx.currentTime + when;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'triangle';
-  osc.frequency.value = freq;
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(0.3, t + 0.03);
-  gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  osc.start(t);
-  osc.stop(t + dur + 0.05);
-}
-function flashLane(laneIdx) {
-  // 视觉反馈（暂时未做，留位）
+/* ---------- 节点进入 ---------- */
+function enterNode(node){
+  node.done=true;
+  if(node.t==='F'||node.t==='E'||node.t==='X'){startBattle(node.t)}
+  else if(node.t==='C')showCamp();
+  else if(node.t==='S')showShop();
+  else if(node.t==='B')showChest();
+  else if(node.t==='V')showEvent();
 }
 
-// ===== Render =====
-function renderTop() {
-  document.getElementById('enemy-name').textContent = `音符小怪 · 第 ${state.turn} 回合`;
-  document.getElementById('hp-text').textContent = `${state.enemyHP} / ${ENEMY_MAX_HP}`;
-  document.getElementById('hp-fill').style.width = (state.enemyHP / ENEMY_MAX_HP * 100) + '%';
-  const pEl = document.getElementById('enemy-placements');
-  pEl.innerHTML = state.placements.map(p => {
-    if (p.type === 'attack') {
-      return `<div class="placement attack"><div class="p-lane">${LANES[p.lane]}</div><div class="p-points">${p.points}</div></div>`;
-    } else if (p.statusType === 'weaken') {
-      return `<div class="placement status-weaken"><div class="p-icon">⇩</div><div class="p-label">削弱-${LANES[p.lane]}</div></div>`;
-    } else {
-      return `<div class="placement status-buff"><div class="p-icon">⇧</div><div class="p-label">增强-${LANES[p.lane]}</div></div>`;
+/* ---------- 音频 ---------- */
+let AC=null;
+function au(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}
+function tone(f,when=0,dur=.4){const c=au(),t=c.currentTime+when;const o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.value=f;o.connect(g);g.connect(c.destination);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.start(t);o.stop(t+dur+.05)}
+document.addEventListener('pointerdown',()=>au(),{once:true});
+
+/* ---------- 战斗 ---------- */
+function pickMonster(kind){
+  if(kind==='X')return MONSTERS.tyrant;
+  if(kind==='E')return MONSTERS[ELITE_POOL[Math.floor(Math.random()*ELITE_POOL.length)]];
+  return MONSTERS[NORMAL_POOL[Math.floor(Math.random()*NORMAL_POOL.length)]];
+}
+function startBattle(kind){
+  const m=pickMonster(kind);
+  S.bt={
+    m,eHP:m.hp,eMax:m.hp,eBlock:m.sh||0,vuln:0, // vuln=音膜破损回合数
+    turn:0,placements:[],picks:{},
+    vol:0,block:0,metal:0,barricade:false,tempAtk:0,
+    energy:3,maxE:3,
+    draw:[],hand:[],discard:[],exhaust:[],
+    charging:0,cycleIdx:0,reflect:m.reflect||0,
+    over:false,
+  };
+  // 洗牌
+  S.bt.draw=shuffle(S.deck.map(c=>({...c})));
+  drawCards(5);
+  S.screen='battle';
+  enemyTurn();
+  renderBattle();
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function drawCards(n){
+  for(let i=0;i<n;i++){
+    if(S.bt.draw.length===0){
+      if(S.bt.discard.length===0)break;
+      S.bt.draw=shuffle(S.bt.discard);S.bt.discard=[];
     }
+    S.bt.hand.push(S.bt.draw.pop());
+  }
+}
+function enemyTurn(){
+  const b=S.bt,m=b.m;
+  b.turn++;
+  b.placements=[];b.picks={};b.tempAtk=0;
+  if(!b.barricade)b.block=0;
+  // 敌方回盾
+  if(m.sh)b.eBlock=m.sh;
+  if(m.id==='metro')b.eBlock=m.sh; // 简化
+  // 音膜破损递减
+  if(b.vuln>0)b.vuln--;
+  // 出招
+  const atkCount=3+Math.floor(Math.random()*3); // 3-5
+  if(m.charge&&b.turn%2===0){
+    // 大提琴熊: 偶数回合蓄力不出招
+    b.placements.push({type:'charge'});
+  }else if(m.boss&&b.turn%4===0){
+    // 铜管暴君: 每4回合全场炮
+    for(let i=0;i<5;i++){const lane=Math.floor(Math.random()*7);b.placements.push({type:'atk',lane,pts:6})}
+  }else if(m.cycle){
+    const pts=m.cycle[b.cycleIdx%3];b.cycleIdx++;
+    const c=2+Math.floor(Math.random()*2);
+    for(let i=0;i<c;i++){let lane=Math.floor(Math.random()*7);b.placements.push({type:'atk',lane,pts})}
+  }else{
+    const mv=m.pool[0];
+    const c=mv.c||atkCount;
+    const lanes=[];
+    for(let i=0;i<c;i++){
+      let lane=Math.floor(Math.random()*7);
+      const pts=mv.min+Math.floor(Math.random()*(mv.max-mv.min+1));
+      b.placements.push({type:'atk',lane,pts});
+    }
+  }
+  // 状态牌: 大爷拍板每回合必有(19:19) 但战斗里改成低频更合理 → 折中: 有status字段的怪50-70%出
+  if(m.status&&Math.random()<(m.statusP||0.5)){
+    const lane=Math.floor(Math.random()*7);
+    b.placements.push({type:'status',lane,st:m.status});
+  }
+  if(m.boss&&Math.random()<0.4){ // boss 常出增强
+    const lane=Math.floor(Math.random()*7);
+    b.placements.push({type:'status',lane,st:'buff'});
+  }
+  // 重抽能量
+  b.energy=b.maxE;
+  // 播音
+  const atks=b.placements.filter(p=>p.type==='atk');
+  atks.forEach((p,i)=>{if(i<6){tone(FREQ[p.lane],i*.45,.4)}});
+}
+function renderBattle(){
+  document.getElementById('map-screen').classList.remove('on');
+  document.getElementById('battle-screen').classList.add('on');
+  const b=S.bt;
+  // enemy
+  document.getElementById('enemy-face').textContent=b.m.e;
+  document.getElementById('enemy-name').textContent=`${b.m.n} · 第 ${b.turn} 回合`;
+  document.getElementById('ehp-fill').style.width=(b.eHP/b.eMax*100)+'%';
+  document.getElementById('hp-text').textContent=`${b.eHP}/${b.eMax}${b.eBlock>0?' 🛡'+b.eBlock:''}`;
+  document.getElementById('enemy-debuffs').textContent=b.vuln>0?`🎧 音膜破损 ${b.vuln} 回合(受伤+50%)`:'';
+  const pe=document.getElementById('enemy-placements');
+  pe.innerHTML=b.placements.map(p=>{
+    if(p.type==='atk')return`<div class="placement atk"><div class="pl">${LANES[p.lane]}</div><div class="pp">${p.pts}</div></div>`;
+    if(p.type==='charge')return`<div class="placement st-b"><div>⚡蓄力中…</div></div>`;
+    if(p.st==='weak')return`<div class="placement st-w"><div>⇩削弱</div><div style="font-size:9px">${LANES[p.lane]}道</div></div>`;
+    return`<div class="placement st-b"><div>⇧增强</div><div style="font-size:9px">${LANES[p.lane]}道</div></div>`;
   }).join('');
-}
-
-function renderLanes() {
-  const el = document.getElementById('lanes');
-  let html = '';
-  // 18:50 大爷：do 在最下面（升序从下往上 do→si）
-  for (let i = 6; i >= 0; i--) {
-    const picks = state.lanePicks[i] || {defense:0, attack:0};
-    // 该 lane 上的敌人攻击点
-    const attackOnLane = state.placements.filter(p => p.type === 'attack' && p.lane === i);
-    const attackPts = attackOnLane.reduce((s,p) => s + p.points, 0);
-    // 玩家覆盖
-    const coveredPts = picks.defense * 5; // 防御 5 点/张（MVP 单点版）
-    const damage = Math.max(0, attackPts - coveredPts);
-    // 显示状态：lane win/lose
-    let cls = 'lane';
-    if (damage === 0 && attackPts > 0) cls += ' win';
-    else if (damage > 0) cls += ' lose';
-    else if (attackPts === 0) cls += ' tie';
-    // 卡槽
-    let slot = '';
-    if (picks.attack > 0) {
-      slot = `<div class="lane-card-slot attack">⚔ ×${picks.attack}</div>`;
-    } else {
-      slot = `<div class="lane-card-slot empty">点击放牌</div>`;
-    }
-    let damageBadge = '';
-    if (damage > 0) {
-      damageBadge = `<div class="lane-damage">-${damage}</div>`;
-    }
-    html += `<div class="${cls}" data-lane="${i}">
-      <div class="lane-name">${LANES[i]}</div>
-      <div class="lane-content">${slot}${damageBadge}</div>
-    </div>`;
+  // lanes
+  const el=document.getElementById('lanes');let html='';
+  for(let i=6;i>=0;i--){
+    const pk=b.picks[i]||{d:0,a:0};
+    const atk=b.placements.filter(p=>p.type==='atk'&&p.lane===i);
+    const atkPts=atk.reduce((s,p)=>s+p.pts,0);
+    const covered=pk.d*(5); // 每张防御牌基础挡5(音壁) 实际按牌算 见endTurn
+    let cls='lane';
+    if(atkPts>0&&covered>=atkPts)cls+=' win';else if(atkPts>0&&covered<atkPts)cls+=' lose';
+    const slot=pk.a>0?`<div class="slot atkc">⚔×${pk.a}</div>`:(pk.d>0?`<div class="slot def">🛡×${pk.d}</div>`:`<div class="slot">放牌</div>`);
+    const dmg=atkPts>0?`<div class="ldmg">-${Math.max(0,atkPts-covered)}</div>`:'';
+    html+=`<div class="${cls}" data-l="${i}"><div class="lane-name">${b.m.hideNames?'·':LANES[i]}</div><div class="lane-body">${slot}${dmg}</div></div>`;
   }
-  el.innerHTML = html;
-  // 绑定 lane 点击
-  el.querySelectorAll('.lane').forEach(node => {
-    node.addEventListener('click', () => {
-      if (state.over) return;
-      if (state.selectedCard === null) return;
-      const laneIdx = +node.dataset.lane;
-      const card = state.hand[state.selectedCard];
-      if (!card || card.used) return;
-      // 替换已有
-      if (!state.lanePicks[laneIdx]) state.lanePicks[laneIdx] = {defense:0, attack:0};
-      state.lanePicks[laneIdx][card.type]++;
-      card.used = true;
-      state.selectedCard = null;
-      renderAll();
-    });
+  el.innerHTML=html;
+  el.querySelectorAll('.lane').forEach(n=>{
+    n.onclick=()=>{if(S.selCard!=null)placeCard(+n.dataset.l)};
   });
-}
-
-function renderHand() {
-  const el = document.getElementById('hand');
-  el.innerHTML = state.hand.map((c, idx) => {
-    let cls = 'card ' + c.type;
-    if (state.selectedCard === idx) cls += ' selected';
-    if (c.used) cls += ' used';
-    const actionLabel = c.type === 'defense' ? '挡' : '打';
-    return `<div class="${cls}" data-idx="${idx}">
-      <div class="c-type">${c.type==='defense' ? '🛡 防御' : '⚔ 攻击'}</div>
-      <div class="c-points">${c.points}</div>
-      <div class="c-action">${actionLabel}音</div>
-    </div>`;
+  // player status
+  document.getElementById('p-status').innerHTML=
+    `<span class="tag hp">❤️ ${S.hp}/${P_MAXHP}</span><span class="tag gold">💰 ${S.gold}</span>`+
+    `<span class="tag vol">🔊 音量 +${b.vol}</span>`+
+    (b.block>0?`<span class="tag block">🛡 音盾 ${b.block}</span>`:'')+
+    (b.metal>0?`<span class="tag metal">⚙ 金属音甲 +${b.metal}/回合</span>`:'')+
+    (b.barricade?`<span class="tag barricade">🏰 壁垒(盾不清)</span>`:'');
+  document.getElementById('energy').textContent=`♪ ${b.energy}/${b.maxE}`;
+  document.getElementById('pile-info').textContent=`牌库 ${b.draw.length} | 弃 ${b.discard.length}${b.exhaust.length?' | 烧 '+b.exhaust.length:''}`;
+  // hand
+  const h=document.getElementById('hand');
+  h.innerHTML=b.hand.map((c,i)=>{
+    let cls='card '+c.t+(c.up?' up':'');
+    const cost=c.cost;
+    if(S.selCard===i)cls+=' sel';
+    if(b.energy<cost||c.unplayable)cls+=' dis';
+    return`<div class="${cls}" data-i="${i}"><div class="cc">♪${cost}</div><div class="cn">${c.n}${c.up?'⁺':''}</div><div class="cd">${c.d}</div></div>`;
   }).join('');
-  el.querySelectorAll('.card').forEach(node => {
-    node.addEventListener('click', () => {
-      if (state.over) return;
-      const idx = +node.dataset.idx;
-      const card = state.hand[idx];
-      if (card.used) return;
-      state.selectedCard = (state.selectedCard === idx) ? null : idx;
-      renderHand();
-    });
+  h.querySelectorAll('.card').forEach(n=>{
+    n.onclick=()=>{
+      const i=+n.dataset.i;const c=b.hand[i];
+      if(c.unplayable){toast('喘息音符打不出');return}
+      if(b.energy<c.cost){toast('♪能量不够');return}
+      S.selCard=S.selCard===i?null:i;renderBattle();
+    };
   });
 }
+let toastTimer=null;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('on'),1600)}
 
-function renderStatus() {
-  document.getElementById('weaken-cnt').textContent = state.weaken;
-  document.getElementById('buff-cnt').textContent = state.buff;
-  document.getElementById('player-hp').textContent = state.playerHP;
-}
-
-function renderAll() {
-  renderTop();
-  renderLanes();
-  renderHand();
-  renderStatus();
-}
-
-// ===== End turn / resolution =====
-function endTurn() {
-  if (state.over) return;
-  // 计算每个 lane 的玩家攻击数（按 laneIdx）
-  const playerAttackByLane = {};
-  for (let i = 0; i < 7; i++) {
-    const picks = state.lanePicks[i] || {defense:0, attack:0};
-    if (picks.attack > 0) playerAttackByLane[i] = picks.attack;
-  }
-  // 找和弦（三连音 lane）
-  const chordLanes = [];
-  for (let i = 0; i <= 4; i++) {
-    if (playerAttackByLane[i] && playerAttackByLane[i+1] && playerAttackByLane[i+2]) {
-      chordLanes.push(i);
+function placeCard(lane){
+  const b=S.bt;const c=b.hand[S.selCard];
+  if(!c)return;
+  // 花能量移牌
+  b.energy-=c.cost;
+  b.hand.splice(S.selCard,1);
+  if(c.exhaust)b.exhaust.push(c);else b.discard.push(c);
+  S.selCard=null;
+  // 效果
+  if(c.t==='defense'){
+    if(!b.picks[lane])b.picks[lane]={d:0,a:0,cards:[]};
+    b.picks[lane].d++;b.picks[lane].cards=b.picks[lane].cards||[];b.picks[lane].cards.push({def:c.def});
+    b.block+=c.def; // 也进音盾池
+  }else if(c.t==='attack'){
+    if(!b.picks[lane])b.picks[lane]={d:0,a:0,cards:[]};
+    b.picks[lane].a++;
+    // 攻击牌直接结算对敌伤害(音量加成+音膜)
+    let dmg=(c.atk||0)+b.vol+b.tempAtk;
+    if(c.multi)dmg=(c.atk||0)+b.vol; // 简化双段
+    if(c.slam)dmg=b.block+b.vol; // 音浪崩击=音盾值
+    if(c.whirl)dmg=c.atk+b.vol; // 每段
+    if(b.vuln>0)dmg=Math.floor(dmg*1.5);
+    dealToEnemy(dmg,c);
+  }else if(c.t==='skill'){
+    if(c.id==='cry')b.tempAtk=c.bonus||2;
+    if(c.id==='crack')b.vuln=c.turns||2;
+    if(c.id==='blood'){S.hp=Math.max(1,S.hp-3);drawCards(c.draw||2)}
+    if(c.id==='insight'){
+      const hasAtk=b.placements.some(p=>p.type==='atk');
+      if(hasAtk){b.vol+=(c.vol||3);toast('看破！音量+'+(c.vol||3))}else{toast('敌人没攻击意图，白唱了');}
     }
+    if(c.id==='echo'){b.vol+=(c.vol||1)}
+  }else if(c.t==='power'){
+    if(c.id==='inflame')b.vol+=(c.vol||2);
+    if(c.id==='metal')b.metal+=(c.val||3);
+    if(c.id==='barricade')b.barricade=true;
   }
-  // 状态牌效果
-  if (state.placements.some(p => p.type==='status' && p.statusType==='weaken')) {
-    state.weaken += state.placements.filter(p => p.type==='status' && p.statusType==='weaken').length;
-  }
-  if (state.placements.some(p => p.type==='status' && p.statusType==='buff')) {
-    state.buff += state.placements.filter(p => p.type==='status' && p.statusType==='buff').length;
-  }
-  // 攻击牌可打掉状态牌
-  const statusLanes = new Set(state.placements.filter(p => p.type==='status').map(p => p.lane));
-  // 计算总攻击伤害
-  let totalAttackDamage = 0;
-  const weakenFactor = Math.max(0, 1 - state.weaken * 0.3); // -30%/stack
-  // 基础攻击点 8，chord ×2，状态牌吃了少 8
-  for (let i = 0; i < 7; i++) {
-    const picks = state.lanePicks[i] || {defense:0, attack:0};
-    if (picks.attack > 0) {
-      let dmg = picks.attack * 8 * weakenFactor;
-      if (chordLanes.includes(i)) dmg *= 2; // 和弦 ×2
-      if (statusLanes.has(i)) dmg -= 8; // 状态牌打了 -8
-      totalAttackDamage += Math.max(0, dmg);
-    }
-  }
-  state.enemyHP = Math.max(0, state.enemyHP - Math.floor(totalAttackDamage));
-  // 计算玩家受攻击伤害（每个 lane 未覆盖的攻击点扣血）
-  let totalPlayerDamage = 0;
-  for (let i = 0; i < 7; i++) {
-    const picks = state.lanePicks[i] || {defense:0, attack:0};
-    const attackOnLane = state.placements.filter(p => p.type === 'attack' && p.lane === i);
-    const attackPts = attackOnLane.reduce((s,p) => s + p.points, 0);
-    const coveredPts = picks.defense * 5;
-    totalPlayerDamage += Math.max(0, attackPts - coveredPts);
-  }
-  // 增强 boss 让玩家受更多伤害？不——buff 是 boss 攻击+。简化：buff 算到下次攻击
-  // MVP 简化为 buff 累积但本回合不影响（后续实现）
-  state.playerHP = Math.max(0, state.playerHP - totalPlayerDamage);
-  // 状态牌持续 1 回合 → 本回合已生效，下回合自动消失
-  // 削弱/增强持续到下回合
-  // 判定胜负
-  state.over = true;
-  if (state.enemyHP <= 0) {
-    showResult('win', totalAttackDamage, totalPlayerDamage, chordLanes.length);
-  } else if (state.playerHP <= 0) {
-    showResult('lose', totalAttackDamage, totalPlayerDamage, chordLanes.length);
-  } else {
-    showResult('continue', totalAttackDamage, totalPlayerDamage, chordLanes.length);
-  }
-  renderAll();
+  renderBattle();
+}
+function dealToEnemy(dmg,card){
+  const b=S.bt;
+  // 简化: 敌方盾先挡
+  if(b.eBlock>0){const abs=Math.min(b.eBlock,dmg);b.eBlock-=abs;dmg-=abs}
+  b.eHP=Math.max(0,b.eHP-dmg);
+  // 吸血
+  if(card&&card.reaper&&dmg>0){S.hp=Math.min(P_MAXHP,S.hp+Math.ceil(dmg/2))}
+  // 反伤
+  if(b.reflect>0&&card&&card.t==='attack'){S.hp=Math.max(1,S.hp-Math.min(b.reflect,5))}
+  if(b.eHP<=0){b.over=true;setTimeout(()=>battleWin(),600)}
+  renderBattle();
 }
 
-function showResult(result, atkDmg, plyDmg, chordCount) {
-  document.getElementById('r-title').textContent = result==='win'?'你赢了！':result==='lose'?'你输了':'继续战斗';
-  document.getElementById('r-title').className = result==='win'?'win':result==='lose'?'lose':'tie';
-  document.getElementById('r-stats').innerHTML = `
-    玩家攻击伤害: <b>${Math.floor(atkDmg)}</b> ${chordCount>0?`(<b>${chordCount}个和弦×2</b>)`:''}<br>
-    玩家受伤: <b>${plyDmg}</b><br>
-    削弱 ${state.weaken} / 增强 ${state.buff}<br>
-    敌人HP: <b>${state.enemyHP}</b> / 玩家HP: <b>${state.playerHP}</b>
-  `;
-  document.getElementById('result').classList.add('on');
+/* ---------- 结束回合 ---------- */
+function endTurn(){
+  const b=S.bt;if(b.over)return;
+  // 和弦判定: 相邻3道都有攻击牌 → ×2 追加
+  const lanesWith=[];
+  for(let i=0;i<7;i++){const pk=b.picks[i];if(pk&&pk.a>0)lanesWith.push(i)}
+  let chord=0;
+  for(let i=0;i<5;i++){if(lanesWith.includes(i)&&lanesWith.includes(i+1)&&lanesWith.includes(i+2)){chord++}}
+  if(chord>0){const bonus=chord*8*(b.vol+2);dealToEnemy(bonus,{t:'attack'});toast(`🎵 和弦共鸣 ×${chord}！追伤 ${bonus}`)}
+  // 玩家受击: 每道未挡部分
+  let dmgTaken=0;
+  for(let i=0;i<7;i++){
+    const atk=b.placements.filter(p=>p.type==='atk'&&p.lane===i);
+    const atkPts=atk.reduce((s,p)=>s+p.pts,0);
+    const pk=b.picks[i];const covered=pk?pk.d*5:0;
+    const leak=Math.max(0,atkPts-covered);
+    dmgTaken+=leak;
+  }
+  // 削弱/增强状态牌结算(简化: 状态牌在场则敌伤+30%或玩家攻击-30%下回合——这里只做即时)
+  const hasWeak=b.placements.some(p=>p.type==='status'&&p.st==='weak');
+  if(hasWeak){b.vol=Math.max(0,b.vol-1);toast('⇩ 被削弱！音量-1')}
+  // 音盾抵扣
+  if(b.block>0){const abs=Math.min(b.block,dmgTaken);b.block-=abs;dmgTaken-=abs}
+  if(dmgTaken>0)S.hp=Math.max(0,S.hp-dmgTaken);
+  // 金属音甲
+  if(b.metal>0)b.block+=b.metal;
+  // 弃手牌
+  b.discard.push(...b.hand);b.hand=[];
+  if(S.hp<=0){gameOver();return}
+  if(b.eHP<=0){battleWin();return}
+  // 新回合
+  drawCards(5);
+  enemyTurn();
+  renderBattle();
 }
 
-// ===== Events =====
-document.getElementById('replay-btn').addEventListener('click', () => {
-  ensureAudio();
-  const attacks = state.placements.filter(p => p.type === 'attack');
-  attacks.forEach((p, i) => {
-    playTone(LANE_FREQ[p.lane], i * 0.5, 0.4);
+/* ---------- 战斗胜负/奖励 ---------- */
+function battleWin(){
+  const b=S.bt;if(!b)return;
+  const isBoss=b.m.boss,isElite=!!b.m.elite;
+  const gold=10+Math.floor(Math.random()*11)+(isElite?25:0)+(isBoss?50:0);
+  S.gold+=gold;
+  // 3选1加卡
+  const poolIds=['hammer','wall','twin','cry','inflame','crack','metal','blood','insight','slam','barricade','reaper','whirl','echo'];
+  const offers=[];
+  const tmp=[...poolIds];
+  for(let i=0;i<3;i++)offers.push(tmp.splice(Math.floor(Math.random()*tmp.length),1)[0]);
+  S.bt=null;
+  if(isBoss){victory(gold);return}
+  modal(`⚔️ 战斗胜利！`,
+    `获得 💰 <b>${gold}</b> 金币<br>选 1 张卡加入卡组`,
+    offers.map(id=>({card:mkCard(id),fn:()=>{
+      S.deck.push(mkCard(id));
+      toast(`已加入 ${CARDS[id].n}`);
+      nextFloor();
+    }})),
+    [{t:'跳过',fn:()=>nextFloor()}]
+  );
+}
+function nextFloor(){
+  closeModal();
+  S.curLayer++;
+  if(S.curLayer>=15){victory(0);return}
+  S.screen='map';renderMap();
+}
+function gameOver(){
+  S.bt=null;
+  modal('💀 你倒下了…',`第一幕 第 ${S.curLayer+1} 层<br><br><b>铁音武士，声之原野会记住你的歌。</b>`,[],[
+    {t:'重新开始',fn:()=>{newRun();closeModal();renderMap()}},
+  ]);
+}
+function victory(gold){
+  modal('👑 第一幕通关！',`铜管暴君哑火！<br>获得 💰 <b>${gold}</b> 金币<br><br>第二幕 · 情感之城 —— 敬请期待`,[],[
+    {t:'再战一局',fn:()=>{newRun();closeModal();renderMap()}},
+  ]);
+}
+
+/* ---------- 篝火 ---------- */
+function showCamp(){
+  modal('🔥 排练室','休息或练卡，二选一',[],[
+    {t:`💤 休息 (回 ${Math.ceil(P_MAXHP*0.3)} HP)`,fn:()=>{S.hp=Math.min(P_MAXHP,S.hp+Math.ceil(P_MAXHP*0.3));toast('睡了个好觉');nextFloor()}},
+    {t:'🎼 练卡 (升级 1 张)',fn:()=>showUpgrade()},
+  ]);
+}
+function showUpgrade(){
+  closeModal();
+  const upg=S.deck.filter(c=>!c.up);
+  if(!upg.length){toast('没有可升级的卡');showCamp();return}
+  const byId={};upg.forEach(c=>{byId[c.id]=byId[c.id]||c});
+  modal('🎼 练哪张？','升级后数值增强',Object.values(byId).map(c=>({card:c,fn:()=>{
+    // 升级所有同名卡中的1张
+    const i=S.deck.findIndex(x=>x.id===c.id&&!x.up);
+    const base=CARDS[c.id];
+    S.deck[i]={...S.deck[i],...base.up,up:true};
+    toast(`${c.n} 升级！`);
+    nextFloor();
+  }})),[{t:'返回',fn:()=>showCamp()}]);
+}
+
+/* ---------- 商店 ---------- */
+function showShop(){
+  const poolIds=['inflame','crack','metal','blood','insight','slam','barricade','reaper','whirl','twin','echo','cry'];
+  const offers=[];
+  const tmp=[...poolIds];
+  for(let i=0;i<3;i++)offers.push(tmp.splice(Math.floor(Math.random()*tmp.length),1)[0]);
+  const price=()=>45+Math.floor(Math.random()*31);
+  const prices=offers.map(price);
+  const delPrice=50;
+  const render=()=>{
+    modal('🛒 唱片行',`💰 <b>${S.gold}</b> 金币`,offers.map((id,i)=>({card:mkCard(id),cost:prices[i],fn:()=>{
+      if(S.gold<prices[i]){toast('钱不够');return}
+      S.gold-=prices[i];S.deck.push(mkCard(id));offers[i]=null;toast(`买了 ${CARDS[id].n}`);render();
+    }})),[
+      {t:`🗑 删卡 (${delPrice}金)`,fn:()=>{if(S.gold<delPrice){toast('钱不够');return}showDelete(delPrice)}},
+      {t:'离开',fn:()=>nextFloor()},
+    ]);
+  };
+  render();
+}
+function showDelete(price){
+  const byId={};S.deck.forEach(c=>{byId[c.id]=byId[c.id]||c});
+  modal('🗑 删哪张？',`当前 ${S.deck.length} 张`,Object.values(byId).map(c=>({card:c,fn:()=>{
+    const i=S.deck.findIndex(x=>x.id===c.id);
+    S.deck.splice(i,1);S.gold-=price;toast(`删掉 ${c.n}`);showShop();
+  }})),[{t:'不删了',fn:()=>showShop()}]);
+}
+
+/* ---------- 宝箱 ---------- */
+function showChest(){
+  const g=30+Math.floor(Math.random()*21);
+  S.gold+=g;
+  const rare=['reaper','barricade','slam','whirl'][Math.floor(Math.random()*4)];
+  modal('🎁 音盒',`箱子里有：<br>💰 <b>${g}</b> 金币 + 一张稀有卡`,[{card:mkCard(rare),fn:()=>{
+    S.deck.push(mkCard(rare));toast(`获得 ${CARDS[rare].n}！`);nextFloor();
+  }}],[{t:'只要金币',fn:()=>nextFloor()}]);
+}
+
+/* ---------- 事件 ---------- */
+const EVENTS=[
+  {t:'⛲ 声音泉',b:'清澈的泉水叮咚作响，喝一口？',opts:[
+    {t:'喝一口 (回 20 HP)',fn:()=>{S.hp=Math.min(P_MAXHP,S.hp+20);toast('+20 HP');nextFloor()}},
+    {t:'沐浴 (删 1 张基础卡)',fn:()=>showSimpleDelete()},
+    {t:'离开',fn:()=>nextFloor()}]},
+  {t:'👻 乐器的幽灵',b:'一把旧吉他的灵魂请求加入你的乐队…',opts:[
+    {t:'答应 (失 8 HP，得随机稀有卡)',fn:()=>{S.hp=Math.max(1,S.hp-8);const rare=['reaper','barricade','slam','whirl'][Math.floor(Math.random()*4)];S.deck.push(mkCard(rare));toast(`幽灵赠予 ${CARDS[rare].n}！`);nextFloor()}},
+    {t:'拒绝',fn:()=>nextFloor()}]},
+  {t:'🎲 音速赌场',b:'庄家微笑：赌上你的钱包？',opts:[
+    {t:'梭哈 (50% 金币翻倍)',fn:()=>{if(Math.random()<.5){S.gold*=2;toast('赢了！金币翻倍！')}else{S.gold=0;toast('输光了…')}nextFloor()}},
+    {t:'走为上',fn:()=>nextFloor()}]},
+  {t:'🎻 大师的指导',b:'路过的老乐师愿意帮你精简卡组。',opts:[
+    {t:'删 1 张基础卡',fn:()=>showSimpleDelete()},
+    {t:'鞠躬致谢',fn:()=>nextFloor()}]},
+];
+function showEvent(){
+  const ev=EVENTS[Math.floor(Math.random()*EVENTS.length)];
+  modal(ev.t,ev.b,[],ev.opts);
+}
+function showSimpleDelete(){
+  const basics=S.deck.filter(c=>c.id==='hammer'||c.id==='wall');
+  if(!basics.length){toast('没有基础卡可删');nextFloor();return}
+  const byId={};basics.forEach(c=>{byId[c.id]=byId[c.id]||c});
+  modal('🗑 删哪张基础卡？','',Object.values(byId).map(c=>({card:c,fn:()=>{
+    const i=S.deck.findIndex(x=>x.id===c.id);S.deck.splice(i,1);toast(`删掉 ${c.n}`);nextFloor();
+  }})),[{t:'算了',fn:()=>nextFloor()}]);
+}
+
+/* ---------- Modal ---------- */
+let modalCards=[];
+function modal(title,body,cards,btns){
+  document.getElementById('m-title').innerHTML=title;
+  document.getElementById('m-body').innerHTML=body;
+  const ce=document.getElementById('m-cards');ce.innerHTML='';modalCards=cards||[];
+  modalCards.forEach((mc,i)=>{
+    if(!mc)return;
+    const c=mc.card;
+    const div=document.createElement('div');
+    div.className='card mcard '+c.t;
+    div.innerHTML=`<div class="cc">♪${c.cost}</div><div class="cn">${c.n}</div><div class="cd">${c.d}</div>${mc.cost!=null?`<div class="cd" style="color:#ffd54f">💰${mc.cost}</div>`:''}`;
+    div.onclick=mc.fn;
+    ce.appendChild(div);
   });
-});
-document.getElementById('btn-clear').addEventListener('click', () => {
-  if (state.over) return;
-  state.hand.forEach(c => c.used = false);
-  state.lanePicks = {};
-  state.selectedCard = null;
-  renderAll();
-});
-document.getElementById('btn-end').addEventListener('click', () => {
-  endTurn();
-});
-document.getElementById('btn-new').addEventListener('click', () => {
-  state.enemyHP = ENEMY_MAX_HP;
-  state.playerHP = PLAYER_MAX_HP;
-  state.weaken = 0;
-  state.buff = 0;
-  state.turn = 0;
-  state.over = false;
-  document.getElementById('result').classList.remove('on');
-  newTurn();
-});
-document.getElementById('btn-again').addEventListener('click', () => {
-  state.enemyHP = ENEMY_MAX_HP;
-  state.playerHP = PLAYER_MAX_HP;
-  state.weaken = 0;
-  state.buff = 0;
-  state.turn = 0;
-  state.over = false;
-  document.getElementById('result').classList.remove('on');
-  newTurn();
-});
-
-// ===== Init =====
-function fit() {
-  const s = Math.min(innerWidth / 1280, innerHeight / 720);
-  document.getElementById('app').style.transform = `scale(${s})`;
+  const be=document.getElementById('m-btns');be.innerHTML='';
+  (btns||[]).forEach(b=>{
+    const btn=document.createElement('button');btn.className='btn gold';btn.textContent=b.t;btn.onclick=b.fn;
+    be.appendChild(btn);
+  });
+  document.getElementById('modal').classList.add('on');
 }
-addEventListener('resize', fit);
-fit();
-newTurn();
-document.addEventListener('click', () => ensureAudio(), {once:true});
-document.addEventListener('touchstart', () => ensureAudio(), {once:true});
+function closeModal(){document.getElementById('modal').classList.remove('on')}
+
+/* ---------- 控件 ---------- */
+document.getElementById('btn-end').onclick=()=>endTurn();
+document.getElementById('btn-replay').onclick=()=>{
+  if(!S.bt)return;
+  S.bt.placements.filter(p=>p.type==='atk').forEach((p,i)=>{if(i<6)tone(FREQ[p.lane],i*.45,.4)});
+};
+document.getElementById('btn-clear').onclick=()=>{S.selCard=null;renderBattle()};
+
+/* ---------- 启动 ---------- */
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);document.getElementById('app').style.transform=`scale(${s})`}
+addEventListener('resize',fit);fit();
+newRun();renderMap();
 </script>
 </body>
 </html>

@@ -11,10 +11,16 @@
   html, body { width:100%; height:100%; overflow:hidden; background:#0a0e1a; font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; user-select:none; color:#dfe6ff; }
   body { display:flex; align-items:center; justify-content:center; }
 
+  #stage {
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
   #app {
     position:relative;
-    width:100vw; height:100vh;
-    max-width:1000px; max-height:560px;
+    width:1000px; height:500px;
+    flex:none;
+    transform-origin:center center;
     background:radial-gradient(800px 500px at 50% 40%, #1a2247 0%, #0d1122 60%, #050714 100%);
     overflow:hidden;
     display:flex; flex-direction:column;
@@ -173,31 +179,12 @@
   #r-cards .rcard.joker { color:#ffd54f; border-color:#ffd54f; background:#2a2010; }
   #r-btns { display:flex; gap:10px; }
 
-  /* ===== Portrait hint ===== */
-  #rotate-hint {
-    position:fixed; inset:0;
-    background:#0a0e1a;
-    display:none;
-    flex-direction:column; align-items:center; justify-content:center;
-    gap:14px; z-index:1000;
-    color:#8f9ccf; font-size:16px;
-  }
-  #rotate-hint .icon { font-size:48px; }
-  @media (orientation: portrait) and (max-width: 600px) {
-    #rotate-hint { display:flex; }
-  }
-  @media (min-aspect-ratio: 1/1) {
-    #rotate-hint { display:none; }
-  }
+  /* ===== Portrait hint (removed - use auto-scale instead) ===== */
 </style>
 </head>
 <body>
 
-<div id="rotate-hint">
-  <div class="icon">📱↻</div>
-  <div>请横屏游玩</div>
-</div>
-
+<div id="stage">
 <div id="app">
 
   <div id="top">
@@ -230,6 +217,7 @@
     </div>
   </div>
 
+</div>
 </div>
 
 <script>
@@ -670,6 +658,21 @@ updateMiniScore();
 // 首次点击解锁音频
 document.addEventListener('click', () => ensureAudio(), {once:true});
 document.addEventListener('touchstart', () => ensureAudio(), {once:true});
+
+// ===== 自动缩放：画布固定 1000x500，适配任何 viewport 形状 =====
+function fitStage() {
+  const stage = document.getElementById('stage');
+  const app = document.getElementById('app');
+  const W = 1000, H = 500;
+  const sw = window.innerWidth, sh = window.innerHeight;
+  const scale = Math.min(sw / W, sh / H);
+  app.style.transform = `scale(${scale})`;
+  // 背景填充整个屏幕（避免画布外露黑边）
+  stage.style.background = 'radial-gradient(' + (800*scale) + 'px ' + (500*scale) + 'px at 50% 50%, #1a2247 0%, #0d1122 60%, #050714 100%)';
+}
+window.addEventListener('resize', fitStage);
+window.addEventListener('orientationchange', fitStage);
+fitStage();
 </script>
 </body>
 </html>

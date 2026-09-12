@@ -352,7 +352,8 @@ function renderTop() {
 function renderLanes() {
   const el = document.getElementById('lanes');
   let html = '';
-  for (let i = 0; i < 7; i++) {
+  // 18:50 大爷：do 在最下面（升序从下往上 do→si）
+  for (let i = 6; i >= 0; i--) {
     const picks = state.lanePicks[i] || {defense:0, attack:0};
     // 该 lane 上的敌人攻击点
     const attackOnLane = state.placements.filter(p => p.type === 'attack' && p.lane === i);

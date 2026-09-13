@@ -119,6 +119,22 @@ html,body{background:#050714;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #ult-ov.on{display:flex}
 #ult-ov .u1{font-size:40px;font-weight:900;letter-spacing:4px;color:#ffd54f;text-shadow:0 0 24px #ff5d6c}
 #ult-ov .u2{font-size:15px;color:#ffe9b8}
+/* ===== 拖拽/弹道层(18:24 大爷:攻击牌拖到敌人身上+指示线+红点连射爆炸) ===== */
+#fx-layer{position:fixed;inset:0;pointer-events:none;z-index:190;display:none}
+#fx-layer.on{display:block}
+#fx-layer svg{width:100%;height:100%;overflow:visible}
+.ghost-card{position:fixed;pointer-events:none;z-index:200;transform:scale(1.08) rotate(3deg);opacity:.92;filter:drop-shadow(0 8px 18px #000c)!important;margin:0!important}
+.card.attack{touch-action:none;cursor:grab}
+.card.dragging{opacity:.25}
+.bullet{position:fixed;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe9b8,#ff5d6c);box-shadow:0 0 14px #ff5d6caa,0 0 30px #ff9a7666;z-index:195;pointer-events:none}
+.boom{position:fixed;width:22px;height:22px;border:3px solid #ffd54f;border-radius:50%;box-shadow:0 0 18px #ff5d6c,inset 0 0 10px #ff9a76;z-index:195;pointer-events:none}
+@keyframes eshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(5px)}}
+#top{position:relative}
+#top.shake{animation:eshake .28s}
+#top.drag-over{background:linear-gradient(180deg,#3a1218cc,#0d1128)}
+#top.drag-over #enemy-row{filter:brightness(1.3) drop-shadow(0 0 12px #ff5d6c)}
+#top.drop-hint::after{content:'⚔ 点击此处释放攻击';position:absolute;left:50%;bottom:5px;transform:translateX(-50%);color:#ff9a8a;font-size:13px;font-weight:bold;letter-spacing:2px;text-shadow:0 0 10px #ff5d6c;animation:ultpulse 1s infinite;pointer-events:none;z-index:5}
+#top.drop-hint #enemy-row{filter:drop-shadow(0 0 10px #ff5d6c88)}
 </style>
 </head>
 <body>
@@ -170,6 +186,7 @@ html,body{background:#050714;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 <div id="toast"></div>
 
 </div></div>
+<div id="fx-layer"><svg></svg></div>
 <script>
 "use strict";
 /* ================= V20 第一幕 · 铁音武士 · 单文件版 =================
@@ -317,6 +334,7 @@ function startBattle(kind){
     energy:3,maxE:3,
     draw:[],hand:[],discard:[],exhaust:[],
     charging:0,cycleIdx:0,reflect:m.reflect||0,
+    atkLanes:[], // 18:24 大爷拖拽改版:回合内打出的攻击覆盖轨(和弦判定改用此)
     over:false,
   };
   // 洗牌
@@ -339,7 +357,7 @@ function drawCards(n){
 function enemyTurn(){
   const b=S.bt,m=b.m;
   b.turn++;
-  b.placements=[];b.picks={};b.tempAtk=0;
+  b.placements=[];b.picks={};b.tempAtk=0;b.atkLanes=[];
   // 注意:音盾清空已移到 endTurn 结算后(金属音甲需要在清空后累积),这里不清
   // 敌方回盾
   if(m.sh)b.eBlock=m.sh;
@@ -457,14 +475,10 @@ function renderBattle(){
     if(b.energy<cost||c.unplayable)cls+=' dis';
     return`<div class="${cls}" data-i="${i}"><div class="cc">♪${cost}</div><div class="cn">${c.n}${c.up?'⁺':''}</div><div class="cd">${c.d}</div></div>`;
   }).join('');
-  h.querySelectorAll('.card').forEach(n=>{
-    n.onclick=()=>{
-      const i=+n.dataset.i;const c=b.hand[i];
-      if(c.unplayable){toast('喘息音符打不出');return}
-      if(b.energy<c.cost){toast('♪能量不够');return}
-      S.selCard=S.selCard===i?null:i;renderBattle();
-    };
-  });
+  // 18:24 拖拽改版:手牌点击/拖拽全走 pointer 系统(bindDrag),不绑 onclick 防双触发
+  // 选中攻击牌时敌人区亮释放提示
+  document.getElementById('top').classList.toggle('drop-hint',
+    S.selCard!=null&&isAttackCard(b.hand[S.selCard])&&!b.over);
 }
 let toastTimer=null;
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('on'),1600)}
@@ -474,6 +488,10 @@ function covLanes(c){return c<=0?[0,1,2]:c>=6?[4,5,6]:[c-1,c,c+1]}
 function placeCard(lane){
   const b=S.bt;const c=b.hand[S.selCard];
   if(!c)return;
+  if(c.t!=='defense'){ // 18:24 拖拽改版:仅防御牌走轨道放置;攻击牌拖到敌人释放
+    toast(isAttackCard(c)?'⚔ 攻击牌拖到敌人身上（或点敌人区）释放':'这类牌点一下直接打出');
+    return;
+  }
   // 花能量移牌
   b.energy-=c.cost;
   b.hand.splice(S.selCard,1);
@@ -491,53 +509,6 @@ function placeCard(lane){
     }
     b.block+=c.def; // 也进音盾池(只加1次保slam/备用盾平衡)
     toast(`🛡 盖住 ${cov.map(l=>LANES[l]).join('-')}`);
-  }else if(c.t==='attack'){
-    if(!b.picks[lane])b.picks[lane]={d:0,a:0,cards:[]};
-    if(!c.span)b.picks[lane].a++; // span 牌自己逐道计数,避免中心轨双计(目验抓出)
-    // 12:29 大爷:三连音 — 连续音轨攻击牌,相邻3道各打一次,自动构成和弦
-    if(c.span){
-      const cov=covLanes(lane);
-      for(const L of cov){
-        if(!b.picks[L])b.picks[L]={d:0,a:0,cards:[]};
-        b.picks[L].a++;
-        let dm=(c.atk||0)+b.vol+b.tempAtk;
-        if(b.vuln>0)dm=Math.floor(dm*1.5);
-        if(b.weakN>0)dm=Math.max(1,Math.floor(dm*Math.max(.4,1-.3*b.weakN)));
-        dealToEnemy(dm,{t:'attack'});
-      }
-      toast(`🎵 三连音扫过 ${cov.map(l=>LANES[l]).join('-')}！`);
-      renderBattle();
-      return;
-    }
-    // 攻击牌直接结算对敌伤害(音量加成+音膜)
-    let dmg=(c.atk||0)+b.vol+b.tempAtk;
-    if(c.multi)dmg=(c.atk||0)+b.vol; // 简化双段
-    if(c.slam)dmg=b.block+b.vol; // 音浪崩击=音盾值
-    if(c.whirl){ // 无双回旋:耗尽全部♪,每♪一段
-      const seg=b.energy+1;b.energy=0;
-      dmg=(c.atk||5)+b.vol;
-      if(b.vuln>0)dmg=Math.floor(dmg*1.5);
-      dealToEnemy(dmg*seg,c);
-      toast(`🌀 无双回旋 ×${seg} 段！`);
-      renderBattle();
-      return;
-    }
-    if(b.vuln>0)dmg=Math.floor(dmg*1.5);
-    if(b.weakN>0)dmg=Math.max(1,Math.floor(dmg*Math.max(.4,1-.3*b.weakN)));
-    dealToEnemy(dmg,c);
-  }else if(c.t==='skill'){
-    if(c.id==='cry')b.tempAtk=c.bonus||2;
-    if(c.id==='crack')b.vuln=c.turns||2;
-    if(c.id==='blood'){S.hp=Math.max(1,S.hp-3);drawCards(c.draw||2)}
-    if(c.id==='insight'){
-      const hasAtk=b.placements.some(p=>p.type==='atk');
-      if(hasAtk){b.vol+=(c.vol||3);toast('看破！音量+'+(c.vol||3))}else{toast('敌人没攻击意图，白唱了');}
-    }
-    if(c.id==='echo'){b.vol+=(c.vol||1)}
-  }else if(c.t==='power'){
-    if(c.id==='inflame')b.vol+=(c.vol||2);
-    if(c.id==='metal')b.metal+=(c.val||3);
-    if(c.id==='barricade')b.barricade=true;
   }
   renderBattle();
 }
@@ -602,9 +573,8 @@ async function fireUlt(){
 /* ---------- 结束回合 ---------- */
 function endTurn(){
   const b=S.bt;if(b.over)return;
-  // 和弦判定: 相邻3道都有攻击牌 → ×2 追加
-  const lanesWith=[];
-  for(let i=0;i<7;i++){const pk=b.picks[i];if(pk&&pk.a>0)lanesWith.push(i)}
+  // 和弦判定(18:24 拖拽改版): 本回合打出的攻击覆盖轨中相邻3道齐 → 追伤
+  const lanesWith=[...new Set(b.atkLanes||[])];
   let chord=0;
   for(let i=0;i<5;i++){if(lanesWith.includes(i)&&lanesWith.includes(i+1)&&lanesWith.includes(i+2)){chord++}}
   if(chord>0){const bonus=chord*8*(b.vol+2);dealToEnemy(bonus,{t:'attack'});toast(`🎵 和弦共鸣 ×${chord}！追伤 ${bonus}`)}
@@ -826,6 +796,179 @@ function modal(title,body,cards,btns){
 }
 function closeModal(){document.getElementById('modal').classList.remove('on')}
 
+/* ---------- 攻击牌拖拽+弹道系统(18:24 大爷:拖到敌人身上+指示线+红点连射爆炸) ---------- */
+function isAttackCard(c){return !!c&&c.t==='attack'}
+function toggleSel(i){
+  const b=S.bt;if(!b||b.over)return;const c=b.hand[i];
+  if(!c)return;
+  if(c.unplayable){toast('喘息音符打不出');return}
+  if(b.energy<c.cost){toast('♪能量不够');return}
+  if(c.t==='skill'||c.t==='power'){playCard(i);return} // 技能/能力点一下直接打出
+  S.selCard=S.selCard===i?null:i;
+  renderBattle();
+  if(S.selCard===i&&isAttackCard(c))toast('⚔ 拖到敌人身上松手，或点击敌人区释放');
+}
+function playCard(i){ // skill/power:无需目标,点击即出
+  const b=S.bt;const c=b.hand[i];
+  if(!c||c.unplayable)return;
+  if(b.energy<c.cost){toast('♪能量不够');return}
+  b.energy-=c.cost;
+  b.hand.splice(i,1);
+  if(c.exhaust)b.exhaust.push(c);else b.discard.push(c);
+  S.selCard=null;
+  if(c.id==='cry')b.tempAtk=c.bonus||2;
+  if(c.id==='crack')b.vuln=c.turns||2;
+  if(c.id==='blood'){S.hp=Math.max(1,S.hp-3);drawCards(c.draw||2)}
+  if(c.id==='insight'){
+    const hasAtk=b.placements.some(p=>p.type==='atk');
+    if(hasAtk){b.vol+=(c.vol||3);toast('看破！音量+'+(c.vol||3))}else{toast('敌人没攻击意图，白唱了');}
+  }
+  if(c.id==='echo')b.vol+=(c.vol||1);
+  if(c.id==='inflame')b.vol+=(c.vol||2);
+  if(c.id==='metal')b.metal+=(c.val||3);
+  if(c.id==='barricade')b.barricade=true;
+  renderBattle();
+}
+function laneY(l){const el=[...document.querySelectorAll('#lanes .lane')].find(e=>+e.dataset.l===l);return el?el.getBoundingClientRect():document.getElementById('enemy-row').getBoundingClientRect()}
+function drawGuide(fromEl,x,y){
+  const svg=document.querySelector('#fx-layer svg');
+  const r=fromEl.getBoundingClientRect();
+  const x1=r.left+r.width/2,y1=r.top;
+  const cx=(x1+x)/2, cy=Math.min(y1,y)-90;
+  const over=document.getElementById('top').classList.contains('drag-over');
+  const col=over?'#ffd54f':'#ff7a7a';
+  svg.innerHTML=`<path d="M${x1},${y1} Q${cx},${cy} ${x},${y}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round" opacity=".85" stroke-dasharray="10 8"/>`+
+    `<circle cx="${x}" cy="${y}" r="7" fill="none" stroke="${col}" stroke-width="3"/>`;
+}
+function clearDragUI(t){
+  t.el&&t.el.classList.remove('dragging');
+  if(t.ghost)t.ghost.remove();
+  const fx=document.getElementById('fx-layer');fx.classList.remove('on');document.querySelector('#fx-layer svg').innerHTML='';
+  document.getElementById('top').classList.remove('drag-over');
+}
+function fireBullets(segs,done){ // 红点从各轨左端依次连射向敌人,命中爆炸+震屏;每颗带自己的音
+  const fx=document.getElementById('fx-layer');fx.classList.add('on');
+  const er=document.getElementById('enemy-row').getBoundingClientRect();
+  const tx=er.left+er.width*.62,ty=er.top+er.height*.5;
+  let n=0;
+  const shoot=()=>{
+    if(n>=segs.length){fx.classList.remove('on');done&&done();return}
+    const L=segs[n++];
+    const lr=laneY(L.lane);
+    const sx=lr.left+40, sy=lr.top+lr.height/2;
+    const bl=document.createElement('div');bl.className='bullet';
+    bl.style.left=(sx-7)+'px';bl.style.top=(sy-7)+'px';
+    fx.appendChild(bl);
+    tone(FREQ[L.lane],0,.15);
+    bl.animate([{transform:'translate(0,0) scale(1)'},{transform:`translate(${tx-sx}px,${ty-sy}px) scale(.7)`}],{duration:260,easing:'cubic-bezier(.5,0,1,1)'}).onfinish=()=>{
+      bl.remove();
+      const bm=document.createElement('div');bm.className='boom';
+      bm.style.left=(tx-11)+'px';bm.style.top=(ty-11)+'px';
+      fx.appendChild(bm);
+      bm.animate([{transform:'scale(.4)',opacity:1},{transform:'scale(3.2)',opacity:0}],{duration:380,easing:'ease-out'}).onfinish=()=>bm.remove();
+      const top=document.getElementById('top');top.classList.remove('shake');void top.offsetWidth;top.classList.add('shake');
+    };
+    setTimeout(shoot,140);
+  };
+  shoot();
+}
+let atkLock=false;
+function releaseAttack(i){
+  const b=S.bt;const c=b.hand[i];
+  if(!b||!c||atkLock||b.over||!isAttackCard(c))return;
+  if(c.unplayable){toast('喘息音符打不出');return}
+  if(b.energy<c.cost){toast('♪能量不够');return}
+  atkLock=true;
+  b.energy-=c.cost;
+  b.hand.splice(i,1);
+  if(c.exhaust)b.exhaust.push(c);else b.discard.push(c);
+  S.selCard=null;
+  // 18:24 拖拽改版:伤害公式沿用原版;轨道只做演出;和弦判定改用 atkLanes
+  const vul=d=>b.vuln>0?Math.floor(d*1.5):d;
+  const wk=d=>b.weakN>0?Math.max(1,Math.floor(d*Math.max(.4,1-.3*b.weakN))):d;
+  let segs=[],total=0;
+  const addLane=L=>{b.atkLanes.push(L);if(!b.picks[L])b.picks[L]={d:0,a:0,cards:[]};b.picks[L].a++};
+  if(c.span){ // 三连音:相邻3道各打一次,自成和弦
+    const cov=covLanes(1+Math.floor(Math.random()*5));
+    const d=vul(wk((c.atk||0)+b.vol+b.tempAtk));
+    cov.forEach(L=>{segs.push({lane:L,dmg:d});total+=d;addLane(L)});
+    toast(`🎵 三连音扫过 ${cov.map(l=>LANES[l]).join('-')}！`);
+  }else if(c.whirl){ // 无双回旋:耗尽全部♪,每♪一段
+    const seg=b.energy+1;b.energy=0;
+    const d=vul((c.atk||5)+b.vol);
+    for(let k=0;k<seg;k++){const L=Math.floor(Math.random()*7);segs.push({lane:L,dmg:d});addLane(L)}
+    total=d*seg;
+    toast(`🌀 无双回旋 ×${seg} 段！`);
+  }else if(c.reaper){ // 全体:7轨连射,总伤一笔
+    const d=vul(wk((c.atk||5)+b.vol+b.tempAtk));
+    for(let L=0;L<7;L++){segs.push({lane:L,dmg:0});addLane(L)}
+    total=d;
+  }else{
+    let d=(c.atk||0)+b.vol+b.tempAtk;
+    if(c.multi)d=(c.atk||0)+b.vol;
+    if(c.slam)d=b.block+b.vol;
+    d=vul(wk(d));
+    const n=c.multi?2:1;
+    const L=Math.floor(Math.random()*7);
+    for(let k=0;k<n;k++)segs.push({lane:L,dmg:0});
+    total=d;
+    addLane(L);b.picks[L].a=n-1; // 首点已+1
+    if(c.slam)toast('🛡 音盾化作音浪轰出！');
+  }
+  renderBattle(); // 先刷能量/手牌/轨道视觉,再演出
+  fireBullets(segs,()=>{
+    dealToEnemy(total,c);
+    atkLock=false;
+    renderBattle();
+  });
+}
+function bindDrag(){ // 拖拽:攻击卡拖到敌人区松手释放;其他卡原地松手=点击选中
+  const hand=document.getElementById('hand');
+  let tap=null;
+  hand.addEventListener('pointerdown',e=>{
+    if(!S.bt||S.bt.over)return;
+    const cardEl=e.target.closest('.card');
+    if(!cardEl)return;
+    const i=+cardEl.dataset.i;const c=S.bt.hand[i];
+    if(!c)return;
+    tap={i,pid:e.pointerId,sx:e.clientX,sy:e.clientY,el:cardEl,attack:isAttackCard(c)&&!c.unplayable,started:false};
+    try{cardEl.setPointerCapture(e.pointerId)}catch(_){}
+  });
+  hand.addEventListener('pointermove',e=>{
+    if(!tap||e.pointerId!==tap.pid||!tap.attack)return;
+    if(!tap.started&&Math.hypot(e.clientX-tap.sx,e.clientY-tap.sy)>10){
+      tap.started=true;
+      tap.el.classList.add('dragging');
+      const g=tap.el.cloneNode(true);
+      g.classList.add('ghost-card');g.classList.remove('dragging','sel');
+      g.style.width=tap.el.offsetWidth+'px';g.style.height=tap.el.offsetHeight+'px';
+      document.body.appendChild(g);tap.ghost=g;
+      document.getElementById('fx-layer').classList.add('on');
+      try{e.preventDefault()}catch(_){}
+    }
+    if(tap.started){
+      tap.ghost.style.left=(e.clientX-tap.el.offsetWidth/2)+'px';
+      tap.ghost.style.top=(e.clientY-tap.el.offsetHeight/2)+'px';
+      drawGuide(tap.el,e.clientX,e.clientY);
+      const r=document.getElementById('top').getBoundingClientRect();
+      document.getElementById('top').classList.toggle('drag-over',e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom);
+    }
+  });
+  const finish=e=>{
+    if(!tap||e.pointerId!==tap.pid)return;
+    const t=tap;tap=null;
+    if(t.started){
+      const over=document.getElementById('top').classList.contains('drag-over');
+      clearDragUI(t);
+      if(over)releaseAttack(t.i);
+    }else{
+      toggleSel(t.i);
+    }
+  };
+  hand.addEventListener('pointerup',finish);
+  hand.addEventListener('pointercancel',e=>{if(tap&&e.pointerId===tap.pid){const t=tap;tap=null;if(t.started)clearDragUI(t)}});
+}
+
 /* ---------- 控件 ---------- */
 document.getElementById('btn-end').onclick=()=>endTurn();
 document.getElementById('btn-ult').onclick=()=>fireUlt();
@@ -834,6 +977,10 @@ document.getElementById('btn-replay').onclick=()=>{
   S.bt.placements.filter(p=>p.type==='atk').forEach((p,i)=>{if(i<6)tone(FREQ[p.lane],i*.45,.4)});
 };
 document.getElementById('btn-clear').onclick=()=>{S.selCard=null;renderBattle()};
+document.getElementById('top').onclick=()=>{ // 两步模式:选中攻击卡后点敌人区释放(手机友好)
+  if(S.bt&&S.selCard!=null&&isAttackCard(S.bt.hand[S.selCard]))releaseAttack(S.selCard);
+};
+bindDrag();;
 
 /* ---------- 启动 ---------- */
 function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);document.getElementById('app').style.transform=`scale(${s})`}

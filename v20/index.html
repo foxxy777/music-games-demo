@@ -38,7 +38,13 @@ html,body{background:#050714;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .hpbar{height:13px;background:#20264a;border:1px solid #3d4680;border-radius:7px;overflow:hidden}
 .hpfill{height:100%;background:linear-gradient(90deg,#ff5d6c,#ff9a76);transition:width .3s;border-radius:7px}
 #hp-text{font-size:11px;margin-top:2px;color:#9fb0e8}
-#enemy-debuffs{font-size:11px;color:#b88aff;min-height:15px}
+#enemy-debuffs{margin-top:3px;min-height:0}
+.st-icons{display:flex;gap:5px;flex-wrap:wrap}
+.st-ico{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:bold;border:1px solid;line-height:1.3}
+.st-ico .n{font-size:10px;opacity:.9;font-weight:normal}
+.st-ico.bad{background:#3a1240;color:#b88aff;border-color:#7d4de0}
+.st-ico.good{background:#3a2e10;color:#ffd54f;border-color:#ffd54f88}
+.st-ico.neutral{background:#12203a;color:#9ad8ff;border-color:#4d8ae288}
 #enemy-placements{display:flex;gap:4px;flex-wrap:wrap;min-height:48px;padding:5px;background:#0d1128aa;border:1px solid #2c3560;border-radius:8px}
 .placement{width:74px;height:44px;border-radius:6px;border:2px solid;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0}
 .placement.atk{color:#ff5d6c;border-color:#c04658;background:linear-gradient(165deg,#3a1218,#1a0c10)}
@@ -51,6 +57,7 @@ html,body{background:#050714;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .lane:hover{background:linear-gradient(90deg,#ffffff0a,#ffffff18 50%,#ffffff0a);border-color:#ffffff30}
 .lane.win{background:linear-gradient(90deg,#5dff7a15,#5dff7a30 50%,#5dff7a15);border-color:#5dff7a}
 .lane.lose{background:linear-gradient(90deg,#ff5d6c15,#ff5d6c30 50%,#ff5d6c30);border-color:#ff5d6c}
+.lane.cov,.lane.win.cov,.lane.lose.cov{box-shadow:inset 0 0 26px #4d8ae24d;border-color:#4d8ae2cc}
 .lane-name{width:44px;flex:none;text-align:center;font-size:17px;font-weight:bold;text-shadow:0 0 8px currentColor}
 .lane-body{flex:1;display:flex;gap:6px;align-items:center}
 .slot{width:62px;height:44px;border:1.5px dashed #5d6ba0;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#5d6ba0;flex-shrink:0}
@@ -168,7 +175,7 @@ const P_MAXHP=80;
 /* ---------- 卡牌定义 ---------- */
 const CARDS={
   hammer:{n:'重音锤',t:'attack',cost:1,atk:8,d:'攻击 8',up:{atk:11,d:'攻击 11'}},
-  wall:{n:'音壁',t:'defense',cost:1,def:5,d:'音盾 5',up:{def:8,d:'音盾 8'}},
+  wall:{n:'音壁',t:'defense',cost:1,def:5,d:'音盾 5 · 盖相邻3道',up:{def:8,d:'音盾 8 · 盖相邻3道'}},
   twin:{n:'双锤连音',t:'attack',cost:1,atk:5,multi:2,d:'攻击 5×2 段',up:{atk:7,d:'攻击 7×2 段'}},
   cry:{n:'战吼',t:'skill',cost:0,d:'本回合攻击牌 +2 点',up:{d:'本回合攻击牌 +3 点',bonus:3},bonus:2},
   inflame:{n:'音量凝聚',t:'power',cost:1,d:'音量 +2 (攻击牌永久加成)',up:{vol:3,d:'音量 +3'},vol:2},
@@ -187,17 +194,17 @@ function mkCard(id,up=false){const b=CARDS[id];return{id,up:up||(b&&false),...b,
 
 /* ---------- 怪物定义（怪物表精选）---------- */
 const MONSTERS={
-  louse:{n:'小谱号·音符虱',e:'🐛',hp:60,sh:0,pool:[{t:'atk',min:3,max:5,c:1}]},
-  slime:{n:'节拍史莱姆·中',e:'🟢',hp:110,sh:0,pool:[{t:'atk',min:4,max:6,c:2}]},
-  star:{n:'星尘精灵',e:'✨',hp:90,sh:5,pool:[{t:'atk',min:5,max:8,c:2}],hideNames:2},
-  snow:{n:'雪晶人偶',e:'❄️',hp:100,sh:5,pool:[{t:'atk',min:8,max:8,c:1}],status:'weak',statusP:.5},
-  pup:{n:'鼓点幼犬',e:'🐶',hp:95,sh:0,pool:[{t:'atk',min:3,max:3,c:4}]},
-  frog:{n:'蓝调青蛙',e:'🐸',hp:105,sh:0,pool:[{t:'atk',min:5,max:7,c:1}],status:'weak',statusP:.7},
-  bear:{n:'大提琴熊',e:'🐻',hp:150,sh:5,charge:true,pool:[{t:'atk',min:12,max:14,c:1}]},
-  metro:{n:'节拍器骑士',e:'⏱',hp:135,sh:8,cycle:[5,8,11],pool:[{t:'atk',min:5,max:5,c:1}]},
-  worm:{n:'巨型音波蠕虫',e:'🪱',hp:240,sh:0,elite:true,pool:[{t:'atk',min:3,max:3,c:5}]},
-  golem:{n:'断弦魔像',e:'🗿',hp:220,sh:20,elite:true,reflect:8,pool:[{t:'atk',min:10,max:10,c:1}]},
-  tyrant:{n:'铜管暴君',e:'🎺',hp:400,sh:25,boss:true,pool:[{t:'atk',min:8,max:14,c:2}]},
+  louse:{n:'小谱号·音符虱',e:'🐛',hp:60,sh:0,pool:[{t:'atk',min:2,max:4,c:1}]},
+  slime:{n:'节拍史莱姆·中',e:'🟢',hp:110,sh:0,pool:[{t:'atk',min:3,max:5,c:2}]},
+  star:{n:'星尘精灵',e:'✨',hp:90,sh:5,pool:[{t:'atk',min:4,max:6,c:2}],hideNames:2},
+  snow:{n:'雪晶人偶',e:'❄️',hp:100,sh:5,pool:[{t:'atk',min:6,max:6,c:1}],status:'weak',statusP:.5},
+  pup:{n:'鼓点幼犬',e:'🐶',hp:95,sh:0,pool:[{t:'atk',min:2,max:2,c:4}]},
+  frog:{n:'蓝调青蛙',e:'🐸',hp:105,sh:0,pool:[{t:'atk',min:4,max:6,c:1}],status:'weak',statusP:.7},
+  bear:{n:'大提琴熊',e:'🐻',hp:150,sh:5,charge:true,pool:[{t:'atk',min:10,max:12,c:1}]},
+  metro:{n:'节拍器骑士',e:'⏱',hp:135,sh:8,cycle:[4,6,9],pool:[{t:'atk',min:4,max:4,c:1}]},
+  worm:{n:'巨型音波蠕虫',e:'🪱',hp:240,sh:0,elite:true,pool:[{t:'atk',min:2,max:2,c:5}]},
+  golem:{n:'断弦魔像',e:'🗿',hp:220,sh:20,elite:true,reflect:8,pool:[{t:'atk',min:8,max:8,c:1}]},
+  tyrant:{n:'铜管暴君',e:'🎺',hp:400,sh:25,boss:true,pool:[{t:'atk',min:6,max:11,c:2}]},
 };
 const NORMAL_POOL=['louse','slime','star','snow','pup','frog','bear','metro'];
 const ELITE_POOL=['worm','golem'];
@@ -289,6 +296,7 @@ function startBattle(kind){
   const m=pickMonster(kind);
   S.bt={
     m,eHP:m.hp,eMax:m.hp,eBlock:m.sh||0,vuln:0, // vuln=音膜破损回合数
+    weakN:0,buffN:0, // 12:03 大爷:状态牌要可见图标(玩家被削弱/敌人增强,各持续1回合)
     turn:0,placements:[],picks:{},
     vol:0,block:0,metal:0,barricade:false,tempAtk:0,reserve:0,
     energy:3,maxE:3,
@@ -330,7 +338,7 @@ function enemyTurn(){
     b.placements.push({type:'charge'});
   }else if(m.boss&&b.turn%4===0){
     // 铜管暴君: 每4回合全场炮
-    for(let i=0;i<5;i++){const lane=Math.floor(Math.random()*7);b.placements.push({type:'atk',lane,pts:6})}
+    for(let i=0;i<5;i++){const lane=Math.floor(Math.random()*7);b.placements.push({type:'atk',lane,pts:5})}
   }else if(m.cycle){
     const pts=m.cycle[b.cycleIdx%3];b.cycleIdx++;
     const c=2+Math.floor(Math.random()*2);
@@ -369,7 +377,12 @@ function renderBattle(){
   document.getElementById('enemy-name').textContent=`${b.m.n} · 第 ${b.turn} 回合`;
   document.getElementById('ehp-fill').style.width=(b.eHP/b.eMax*100)+'%';
   document.getElementById('hp-text').textContent=`${b.eHP}/${b.eMax}${b.eBlock>0?' 🛡'+b.eBlock:''}`;
-  document.getElementById('enemy-debuffs').textContent=b.vuln>0?`🎧 音膜破损 ${b.vuln} 回合(受伤+50%)`:'';
+  // 12:03 大爷:状态图标行·放敌人血条下头(音膜破损/敌人增强/蓄力)
+  const est=[];
+  if(b.vuln>0)est.push(`<span class="st-ico bad">🎧<span class="n">音膜破损 ${b.vuln}回合·受伤+50%</span></span>`);
+  if(b.buffN>0)est.push(`<span class="st-ico good">⇧<span class="n">增强×${b.buffN}·敌攻+30%</span></span>`);
+  if(b.placements.some(p=>p.type==='charge'))est.push(`<span class="st-ico good">⚡<span class="n">蓄力中…</span></span>`);
+  document.getElementById('enemy-debuffs').innerHTML=`<div class="st-icons">${est.join('')}</div>`;
   const pe=document.getElementById('enemy-placements');
   pe.innerHTML=b.placements.map(p=>{
     if(p.type==='atk')return`<div class="placement atk"><div class="pl">${LANES[p.lane]}</div><div class="pp">${p.pts}</div></div>`;
@@ -384,7 +397,11 @@ function renderBattle(){
     const atk=b.placements.filter(p=>p.type==='atk'&&p.lane===i);
     const atkPts=atk.reduce((s,p)=>s+p.pts,0);
     const covered=((pk.cards)||[]).reduce((s,c)=>s+(c.def||5),0); // 按实际卡面防御算
+    // 跨道音壁覆盖高亮(以放置中心轨±1为准)
+    let hasCov=false;
+    for(let j=0;j<7;j++){const pj=b.picks[j];if(pj&&(pj.cards||[]).some(cd=>covLanes(cd.center!=null?cd.center:j).includes(i))){hasCov=true;break}}
     let cls='lane';
+    if(hasCov)cls+=' cov';
     if(atkPts>0&&covered>=atkPts)cls+=' win';else if(atkPts>0&&covered<atkPts)cls+=' lose';
     const slot=pk.a>0?`<div class="slot atkc">⚔×${pk.a}</div>`:(pk.d>0?`<div class="slot def">🛡×${pk.d}</div>`:`<div class="slot">放牌</div>`);
     const dmg=atkPts>0?`<div class="ldmg">-${Math.max(0,atkPts-covered)}</div>`:'';
@@ -394,15 +411,19 @@ function renderBattle(){
   el.querySelectorAll('.lane').forEach(n=>{
     n.onclick=()=>{if(S.selCard!=null)placeCard(+n.dataset.l)};
   });
-  // 玩家状态: 大血条 + 标签
+  // 玩家状态: 大血条 + 状态图标行(12:03 大爷:打了状态牌要有图标,放血条下头)
+  const pst=[];
+  if(b.vol>0)pst.push(`<span class="st-ico good">🔊<span class="n">音量 +${b.vol}</span></span>`);
+  if(b.weakN>0)pst.push(`<span class="st-ico bad">⇩<span class="n">削弱×${b.weakN}·我攻-30%</span></span>`);
+  if(b.tempAtk>0)pst.push(`<span class="st-ico good">📢<span class="n">战吼 +${b.tempAtk}</span></span>`);
+  if(b.block>0)pst.push(`<span class="st-ico neutral">🛡<span class="n">音盾 ${b.block}</span></span>`);
+  if(b.reserve>0)pst.push(`<span class="st-ico neutral" style="border-color:#ffd54f;color:#ffd54f">🛡<span class="n">备用盾 ${b.reserve}·天赋</span></span>`);
+  if(b.metal>0)pst.push(`<span class="st-ico neutral">⚙<span class="n">音甲 +${b.metal}/回合</span></span>`);
+  if(b.barricade)pst.push(`<span class="st-ico neutral">🏰<span class="n">壁垒·盾不清</span></span>`);
   document.getElementById('p-status').innerHTML=
     `<div id="hp-big"><span class="hicon">❤️</span><div class="bar"><div class="fill" style="width:${S.hp/P_MAXHP*100}%"></div><span class="num">铁音武士 &nbsp;${S.hp} / ${P_MAXHP}</span></div></div>`+
-    `<span class="tag gold">💰 ${S.gold}</span>`+
-    `<span class="tag vol">🔊 音量 +${b.vol}</span>`+
-    (b.block>0?`<span class="tag block">🛡 音盾 ${b.block}</span>`:'')+
-    (b.reserve>0?`<span class="tag block" style="border-color:#ffd54f;color:#ffd54f">🛡 备用盾 ${b.reserve} ⚔️天赋</span>`:'')+
-    (b.metal>0?`<span class="tag metal">⚙ 金属音甲 +${b.metal}/回合</span>`:'')+
-    (b.barricade?`<span class="tag barricade">🏰 壁垒(盾不清)</span>`:'');
+    `<div class="st-icons" style="margin:2px 0 3px">${pst.join('')}</div>`+
+    `<span class="tag gold">💰 ${S.gold}</span>`;
   document.getElementById('energy').textContent=`♪ ${b.energy}/${b.maxE}`;
   document.getElementById('pile-info').textContent=`牌库 ${b.draw.length} | 弃 ${b.discard.length}${b.exhaust.length?' | 烧 '+b.exhaust.length:''}`;
   // hand
@@ -425,6 +446,8 @@ function renderBattle(){
 }
 let toastTimer=null;
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('on'),1600)}
+// 12:03 大爷:防御牌连续防3条音阶 → 放置轨为中心盖住相邻3道(边缘向内延伸)
+function covLanes(c){return c<=0?[0,1,2]:c>=6?[4,5,6]:[c-1,c,c+1]}
 
 function placeCard(lane){
   const b=S.bt;const c=b.hand[S.selCard];
@@ -436,9 +459,14 @@ function placeCard(lane){
   S.selCard=null;
   // 效果
   if(c.t==='defense'){
-    if(!b.picks[lane])b.picks[lane]={d:0,a:0,cards:[]};
-    b.picks[lane].d++;b.picks[lane].cards=b.picks[lane].cards||[];b.picks[lane].cards.push({def:c.def});
+    // 12:03 大爷:一张音壁盖住相邻3道(各自独立挡各自的攻击点);音盾池只加1次保slam/备用盾平衡
+    const cov=covLanes(lane);
+    for(const L of cov){
+      if(!b.picks[L])b.picks[L]={d:0,a:0,cards:[]};
+      b.picks[L].d++;b.picks[L].cards.push({def:c.def,center:lane});
+    }
     b.block+=c.def; // 也进音盾池
+    toast(`🛡 ${LANES[lane]}壁盖住 ${cov.map(l=>LANES[l]).join('-')} 三道`);
   }else if(c.t==='attack'){
     if(!b.picks[lane])b.picks[lane]={d:0,a:0,cards:[]};
     b.picks[lane].a++;
@@ -456,6 +484,7 @@ function placeCard(lane){
       return;
     }
     if(b.vuln>0)dmg=Math.floor(dmg*1.5);
+    if(b.weakN>0)dmg=Math.max(1,Math.floor(dmg*Math.max(.4,1-.3*b.weakN)));
     dealToEnemy(dmg,c);
   }else if(c.t==='skill'){
     if(c.id==='cry')b.tempAtk=c.bonus||2;
@@ -504,9 +533,9 @@ function endTurn(){
     const leak=Math.max(0,atkPts-covered);
     dmgTaken+=leak;
   }
-  // 削弱/增强状态牌结算(简化: 状态牌在场则敌伤+30%或玩家攻击-30%下回合——这里只做即时)
-  const hasWeak=b.placements.some(p=>p.type==='status'&&p.st==='weak');
-  if(hasWeak){b.vol=Math.max(0,b.vol-1);toast('⇩ 被削弱！音量-1')}
+  // 削弱/增强状态牌结算(12:03 改版:挂成持续1回合的状态,带图标显示在两侧血条下)
+  // 上回合挂的增强本回合生效:敌伤×(1+30%×层)
+  if(b.buffN>0){dmgTaken=Math.floor(dmgTaken*(1+.3*b.buffN));toast(`⇧ 敌人增强中!本回合伤害 +30%`)}
   // 音盾抵扣
   if(b.block>0){const abs=Math.min(b.block,dmgTaken);b.block-=abs;dmgTaken-=abs}
   // ⚔️战士天赋: 备用盾抵扣漏伤(上回合留存,只维持这一回合)
@@ -518,6 +547,13 @@ function endTurn(){
   if(!b.barricade){b.reserve=b.block;b.block=0}
   else b.reserve=0;
   if(b.metal>0)b.block+=b.metal;
+  // 状态牌到期清零,再挂本回合敌方出的新状态(下回合生效,大爷09-12 18:25拍板:持续1回合)
+  const hasWeak=b.placements.some(p=>p.type==='status'&&p.st==='weak');
+  const hasBuff=b.placements.some(p=>p.type==='status'&&p.st==='buff');
+  b.weakN=hasWeak?1:0;
+  b.buffN=hasBuff?1:0;
+  if(hasWeak)toast('⇩ 你被削弱了!下回合攻击牌伤害 -30%');
+  if(hasBuff)toast('⇧ 敌人增强了!下回合它的攻击 +30%');
   // 弃手牌
   b.discard.push(...b.hand);b.hand=[];
   if(S.hp<=0){gameOver();return}

@@ -113,6 +113,12 @@ html,body{background:#050714;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .mcard:hover{transform:translateY(-6px)}
 #toast{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:#232b4dee;border:1px solid #ffd54f88;color:#ffe9b8;padding:8px 22px;border-radius:8px;font-size:14px;z-index:120;display:none}
 #toast.on{display:block}
+#btn-ult.ult-ready{background:linear-gradient(160deg,#a37c1c,#6d5210);border-color:#ffd54f;color:#fff6d8;font-weight:bold;animation:ultpulse 1s infinite}
+@keyframes ultpulse{50%{box-shadow:0 0 18px #ffd54faa}}
+#ult-ov{position:absolute;inset:0;background:radial-gradient(600px 400px at 50% 45%,#ff5d6c33,#07091ecc 70%);display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:110}
+#ult-ov.on{display:flex}
+#ult-ov .u1{font-size:40px;font-weight:900;letter-spacing:4px;color:#ffd54f;text-shadow:0 0 24px #ff5d6c}
+#ult-ov .u2{font-size:15px;color:#ffe9b8}
 </style>
 </head>
 <body>
@@ -147,6 +153,7 @@ html,body{background:#050714;font-family:"Segoe UI","Microsoft YaHei",system-ui,
     </div>
     <div id="ctrl-row">
       <div id="energy">♪ 3/3</div>
+      <button class="btn" id="btn-ult">💥 0/12</button>
       <button class="btn" id="btn-replay">🔊 重听</button>
       <button class="btn" id="btn-clear">↺ 收回</button>
     </div>
@@ -159,6 +166,7 @@ html,body{background:#050714;font-family:"Segoe UI","Microsoft YaHei",system-ui,
   <div id="m-cards"></div>
   <div id="m-btns"></div>
 </div>
+<div id="ult-ov"><div class="u1">💥 高潮爆发！</div><div class="u2" id="ult-info"></div></div>
 <div id="toast"></div>
 
 </div></div>
@@ -171,6 +179,7 @@ html,body{background:#050714;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 const LANES=['do','re','mi','fa','sol','la','si'];
 const FREQ=[262,294,330,349,392,440,494];
 const P_MAXHP=80;
+const ORG_MAX=12, MOAN_FILES=15; // 13:12 大爷:防住攻击计数→满格放拼接呻吟大招(湘菲15段拾音)
 
 /* ---------- 卡牌定义 ---------- */
 const CARDS={
@@ -217,6 +226,7 @@ let S=null;
 function newRun(){
   S={
     screen:'map',hp:P_MAXHP,gold:99,floor:0,
+    org:0,moanChain:[], // 13:12 大爷:高潮计数器(跨战斗攒)+呻吟链(拼卡增长)
     deck:[],  // 所有卡
     // 地图
     layers:[],curLayer:0,reachable:[],
@@ -252,7 +262,7 @@ function renderMap(){
   document.getElementById('map-screen').classList.add('on');
   document.getElementById('battle-screen').classList.remove('on');
   document.getElementById('map-stats').innerHTML=
-    `❤️ HP <b>${S.hp}</b>/${P_MAXHP} · 💰 <b>${S.gold}</b> · 🃏 <b>${S.deck.length}</b> 张 · 第 <b>${S.curLayer+1}</b>/15 层<br>⚔️ 战士天赋：多余防御留存为备用盾（维持 1 回合）`;
+    `❤️ HP <b>${S.hp}</b>/${P_MAXHP} · 💰 <b>${S.gold}</b> · 🃏 <b>${S.deck.length}</b> 张 · 第 <b>${S.curLayer+1}</b>/15 层<br>⚔️ 战士天赋：多余防御留存为备用盾（维持 1 回合） · 💥 大招链 ${S.moanChain.length} 段（一发 ${ultDmg()} 伤 · 计数 ${S.org}/${ORG_MAX}）`;
   const el=document.getElementById('map-layers');el.innerHTML='';
   S.layers.forEach((row,li)=>{
     const div=document.createElement('div');div.className='map-layer';
@@ -377,6 +387,7 @@ function renderBattle(){
   document.getElementById('map-screen').classList.remove('on');
   document.getElementById('battle-screen').classList.add('on');
   const b=S.bt;
+  const urdy=S.org>=ORG_MAX; // 13:12:大招就绪标记(提前定义,p-status 徽章与按钮共用,防 TDZ)
   // enemy
   document.getElementById('enemy-face').textContent=b.m.e;
   document.getElementById('enemy-name').textContent=`${b.m.n} · 第 ${b.turn} 回合`;
@@ -425,11 +436,17 @@ function renderBattle(){
   if(b.reserve>0)pst.push(`<span class="st-ico neutral" style="border-color:#ffd54f;color:#ffd54f">🛡<span class="n">备用盾 ${b.reserve}·天赋</span></span>`);
   if(b.metal>0)pst.push(`<span class="st-ico neutral">⚙<span class="n">音甲 +${b.metal}/回合</span></span>`);
   if(b.barricade)pst.push(`<span class="st-ico neutral">🏰<span class="n">壁垒·盾不清</span></span>`);
+  if(S.org>0)pst.push(`<span class="st-ico ${urdy?'good':'neutral'}">💥<span class="n">${urdy?'大招就绪！':'计数 '+S.org+'/'+ORG_MAX}</span></span>`);
+  if(S.moanChain.length>0)pst.push(`<span class="st-ico neutral">🔗<span class="n">呻吟链 ${S.moanChain.length} 段·一发 ${ultDmg()}</span></span>`);
   document.getElementById('p-status').innerHTML=
     `<div id="hp-big"><span class="hicon">❤️</span><div class="bar"><div class="fill" style="width:${S.hp/P_MAXHP*100}%"></div><span class="num">铁音武士 &nbsp;${S.hp} / ${P_MAXHP}</span></div></div>`+
     `<div class="st-icons" style="margin:2px 0 3px">${pst.join('')}</div>`+
     `<span class="tag gold">💰 ${S.gold}</span>`;
   document.getElementById('energy').textContent=`♪ ${b.energy}/${b.maxE}`;
+  const bu=document.getElementById('btn-ult');
+  bu.textContent=`💥 ${S.org}/${ORG_MAX}`;
+  bu.disabled=!urdy||b.over;
+  bu.className='btn'+(urdy?' ult-ready':'');
   document.getElementById('pile-info').textContent=`牌库 ${b.draw.length} | 弃 ${b.discard.length}${b.exhaust.length?' | 烧 '+b.exhaust.length:''}`;
   // hand
   const h=document.getElementById('hand');
@@ -537,6 +554,51 @@ function dealToEnemy(dmg,card){
   renderBattle();
 }
 
+/* ---------- 呻吟大招(13:12 大爷:防住攻击计数→满格拼接高潮爆发) ---------- */
+function ultDmg(){return 12+8*S.moanChain.length}
+const moanCache={};
+async function loadMoan(n){
+  if(moanCache[n])return moanCache[n];
+  const r=await fetch('audio/'+String(n).padStart(2,'0')+'.m4a');
+  moanCache[n]=await au().decodeAudioData(await r.arrayBuffer());
+  return moanCache[n];
+}
+function playSingleMoan(n){loadMoan(n).then(buf=>{const c=au(),src=c.createBufferSource(),g=c.createGain();src.buffer=buf;g.gain.value=.9;src.connect(g);g.connect(c.destination);src.start()}).catch(()=>toast('音频加载失败'))}
+async function playMoanChain(){
+  const c=au();
+  if(!S.moanChain.length){[0,4,7,12].forEach((st,i)=>tone(FREQ[0]*Math.pow(2,st/12),i*.12,.5));return .9}
+  let t=c.currentTime+.05,total=0;
+  for(const n of S.moanChain){
+    const buf=await loadMoan(n);
+    const src=c.createBufferSource(),g=c.createGain();
+    src.buffer=buf;g.gain.value=.9;src.connect(g);g.connect(c.destination);
+    src.start(t);t+=buf.duration;total+=buf.duration;
+  }
+  return total;
+}
+function ultOverlay(on,info){
+  const o=document.getElementById('ult-ov');
+  document.getElementById('ult-info').innerHTML=info||'';
+  o.classList.toggle('on',!!on);
+}
+let ultLock=false;
+async function fireUlt(){
+  const b=S.bt;
+  if(!b||b.over||ultLock||S.org<ORG_MAX)return;
+  ultLock=true;
+  const dmg=ultDmg();
+  S.org=0;
+  document.getElementById('btn-ult').disabled=true;
+  ultOverlay(true,`🔗 ${S.moanChain.length} 段呻吟链 · <b style="color:#ff9a8a">${dmg}</b> 点伤害`);
+  const dur=await playMoanChain();
+  setTimeout(()=>{
+    dealToEnemy(dmg,{t:'skill'}); // skill=不吃反伤不吸血,纯爆发
+    ultOverlay(false);
+    ultLock=false;
+    renderBattle();
+  },Math.max(400,dur*1000-200));
+}
+
 /* ---------- 结束回合 ---------- */
 function endTurn(){
   const b=S.bt;if(b.over)return;
@@ -548,12 +610,20 @@ function endTurn(){
   if(chord>0){const bonus=chord*8*(b.vol+2);dealToEnemy(bonus,{t:'attack'});toast(`🎵 和弦共鸣 ×${chord}！追伤 ${bonus}`)}
   // 玩家受击: 每道未挡部分
   let dmgTaken=0;
+  let blocked=0;
   for(let i=0;i<7;i++){
     const atk=b.placements.filter(p=>p.type==='atk'&&p.lane===i);
     const atkPts=atk.reduce((s,p)=>s+p.pts,0);
     const pk=b.picks[i];const covered=pk?((pk.cards||[]).reduce((s,c)=>s+(c.def||5),0)):0;
     const leak=Math.max(0,atkPts-covered);
+    if(atkPts>0&&leak===0)blocked+=atk.length; // 全挡住的轨,攻击点全数计数(13:12 大爷)
     dmgTaken+=leak;
+  }
+  if(blocked>0){
+    const was=S.org;
+    S.org=Math.min(ORG_MAX,S.org+blocked);
+    if(S.org>=ORG_MAX&&was<ORG_MAX)toast('💥 计数器满了！可以放高潮大招！');
+    else toast(`🛡 防住 ${blocked} 个攻击 · 计数 ${S.org}/${ORG_MAX}`);
   }
   // 削弱/增强状态牌结算(12:03 改版:挂成持续1回合的状态,带图标显示在两侧血条下)
   // 上回合挂的增强本回合生效:敌伤×(1+30%×层)
@@ -592,13 +662,29 @@ function battleWin(){
   const isBoss=b.m.boss,isElite=!!b.m.elite;
   const gold=10+Math.floor(Math.random()*11)+(isElite?25:0)+(isBoss?50:0);
   S.gold+=gold;
+  const dropCnt=isElite?1:(Math.random()<.6?1:0); // 13:12 大爷:打完小怪概率掉呻吟声卡(Boss直接通关不碰)
+  S.bt=null;
+  if(isBoss){victory(gold);return}
+  moanDrop(dropCnt,()=>offerCardReward(gold));
+}
+function moanDrop(cnt,after){
+  if(!cnt){after();return}
+  const n=1+Math.floor(Math.random()*MOAN_FILES);
+  const cur=ultDmg(),next=cur+8;
+  modal('🎵 捡到一张呻吟声卡！',
+    `湘菲拾音 No.${n}（约 2.4 秒）<br>拼入大招链：一发伤害 <b>${cur}</b> → <b>${next}</b><br>当前 ${S.moanChain.length} 段 · 越拼越长，越打越痛`,
+    [],[
+      {t:'🎧 试听',fn:()=>{playSingleMoan(n)}},
+      {t:'➕ 拼入大招',fn:()=>{S.moanChain.push(n);toast(`🔗 大招链 ${S.moanChain.length} 段！`);moanDrop(cnt-1,after)}},
+      {t:'✋ 放弃',fn:()=>moanDrop(cnt-1,after)},
+    ]);
+}
+function offerCardReward(gold){
   // 3选1加卡
   const poolIds=['hammer','wall','solo','parion','triscale','twin','cry','inflame','crack','metal','blood','insight','slam','barricade','reaper','whirl','echo'];
   const offers=[];
   const tmp=[...poolIds];
   for(let i=0;i<3;i++)offers.push(tmp.splice(Math.floor(Math.random()*tmp.length),1)[0]);
-  S.bt=null;
-  if(isBoss){victory(gold);return}
   modal(`⚔️ 战斗胜利！`,
     `获得 💰 <b>${gold}</b> 金币<br>选 1 张卡加入卡组`,
     offers.map(id=>({card:mkCard(id),fn:()=>{
@@ -742,6 +828,7 @@ function closeModal(){document.getElementById('modal').classList.remove('on')}
 
 /* ---------- 控件 ---------- */
 document.getElementById('btn-end').onclick=()=>endTurn();
+document.getElementById('btn-ult').onclick=()=>fireUlt();
 document.getElementById('btn-replay').onclick=()=>{
   if(!S.bt)return;
   S.bt.placements.filter(p=>p.type==='atk').forEach((p,i)=>{if(i<6)tone(FREQ[p.lane],i*.45,.4)});

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>V21 · 负债铁匠 · 打铁听音</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;user-select:none;color:#f3e9d8;overflow:hidden}
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#app{width:780px;height:1280px;flex:none;transform-origin:center center;background:radial-gradient(900px 700px at 50% 30%,#2a1c10 0%,#170f09 55%,#0a0705 100%);display:flex;flex-direction:column;overflow:hidden;position:relative}
+
+/* ===== 顶部 HUD ===== */
+#hud{flex:0 0 178px;display:flex;flex-direction:column;padding:12px 18px 8px;border-bottom:2px solid #4a3320;background:linear-gradient(180deg,#1c120a,#170f0999)}
+#hud-row1{display:flex;align-items:center;gap:12px}
+#debt-tag{font-size:12px;padding:3px 10px;border-radius:12px;background:#3a1218;border:1px solid #ff5d6c88;color:#ff9a8a;flex:none}
+#gold-row{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:16px;font-weight:bold;color:#ffd54f}
+#gold-row .coin{font-size:18px}
+#hud-row2{display:flex;align-items:flex-end;gap:14px;margin-top:8px}
+#sword-info{flex:1;min-width:0}
+#sword-name{font-size:19px;color:#ffe9b8;font-weight:bold;letter-spacing:1px;display:flex;align-items:center;gap:8px}
+#tier-tag{font-size:11px;color:#c9a06a;border:1px solid #6a4c2a;border-radius:8px;padding:1px 8px}
+#value-wrap{margin-top:5px}
+#value-bar{height:16px;background:#241505;border:1.5px solid #6a4c2a;border-radius:8px;overflow:hidden;position:relative}
+#value-fill{height:100%;width:100%;background:linear-gradient(90deg,#c9822a,#ffd54f);transition:width .25s;border-radius:8px}
+#value-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;color:#fff;text-shadow:0 1px 3px #000}
+#streak-wrap{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px}
+#streak-label{font-size:11px;color:#c9a06a}
+#streak-hammers{display:flex;gap:5px}
+.hammer{font-size:22px;filter:grayscale(1) brightness(.45);transition:all .2s}
+.hammer.lit{filter:none;text-shadow:0 0 10px #ffb84d}
+#hud-row3{display:flex;gap:8px;margin-top:9px;align-items:center}
+.btn{padding:6px 18px;background:#33241374;border:1px solid #7a5830;border-radius:9px;color:#f3e9d8;font-size:13px;cursor:pointer;transition:all .15s}
+.btn:hover{border-color:#c9a06a;background:#4a332074}
+.btn.gold{background:linear-gradient(160deg,#a37c1c,#6d5210);border-color:#ffd54f;color:#fff6d8;font-weight:bold}
+.btn:disabled{opacity:.3;cursor:default}
+#btn-help{margin-left:auto;font-size:12px;padding:4px 12px}
+
+/* ===== 题目区 ===== */
+#quiz{flex:0 0 128px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border-bottom:2px solid #4a3320;background:#120c0777;position:relative}
+#quiz-title{font-size:13px;color:#c9a06a;letter-spacing:2px}
+#slots{display:flex;gap:12px;align-items:center;justify-content:center;min-height:56px}
+.qslot{width:58px;height:54px;border:2px dashed #6a4c2a;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a110a;transition:all .18s;position:relative}
+.qslot.waiting{border-style:dashed}
+.qslot.playing{border-color:#ffd54f;box-shadow:0 0 14px #ffd54f55;animation:qpulse .5s infinite}
+.qslot.hit{border-style:solid;border-color:#7ddf6a;background:linear-gradient(165deg,#1a3012,#0d1808)}
+.qslot.hit .qn{color:#a8f0a0}
+.qslot.miss{border-style:solid;border-color:#ff5d6c;background:linear-gradient(165deg,#3a1218,#1a0c10);animation:shake .35s}
+.qslot.miss .qn{color:#ff9a8a}
+.qslot .qn{font-size:19px;font-weight:bold;color:#8a6c42}
+.qslot .qsi{font-size:9px;color:#c9a06a66;margin-top:1px}
+.qslot.hit .qsi,.qslot.miss .qsi{color:#c9a06a}
+@keyframes qpulse{50%{box-shadow:0 0 22px #ffd54faa}}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+#quiz-hint{font-size:12px;color:#8a6c42;min-height:16px;transition:color .2s}
+#quiz-hint.warn{color:#ff9a8a}
+
+/* ===== 铁砧区(音道+剑) ===== */
+#anvil{flex:1;display:flex;position:relative;overflow:hidden}
+#lanes{flex:1;display:flex;flex-direction:column-reverse;padding:10px 14px 16px;gap:4px}
+.lane{flex:1;display:flex;align-items:center;border-radius:9px;border:1.5px solid #ffffff10;background:linear-gradient(90deg,#ffffff04,#ffffff08 50%,#ffffff04);cursor:pointer;transition:background .12s,border-color .12s,filter .2s;position:relative;min-height:0}
+.lane .ln{width:64px;flex:none;text-align:center;font-size:16px;font-weight:bold;text-shadow:0 0 8px currentColor}
+.lane .lk{width:40px;flex:none;text-align:center;font-size:10px;opacity:.55}
+.lane.dim{filter:brightness(.32) saturate(.4)}
+.lane.cov{border-color:#ffffff28}
+.lane.cov .ln{opacity:1}
+.lane.flash-hit{background:linear-gradient(90deg,#5dff7a30,#5dff7a4d 50%,#5dff7a30)!important;border-color:#5dff7a!important}
+.lane.flash-miss{background:linear-gradient(90deg,#ff5d6c30,#ff5d6c4d 50%,#ff5d6c30)!important;border-color:#ff5d6c!important}
+.lane.next-ghost{animation:none}
+/* 剑 */
+#sword-zone{position:absolute;left:50%;top:0;bottom:0;width:150px;transform:translateX(-50%);pointer-events:none;z-index:5}
+#sword-svg{position:absolute;left:50%;transform:translateX(-50%);transition:height .5s,top .5s;filter:drop-shadow(0 0 12px #ffb84d33)}
+#sword-glow{position:absolute;left:50%;transform:translateX(-50%);width:120px;border-radius:50%;background:radial-gradient(closest-side,#ffb84d2d,transparent);pointer-events:none;transition:height .5s,top .5s}
+/* 激光 */
+.laser{position:absolute;left:22px;right:172px;height:2px;background:linear-gradient(90deg,transparent,#ff5d6c66 15%,#ff5d6cdd 50%,#ff5d6c66 85%,transparent);box-shadow:0 0 12px #ff5d6c88;z-index:4;pointer-events:none;transition:top .5s}
+.laser::before,.laser::after{content:'';position:absolute;top:-3px;width:8px;height:8px;border-radius:50%;background:#ff5d6c;box-shadow:0 0 10px #ff5d6c}
+.laser::before{left:24px}.laser::after{right:24px}
+/* 铁锤 */
+#hammer{position:absolute;right:26px;font-size:52px;z-index:6;transition:top .3s;filter:drop-shadow(0 4px 8px #000a);pointer-events:none}
+#hammer.swing{animation:hswing .28s ease-in}
+@keyframes hswing{0%{transform:rotate(0) translateX(0)}45%{transform:rotate(-38deg) translateX(-26px) translateY(16px)}100%{transform:rotate(0)}}
+.spark{position:absolute;font-size:15px;z-index:7;pointer-events:none;animation:sparkfly .5s ease-out forwards}
+@keyframes sparkfly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.4)}}
+/* 金币/扣钱飘字 */
+.float{position:absolute;font-size:17px;font-weight:bold;z-index:8;pointer-events:none;animation:floatup 1s ease-out forwards;text-shadow:0 1px 3px #000}
+.float.plus{color:#7ddf6a}
+.float.minus{color:#ff5d6c}
+@keyframes floatup{0%{opacity:0;transform:translateY(6px)}15%{opacity:1}100%{opacity:0;transform:translateY(-46px)}}
+
+/* ===== 遮罩层(成功/崩坏/说明) ===== */
+#overlay{position:absolute;inset:0;background:#0a0705e8;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:50;padding:40px;text-align:center}
+#overlay.on{display:flex}
+#ov-title{font-size:38px;font-weight:900;letter-spacing:4px}
+#ov-title.gold{color:#ffd54f;text-shadow:0 0 30px #ffb84d88}
+#ov-title.red{color:#ff5d6c;text-shadow:0 0 30px #ff5d6c66}
+#ov-body{color:#d8c9ae;font-size:15px;line-height:1.9;max-width:560px}
+#ov-body b{color:#ffd54f}
+#ov-sword{font-size:64px}
+#ov-btns{display:flex;gap:14px;margin-top:6px}
+#toast{position:absolute;top:190px;left:50%;transform:translateX(-50%);background:#2a1c10ee;border:1px solid #ffd54f66;color:#ffe9b8;padding:8px 24px;border-radius:9px;font-size:14px;z-index:120;display:none}
+#toast.on{display:block}
+.shard{position:absolute;z-index:9;pointer-events:none}
+@keyframes shardfly{to{transform:translate(var(--dx),var(--dy)) rotate(var(--rot));opacity:0}}
+#forge-flash{position:absolute;inset:0;background:#ffd54f;opacity:0;z-index:40;pointer-events:none}
+#forge-flash.go{animation:fflash .55s ease-out}
+@keyframes fflash{12%{opacity:.55}100%{opacity:0}}
+</style>
+</head>
+<body>
+<div id="stage"><div id="app">
+  <div id="hud">
+    <div id="hud-row1">
+      <div id="debt-tag">🏚️ 负债铁匠 · 房租倒计时</div>
+      <div id="gold-row"><span class="coin">🪙</span><span id="gold-num">0</span></div>
+    </div>
+    <div id="hud-row2">
+      <div id="sword-info">
+        <div id="sword-name"><span id="sword-emoji">🗡️</span><span id="sword-title">生锈匕首</span><span id="tier-tag">Tier 1/6</span></div>
+        <div id="value-wrap"><div id="value-bar"><div id="value-fill"></div><div id="value-num">60</div></div></div>
+      </div>
+      <div id="streak-wrap">
+        <div id="streak-label">连铸锤印</div>
+        <div id="streak-hammers"></div>
+      </div>
+    </div>
+    <div id="hud-row3">
+      <button class="btn gold" id="btn-start">🔥 开始锻造</button>
+      <button class="btn" id="btn-replay" disabled>🔁 重听题目</button>
+      <button class="btn" id="btn-help">❓ 玩法</button>
+    </div>
+  </div>
+  <div id="quiz">
+    <div id="quiz-title">听音 · 按顺序敲出题目</div>
+    <div id="slots"></div>
+    <div id="quiz-hint">点击「开始锻造」点火开炉</div>
+  </div>
+  <div id="anvil">
+    <div id="lanes"></div>
+    <div id="laser-top" class="laser"></div>
+    <div id="laser-bot" class="laser"></div>
+    <div id="sword-glow"></div>
+    <div id="sword-zone"><svg id="sword-svg" width="120" height="600" viewBox="0 0 120 600"></svg></div>
+    <div id="hammer">🔨</div>
+  </div>
+  <div id="forge-flash"></div>
+  <div id="toast"></div>
+  <div id="overlay">
+    <div id="ov-sword">⚔️</div>
+    <div id="ov-title"></div>
+    <div id="ov-body"></div>
+    <div id="ov-btns"></div>
+  </div>
+</div></div>
+<script>
+/* ================= 配置 ================= */
+const NOTES=[
+ {m:60,n:'do', d:'C4'},{m:62,n:'re', d:'D4'},{m:64,n:'mi', d:'E4'},{m:65,n:'fa', d:'F4'},
+ {m:67,n:'sol',d:'G4'},{m:69,n:'la', d:'A4'},{m:71,n:'si', d:'B4'},
+ {m:72,n:'do′',d:'C5'},{m:74,n:'re′',d:'D5'},{m:76,n:'mi′',d:'E5'},{m:77,n:'fa′',d:'F5'},
+ {m:79,n:'sol′',d:'G5'},{m:81,n:'la′',d:'A5'},{m:83,n:'si′',d:'B5'},{m:84,n:'do″',d:'C6'}
+];
+const NOTE_COLORS={do:'#ff6b5d',re:'#ff9d4d',mi:'#ffd54f',fa:'#7ddf6a',sol:'#4dd8c4',la:'#5da8ff',si:'#b88aff'};
+const colorOf=n=>NOTE_COLORS[n.replace(/[′″]/,'')]||'#ddd';
+const SWORDS=[
+ {name:'生锈匕首', emoji:'🗡️', span:3,  qlen:3, base:60,  gain:7,  loss:15, sell:80},
+ {name:'猎户短剑', emoji:'🔪', span:5,  qlen:3, base:100, gain:9,  loss:18, sell:150},
+ {name:'骑士长剑', emoji:'⚔️', span:7,  qlen:4, base:170, gain:12, loss:26, sell:280},
+ {name:'双手大剑', emoji:'🗡️', span:9,  qlen:4, base:260, gain:16, loss:36, sell:460},
+ {name:'门卫巨剑', emoji:'🗿', span:12, qlen:5, base:400, gain:22, loss:52, sell:800},
+ {name:'青龙偃月刀', emoji:'🐉', span:15, qlen:5, base:600, gain:30, loss:70, sell:1288}
+];
+const NEED=5; // 连对题数→铸成
+
+/* ================= 状态 ================= */
+const S={tier:0,value:0,streak:0,gold:0,collapses:0,forged:0,
+ phase:'idle', // idle|playing|input|busy
+ q:[],pos:0,revealed:false};
+const $=id=>document.getElementById(id);
+
+/* ================= 音频 ================= */
+let AC=null;
+function au(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}
+function tone(f,when=0,dur=.42,vol=.22){const c=au(),t=c.currentTime+when;const o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.value=f;o.connect(g);g.connect(c.destination);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.028);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.start(t);o.stop(t+dur+.05)}
+function clank(ok){const c=au(),t=c.currentTime;const o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.setValueAtTime(ok?1240:340,t);o.frequency.exponentialRampToValueAtTime(ok?880:180,t+.09);g.gain.setValueAtTime(.09,t);g.gain.exponentialRampToValueAtTime(.0001,t+.13);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.15)}
+document.addEventListener('pointerdown',()=>au(),{once:true});
+const midiF=m=>440*Math.pow(2,(m-69)/12);
+
+/* ================= 布局 ================= */
+const app=$('app');
+function fit(){const k=Math.min(innerWidth/app.offsetWidth,innerHeight/app.offsetHeight);app.style.transform=`scale(${k})`}
+addEventListener('resize',fit);fit();
+
+function buildLanes(){
+ const box=$('lanes');box.innerHTML='';
+ NOTES.forEach((nt,i)=>{
+  const d=document.createElement('div');d.className='lane';d.dataset.i=i;
+  const c=colorOf(nt.n);
+  d.innerHTML=`<div class="ln" style="color:${c}">${nt.n}</div><div class="lk" style="color:${c}">${nt.d}</div>`;
+  d.addEventListener('pointerdown',()=>hitLane(i));
+  box.appendChild(d);
+ });
+}
+function updateSword(){
+ const sw=SWORDS[S.tier],first=0,last=sw.span-1;
+ const lanesEls=[...document.querySelectorAll('.lane')];
+ lanesEls.forEach((el,i)=>{el.classList.toggle('cov',i>=first&&i<=last);el.classList.toggle('dim',i<first||i>last)});
+ // 剑身定位:贴合覆盖音道
+ const laneH=lanesEls[0].offsetHeight,anvilH=$('anvil').offsetHeight;
+ const gap=parseFloat(getComputedStyle($('lanes')).gap)||4;
+ const topPx=anvilH-(last+1)*(laneH+gap)+6, botPx=anvilH-first*(laneH+gap)-6;
+ const h=Math.max(120,botPx-topPx);
+ $('sword-svg').style.top=topPx+'px';$('sword-svg').style.height=h+'px';
+ $('sword-glow').style.top=topPx+'px';$('sword-glow').style.height=h+'px';
+ $('laser-top').style.top=(topPx-4)+'px';$('laser-bot').style.top=(botPx+4)+'px';
+ drawSword(sw,h);
+}
+function drawSword(sw,hPx){
+ const svg=$('sword-svg');const W=120;svg.setAttribute('viewBox',`0 0 120 600`);
+ const bl=W*.22,bl2=bl/2; // 刃宽
+ const crossW=W*.72,guardY=560,gripH=34,pomY=guardY+gripH+8;
+ svg.innerHTML=`
+  <defs>
+    <linearGradient id="blade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6a7686"/><stop offset=".32" stop-color="#eef3fa"/>
+      <stop offset=".55" stop-color="#b9c4d4"/><stop offset="1" stop-color="#59636f"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <polygon points="${W/2},4 ${W/2+bl2},${70} ${W/2+bl2},${guardY} ${W/2-bl2},${guardY} ${W/2-bl2},${70}"
+      fill="url(#blade)" stroke="#2c333d" stroke-width="2"/>
+    <line x1="${W/2}" y1="16" x2="${W/2}" y2="${guardY}" stroke="#ffffffaa" stroke-width="2.5"/>
+    <path d="M ${W/2-bl2*.4} ${90} Q ${W/2+bl2*.9} ${300} ${W/2-bl2*.2} ${guardY-40}" stroke="#8fa0b566" stroke-width="3" fill="none"/>
+    <rect x="${W/2-crossW/2}" y="${guardY}" width="${crossW}" height="14" rx="6" fill="#7a5830" stroke="#3a2810" stroke-width="2"/>
+    <rect x="${W/2-9}" y="${guardY+14}" width="18" height="${gripH}" rx="7" fill="#4a3018" stroke="#2c1c0a" stroke-width="2"/>
+    ${Array.from({length:4},(_,k)=>`<line x1="${W/2-9}" y1="${guardY+20+k*8}" x2="${W/2+9}" y2="${guardY+20+k*8}" stroke="#2c1c0a" stroke-width="2"/>`).join('')}
+    <circle cx="${W/2}" cy="${pomY}" r="10" fill="#c9a06a" stroke="#6a4c2a" stroke-width="2"/>
+  </g>`;
+ // 匕首类:护手前移显得短
+ if(sw.span<=3){svg.querySelector('g').style.transform='translateY(120px)'}
+}
+
+/* ================= HUD ================= */
+function hud(){
+ const sw=SWORDS[S.tier];
+ $('sword-title').textContent=sw.name;$('sword-emoji').textContent=sw.emoji;
+ $('tier-tag').textContent=`Tier ${S.tier+1}/${SWORDS.length}`;
+ $('value-fill').style.width=Math.max(0,Math.min(100,S.value/sw.base*100))+'%';
+ $('value-num').textContent=Math.max(0,Math.round(S.value));
+ $('gold-num').textContent=S.gold;
+ const hm=$('streak-hammers');hm.innerHTML='';
+ for(let i=0;i<NEED;i++){const s=document.createElement('span');s.className='hammer'+(i<S.streak?' lit':'');s.textContent='🔨';hm.appendChild(s)}
+ $('btn-start').disabled=S.phase!=='idle';
+ $('btn-replay').disabled=!(S.phase==='input'||S.phase==='playing');
+}
+function toast(msg,ms=1800){const t=$('toast');t.textContent=msg;t.classList.add('on');clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('on'),ms)}
+
+/* ================= 题目 ================= */
+function genQuestion(){
+ const sw=SWORDS[S.tier];const pool=NOTES.slice(0,sw.span);
+ const q=[];let prev=-1;
+ for(let i=0;i<sw.qlen;i++){
+  let idx;
+  do{ // 随机游走:偏小步跳(更像旋律)
+   if(prev<0)idx=Math.floor(Math.random()*pool.length);
+   else{const step=[-2,-1,-1,0,0,1,1,2,3][Math.floor(Math.random()*9)];idx=Math.min(pool.length-1,Math.max(0,prev+step));if(idx===prev&&Math.random()<.7)idx=Math.min(pool.length-1,Math.max(0,idx+(Math.random()<.5?1:-1)));}
+  }while(false);
+  q.push(idx);prev=idx;
+ }
+ return q;
+}
+function renderSlots(state){ // state: 'empty'|'playing'|filled marks
+ const box=$('slots');box.innerHTML='';
+ S.q.forEach((ni,i)=>{
+  const nt=NOTES[ni];const d=document.createElement('div');
+  let cls='qslot',inner='?';
+  if(S.phase==='playing'){cls+= i===S.pos?' playing':' waiting'}
+  else if(i<S.pos){cls+=' hit';inner=nt.n}
+  else if(i===S.pos&&state==='miss'){cls+=' miss';inner=nt.n}
+  else if(S.revealed){cls+=' hit';inner=nt.n}
+  d.className=cls;
+  const c=colorOf(nt.n);
+  d.innerHTML=`<div class="qn" style="color:${cls.includes('hit')||cls.includes('miss')?c:'#8a6c42'}">${inner}</div><div class="qsi">${i+1}</div>`;
+  box.appendChild(d);
+ });
+}
+function playQuestion(){
+ S.phase='playing';S.pos=0;S.revealed=false;hud();renderSlots();
+ const sw=SWORDS[S.tier];
+ S.q.forEach((ni,i)=>tone(midiF(NOTES[ni].m),.16+i*.46,.4));
+ const total=.16+S.q.length*.46+.3;
+ setTimeout(()=>{S.phase='input';renderSlots();$('quiz-hint').textContent='轮到你:按顺序敲!';hud()},total*1000);
+ $('quiz-hint').textContent='🔊 仔细听…';
+}
+
+/* ================= 敲击判定(音高+顺序,无timing) ================= */
+function hitLane(i){
+ if(S.phase!=='input')return;
+ const nt=NOTES[i],sw=SWORDS[S.tier];
+ tone(midiF(nt.m),0,.4);
+ const laneEl=document.querySelector(`.lane[data-i="${i}"]`);
+ const expect=S.q[S.pos];
+ const rect=laneEl.getBoundingClientRect();
+ $('hammer').style.top=(rect.top-app.getBoundingClientRect().top+rect.height/2-30)+'px';
+ $('hammer').classList.remove('swing');void $('hammer').offsetWidth;$('hammer').classList.add('swing');
+ spawnSparks(rect);
+ if(i===expect){
+  clank(true);S.value+=sw.gain;
+  laneEl.classList.add('flash-hit');setTimeout(()=>laneEl.classList.remove('flash-hit'),260);
+  floatText(rect,'+'+sw.gain,'plus');
+  S.pos++;renderSlots();hud();
+  if(S.pos>=S.q.length){ // 整题对
+   S.streak++;hud();
+   if(S.streak>=NEED){forgeSuccess();return}
+   $('quiz-hint').textContent=`✔ 本题全对!连铸 ${S.streak}/${NEED}`;S.phase='busy';
+   setTimeout(()=>{nextQuestion()},900);
+  }
+ }else{
+  clank(false);S.value-=sw.loss;S.streak=0;
+  laneEl.classList.add('flash-miss');setTimeout(()=>laneEl.classList.remove('flash-miss'),340);
+  floatText(rect,'-'+sw.loss,'minus');
+  S.revealed=true;renderSlots('miss');hud();
+  const wrongN=NOTES[expect].n;
+  $('quiz-hint').textContent=`✘ 应为 ${wrongN},敲成了 ${nt.n} · 连铸清零`;
+  $('quiz-hint').classList.add('warn');setTimeout(()=>$('quiz-hint').classList.remove('warn'),2200);
+  if(S.value<=0){collapse();return}
+  S.phase='busy';
+  setTimeout(()=>nextQuestion(),1400);
+ }
+}
+function nextQuestion(){S.q=genQuestion();S.pos=0;S.revealed=false;playQuestion()}
+function spawnSparks(rect){
+ for(let k=0;k<5;k++){const s=document.createElement('div');s.className='spark';s.textContent=['✨','⚡','·','✦'][k%4];
+  s.style.left=(rect.left-app.getBoundingClientRect().left+rect.width/2)+'px';
+  s.style.top=(rect.top-app.getBoundingClientRect().top+rect.height/2)+'px';
+  s.style.setProperty('--dx',(Math.random()*90-45)+'px');s.style.setProperty('--dy',(-30-Math.random()*60)+'px');
+  app.appendChild(s);setTimeout(()=>s.remove(),520)}
+}
+function floatText(rect,txt,cls){const f=document.createElement('div');f.className='float '+cls;f.textContent=txt;
+ f.style.left=(rect.left-app.getBoundingClientRect().left+rect.width-70)+'px';
+ f.style.top=(rect.top-app.getBoundingClientRect().top+rect.height/2-14)+'px';
+ app.appendChild(f);setTimeout(()=>f.remove(),1050)}
+
+/* ================= 成功/崩坏 ================= */
+function forgeSuccess(){
+ S.phase='busy';S.forged++;S.gold+=SWORDS[S.tier].sell;hud();
+ $('forge-flash').classList.add('go');setTimeout(()=>$('forge-flash').classList.remove('go'),600);
+ showOverlay('gold',`${SWORDS[S.tier].emoji}`,`${SWORDS[S.tier].name} 铸成!`,
+  `连续 ${NEED} 题全对,宝剑出炉!<br>卖出得 <b>🪙${SWORDS[S.tier].sell}</b> · 累计 <b>🪙${S.gold}</b><br>${S.tier+1<SWORDS.length?'下一把剑更长,音域更宽,题目更长——':'你已是铁匠之神!'}`,
+  [{label:'🔨 下一把剑',cls:'gold',fn:()=>{hideOverlay();S.tier=Math.min(SWORDS.length-1,S.tier+1);startForge()}},
+   ...(S.tier+1>=SWORDS.length?[]:[])]);
+}
+function collapse(){
+ S.phase='busy';S.collapses++;hud();
+ // 剑碎裂动画
+ const svgR=$('sword-svg').getBoundingClientRect(),appR=app.getBoundingClientRect();
+ for(let k=0;k<10;k++){const sh=document.createElement('div');sh.className='shard';sh.textContent='🔻';
+  sh.style.left=(svgR.left-appR.left+svgR.width/2)+'px';sh.style.top=(svgR.top-appR.top+k*40)+'px';
+  sh.style.fontSize=(14+Math.random()*16)+'px';
+  sh.style.animation=`shardfly .9s ease-in ${k*0.03}s forwards`;
+  sh.style.setProperty('--dx',(Math.random()*260-130)+'px');sh.style.setProperty('--dy',(120+Math.random()*280)+'px');sh.style.setProperty('--rot',(Math.random()*720-360)+'deg');
+  app.appendChild(sh);setTimeout(()=>sh.remove(),1200)}
+ showOverlay('red','💥','剑崩了!',
+  `价值扣到 0,钢水报废。<br>崩剑 ${S.collapses} 次 · 重新起炉同款剑(基础价值 <b>${SWORDS[S.tier].base}</b>)`,
+  [{label:'🔥 重铸',cls:'gold',fn:()=>{hideOverlay();startForge()}}]);
+}
+function showOverlay(kind,emoji,title,body,btns){
+ const ov=$('overlay');ov.classList.add('on');
+ $('ov-title').textContent=title;$('ov-title').className=kind==='gold'?'gold':'red';
+ $('ov-sword').textContent=emoji;$('ov-body').innerHTML=body;
+ const bx=$('ov-btns');bx.innerHTML='';
+ btns.forEach(b=>{const el=document.createElement('button');el.className='btn '+(b.cls||'');el.textContent=b.label;el.onclick=b.fn;bx.appendChild(el)});
+}
+function hideOverlay(){$('overlay').classList.remove('on')}
+
+/* ================= 流程 ================= */
+function startForge(){
+ S.value=SWORDS[S.tier].base;S.streak=0;S.phase='idle';hud();updateSword();
+ $('btn-start').disabled=false;
+ $('quiz-hint').textContent='点火!开始出题';
+ toast(`🔥 开炉:${SWORDS[S.tier].name}(价值 ${SWORDS[S.tier].base})`);
+ nextQuestion();
+}
+$('btn-start').onclick=()=>{if(S.phase!=='idle')return;startForge()};
+$('btn-replay').onclick=()=>{if(S.phase==='input'){const p=S.pos,r=S.revealed;playQuestion();S.pos=p;/*重播不打断进度*/}
+ };
+$('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音',
+ `听炉边传来的音序(题目),<b>按顺序</b>在音道上敲出这些音。<br>
+  · 判定只看<b>音高 + 顺序</b>,不看节奏<br>
+  · 敲对 <b>+</b> 价值,敲错 <b>−</b> 价值,价值归零 = 剑崩<br>
+  · 连续答对 ${NEED} 题 → 铸成卖出,换更长的剑<br>
+  · 剑越长,覆盖音域越宽(激光标出边界),题目也越长<br>
+  · 横幅颜色 = 唱名颜色(do 红 re 橙 mi 黄 fa 绿 sol 青 la 蓝 si 紫)`,
+ [{label:'明白,开炉!',cls:'gold',fn:hideOverlay}])};
+
+/* 测试钩子 */
+window.__api={S,NOTES,SWORDS,startForge,nextQuestion,hitLane,genQuestion,playQuestion};
+
+/* ================= 启动 ================= */
+buildLanes();
+// 延迟到首帧后量尺寸
+requestAnimationFrame(()=>requestAnimationFrame(()=>{hud();updateSword()}));
+addEventListener('resize',()=>setTimeout(updateSword,80));
+</script>
+</body>
+</html>

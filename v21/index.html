@@ -113,7 +113,8 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #girl-tag{position:absolute;top:-4px;left:50%;transform:translateX(-50%);font-size:9px;color:#c9a06a99;background:#1a110acc;padding:1px 8px;border-radius:8px;white-space:nowrap}
 
 /* ===== 铁锤本体(跟随鼠标) ===== */
-#hammer{position:absolute;z-index:30;pointer-events:none;transform-origin:12% 88%;filter:drop-shadow(0 5px 9px #000c);transition:transform .05s linear}
+#app{touch-action:none;cursor:none;-webkit-user-select:none;user-select:none}
+#hammer{position:absolute;z-index:30;pointer-events:none;transform-origin:12% 88%;filter:drop-shadow(0 5px 9px #000c);transition:transform .05s linear,opacity .4s}
 #hammer svg{display:block}
 #hammer.swing{animation:mswing .22s cubic-bezier(.6,0,.9,1)}
 @keyframes mswing{0%{transform:rotate(8deg)}45%{transform:rotate(-52deg) translateY(10px)}100%{transform:rotate(8deg)}}
@@ -447,14 +448,19 @@ hammerEl.innerHTML=`<svg width="86" height="86" viewBox="0 0 86 86">
  </g>
 </svg>`;
 app.appendChild(hammerEl);
-let mouseInAnvil=false;
-$('anvil').addEventListener('pointermove',e=>{
- const r=app.getBoundingClientRect(),ar=$('anvil').getBoundingClientRect();
- hammerEl.style.left=(e.clientX-r.left-14)+'px';
- hammerEl.style.top=(e.clientY-r.top-72)+'px';
-});
-$('anvil').addEventListener('pointerleave',()=>{hammerEl.style.opacity=0});
-$('anvil').addEventListener('pointerenter',()=>{hammerEl.style.opacity=1});
+/* 坐标换算:client→app(必须除以缩放系数,手机/窄窗口必备) */
+function toApp(cx,cy){const r=app.getBoundingClientRect(),k=r.width/app.offsetWidth;return{x:(cx-r.left)/k,y:(cy-r.top)/k}}
+let lastPt=null,hideTm=null;
+function placeHammer(cx,cy){
+ const p=toApp(cx,cy);lastPt={x:p.x,y:p.y,t:Date.now()};
+ hammerEl.style.left=(p.x-14)+'px';hammerEl.style.top=(p.y-72)+'px';
+ hammerEl.style.opacity=1;clearTimeout(hideTm);
+}
+app.addEventListener('pointermove',e=>{placeHammer(e.clientX,e.clientY)},{passive:true});
+app.addEventListener('pointerdown',e=>{placeHammer(e.clientX,e.clientY)});
+app.addEventListener('pointerup',e=>{if(e.pointerType!=='mouse')hideTm=setTimeout(()=>hammerEl.style.opacity=0,600)});
+app.addEventListener('pointerleave',()=>{hammerEl.style.opacity=0});
+app.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')hammerEl.style.opacity=1});
 function swingHammer(x,y){ // x,y 相对 app
  hammerEl.style.left=(x-14)+'px';hammerEl.style.top=(y-72)+'px';
  hammerEl.classList.remove('swing');void hammerEl.offsetWidth;hammerEl.classList.add('swing');
@@ -545,8 +551,10 @@ function hitLane(i){
  tone(midiF(nt.m),0,.4);
  const laneEl=document.querySelector(`.lane[data-i="${i}"]`);
  const expect=S.q[S.pos];
- const rect=laneEl.getBoundingClientRect(),appR=app.getBoundingClientRect();
- const hx=rect.left-appR.left+rect.width/2, hy=rect.top-appR.top+rect.height/2;
+ const rect=laneEl.getBoundingClientRect(),appR=app.getBoundingClientRect(),sk=appR.width/app.offsetWidth;
+ const fresh=lastPt&&Date.now()-lastPt.t<500;
+ const hx=fresh?lastPt.x:(rect.left-appR.left+rect.width/2)/sk,
+       hy=fresh?lastPt.y:(rect.top-appR.top+rect.height/2)/sk;
  swingHammer(hx,hy);
  spawnSparks(hx,hy);
  S.strikes++;S.totStrikes++;
@@ -741,6 +749,7 @@ $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音 · 淬�
 /* 音道点击(用 app 坐标判定,锤子即光标) */
 $('lanes').addEventListener('pointerdown',e=>{
  const laneEl=e.target.closest('.lane');if(!laneEl)return;
+ placeHammer(e.clientX,e.clientY);
  hitLane(+laneEl.dataset.i);
 });
 

@@ -90,14 +90,14 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #acc-strip .lab{font-size:15px;color:#c9a06a;letter-spacing:2px}
 #acc-big{font-size:30px;color:#ffd54f;font-weight:800;text-shadow:0 0 16px #ffd54f55;font-family:inherit}
 #acc-detail2{font-size:12px;color:#c9a06a}
-#quench-btn{display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:40;padding:11px 20px;font-size:18px;font-weight:bold;border-radius:14px;background:linear-gradient(160deg,#2f8fda,#1a5f9e);border:2px solid #a8dcff;color:#fff;cursor:pointer;animation:qbpulse 1.1s ease-in-out infinite;box-shadow:0 0 22px #4da3e888}
+#quench-btn{display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:40;padding:11px 20px;font-size:18px;font-weight:bold;border-radius:14px;background:linear-gradient(160deg,#8a5cff,#1a5f9e);border:2px solid #d0b3ff;color:#fff;cursor:pointer;animation:qbpulse 1.1s ease-in-out infinite;box-shadow:0 0 22px #4da3e888}
 @keyframes qbpulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.07)}}
-#left-col{width:240px;flex:none;display:flex;flex-direction:column;position:relative;border-right:2px solid #4a3320;background:linear-gradient(180deg,#150d07 0%,#0d0805 100%)}
-#girl-col{width:216px;flex:none;display:flex;position:relative;border-left:2px solid #4a3320;background:linear-gradient(180deg,#150d07,#0d0805)}
+#left-col{width:240px;flex:none;order:2;display:flex;flex-direction:column;position:relative;border-left:2px solid #4a3320;background:linear-gradient(180deg,#150d07 0%,#0d0805 100%)}
+#girl-col{width:216px;flex:none;order:-1;display:flex;position:relative;border-right:2px solid #4a3320;background:linear-gradient(180deg,#150d07,#0d0805)}
 #bucket-zone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:12px 10px 6px;position:relative}
 #bucket{width:76%;max-width:235px;flex:none;filter:drop-shadow(0 8px 14px #000a)}
 #bucket-cap{font-size:12px;color:#7fb8e8;letter-spacing:1px;text-shadow:0 1px 2px #000}
-#bucket-num{font-size:13px;color:#a8dcff;font-weight:600;text-shadow:0 1px 2px #000}
+#bucket-num{font-size:13px;color:#d0b3ff;font-weight:600;text-shadow:0 1px 2px #000}
 #bucket-water{transition:all .3s}
 #bucket-water-glow{transition:all .3s}
 .flydrop{position:absolute;z-index:36;pointer-events:none;font-size:19px;opacity:.95;transition:transform .55s cubic-bezier(.3,-.15,.65,1.05);text-shadow:0 2px 4px #0008}
@@ -117,9 +117,10 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .lane.dim{filter:brightness(.32) saturate(.4)}
 .lane.cov{border-color:#ffffff28}
 .lane.cov .ln{opacity:1}
-.anchor-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:3;display:none;padding:2px 10px;border-radius:12px;background:#2a1c0fdd;border:1.5px solid #c9a06a99;color:#ffd54f;font-size:13px;font-weight:bold;cursor:pointer;pointer-events:auto}
+.anchor-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:3;display:none;padding:4px 14px;border-radius:14px;background:linear-gradient(180deg,#4a3218,#2a1c0f);border:2px solid #ffd54f;box-shadow:0 0 10px #ffb84d88,0 1px 3px #000a;color:#ffe89a;font-size:15px;font-weight:bold;cursor:pointer;pointer-events:auto;animation:anchorPulse 1.6s ease-in-out infinite}
+@keyframes anchorPulse{0%,100%{box-shadow:0 0 8px #ffb84d55,0 1px 3px #000a}50%{box-shadow:0 0 18px #ffb84dbb,0 1px 3px #000a}}
 .lane.anchor-on .anchor-btn{display:block}
-.anchor-btn:hover{background:#4a3218ee;color:#ffe89a}
+.anchor-btn:hover{background:#5a4020;color:#fff}
 .lane.off{display:none}
 .lane.flash-hit{background:linear-gradient(90deg,#5dff7a30,#5dff7a4d 50%,#5dff7a30)!important;border-color:#5dff7a!important}
 .lane.flash-miss{background:linear-gradient(90deg,#ff5d6c30,#ff5d6c4d 50%,#ff5d6c30)!important;border-color:#ff5d6c!important}
@@ -228,7 +229,7 @@ body{overflow:hidden}
       <div id="sword-name"><span id="sword-emoji">🗡️</span><span id="sword-title">生锈匕首</span><span id="tier-tag">Tier 1/8</span></div>
       <div id="value-wrap"><div id="value-bar"><div id="value-fill"></div><div id="value-num">0</div></div></div>
     </div>
-    <div id="pot-row">💧 潜在 <span id="pot-num">0</span></div>
+    <div id="pot-row">🔮 魔能 <span id="pot-num">0</span></div>
     <div id="gold-row"><span class="coin">🪙</span><span id="gold-num">0</span></div>
     <div id="charge-wrap">
       <div id="charge-label">超神充能</div>
@@ -263,21 +264,21 @@ body{overflow:hidden}
    <div id="left-col">
     <div id="bucket-zone">
       <button id="quench-btn">🔥 淬 火</button>
-      <div id="bucket-cap">💧 淬火桶 · 敲击积累水滴</div>
+      <div id="bucket-cap">🔮 注魔池 · 敲击积累魔能</div>
       <svg id="bucket" viewBox="0 0 200 230">
         <defs><clipPath id="bkc"><path d="M36,42 L32,200 Q100,222 168,200 L164,42 Q100,56 36,42"/></clipPath></defs>
         <path d="M36,42 L32,200 Q100,222 168,200 L164,42" fill="#5c3d20" stroke="#2f1f0e" stroke-width="3"/>
         <path d="M78,44 L75,214" stroke="#3f2a14" stroke-width="2" fill="none"/>
         <path d="M122,44 L125,214" stroke="#3f2a14" stroke-width="2" fill="none"/>
         <g clip-path="url(#bkc)">
-          <rect id="bucket-water" x="20" y="204" width="160" height="0" fill="#2f8fda" opacity="0.88"/>
-          <rect id="bucket-water-glow" x="20" y="202" width="160" height="3" fill="#a8dcff" opacity="0"/>
+          <rect id="bucket-water" x="20" y="204" width="160" height="0" fill="#8a5cff" opacity="0.88"/>
+          <rect id="bucket-water-glow" x="20" y="202" width="160" height="3" fill="#d0b3ff" opacity="0"/>
         </g>
         <path d="M33,110 Q100,128 167,110" fill="none" stroke="#8d949e" stroke-width="7"/>
         <path d="M31,165 Q100,183 169,165" fill="none" stroke="#8d949e" stroke-width="7"/>
         <ellipse cx="100" cy="42" rx="64" ry="13" fill="none" stroke="#8a5a2e" stroke-width="5"/>
       </svg>
-      <div id="bucket-num">💧 ×<span id="bucket-drops">0</span></div>
+      <div id="bucket-num">🔮 ×<span id="bucket-drops">0</span></div>
     </div>
     <div id="quench">
       <div id="quench-steam">💨💨💨</div>
@@ -314,7 +315,7 @@ const CFG={
  FRENZY_NEED:10,      // 连对敲击数 → 超神
  FRENZY_SECS:8,       // 超神窗口秒数
  FRENZY_GOLD:2,       // 超神内敲对立即得金/击
- POT_PER_HIT:1,       // 敲对积累潜在钱/击
+ POT_PER_HIT:1,       // 敲对积累魔能/击
  TIERS:{great:{name:'大成功',mult:4,cls:'great'},good:{name:'成功',mult:2,cls:'good'},
         keep:{name:'维持',mult:1,cls:'keep'},dmg:{name:'损坏',mult:0,cls:'dmg'},fail:{name:'失败',mult:0,cls:'fail'}},
  PROB:{great0:.02,great1:.45, good0:.18,good1:.33, keep0:.30,keep1:.15, dmg0:.20,dmg1:.05, fail0:.30,fail1:.02},
@@ -598,7 +599,7 @@ function bucketPt(){ // 桶口中心(app 坐标,缩放安全)
  return {x:(r.left-a.left)/k+r.width/k/2,y:(r.top-a.top)/k+16};
 }
 function flyDrop(hx,hy){
- const p=bucketPt(),d=document.createElement('div');d.className='flydrop';d.textContent='💧';
+ const p=bucketPt(),d=document.createElement('div');d.className='flydrop';d.textContent='🔮';
  d.style.left=hx+'px';d.style.top=hy+'px';app.appendChild(d);
  requestAnimationFrame(()=>{d.style.transform=`translate(${p.x-hx}px,${p.y-hy}px) scale(.5)`});
  setTimeout(()=>d.remove(),640);
@@ -607,7 +608,7 @@ function bucketQuenchVisual(){
  $('bucket-water').setAttribute('height',0);$('bucket-water').setAttribute('y',204);
  $('bucket-water-glow').setAttribute('opacity',0);
  const p=bucketPt();
- for(let i=0;i<7;i++){const s=document.createElement('div');s.className='spark';s.textContent='💧';
+ for(let i=0;i<7;i++){const s=document.createElement('div');s.className='spark';s.textContent='🔮';
   const ang=-Math.PI/2+(Math.random()-.5)*1.7,v=55+Math.random()*75;
   s.style.setProperty('--dx',Math.cos(ang)*v+'px');s.style.setProperty('--dy',Math.sin(ang)*v+'px');
   s.style.left=p.x+'px';s.style.top=p.y+'px';app.appendChild(s);setTimeout(()=>s.remove(),720);}
@@ -728,7 +729,7 @@ function hitLane(i){
    floatText(hx,hy,`+${CFG.FRENZY_GOLD}🪙`,'gold');
   }else{
    S.charge=Math.min(CFG.FRENZY_NEED,S.charge+1);
-   floatText(hx,hy,`+${CFG.POT_PER_HIT}💧`,'plus');
+   floatText(hx,hy,`+${CFG.POT_PER_HIT}🔮`,'plus');
    if(S.charge>=CFG.FRENZY_NEED)startFrenzy();
   }
   S.pos++;renderSlots();hud();
@@ -754,13 +755,13 @@ function hitLane(i){
 function endQuestion(){
  if(S.frenzyActive){ // 超神期间:快速连发,攒到窗口结束一次性大淬火
   S.pendingQuench=true;S.phase='busy';
-  $('quiz-hint').textContent='⚡ 超神连打!潜在金额累积中…';
+  $('quiz-hint').textContent='⚡ 超神连打!魔能累积中…';
   setTimeout(()=>{if(S.phase==='busy'){S.q=genQuestion();playQuestion()}},420);
   return;
  }
  S.phase='ready';
  const qb=$('quench-btn');
- qb.innerHTML=`🔥 淬 火 · 💧${S.potential}`;
+ qb.innerHTML=`🔥 淬 火 · 🔮${S.potential}`;
  qb.style.display='block';
  $('quiz-hint').textContent='敲完了!点水桶上方按钮淬火';
 }
@@ -773,7 +774,7 @@ function quenchPhase(){
  const vBefore=S.value;
  // 居中覆盖面板(大爷19:49令:看得清,点继续才关)
  const qm=$('quench-modal');qm.classList.add('on');
- $('qm-sub').textContent=`正确率 ${Math.round(acc*100)}% · 潜在 💧${S.potential} × 档位倍率`;
+ $('qm-sub').textContent=`正确率 ${Math.round(acc*100)}% · 魔能 🔮${S.potential} × 档位倍率`;
  $('qm-result').textContent='';
  const btn=$('qm-btn');btn.style.display='none';btn.onclick=null;
  const strip=$('qm-strip');strip.innerHTML='';
@@ -788,12 +789,12 @@ function quenchPhase(){
   winEl.classList.add('winner');
   const t=CFG.TIERS[result];
   $('qm-result').innerHTML=result==='great'
-   ?`<span style="color:#ffd54f">🌈 大成功!💧${S.potential} × ${t.mult} = 🪙${payout}!</span>`
+   ?`<span style="color:#ffd54f">🌈 大成功!🔮${S.potential} × ${t.mult} = 🪙${payout}!</span>`
    :result==='dmg'
    ?`<span style="color:#ffb87a">💥 损坏!剑受损,铸成价值 -10%…</span>`
    :result==='fail'
-   ?`<span style="color:#ff9a8a">❌ 失败!剑碎了!💧${S.potential} 全洒!</span>`
-   :`<span style="color:#a8f0a0">${t.name}!💧${S.potential} × ${t.mult} = 🪙${payout}</span>`;
+   ?`<span style="color:#ff9a8a">❌ 失败!剑碎了!🔮${S.potential} 全散!</span>`
+   :`<span style="color:#a8f0a0">${t.name}!🔮${S.potential} × ${t.mult} = 🪙${payout}</span>`;
   tone(midiF(result==='great'?84:(result==='dmg'||result==='fail')?55:72),0,.5,.26);
   if(result==='great')setTimeout(()=>[0,4,7,12].forEach((s,i)=>tone(midiF(72+s),i*.09,.35,.22)),200);
   // 结算
@@ -917,8 +918,8 @@ $('quench-btn').onclick=()=>{if(S.phase!=='ready')return;$('quench-btn').style.d
 $('btn-replay').onclick=()=>{if(S.phase==='input'){const p=S.pos,m=S.marks,r=S.revealed;playQuestion();S.pos=p;S.marks=m;S.revealed=r;renderSlots()}};
 $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音 · 淬火定命',
  `- 听题目(音序),<b>按顺序</b>在音道上敲出这些音<br>
-  · 敲对 <b>+1💧潜在钱</b>;敲错<b>剑不碎</b>,只把淬火档位概率变差<br>
-  · 一题敲完 → <b>淬火</b>:roll 档位,潜在钱 × 倍率变金币<br>
+  · 敲对 <b>+1🔮魔能</b>;敲错<b>剑不碎</b>,只把淬火档位概率变差<br>
+  · 一题敲完 → <b>淬火</b>:roll 档位,魔能 × 倍率变金币<br>
   · 五档:<b>大成功×4 / 成功×2 / 维持×1 / 损坏(剑损-10%) / 失败(剑碎退档)</b>,敲得越正确概率越好<br>
   · 背景是五线谱:每个音的音符位置 = 它在谱上的真实位置,玩着玩着就认识谱了<br>
   · 连对 ${CFG.FRENZY_NEED} 击 → <b>⚡超神 ${CFG.FRENZY_SECS}s</b>:敲对每击 +${CFG.FRENZY_GOLD}🪙、敲错零惩罚,窗口结束大淬火一把结<br>

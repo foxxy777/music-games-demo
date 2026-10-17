@@ -102,8 +102,8 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #bucket-water-glow{transition:all .3s}
 .flydrop{position:absolute;z-index:36;pointer-events:none;font-size:19px;opacity:.95;transition:transform .55s cubic-bezier(.3,-.15,.65,1.05);text-shadow:0 2px 4px #0008}
 #anvil{flex:1;display:flex;position:relative;overflow:hidden;cursor:none}
-#lanes{flex:1;display:flex;flex-direction:row;padding:12px 16px;gap:4px;position:relative}
-.lane{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:8px;border-radius:9px;border:1.5px solid #ffffff10;background:linear-gradient(180deg,#ffffff04,#ffffff08 50%,#ffffff04);transition:background .12s,border-color .12s,filter .2s;position:relative;min-width:0}
+#lanes{flex:1;display:flex;flex-direction:column-reverse;padding:12px 16px;gap:4px;position:relative}
+.lane{flex:1;display:flex;flex-direction:row;align-items:center;gap:8px;padding:0 12px;border-radius:9px;border:1.5px solid #ffffff10;background:linear-gradient(90deg,#ffffff04,#ffffff08 50%,#ffffff04);transition:background .12s,border-color .12s,filter .2s;position:relative;min-height:0}
 .lane .ln{flex:none;text-align:center;font-size:15px;font-weight:bold;text-shadow:0 0 8px currentColor}
 .lane .lk{flex:none;text-align:center;font-size:10px;opacity:.55}
 .lane.dim{filter:brightness(.32) saturate(.4)}
@@ -112,22 +112,22 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .lane.flash-hit{background:linear-gradient(90deg,#5dff7a30,#5dff7a4d 50%,#5dff7a30)!important;border-color:#5dff7a!important}
 .lane.flash-miss{background:linear-gradient(90deg,#ff5d6c30,#ff5d6c4d 50%,#ff5d6c30)!important;border-color:#ff5d6c!important}
 .lane.broken{filter:grayscale(.9) brightness(.4) contrast(1.4);animation:crackshake .4s ease-out}
-.lane.broken::after{content:'✖';position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);font-size:22px;color:#ff5d6c;text-shadow:0 0 10px #ff5d6c;pointer-events:none}
+.lane.broken::after{content:'✖';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:18px;color:#ff5d6c;text-shadow:0 0 10px #ff5d6c;pointer-events:none}
 @keyframes crackshake{0%{transform:translate(0)}20%{transform:translate(-4px,2px)}40%{transform:translate(4px,-2px)}60%{transform:translate(-3px,0)}80%{transform:translate(2px,1px)}100%{transform:translate(0)}}
 /* 五线谱底色 */
 .staff-line{position:absolute;left:1.5%;right:1.5%;height:1.6px;background:#d8c9a844;pointer-events:none;z-index:0}
 .staff-line.xl{background:#d8c9a822;border-top:1px dashed #d8c9a855;background:none}
 .staff-clef{position:absolute;left:4px;font-size:58px;line-height:1;color:#d8c9a8aa;font-family:'Noto Music','Segoe UI Symbol','Bravura',serif;z-index:0;pointer-events:none;text-shadow:0 0 8px #d8c9a833}
-.note-head{position:absolute;left:50%;width:15px;height:10.5px;border-radius:50%;transform:translate(-50%,-50%) rotate(-16deg);z-index:1;pointer-events:none;box-shadow:0 1px 3px #0009,inset -2px -1px 2px #0005}
+.note-head{position:absolute;left:34%;top:50%;width:15px;height:10.5px;border-radius:50%;transform:translate(-50%,-50%) rotate(-16deg);z-index:1;pointer-events:none;box-shadow:0 1px 3px #0009,inset -2px -1px 2px #0005}
 .nh-stem{position:absolute;right:-1.5px;top:7px;width:1.8px;height:34px;background:inherit;opacity:.9}
-/* 剑 */
-#sword-zone{position:absolute;top:50%;left:0;right:0;height:150px;transform:translateY(-50%);pointer-events:none;z-index:5}
-#sword-svg{position:absolute;top:50%;left:0;transform:translateY(-50%);transition:width .5s,left .5s;filter:drop-shadow(0 0 12px #ffb84d33);height:120px}
-#sword-glow{position:absolute;top:50%;transform:translateY(-50%);height:120px;border-radius:50%;background:radial-gradient(closest-side,#ffb84d2d,transparent);pointer-events:none;transition:width .5s,left .5s}
-/* 激光 */
-.laser{position:absolute;top:10px;bottom:10px;width:2px;height:auto;background:linear-gradient(180deg,transparent,#ff5d6c66 15%,#ff5d6cdd 50%,#ff5d6c66 85%,transparent);box-shadow:0 0 12px #ff5d6c88;z-index:4;pointer-events:none;transition:left .5s}
-.laser::before,.laser::after{content:'';position:absolute;top:-3px;width:8px;height:8px;border-radius:50%;background:#ff5d6c;box-shadow:0 0 10px #ff5d6c}
-.laser::before{left:24px}.laser::after{right:24px}
+/* 剑(竖放:柄在下do端,尖朝上高音) */
+#sword-zone{position:absolute;left:50%;top:0;bottom:0;width:150px;transform:translateX(-50%);pointer-events:none;z-index:5}
+#sword-svg{position:absolute;left:50%;transform:translateX(-50%);transition:height .5s,top .5s;filter:drop-shadow(0 0 12px #ffb84d33);width:120px}
+#sword-glow{position:absolute;left:50%;transform:translateX(-50%);width:120px;border-radius:50%;background:radial-gradient(closest-side,#ffb84d2d,transparent);pointer-events:none;transition:height .5s,top .5s}
+/* 激光(上下横线标音域) */
+.laser{position:absolute;left:12px;right:12px;height:2px;background:linear-gradient(90deg,transparent,#ff5d6c66 15%,#ff5d6cdd 50%,#ff5d6c66 85%,transparent);box-shadow:0 0 12px #ff5d6c88;z-index:4;pointer-events:none;transition:top .5s}
+.laser::before,.laser::after{content:'';position:absolute;left:-3px;width:8px;height:8px;border-radius:50%;background:#ff5d6c;box-shadow:0 0 10px #ff5d6c}
+.laser::before{top:-3px}.laser::after{bottom:-3px}
 
 /* ===== 女铁匠(素材槽:H3 视频帧就位前用占位 SVG) ===== */
 #girl{flex:1;width:100%;min-height:0;z-index:6;pointer-events:none;display:flex;align-items:flex-end;justify-content:center;padding:0 6px 8px}
@@ -360,68 +360,63 @@ addEventListener('resize',fit);fit();
 
 function buildLanes(){
  const box=$('lanes');box.innerHTML='';
- // 五线谱底:级0=C4下加一线..级14=C6上加二线(全音阶逐级);线=偶数级
- const STAFF_TOP=11,STAFF_H=80; // %:谱面顶部/高度(顶部留出音名区)
- [0,2,4,6,8,10,12,14].forEach(g=>{ // 线:C4,E4,G4,B4,D5,F5,A5,C6
-  const l=document.createElement('div');l.className='staff-line'+(g===0||g===14?' xl':'');
-  l.style.top=(STAFF_TOP+(14-g)/14*STAFF_H)+'%';box.appendChild(l)});
- const clef=document.createElement('div');clef.className='staff-clef';clef.textContent='𝄞';
- clef.style.top=(STAFF_TOP+(14-4)/14*STAFF_H-17)+'%';box.appendChild(clef); // G4线=谱号中心
  NOTES.forEach((nt,i)=>{
   const d=document.createElement('div');d.className='lane';d.dataset.i=i;
   const c=colorOf(nt.n);
   d.innerHTML=`<div class="ln" style="color:${c}">${nt.n}</div><div class="lk" style="color:${c}">${nt.d}</div>`;
+  const nh=document.createElement('div');nh.className='note-head';nh.dataset.i=i;
+  nh.style.background=c;
+  nh.innerHTML='<div class="nh-stem"></div>';
+  nh.querySelector('.nh-stem').style.background=c;
+  d.appendChild(nh);
   box.appendChild(d);
  });
- // 符头放 lanes 坐标系(与谱线同一坐标系,零错位);需 layout 后定位
+ // 五线谱线/谱号:按横条实际几何生成(偶数级=线,C4=下加一线..C6=上加二线)
  requestAnimationFrame(()=>{
-  NOTES.forEach((nt,i)=>{
-   const laneEl=box.querySelector(`.lane[data-i="${i}"]`);if(!laneEl)return;
-   const nh=document.createElement('div');nh.className='note-head';nh.dataset.i=i;
-   nh.style.background=colorOf(nt.n);
-   nh.style.left=(laneEl.offsetLeft+laneEl.offsetWidth/2)+'px';
-   nh.style.top=(STAFF_TOP+(14-i)/14*STAFF_H)+'%';
-   nh.innerHTML='<div class="nh-stem"></div>';
-   nh.querySelector('.nh-stem').style.background=colorOf(nt.n);
-   box.appendChild(nh);
-  });
+  const lanesEl=[...box.querySelectorAll('.lane')];if(!lanesEl.length)return;
+  const c4=lanesEl[0].offsetTop+lanesEl[0].offsetHeight/2, c6=lanesEl[14].offsetTop+lanesEl[14].offsetHeight/2;
+  [0,2,4,6,8,10,12,14].forEach(g=>{
+   const l=document.createElement('div');l.className='staff-line'+(g===0||g===14?' xl':'');
+   l.style.top=(c6+(14-g)/14*(c4-c6))+'px';box.appendChild(l)});
+  const clef=document.createElement('div');clef.className='staff-clef';clef.textContent='𝄞';
+  const g4y=c6+(14-4)/14*(c4-c6);
+  clef.style.top=(g4y-20)+'px';box.appendChild(clef);
  });
 }
 function updateSword(){
  const sw=SWORDS[S.tier],first=0,last=sw.span-1;
  const lanesEls=[...document.querySelectorAll('.lane')];
  lanesEls.forEach((el,i)=>{el.classList.toggle('cov',i>=first&&i<=last);el.classList.toggle('dim',i<first||i>last)});
- document.querySelectorAll('.note-head').forEach(nh=>{const i=+nh.dataset.i;nh.style.opacity=(i<first||i>last)?.25:.95});
- const laneW=lanesEls[0].offsetWidth;
- const leftPx=lanesEls[first].offsetLeft-2, rightPx=lanesEls[last].offsetLeft+laneW+2;
- const w=Math.max(120,rightPx-leftPx);
- $('sword-svg').style.left=leftPx+'px';$('sword-svg').style.width=w+'px';
- $('sword-glow').style.left=leftPx+'px';$('sword-glow').style.width=w+'px';
- $('laser-top').style.left=(leftPx-5)+'px';$('laser-bot').style.left=(rightPx+5)+'px';
- drawSword(sw,w);
+ const lanesBox=$('lanes'),laneH=lanesEls[0].offsetHeight,off=lanesBox.offsetTop;
+ const topPx=off+lanesEls[last].offsetTop-2, botPx=off+lanesEls[first].offsetTop+laneH+2;
+ const h=Math.max(120,botPx-topPx);
+ $('sword-svg').style.top=topPx+'px';$('sword-svg').style.height=h+'px';
+ $('sword-glow').style.top=topPx+'px';$('sword-glow').style.height=h+'px';
+ $('laser-top').style.top=(topPx-4)+'px';$('laser-bot').style.top=(botPx+4)+'px';
+ drawSword(sw,h);
 }
-function drawSword(sw,wPx){
- const svg=$('sword-svg');const H=120;svg.setAttribute('viewBox',`0 0 600 ${H}`);
- svg.setAttribute('preserveAspectRatio','none');
- const bl2=H*.11;
- const tipX=596,guardX=44,gripW=30,pomX=guardX-gripW-10;
+function drawSword(sw,hPx){
+ const svg=$('sword-svg');const W=120;svg.setAttribute('viewBox',`0 0 120 600`);
+ const bl=W*.22,bl2=bl/2;
+ const crossW=W*.72,guardY=560,gripH=34,pomY=guardY+gripH+8;
  svg.innerHTML=`
   <defs>
-    <linearGradient id="blade" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="blade" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#6a7686"/><stop offset=".32" stop-color="#eef3fa"/>
       <stop offset=".55" stop-color="#b9c4d4"/><stop offset="1" stop-color="#59636f"/>
     </linearGradient>
   </defs>
   <g>
-    <polygon points="${tipX},${H/2} ${guardX+80},${H/2-bl2} ${guardX},${H/2-bl2} ${guardX},${H/2+bl2} ${guardX+80},${H/2+bl2}"
+    <polygon points="${W/2},4 ${W/2+bl2},${70} ${W/2+bl2},${guardY} ${W/2-bl2},${guardY} ${W/2-bl2},${70}"
       fill="url(#blade)" stroke="#2c333d" stroke-width="2"/>
-    <line x1="${guardX}" y1="${H/2}" x2="${tipX-16}" y2="${H/2}" stroke="#ffffffaa" stroke-width="2.5"/>
-    <path d="M ${guardX+70} ${H/2-bl2*.4} Q ${300} ${H/2+bl2*.9} ${guardX+90} ${H/2-bl2*.2}" stroke="#8fa0b566" stroke-width="3" fill="none"/>
-    <rect x="${guardX}" y="${H/2-43}" width="14" height="86" rx="6" fill="#7a5830" stroke="#3a2810" stroke-width="2"/>
-    <rect x="${pomX+10}" y="${H/2-9}" width="${gripW}" height="18" rx="7" fill="#4a3018" stroke="#2c1c0a" stroke-width="2"/>
-    ${Array.from({length:4},(_,k)=>`<line x1="${pomX+14+k*6}" y1="${H/2-9}" x2="${pomX+14+k*6}" y2="${H/2+9}" stroke="#2c1c0a" stroke-width="2"/>`).join('')}
-    <circle cx="${pomX}" cy="${H/2}" r="10" fill="#c9a06a" stroke="#6a4c2a" stroke-width="2"/>
+    <line x1="${W/2}" y1="16" x2="${W/2}" y2="${guardY}" stroke="#ffffffaa" stroke-width="2.5"/>
+    <path d="M ${W/2-bl2*.4} ${90} Q ${W/2+bl2*.9} ${300} ${W/2-bl2*.2} ${guardY-40}" stroke="#8fa0b566" stroke-width="3" fill="none"/>
+    <rect x="${W/2-crossW/2}" y="${guardY}" width="${crossW}" height="14" rx="6" fill="#7a5830" stroke="#3a2810" stroke-width="2"/>
+    <rect x="${W/2-9}" y="${guardY+14}" width="18" height="${gripH}" rx="7" fill="#4a3018" stroke="#2c1c0a" stroke-width="2"/>
+    ${Array.from({length:4},(_,k)=>`<line x1="${W/2-9}" y1="${guardY+20+k*8}" x2="${W/2+9}" y2="${guardY+20+k*8}" stroke="#2c1c0a" stroke-width="2"/>`).join('')}
+    <circle cx="${W/2}" cy="${pomY}" r="10" fill="#c9a06a" stroke="#6a4c2a" stroke-width="2"/>
   </g>`;
+ if(sw.span<=3){svg.querySelector('g').style.transform='translateY(120px)'}
 }
 
 /* ================= 女铁匠(H3 素材自动接入,失败回退占位 SVG) ================= */

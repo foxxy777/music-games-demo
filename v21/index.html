@@ -111,8 +111,6 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .lane.cov .ln{opacity:1}
 .lane.flash-hit{background:linear-gradient(90deg,#5dff7a30,#5dff7a4d 50%,#5dff7a30)!important;border-color:#5dff7a!important}
 .lane.flash-miss{background:linear-gradient(90deg,#ff5d6c30,#ff5d6c4d 50%,#ff5d6c30)!important;border-color:#ff5d6c!important}
-.lane.broken{filter:grayscale(.9) brightness(.4) contrast(1.4);animation:crackshake .4s ease-out}
-.lane.broken::after{content:'✖';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:18px;color:#ff5d6c;text-shadow:0 0 10px #ff5d6c;pointer-events:none}
 @keyframes crackshake{0%{transform:translate(0)}20%{transform:translate(-4px,2px)}40%{transform:translate(4px,-2px)}60%{transform:translate(-3px,0)}80%{transform:translate(2px,1px)}100%{transform:translate(0)}}
 /* 五线谱底色 */
 .staff-line{position:absolute;left:1.5%;right:1.5%;height:1.6px;background:#d8c9a844;pointer-events:none;z-index:0}
@@ -128,6 +126,11 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .laser{position:absolute;left:12px;right:12px;height:2px;background:linear-gradient(90deg,transparent,#ff5d6c66 15%,#ff5d6cdd 50%,#ff5d6c66 85%,transparent);box-shadow:0 0 12px #ff5d6c88;z-index:4;pointer-events:none;transition:top .5s}
 .laser::before,.laser::after{content:'';position:absolute;left:-3px;width:8px;height:8px;border-radius:50%;background:#ff5d6c;box-shadow:0 0 10px #ff5d6c}
 .laser::before{top:-3px}.laser::after{bottom:-3px}
+/* 碎剑(失败档) */
+#sword-zone.shatter #sword-svg{animation:sshake .55s ease-out}
+@keyframes sshake{0%{filter:drop-shadow(0 0 16px #ff5d6c)}25%{transform:translateX(calc(-50% - 12px)) rotate(-4deg)}50%{transform:translateX(calc(-50% + 9px)) rotate(3deg)}75%{transform:translateX(calc(-50% - 5px))}100%{transform:translateX(-50%)}}
+.frag{position:absolute;width:11px;height:9px;background:linear-gradient(135deg,#c9d4e0,#7a848f);clip-path:polygon(0 100%,50% 0,100% 100%);z-index:20;pointer-events:none;animation:fragfly .9s ease-in forwards}
+@keyframes fragfly{to{transform:translate(var(--fx),var(--fy)) rotate(200deg);opacity:0}}
 
 /* ===== 女铁匠(素材槽:H3 视频帧就位前用占位 SVG) ===== */
 #girl{flex:1;width:100%;min-height:0;z-index:6;pointer-events:none;display:flex;align-items:flex-end;justify-content:center;padding:0 6px 8px}
@@ -221,7 +224,7 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
       <div class="pbar good" id="pb-good"><div class="pfill"></div><div class="ptxt"><span class="nm">成功 ×2</span><span class="pct">18%</span></div></div>
       <div class="pbar keep" id="pb-keep"><div class="pfill"></div><div class="ptxt"><span class="nm">维持 ×1</span><span class="pct">30%</span></div></div>
       <div class="pbar dmg" id="pb-dmg"><div class="pfill"></div><div class="ptxt"><span class="nm">损坏 剑损</span><span class="pct">20%</span></div></div>
-      <div class="pbar fail" id="pb-fail"><div class="pfill"></div><div class="ptxt"><span class="nm">失败 键碎</span><span class="pct">30%</span></div></div>
+      <div class="pbar fail" id="pb-fail"><div class="pfill"></div><div class="ptxt"><span class="nm">失败 剑碎</span><span class="pct">30%</span></div></div>
     </div></div>
    <div id="mid">
    <div id="left-col">
@@ -306,7 +309,7 @@ const SWORDS=[
 
 /* ================= 状态 ================= */
 const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0,
- rentLeft:CFG.RENT_START,rentTimer:null,brokenLane:null,dmgLv:0,
+ rentLeft:CFG.RENT_START,rentTimer:null,dmgLv:0,
  frenzyActive:false,frenzyEnd:0,frenzyTimer:null,pendingQuench:false,
  hits:0,strikes:0,            // 本题:敲对数/已敲数
  totHits:0,totStrikes:0,      // 全局统计
@@ -594,13 +597,28 @@ function toast(msg,ms=1800){const t=$('toast');t.textContent=msg;t.classList.add
 
 /* ================= 房租已取消(2026-10-17 大爷令) ================= */
 
-/* ================= 碎键(失败档) ================= */
-function breakLane(i){S.brokenLane=i;const el=document.querySelector(`.lane[data-i="${i}"]`);if(el)el.classList.add('broken')}
-function repairLanes(){S.brokenLane=null;document.querySelectorAll('.lane.broken').forEach(el=>el.classList.remove('broken'))}
+/* ================= 碎剑(失败档,2026-10-17 大爷令:碎的是剑不是键) ================= */
+function swordBreak(){
+ const old=SWORDS[S.tier];
+ if(S.tier>0)S.tier-=1;
+ updateSword();hud();
+ const z=$('sword-zone');
+ z.classList.remove('shatter');void z.offsetWidth;z.classList.add('shatter');
+ const zr=z.getBoundingClientRect(),ar=app.getBoundingClientRect(),k=ar.width/app.offsetWidth;
+ for(let i=0;i<9;i++){
+  const f=document.createElement('div');f.className='frag';
+  f.style.left=((zr.left-ar.left)/k+40+(Math.random()*80-40))+'px';
+  f.style.top=((zr.top-ar.top)/k+Math.random()*(zr.height/k))+'px';
+  f.style.setProperty('--fx',(Math.random()*160-80)+'px');
+  f.style.setProperty('--fy',(Math.random()*-130-30)+'px');
+  app.appendChild(f);setTimeout(()=>f.remove(),950);
+ }
+ toast(`💥 ${old.name} 碎了!退回 ${SWORDS[S.tier].name}`,2400);
+}
 
 /* ================= 题目 ================= */
 function genQuestion(){
- const sw=SWORDS[S.tier];const pool=NOTES.slice(0,sw.span).filter((_,idx)=>idx!==S.brokenLane);
+ const sw=SWORDS[S.tier];const pool=NOTES.slice(0,sw.span);
  const q=[];let prev=-1;
  for(let i=0;i<sw.qlen;i++){
   let idx;
@@ -637,7 +655,6 @@ function playQuestion(){
 /* ================= 敲击判定(音高+顺序;错≠失败,只改概率) ================= */
 function hitLane(i){
  if(S.phase!=='input')return;
- if(S.brokenLane===i){toast('💥 这个键碎了,敲不了!');clank(false);return}
  const nt=NOTES[i];
  tone(midiF(nt.m),0,.4);
  const laneEl=document.querySelector(`.lane[data-i="${i}"]`);
@@ -699,7 +716,7 @@ function endQuestion(){
  $('quiz-hint').textContent='敲完了!点水桶上方按钮淬火';
 }
 function quenchPhase(){
- S.phase='quench';repairLanes();hud();
+ S.phase='quench';hud();
  const acc=S.strikes>0?S.hits/S.strikes:0;
  const probs=computeProbs(acc);
  const result=rollTier(probs);
@@ -711,7 +728,7 @@ function quenchPhase(){
  const strip=$('roll-strip');strip.innerHTML='';
  const keys=['great','good','keep','dmg','fail'];
  keys.forEach(k=>{const d=document.createElement('div');d.className='rslot '+k+' rolling';
-  const m=k==='dmg'?'剑损':k==='fail'?'键碎':'×'+CFG.TIERS[k].mult;
+  const m=k==='dmg'?'剑损':k==='fail'?'剑碎':'×'+CFG.TIERS[k].mult;
   d.innerHTML=`<div class="rn">${CFG.TIERS[k].name}</div><div class="rm">${m}</div>`;strip.appendChild(d)});
  sizzle();
  $('quench-steam').classList.remove('puff');void $('quench-steam').offsetWidth;$('quench-steam').classList.add('puff');
@@ -726,14 +743,14 @@ function quenchPhase(){
    :result==='dmg'
    ?`<span style="color:#ffb87a">💥 损坏!剑受损,铸成价值 -10%…</span>`
    :result==='fail'
-   ?`<span style="color:#ff9a8a">❌ 失败!键碎了…💧${S.potential} 全洒!</span>`
+   ?`<span style="color:#ff9a8a">❌ 失败!剑碎了!💧${S.potential} 全洒!</span>`
    :`<span style="color:#a8f0a0">${t.name}!💧${S.potential} × ${t.mult} = 🪙${payout}</span>`;
   tone(midiF(result==='great'?84:(result==='dmg'||result==='fail')?55:72),0,.5,.26);
   if(result==='great')setTimeout(()=>[0,4,7,12].forEach((s,i)=>tone(midiF(72+s),i*.09,.35,.22)),200);
   // 结算
   S.gold+=payout;S.value+=payout;bucketQuenchVisual();S.potential=0;
   if(result==='dmg'){S.dmgLv=Math.min(5,S.dmgLv+1);toast(`⚠ 剑受损!铸成价值 -${S.dmgLv*10}%`,2200);hud()}
-  if(result==='fail'){breakLane(S.q[Math.floor(Math.random()*S.q.length)])}
+  if(result==='fail'){swordBreak()}
   S.hits=0;S.strikes=0;
   hud();
   setTimeout(()=>{
@@ -807,7 +824,7 @@ function gameOver(){
 }
 function restart(){
  S.tier=0;S.value=0;S.potential=0;S.charge=0;S.gold=0;S.forged=0;S.frenzies=0;S.qCount=0;
- S.totHits=0;S.totStrikes=0;S.hits=0;S.strikes=0;S.dmgLv=0;repairLanes();
+ S.totHits=0;S.totStrikes=0;S.hits=0;S.strikes=0;S.dmgLv=0;
  S.frenzyActive=false;S.pendingQuench=false;app.classList.remove('frenzy');
  clearInterval(S.frenzyTimer);
  startForge();
@@ -848,7 +865,7 @@ $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音 · 淬�
  `- 听题目(音序),<b>按顺序</b>在音道上敲出这些音<br>
   · 敲对 <b>+1💧潜在钱</b>;敲错<b>剑不碎</b>,只把淬火档位概率变差<br>
   · 一题敲完 → <b>淬火</b>:roll 档位,潜在钱 × 倍率变金币<br>
-  · 五档:<b>大成功×4 / 成功×2 / 维持×1 / 损坏(剑损-10%) / 失败(键碎)</b>,敲得越正确概率越好<br>
+  · 五档:<b>大成功×4 / 成功×2 / 维持×1 / 损坏(剑损-10%) / 失败(剑碎退档)</b>,敲得越正确概率越好<br>
   · 背景是五线谱:每个音的音符位置 = 它在谱上的真实位置,玩着玩着就认识谱了<br>
   · 连对 ${CFG.FRENZY_NEED} 击 → <b>⚡超神 ${CFG.FRENZY_SECS}s</b>:敲对每击 +${CFG.FRENZY_GOLD}🪙、敲错零惩罚,窗口结束大淬火一把结<br>
   · 每${CFG.GROW_PER}题存活 → 剑长大一档(音域更宽)<br>

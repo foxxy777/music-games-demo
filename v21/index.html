@@ -518,7 +518,7 @@ function toApp(cx,cy){const r=app.getBoundingClientRect(),k=r.width/app.offsetWi
 let lastPt=null,hideTm=null;
 function placeHammer(cx,cy){
  const p=toApp(cx,cy);lastPt={x:p.x,y:p.y,t:Date.now()};
- hammerEl.style.left=(p.x-14)+'px';hammerEl.style.top=(p.y-72)+'px';
+ hammerEl.style.left=(p.x-24)+'px';hammerEl.style.top=(p.y-39)+'px';
  hammerEl.style.opacity=1;clearTimeout(hideTm);
 }
 app.addEventListener('pointermove',e=>{placeHammer(e.clientX,e.clientY)},{passive:true});
@@ -526,8 +526,8 @@ app.addEventListener('pointerdown',e=>{placeHammer(e.clientX,e.clientY)});
 app.addEventListener('pointerup',e=>{if(e.pointerType!=='mouse')hideTm=setTimeout(()=>hammerEl.style.opacity=0,600)});
 app.addEventListener('pointerleave',()=>{hammerEl.style.opacity=0});
 app.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')hammerEl.style.opacity=1});
-function swingHammer(x,y){ // x,y 相对 app
- hammerEl.style.left=(x-14)+'px';hammerEl.style.top=(y-72)+'px';
+function swingHammer(x,y){ // x,y 相对 app;偏移=锤头砸击面中心(SVG 23.9,38.7)对准指针
+ hammerEl.style.left=(x-24)+'px';hammerEl.style.top=(y-39)+'px';
  hammerEl.classList.remove('swing');void hammerEl.offsetWidth;hammerEl.classList.add('swing');
 }
 

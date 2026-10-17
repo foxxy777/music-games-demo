@@ -82,6 +82,15 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #quiz-hint.fz{color:#ffb84d;font-weight:bold}
 
 /* ===== 铁砧区(音道+剑) ===== */
+#main{flex:1;display:flex;min-height:0}
+#left-col{width:43%;flex:none;display:flex;flex-direction:column;position:relative;border-right:2px solid #4a3320;background:linear-gradient(180deg,#150d07 0%,#0d0805 100%)}
+#bucket-zone{flex:0 0 42%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:12px 10px 6px;position:relative}
+#bucket{width:76%;max-width:235px;flex:none;filter:drop-shadow(0 8px 14px #000a)}
+#bucket-cap{font-size:12px;color:#7fb8e8;letter-spacing:1px;text-shadow:0 1px 2px #000}
+#bucket-num{font-size:13px;color:#a8dcff;font-weight:600;text-shadow:0 1px 2px #000}
+#bucket-water{transition:all .3s}
+#bucket-water-glow{transition:all .3s}
+.flydrop{position:absolute;z-index:36;pointer-events:none;font-size:19px;opacity:.95;transition:transform .55s cubic-bezier(.3,-.15,.65,1.05);text-shadow:0 2px 4px #0008}
 #anvil{flex:1;display:flex;position:relative;overflow:hidden;cursor:none}
 #lanes{flex:1;display:flex;flex-direction:column-reverse;padding:10px 14px 16px;gap:4px}
 .lane{flex:1;display:flex;align-items:center;border-radius:9px;border:1.5px solid #ffffff10;background:linear-gradient(90deg,#ffffff04,#ffffff08 50%,#ffffff04);transition:background .12s,border-color .12s,filter .2s;position:relative;min-height:0}
@@ -102,7 +111,7 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .laser::before{left:24px}.laser::after{right:24px}
 
 /* ===== 女铁匠(素材槽:H3 视频帧就位前用占位 SVG) ===== */
-#girl{position:absolute;right:10px;bottom:96px;width:216px;height:400px;z-index:6;pointer-events:none;display:flex;align-items:flex-end;justify-content:center}
+#girl{flex:1;width:100%;min-height:0;z-index:6;pointer-events:none;display:flex;align-items:flex-end;justify-content:center;padding:0 6px 8px}
 #girl .gph{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;position:relative;transition:transform .1s}
 #girl .gph.idle{animation:gbreath 2.6s ease-in-out infinite}
 #girl .gph.strike{animation:gbounce .38s ease-out}
@@ -127,7 +136,7 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 @keyframes floatup{0%{opacity:0;transform:translateY(6px)}15%{opacity:1}100%{opacity:0;transform:translateY(-46px)}}
 
 /* ===== 淬火面板 ===== */
-#quench{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:520px;z-index:45;display:none;flex-direction:column;align-items:center;gap:10px;background:linear-gradient(180deg,#0e1420f2,#0a0e18f2);border:2px solid #4d8dd8aa;border-radius:16px;padding:18px 26px 20px;box-shadow:0 0 44px #4d8dd844}
+#quench{position:absolute;left:50%;top:32%;transform:translate(-50%,-50%);width:min(94%,346px);z-index:45;display:none;flex-direction:column;align-items:center;gap:8px;background:linear-gradient(180deg,#0e1420f2,#0a0e18f2);border:2px solid #4d8dd8aa;border-radius:16px;padding:14px 18px 16px;box-shadow:0 0 44px #4d8dd844}
 #quench.on{display:flex;animation:qin .3s ease-out}
 @keyframes qin{0%{opacity:0;transform:translate(-50%,-46%) scale(.9)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 #quench-title{font-size:21px;font-weight:900;color:#bfe3ff;letter-spacing:5px;text-shadow:0 0 16px #4d8dd8aa}
@@ -202,20 +211,41 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
     <div id="slots"></div>
     <div id="quiz-hint">点击「开始锻造」点火开炉</div>
   </div>
-  <div id="anvil">
+  <div id="main">
+   <div id="left-col">
+    <div id="bucket-zone">
+      <div id="bucket-cap">💧 淬火桶 · 敲击积累水滴</div>
+      <svg id="bucket" viewBox="0 0 200 230">
+        <defs><clipPath id="bkc"><path d="M36,42 L32,200 Q100,222 168,200 L164,42 Q100,56 36,42"/></clipPath></defs>
+        <path d="M36,42 L32,200 Q100,222 168,200 L164,42" fill="#5c3d20" stroke="#2f1f0e" stroke-width="3"/>
+        <path d="M78,44 L75,214" stroke="#3f2a14" stroke-width="2" fill="none"/>
+        <path d="M122,44 L125,214" stroke="#3f2a14" stroke-width="2" fill="none"/>
+        <g clip-path="url(#bkc)">
+          <rect id="bucket-water" x="20" y="204" width="160" height="0" fill="#2f8fda" opacity="0.88"/>
+          <rect id="bucket-water-glow" x="20" y="202" width="160" height="3" fill="#a8dcff" opacity="0"/>
+        </g>
+        <path d="M33,110 Q100,128 167,110" fill="none" stroke="#8d949e" stroke-width="7"/>
+        <path d="M31,165 Q100,183 169,165" fill="none" stroke="#8d949e" stroke-width="7"/>
+        <ellipse cx="100" cy="42" rx="64" ry="13" fill="none" stroke="#8a5a2e" stroke-width="5"/>
+      </svg>
+      <div id="bucket-num">💧 ×<span id="bucket-drops">0</span></div>
+    </div>
+    <div id="girl"><div class="gph idle" id="girl-ph"></div></div>
+    <div id="quench">
+      <div id="quench-steam">💨💨💨</div>
+      <div id="quench-title">🔥 淬 火</div>
+      <div id="quench-sub">概率付诸实践…</div>
+      <div id="roll-strip"></div>
+      <div id="quench-result"></div>
+    </div>
+   </div>
+   <div id="anvil">
     <div id="lanes"></div>
     <div id="laser-top" class="laser"></div>
     <div id="laser-bot" class="laser"></div>
     <div id="sword-glow"></div>
     <div id="sword-zone"><svg id="sword-svg" width="120" height="600" viewBox="0 0 120 600"></svg></div>
-    <div id="girl"><div class="gph idle" id="girl-ph"></div></div>
-  </div>
-  <div id="quench">
-    <div id="quench-steam">💨💨💨</div>
-    <div id="quench-title">🔥 淬 火</div>
-    <div id="quench-sub">概率付诸实践…</div>
-    <div id="roll-strip"></div>
-    <div id="quench-result"></div>
+   </div>
   </div>
   <div id="forge-flash"></div>
   <div id="toast"></div>
@@ -466,6 +496,36 @@ function swingHammer(x,y){ // x,y 相对 app
  hammerEl.classList.remove('swing');void hammerEl.offsetWidth;hammerEl.classList.add('swing');
 }
 
+/* ================= 淬火水桶(左上,水滴可视化) ================= */
+CFG.BUCKET_CAP=10;
+function updateBucket(){
+ const h=Math.min(1,S.potential/CFG.BUCKET_CAP)*160;
+ $('bucket-water').setAttribute('y',204-h);
+ $('bucket-water').setAttribute('height',h);
+ $('bucket-water-glow').setAttribute('y',Math.max(0,202-h));
+ $('bucket-water-glow').setAttribute('opacity',h>3?0.9:0);
+ $('bucket-drops').textContent=S.potential;
+}
+function bucketPt(){ // 桶口中心(app 坐标,缩放安全)
+ const r=$('bucket').getBoundingClientRect(),a=app.getBoundingClientRect(),k=a.width/app.offsetWidth;
+ return {x:(r.left-a.left)/k+r.width/k/2,y:(r.top-a.top)/k+16};
+}
+function flyDrop(hx,hy){
+ const p=bucketPt(),d=document.createElement('div');d.className='flydrop';d.textContent='💧';
+ d.style.left=hx+'px';d.style.top=hy+'px';app.appendChild(d);
+ requestAnimationFrame(()=>{d.style.transform=`translate(${p.x-hx}px,${p.y-hy}px) scale(.5)`});
+ setTimeout(()=>d.remove(),640);
+}
+function bucketQuenchVisual(){
+ $('bucket-water').setAttribute('height',0);$('bucket-water').setAttribute('y',204);
+ $('bucket-water-glow').setAttribute('opacity',0);
+ const p=bucketPt();
+ for(let i=0;i<7;i++){const s=document.createElement('div');s.className='spark';s.textContent='💧';
+  const ang=-Math.PI/2+(Math.random()-.5)*1.7,v=55+Math.random()*75;
+  s.style.setProperty('--dx',Math.cos(ang)*v+'px');s.style.setProperty('--dy',Math.sin(ang)*v+'px');
+  s.style.left=p.x+'px';s.style.top=p.y+'px';app.appendChild(s);setTimeout(()=>s.remove(),720);}
+}
+
 /* ================= HUD ================= */
 function hud(){
  const sw=SWORDS[S.tier];
@@ -474,7 +534,7 @@ function hud(){
  $('value-fill').style.width=Math.max(0,Math.min(100,S.value/sw.base*100))+'%';
  $('value-num').textContent=`${Math.round(S.value)} / ${sw.base}(淬火收益)`;
  $('gold-num').textContent=S.gold;
- $('pot-num').textContent=S.potential;
+ $('pot-num').textContent=S.potential;updateBucket();
  // 充能
  const cb=$('charge-bar');cb.innerHTML='';
  for(let i=0;i<CFG.FRENZY_NEED;i++){const c=document.createElement('div');
@@ -562,6 +622,7 @@ function hitLane(i){
   clank(true);
   S.hits++;S.totHits++;
   S.potential+=CFG.POT_PER_HIT;
+  flyDrop(hx,hy);
   S.marks[S.pos]='hit';
   laneEl.classList.add('flash-hit');setTimeout(()=>laneEl.classList.remove('flash-hit'),260);
   setGirl('strike',380);
@@ -632,7 +693,7 @@ function quenchPhase(){
   tone(midiF(result==='great'?84:result==='poor'?55:72),0,.5,.26);
   if(result==='great')setTimeout(()=>[0,4,7,12].forEach((s,i)=>tone(midiF(72+s),i*.09,.35,.22)),200);
   // 结算
-  S.gold+=payout;S.value+=payout;S.potential=0;
+  S.gold+=payout;S.value+=payout;bucketQuenchVisual();S.potential=0;
   S.hits=0;S.strikes=0;
   hud();
   setTimeout(()=>{

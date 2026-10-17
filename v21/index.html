@@ -38,21 +38,22 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .ch-cell.on{background:linear-gradient(180deg,#ffb84d,#ff8a2a);box-shadow:0 0 8px #ffb84d88}
 .ch-cell.fz{background:linear-gradient(180deg,#fff3b0,#ffd54f);animation:frpulse .4s infinite}
 #frenzy-timer{font-size:11px;color:#ffb84d;font-weight:bold;text-align:center;min-height:14px}
-/* 档位概率条 */
-#probs-wrap{flex:none;display:flex;flex-direction:column;gap:4px;padding:10px 10px 2px}
-#probs-label{font-size:10px;color:#c9a06a;flex:none;writing-mode:horizontal-tb}
-.pbar{height:22px;border:1px solid #4a3320;border-radius:6px;position:relative;overflow:hidden;background:#1a110a;transition:all .3s}
+/* 档位概率条(5档,hud下方横跨条内) */
+#probs-strip{flex:1;display:flex;gap:5px;height:44px;min-width:0}
+.pbar{flex:1;height:44px;border:1px solid #4a3320;border-radius:7px;position:relative;overflow:hidden;background:#1a110a;transition:all .3s;min-width:0}
 .pbar .pfill{position:absolute;left:0;bottom:0;width:100%;transition:height .35s}
 .pbar .ptxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;line-height:1.15;font-weight:bold;text-shadow:0 1px 2px #000;z-index:2}
-.pbar .ptxt .pct{font-size:11px}
+.pbar .ptxt .pct{font-size:10px}
 .pbar.great .pfill{background:linear-gradient(180deg,#ffd54f66,#c9822a88)}
 .pbar.great .ptxt{color:#ffd54f}
 .pbar.good .pfill{background:linear-gradient(180deg,#7ddf6a55,#3a8a2a88)}
 .pbar.good .ptxt{color:#a8f0a0}
-.pbar.normal .pfill{background:linear-gradient(180deg,#c9c9c944,#8a8a8a66)}
-.pbar.normal .ptxt{color:#d8d8d8}
-.pbar.poor .pfill{background:linear-gradient(180deg,#ff5d6c55,#8a1a2688)}
-.pbar.poor .ptxt{color:#ff9a8a}
+.pbar.keep .pfill{background:linear-gradient(180deg,#c9c9c944,#8a8a8a66)}
+.pbar.keep .ptxt{color:#d8d8d8}
+.pbar.dmg .pfill{background:linear-gradient(180deg,#ff9d4d55,#8a4a1a88)}
+.pbar.dmg .ptxt{color:#ffb87a}
+.pbar.fail .pfill{background:linear-gradient(180deg,#ff5d6c55,#8a1a2688)}
+.pbar.fail .ptxt{color:#ff9a8a}
 #hud-row3{display:flex;gap:8px;margin-top:7px;align-items:center}
 .btn{padding:5px 16px;background:#33241374;border:1px solid #7a5830;border-radius:9px;color:#f3e9d8;font-size:13px;cursor:pointer;transition:all .15s}
 .btn:hover{border-color:#c9a06a;background:#4a332074}
@@ -84,7 +85,8 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 /* ===== 铁砧区(音道+剑) ===== */
 #main{flex:1;display:flex;flex-direction:column;min-height:0}
 #mid{flex:1;display:flex;min-height:0}
-#acc-strip{flex:0 0 48px;display:flex;align-items:center;justify-content:center;gap:12px;background:linear-gradient(180deg,#2a1a06,#1a1004);border-bottom:2px solid #c9a06a77}
+#acc-strip{flex:0 0 56px;display:flex;align-items:center;justify-content:flex-start;gap:16px;padding:0 14px;background:linear-gradient(180deg,#2a1a06,#1a1004);border-bottom:2px solid #c9a06a77}
+#acc-strip .acc-left{display:flex;align-items:center;gap:8px;flex:none}
 #acc-strip .lab{font-size:15px;color:#c9a06a;letter-spacing:2px}
 #acc-big{font-size:30px;color:#ffd54f;font-weight:800;text-shadow:0 0 16px #ffd54f55;font-family:inherit}
 #acc-detail2{font-size:12px;color:#c9a06a}
@@ -100,7 +102,7 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #bucket-water-glow{transition:all .3s}
 .flydrop{position:absolute;z-index:36;pointer-events:none;font-size:19px;opacity:.95;transition:transform .55s cubic-bezier(.3,-.15,.65,1.05);text-shadow:0 2px 4px #0008}
 #anvil{flex:1;display:flex;position:relative;overflow:hidden;cursor:none}
-#lanes{flex:1;display:flex;flex-direction:row;padding:12px 16px;gap:4px}
+#lanes{flex:1;display:flex;flex-direction:row;padding:12px 16px;gap:4px;position:relative}
 .lane{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:8px;border-radius:9px;border:1.5px solid #ffffff10;background:linear-gradient(180deg,#ffffff04,#ffffff08 50%,#ffffff04);transition:background .12s,border-color .12s,filter .2s;position:relative;min-width:0}
 .lane .ln{flex:none;text-align:center;font-size:15px;font-weight:bold;text-shadow:0 0 8px currentColor}
 .lane .lk{flex:none;text-align:center;font-size:10px;opacity:.55}
@@ -109,6 +111,15 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .lane.cov .ln{opacity:1}
 .lane.flash-hit{background:linear-gradient(90deg,#5dff7a30,#5dff7a4d 50%,#5dff7a30)!important;border-color:#5dff7a!important}
 .lane.flash-miss{background:linear-gradient(90deg,#ff5d6c30,#ff5d6c4d 50%,#ff5d6c30)!important;border-color:#ff5d6c!important}
+.lane.broken{filter:grayscale(.9) brightness(.4) contrast(1.4);animation:crackshake .4s ease-out}
+.lane.broken::after{content:'✖';position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);font-size:22px;color:#ff5d6c;text-shadow:0 0 10px #ff5d6c;pointer-events:none}
+@keyframes crackshake{0%{transform:translate(0)}20%{transform:translate(-4px,2px)}40%{transform:translate(4px,-2px)}60%{transform:translate(-3px,0)}80%{transform:translate(2px,1px)}100%{transform:translate(0)}}
+/* 五线谱底色 */
+.staff-line{position:absolute;left:1.5%;right:1.5%;height:1.6px;background:#d8c9a844;pointer-events:none;z-index:0}
+.staff-line.xl{background:#d8c9a822;border-top:1px dashed #d8c9a855;background:none}
+.staff-clef{position:absolute;left:4px;font-size:58px;line-height:1;color:#d8c9a8aa;font-family:'Noto Music','Segoe UI Symbol','Bravura',serif;z-index:0;pointer-events:none;text-shadow:0 0 8px #d8c9a833}
+.note-head{position:absolute;left:50%;width:15px;height:10.5px;border-radius:50%;transform:translate(-50%,-50%) rotate(-16deg);z-index:1;pointer-events:none;box-shadow:0 1px 3px #0009,inset -2px -1px 2px #0005}
+.nh-stem{position:absolute;right:-1.5px;top:7px;width:1.8px;height:34px;background:inherit;opacity:.9}
 /* 剑 */
 #sword-zone{position:absolute;top:50%;left:0;right:0;height:150px;transform:translateY(-50%);pointer-events:none;z-index:5}
 #sword-svg{position:absolute;top:50%;left:0;transform:translateY(-50%);transition:width .5s,left .5s;filter:drop-shadow(0 0 12px #ffb84d33);height:120px}
@@ -153,11 +164,11 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .rslot{width:110px;height:84px;border:2px solid #4a3320;border-radius:10px;background:#1a110a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all .12s;position:relative}
 .rslot .rn{font-size:15px;font-weight:900}
 .rslot .rm{font-size:11px;color:#c9a06a}
-.rslot.great .rn{color:#ffd54f}.rslot.good .rn{color:#a8f0a0}.rslot.normal .rn{color:#d8d8d8}.rslot.poor .rn{color:#ff9a8a}
+.rslot.great .rn{color:#ffd54f}.rslot.good .rn{color:#a8f0a0}.rslot.keep .rn{color:#d8d8d8}.rslot.dmg .rn{color:#ffb87a}.rslot.fail .rn{color:#ff9a8a}
 .rslot.rolling{animation:rroll .38s linear infinite}
 @keyframes rroll{0%{transform:translateY(0)}50%{transform:translateY(-7px)}100%{transform:translateY(0)}}
 .rslot.winner{border-color:currentColor;box-shadow:0 0 26px currentColor;transform:scale(1.13);z-index:2}
-.rslot.winner.great{color:#ffd54f}.rslot.winner.good{color:#a8f0a0}.rslot.winner.normal{color:#d8d8d8}.rslot.winner.poor{color:#ff9a8a}
+.rslot.winner.great{color:#ffd54f}.rslot.winner.good{color:#a8f0a0}.rslot.winner.keep{color:#d8d8d8}.rslot.winner.dmg{color:#ffb87a}.rslot.winner.fail{color:#ff9a8a}
 #quench-steam{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:34px;opacity:0;pointer-events:none}
 #quench-steam.puff{animation:steampuff 1.1s ease-out}
 @keyframes steampuff{0%{opacity:0;transform:translateX(-50%) translateY(8px) scale(.6)}25%{opacity:.95}100%{opacity:0;transform:translateX(-50%) translateY(-46px) scale(1.5)}}
@@ -184,7 +195,6 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 <body>
 <div id="stage"><div id="app">
   <div id="hud">
-    <div id="debt-tag">🏚️ 房租 <span id="rent-num">5:00</span></div>
     <div id="sword-info">
       <div id="sword-name"><span id="sword-emoji">🗡️</span><span id="sword-title">生锈匕首</span><span id="tier-tag">Tier 1/8</span></div>
       <div id="value-wrap"><div id="value-bar"><div id="value-fill"></div><div id="value-num">0</div></div></div>
@@ -206,16 +216,15 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
     <div id="quiz-hint">点击「开始锻造」点火开炉</div>
   </div>
   <div id="main">
-   <div id="acc-strip"><span class="lab">🎯 正确率</span><b id="acc-big">—</b><span id="acc-detail2"></span></div>
+   <div id="acc-strip"><div class="acc-left"><span class="lab">🎯 正确率</span><b id="acc-big">—</b><span id="acc-detail2"></span></div><div id="probs-strip">
+      <div class="pbar great" id="pb-great"><div class="pfill"></div><div class="ptxt"><span class="nm">大成功 ×4</span><span class="pct">2%</span></div></div>
+      <div class="pbar good" id="pb-good"><div class="pfill"></div><div class="ptxt"><span class="nm">成功 ×2</span><span class="pct">18%</span></div></div>
+      <div class="pbar keep" id="pb-keep"><div class="pfill"></div><div class="ptxt"><span class="nm">维持 ×1</span><span class="pct">30%</span></div></div>
+      <div class="pbar dmg" id="pb-dmg"><div class="pfill"></div><div class="ptxt"><span class="nm">损坏 剑损</span><span class="pct">20%</span></div></div>
+      <div class="pbar fail" id="pb-fail"><div class="pfill"></div><div class="ptxt"><span class="nm">失败 键碎</span><span class="pct">30%</span></div></div>
+    </div></div>
    <div id="mid">
    <div id="left-col">
-    <div id="probs-wrap">
-      <div id="probs-label">淬火档位概率</div>
-      <div class="pbar great" id="pb-great"><div class="pfill"></div><div class="ptxt"><span class="nm">大成功 ×4</span><span class="pct">8%</span></div></div>
-      <div class="pbar good" id="pb-good"><div class="pfill"></div><div class="ptxt"><span class="nm">成功 ×2</span><span class="pct">30%</span></div></div>
-      <div class="pbar normal" id="pb-normal"><div class="pfill"></div><div class="ptxt"><span class="nm">普通 ×1</span><span class="pct">42%</span></div></div>
-      <div class="pbar poor" id="pb-poor"><div class="pfill"></div><div class="ptxt"><span class="nm">失败 ×½</span><span class="pct">20%</span></div></div>
-    </div>
     <div id="bucket-zone">
       <button id="quench-btn">🔥 淬 火</button>
       <div id="bucket-cap">💧 淬火桶 · 敲击积累水滴</div>
@@ -271,8 +280,8 @@ const CFG={
  FRENZY_GOLD:2,       // 超神内敲对立即得金/击
  POT_PER_HIT:1,       // 敲对积累潜在钱/击
  TIERS:{great:{name:'大成功',mult:4,cls:'great'},good:{name:'成功',mult:2,cls:'good'},
-        normal:{name:'普通',mult:1,cls:'normal'},poor:{name:'失败',mult:.5,cls:'poor'}},
- PROB:{great0:.02,great1:.45, good0:.18,good1:.35, normal0:.40,normal1:.18, poor0:.40,poor1:.02},
+        keep:{name:'维持',mult:1,cls:'keep'},dmg:{name:'损坏',mult:0,cls:'dmg'},fail:{name:'失败',mult:0,cls:'fail'}},
+ PROB:{great0:.02,great1:.45, good0:.18,good1:.33, keep0:.30,keep1:.15, dmg0:.20,dmg1:.05, fail0:.30,fail1:.02},
  RENT_START:300,      // 房租秒数
  RENT_PER_FORGE:75,   // 每铸成一把 +秒
 };
@@ -297,7 +306,7 @@ const SWORDS=[
 
 /* ================= 状态 ================= */
 const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0,
- rentLeft:CFG.RENT_START,rentTimer:null,
+ rentLeft:CFG.RENT_START,rentTimer:null,brokenLane:null,dmgLv:0,
  frenzyActive:false,frenzyEnd:0,frenzyTimer:null,pendingQuench:false,
  hits:0,strikes:0,            // 本题:敲对数/已敲数
  totHits:0,totStrikes:0,      // 全局统计
@@ -310,17 +319,19 @@ function lerp(a,b,t){return a+(b-a)*t}
 function computeProbs(acc){ // acc∈[0,1]
  let g=lerp(CFG.PROB.great0,CFG.PROB.great1,Math.pow(acc,1.6)),
      go=lerp(CFG.PROB.good0,CFG.PROB.good1,acc),
-     n=lerp(CFG.PROB.normal0,CFG.PROB.normal1,acc),
-     p=lerp(CFG.PROB.poor0,CFG.PROB.poor1,Math.pow(acc,2));
- const sum=g+go+n+p;
- return {great:g/sum*100,good:go/sum*100,normal:n/sum*100,poor:p/sum*100};
+     n=lerp(CFG.PROB.keep0,CFG.PROB.keep1,acc),
+     dm=lerp(CFG.PROB.dmg0,CFG.PROB.dmg1,Math.pow(acc,1.8)),
+     f=lerp(CFG.PROB.fail0,CFG.PROB.fail1,Math.pow(acc,2.2));
+ const sum=g+go+n+dm+f;
+ return {great:g/sum*100,good:go/sum*100,keep:n/sum*100,dmg:dm/sum*100,fail:f/sum*100};
 }
 function rollTier(probs){
  const r=Math.random()*100;
  if(r<probs.great)return 'great';
  if(r<probs.great+probs.good)return 'good';
- if(r<probs.great+probs.good+probs.normal)return 'normal';
- return 'poor';
+ if(r<probs.great+probs.good+probs.keep)return 'keep';
+ if(r<probs.great+probs.good+probs.keep+probs.dmg)return 'dmg';
+ return 'fail';
 }
 function curAcc(){return S.strikes>0?S.hits/S.strikes:(S.totStrikes>0?S.totHits/S.totStrikes:.5)}
 
@@ -349,17 +360,38 @@ addEventListener('resize',fit);fit();
 
 function buildLanes(){
  const box=$('lanes');box.innerHTML='';
+ // 五线谱底:级0=C4下加一线..级14=C6上加二线(全音阶逐级);线=偶数级
+ const STAFF_TOP=11,STAFF_H=80; // %:谱面顶部/高度(顶部留出音名区)
+ [0,2,4,6,8,10,12,14].forEach(g=>{ // 线:C4,E4,G4,B4,D5,F5,A5,C6
+  const l=document.createElement('div');l.className='staff-line'+(g===0||g===14?' xl':'');
+  l.style.top=(STAFF_TOP+(14-g)/14*STAFF_H)+'%';box.appendChild(l)});
+ const clef=document.createElement('div');clef.className='staff-clef';clef.textContent='𝄞';
+ clef.style.top=(STAFF_TOP+(14-4)/14*STAFF_H-17)+'%';box.appendChild(clef); // G4线=谱号中心
  NOTES.forEach((nt,i)=>{
   const d=document.createElement('div');d.className='lane';d.dataset.i=i;
   const c=colorOf(nt.n);
   d.innerHTML=`<div class="ln" style="color:${c}">${nt.n}</div><div class="lk" style="color:${c}">${nt.d}</div>`;
   box.appendChild(d);
  });
+ // 符头放 lanes 坐标系(与谱线同一坐标系,零错位);需 layout 后定位
+ requestAnimationFrame(()=>{
+  NOTES.forEach((nt,i)=>{
+   const laneEl=box.querySelector(`.lane[data-i="${i}"]`);if(!laneEl)return;
+   const nh=document.createElement('div');nh.className='note-head';nh.dataset.i=i;
+   nh.style.background=colorOf(nt.n);
+   nh.style.left=(laneEl.offsetLeft+laneEl.offsetWidth/2)+'px';
+   nh.style.top=(STAFF_TOP+(14-i)/14*STAFF_H)+'%';
+   nh.innerHTML='<div class="nh-stem"></div>';
+   nh.querySelector('.nh-stem').style.background=colorOf(nt.n);
+   box.appendChild(nh);
+  });
+ });
 }
 function updateSword(){
  const sw=SWORDS[S.tier],first=0,last=sw.span-1;
  const lanesEls=[...document.querySelectorAll('.lane')];
  lanesEls.forEach((el,i)=>{el.classList.toggle('cov',i>=first&&i<=last);el.classList.toggle('dim',i<first||i>last)});
+ document.querySelectorAll('.note-head').forEach(nh=>{const i=+nh.dataset.i;nh.style.opacity=(i<first||i>last)?.25:.95});
  const laneW=lanesEls[0].offsetWidth;
  const leftPx=lanesEls[first].offsetLeft-2, rightPx=lanesEls[last].offsetLeft+laneW+2;
  const w=Math.max(120,rightPx-leftPx);
@@ -538,7 +570,7 @@ function bucketQuenchVisual(){
 /* ================= HUD ================= */
 function hud(){
  const sw=SWORDS[S.tier];
- $('sword-title').textContent=sw.name;$('sword-emoji').textContent=sw.emoji;
+ $('sword-title').textContent=sw.name+(S.dmgLv>0?` ⚠-${S.dmgLv*10}%`:'');$('sword-emoji').textContent=sw.emoji;
  $('tier-tag').textContent=`Tier ${S.tier+1}/${SWORDS.length}`;
  $('value-fill').style.width=Math.max(0,Math.min(100,S.qCount/CFG.GROW_PER*100))+'%';
  $('value-num').textContent=`成长 ${S.qCount}/${CFG.GROW_PER} 题`;
@@ -555,7 +587,7 @@ function hud(){
   $('acc-detail2').textContent=`(${S.totHits}/${S.totStrikes})`}
  // 档位概率条
  const p=computeProbs(curAcc());
- ['great','good','normal','poor'].forEach(k=>{
+ ['great','good','keep','dmg','fail'].forEach(k=>{
   const el=$('pb-'+k);el.querySelector('.pfill').style.height=p[k]+'%';
   el.querySelector('.pct').textContent=Math.round(p[k])+'%';
  });
@@ -565,21 +597,15 @@ function hud(){
 function fmtT(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
 function toast(msg,ms=1800){const t=$('toast');t.textContent=msg;t.classList.add('on');clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('on'),ms)}
 
-/* ================= 房租倒计时 ================= */
-function startRent(){
- clearInterval(S.rentTimer);
- S.rentTimer=setInterval(()=>{
-  if(S.phase==='over')return;
-  S.rentLeft--;
-  $('rent-num').textContent=fmtT(S.rentLeft);
-  if(S.rentLeft<=30&&S.rentLeft>0&&S.rentLeft%10===0){$('debt-tag').style.animation='shake .5s';setTimeout(()=>$('debt-tag').style.animation='',500)}
-  if(S.rentLeft<=0)gameOver();
- },1000);
-}
+/* ================= 房租已取消(2026-10-17 大爷令) ================= */
+
+/* ================= 碎键(失败档) ================= */
+function breakLane(i){S.brokenLane=i;const el=document.querySelector(`.lane[data-i="${i}"]`);if(el)el.classList.add('broken')}
+function repairLanes(){S.brokenLane=null;document.querySelectorAll('.lane.broken').forEach(el=>el.classList.remove('broken'))}
 
 /* ================= 题目 ================= */
 function genQuestion(){
- const sw=SWORDS[S.tier];const pool=NOTES.slice(0,sw.span);
+ const sw=SWORDS[S.tier];const pool=NOTES.slice(0,sw.span).filter((_,idx)=>idx!==S.brokenLane);
  const q=[];let prev=-1;
  for(let i=0;i<sw.qlen;i++){
   let idx;
@@ -616,6 +642,7 @@ function playQuestion(){
 /* ================= 敲击判定(音高+顺序;错≠失败,只改概率) ================= */
 function hitLane(i){
  if(S.phase!=='input')return;
+ if(S.brokenLane===i){toast('💥 这个键碎了,敲不了!');clank(false);return}
  const nt=NOTES[i];
  tone(midiF(nt.m),0,.4);
  const laneEl=document.querySelector(`.lane[data-i="${i}"]`);
@@ -677,7 +704,7 @@ function endQuestion(){
  $('quiz-hint').textContent='敲完了!点水桶上方按钮淬火';
 }
 function quenchPhase(){
- S.phase='quench';hud();
+ S.phase='quench';repairLanes();hud();
  const acc=S.strikes>0?S.hits/S.strikes:0;
  const probs=computeProbs(acc);
  const result=rollTier(probs);
@@ -687,9 +714,10 @@ function quenchPhase(){
  $('quench-sub').textContent=`正确率 ${Math.round(acc*100)}% · 潜在 💧${S.potential} × 档位倍率`;
  $('quench-result').textContent='';
  const strip=$('roll-strip');strip.innerHTML='';
- const keys=['great','good','normal','poor'];
+ const keys=['great','good','keep','dmg','fail'];
  keys.forEach(k=>{const d=document.createElement('div');d.className='rslot '+k+' rolling';
-  d.innerHTML=`<div class="rn">${CFG.TIERS[k].name}</div><div class="rm">×${CFG.TIERS[k].mult}</div>`;strip.appendChild(d)});
+  const m=k==='dmg'?'剑损':k==='fail'?'键碎':'×'+CFG.TIERS[k].mult;
+  d.innerHTML=`<div class="rn">${CFG.TIERS[k].name}</div><div class="rm">${m}</div>`;strip.appendChild(d)});
  sizzle();
  $('quench-steam').classList.remove('puff');void $('quench-steam').offsetWidth;$('quench-steam').classList.add('puff');
  // 滚动 1.6s → 揭示
@@ -700,13 +728,17 @@ function quenchPhase(){
   const t=CFG.TIERS[result];
   $('quench-result').innerHTML=result==='great'
    ?`<span style="color:#ffd54f">🌈 大成功!💧${S.potential} × ${t.mult} = 🪙${payout}!</span>`
-   :result==='poor'
-   ?`<span style="color:#ff9a8a">💦 失败…×${t.mult} 只得 🪙${payout}(剑没碎!)</span>`
+   :result==='dmg'
+   ?`<span style="color:#ffb87a">💥 损坏!剑受损,铸成价值 -10%…</span>`
+   :result==='fail'
+   ?`<span style="color:#ff9a8a">❌ 失败!键碎了…💧${S.potential} 全洒!</span>`
    :`<span style="color:#a8f0a0">${t.name}!💧${S.potential} × ${t.mult} = 🪙${payout}</span>`;
-  tone(midiF(result==='great'?84:result==='poor'?55:72),0,.5,.26);
+  tone(midiF(result==='great'?84:(result==='dmg'||result==='fail')?55:72),0,.5,.26);
   if(result==='great')setTimeout(()=>[0,4,7,12].forEach((s,i)=>tone(midiF(72+s),i*.09,.35,.22)),200);
   // 结算
   S.gold+=payout;S.value+=payout;bucketQuenchVisual();S.potential=0;
+  if(result==='dmg'){S.dmgLv=Math.min(5,S.dmgLv+1);toast(`⚠ 剑受损!铸成价值 -${S.dmgLv*10}%`,2200);hud()}
+  if(result==='fail'){breakLane(S.q[Math.floor(Math.random()*S.q.length)])}
   S.hits=0;S.strikes=0;
   hud();
   setTimeout(()=>{
@@ -760,13 +792,13 @@ function growSword(){
 function forgeSuccess(){
  S.phase='busy';S.forged++;
  const sw=SWORDS[S.tier];
- S.gold+=sw.sell;S.rentLeft+=CFG.RENT_PER_FORGE;
- $('rent-num').textContent=fmtT(S.rentLeft);
+ const sell=Math.round(sw.sell*(1-S.dmgLv*.1));
+ S.gold+=sell;S.dmgLv=0;
  hud();
  $('forge-flash').classList.add('go');setTimeout(()=>$('forge-flash').classList.remove('go'),600);
  const last=S.tier+1>=SWORDS.length;
  showOverlay('gold',sw.emoji,`${sw.name} 铸成!`,
-  `淬火收益攒满 <b>${sw.base}</b>,宝剑出炉!<br>卖出得 <b>🪙${sw.sell}</b> · 房租 +${CFG.RENT_PER_FORGE}s · 累计 <b>🪙${S.gold}</b><br>${last?'你已是铁匠之神!':'下一把剑更长,音域更宽,题目更长——'}`,
+  `淬火收益攒满 <b>${sw.base}</b>,宝剑出炉!<br>卖出得 <b>🪙${sell}</b> · 累计 <b>🪙${S.gold}</b><br>${last?'你已是铁匠之神!':'下一把剑更长,音域更宽,题目更长——'}`,
   last?[{label:'🔄 再战一局',cls:'gold',fn:()=>{hideOverlay();restart()}}]
       :[{label:'🔨 下一把剑',cls:'gold',fn:()=>{hideOverlay();S.tier++;startForge()}}]);
 }
@@ -780,10 +812,9 @@ function gameOver(){
 }
 function restart(){
  S.tier=0;S.value=0;S.potential=0;S.charge=0;S.gold=0;S.forged=0;S.frenzies=0;S.qCount=0;
- S.rentLeft=CFG.RENT_START;S.totHits=0;S.totStrikes=0;S.hits=0;S.strikes=0;
+ S.totHits=0;S.totStrikes=0;S.hits=0;S.strikes=0;S.dmgLv=0;repairLanes();
  S.frenzyActive=false;S.pendingQuench=false;app.classList.remove('frenzy');
  clearInterval(S.frenzyTimer);
- $('rent-num').textContent=fmtT(S.rentLeft);
  startForge();
 }
 function showOverlay(kind,emoji,title,body,btns){
@@ -812,7 +843,6 @@ function startForge(){
  S.phase='idle';hud();updateSword();
  $('quiz-hint').textContent='点火!开始出题';
  toast(`🔥 开炉:${SWORDS[S.tier].name} · 每${CFG.GROW_PER}题长大一次`);
- startRent();
  nextQuestion();
 }
 function nextQuestion(){S.q=genQuestion();S.pos=0;S.revealed=false;S.marks=[];playQuestion()}
@@ -823,10 +853,10 @@ $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音 · 淬�
  `- 听题目(音序),<b>按顺序</b>在音道上敲出这些音<br>
   · 敲对 <b>+1💧潜在钱</b>;敲错<b>剑不碎</b>,只把淬火档位概率变差<br>
   · 一题敲完 → <b>淬火</b>:roll 档位,潜在钱 × 倍率变金币<br>
-  · 档位:<b>大成功×4 / 成功×2 / 普通×1 / 失败×½</b>,敲得越正确概率越好<br>
+  · 五档:<b>大成功×4 / 成功×2 / 维持×1 / 损坏(剑损-10%) / 失败(键碎)</b>,敲得越正确概率越好<br>
+  · 背景是五线谱:每个音的音符位置 = 它在谱上的真实位置,玩着玩着就认识谱了<br>
   · 连对 ${CFG.FRENZY_NEED} 击 → <b>⚡超神 ${CFG.FRENZY_SECS}s</b>:敲对每击 +${CFG.FRENZY_GOLD}🪙、敲错零惩罚,窗口结束大淬火一把结<br>
-  · 淬火收益攒满 → 铸成卖剑,换更长剑(音域更宽题目更长),房租 +${CFG.RENT_PER_FORGE}s<br>
-  · 房租倒计时归零 = 被赶出铁匠铺<br>
+  · 每${CFG.GROW_PER}题存活 → 剑长大一档(音域更宽)<br>
   · 横幅颜色 = 唱名颜色(do 红 re 橙 mi 黄 fa 绿 sol 青 la 蓝 si 紫)`,
  [{label:'明白,开炉!',cls:'gold',fn:hideOverlay}])};
 
@@ -842,7 +872,6 @@ window.__api={S,NOTES,SWORDS,CFG,computeProbs,rollTier,startForge,nextQuestion,h
 
 /* ================= 启动 ================= */
 buildLanes();
-$('rent-num').textContent=fmtT(S.rentLeft);
 requestAnimationFrame(()=>requestAnimationFrame(()=>{hud();updateSword()}));
 addEventListener('resize',()=>setTimeout(updateSword,80));
 </script>

@@ -395,7 +395,7 @@ function drawSword(sw,wPx){
 /* ================= 女铁匠(H3 素材自动接入,失败回退占位 SVG) ================= */
 /* 素材就位路径:v21/assets/girl/{idle,strike,hurt}/f0.png..fN.png(透明背景帧序列) */
 /* 播放器探测首帧,在位=帧序列模式;不在位=占位 SVG 模式(接口不变) */
-const GIRL_META={idle:{n:16,fps:8,loop:true},strike:{n:12,fps:14,loop:false},hurt:{n:12,fps:10,loop:false}};
+const GIRL_META={idle:{n:16,fps:8,loop:true},strike:{n:16,fps:14,loop:false},hurt:{n:16,fps:10,loop:false}};
 const girlPh=$('girl-ph');
 const girlImg=document.createElement('img');
 girlImg.id='girl-sprite';girlImg.style.cssText='display:none;width:auto;height:100%;object-fit:contain;filter:drop-shadow(0 6px 12px #000a)';

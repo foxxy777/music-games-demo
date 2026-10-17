@@ -8,17 +8,17 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;user-select:none;color:#f3e9d8;overflow:hidden}
 #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
-#app{width:780px;height:1280px;flex:none;transform-origin:center center;background:radial-gradient(900px 700px at 50% 30%,#2a1c10 0%,#170f09 55%,#0a0705 100%);display:flex;flex-direction:column;overflow:hidden;position:relative}
+#app{width:1280px;height:720px;flex:none;transform-origin:center center;background:radial-gradient(900px 700px at 50% 30%,#2a1c10 0%,#170f09 55%,#0a0705 100%);display:flex;flex-direction:column;overflow:hidden;position:relative}
 #app.frenzy{background:radial-gradient(900px 700px at 50% 30%,#3a1c08 0%,#241106 55%,#120803 100%)}
 #app.frenzy::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:35;box-shadow:inset 0 0 90px 24px #ff6b2daa;animation:frpulse .5s infinite}
 @keyframes frpulse{50%{box-shadow:inset 0 0 120px 34px #ff9a4dcc}}
 
 /* ===== 顶部 HUD ===== */
-#hud{flex:0 0 236px;display:flex;flex-direction:column;padding:10px 16px 6px;border-bottom:2px solid #4a3320;background:linear-gradient(180deg,#1c120a,#170f0999)}
+#hud{flex:0 0 64px;display:flex;align-items:center;gap:14px;padding:0 16px;border-bottom:2px solid #4a3320;background:linear-gradient(180deg,#1c120a,#170f0999)}
 #hud-row1{display:flex;align-items:center;gap:10px}
 #debt-tag{font-size:12px;padding:3px 10px;border-radius:12px;background:#3a1218;border:1px solid #ff5d6c88;color:#ff9a8a;flex:none}
 #rent-num{font-weight:bold;color:#ffd54f}
-#gold-row{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:16px;font-weight:bold;color:#ffd54f}
+#gold-row{display:flex;align-items:center;gap:5px;font-size:16px;font-weight:bold;color:#ffd54f}
 #pot-row{display:flex;align-items:center;gap:5px;font-size:15px;font-weight:bold;color:#7ddf6a;margin-left:14px}
 #hud-row2{display:flex;align-items:flex-end;gap:12px;margin-top:7px}
 #sword-info{flex:1;min-width:0}
@@ -39,9 +39,9 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .ch-cell.fz{background:linear-gradient(180deg,#fff3b0,#ffd54f);animation:frpulse .4s infinite}
 #frenzy-timer{font-size:11px;color:#ffb84d;font-weight:bold;text-align:center;min-height:14px}
 /* 档位概率条 */
-#probs-wrap{margin-top:7px;display:flex;gap:6px;align-items:center}
+#probs-wrap{flex:none;display:flex;flex-direction:column;gap:4px;padding:10px 10px 2px}
 #probs-label{font-size:10px;color:#c9a06a;flex:none;writing-mode:horizontal-tb}
-.pbar{flex:1;height:26px;border:1px solid #4a3320;border-radius:6px;position:relative;overflow:hidden;background:#1a110a;transition:all .3s}
+.pbar{height:22px;border:1px solid #4a3320;border-radius:6px;position:relative;overflow:hidden;background:#1a110a;transition:all .3s}
 .pbar .pfill{position:absolute;left:0;bottom:0;width:100%;transition:height .35s}
 .pbar .ptxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;line-height:1.15;font-weight:bold;text-shadow:0 1px 2px #000;z-index:2}
 .pbar .ptxt .pct{font-size:11px}
@@ -62,9 +62,9 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #acc-row{font-size:11px;color:#c9a06a;display:flex;gap:12px;align-items:center}
 
 /* ===== 题目区 ===== */
-#quiz{flex:0 0 118px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;border-bottom:2px solid #4a3320;background:#120c0777;position:relative}
+#quiz{flex:0 0 78px;order:2;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:22px;border-top:2px solid #4a3320;background:#120c0777;position:relative}
 #quiz-title{font-size:13px;color:#c9a06a;letter-spacing:2px}
-#slots{display:flex;gap:10px;align-items:center;justify-content:center;min-height:50px}
+#slots{display:flex;gap:10px;align-items:center;justify-content:center;min-height:50px;flex:none}
 .qslot{width:52px;height:48px;border:2px dashed #6a4c2a;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a110a;transition:all .18s;position:relative}
 .qslot.waiting{border-style:dashed}
 .qslot.playing{border-color:#ffd54f;box-shadow:0 0 14px #ffd54f55;animation:qpulse .5s infinite}
@@ -90,8 +90,9 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #acc-detail2{font-size:12px;color:#c9a06a}
 #quench-btn{display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:40;padding:11px 20px;font-size:18px;font-weight:bold;border-radius:14px;background:linear-gradient(160deg,#2f8fda,#1a5f9e);border:2px solid #a8dcff;color:#fff;cursor:pointer;animation:qbpulse 1.1s ease-in-out infinite;box-shadow:0 0 22px #4da3e888}
 @keyframes qbpulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.07)}}
-#left-col{width:43%;flex:none;display:flex;flex-direction:column;position:relative;border-right:2px solid #4a3320;background:linear-gradient(180deg,#150d07 0%,#0d0805 100%)}
-#bucket-zone{flex:0 0 42%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:12px 10px 6px;position:relative}
+#left-col{width:240px;flex:none;display:flex;flex-direction:column;position:relative;border-right:2px solid #4a3320;background:linear-gradient(180deg,#150d07 0%,#0d0805 100%)}
+#girl-col{width:216px;flex:none;display:flex;position:relative;border-left:2px solid #4a3320;background:linear-gradient(180deg,#150d07,#0d0805)}
+#bucket-zone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:12px 10px 6px;position:relative}
 #bucket{width:76%;max-width:235px;flex:none;filter:drop-shadow(0 8px 14px #000a)}
 #bucket-cap{font-size:12px;color:#7fb8e8;letter-spacing:1px;text-shadow:0 1px 2px #000}
 #bucket-num{font-size:13px;color:#a8dcff;font-weight:600;text-shadow:0 1px 2px #000}
@@ -99,21 +100,21 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #bucket-water-glow{transition:all .3s}
 .flydrop{position:absolute;z-index:36;pointer-events:none;font-size:19px;opacity:.95;transition:transform .55s cubic-bezier(.3,-.15,.65,1.05);text-shadow:0 2px 4px #0008}
 #anvil{flex:1;display:flex;position:relative;overflow:hidden;cursor:none}
-#lanes{flex:1;display:flex;flex-direction:column-reverse;padding:10px 14px 16px;gap:4px}
-.lane{flex:1;display:flex;align-items:center;border-radius:9px;border:1.5px solid #ffffff10;background:linear-gradient(90deg,#ffffff04,#ffffff08 50%,#ffffff04);transition:background .12s,border-color .12s,filter .2s;position:relative;min-height:0}
-.lane .ln{width:60px;flex:none;text-align:center;font-size:16px;font-weight:bold;text-shadow:0 0 8px currentColor}
-.lane .lk{width:38px;flex:none;text-align:center;font-size:10px;opacity:.55}
+#lanes{flex:1;display:flex;flex-direction:row;padding:12px 16px;gap:4px}
+.lane{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:8px;border-radius:9px;border:1.5px solid #ffffff10;background:linear-gradient(180deg,#ffffff04,#ffffff08 50%,#ffffff04);transition:background .12s,border-color .12s,filter .2s;position:relative;min-width:0}
+.lane .ln{flex:none;text-align:center;font-size:15px;font-weight:bold;text-shadow:0 0 8px currentColor}
+.lane .lk{flex:none;text-align:center;font-size:10px;opacity:.55}
 .lane.dim{filter:brightness(.32) saturate(.4)}
 .lane.cov{border-color:#ffffff28}
 .lane.cov .ln{opacity:1}
 .lane.flash-hit{background:linear-gradient(90deg,#5dff7a30,#5dff7a4d 50%,#5dff7a30)!important;border-color:#5dff7a!important}
 .lane.flash-miss{background:linear-gradient(90deg,#ff5d6c30,#ff5d6c4d 50%,#ff5d6c30)!important;border-color:#ff5d6c!important}
 /* 剑 */
-#sword-zone{position:absolute;left:50%;top:0;bottom:0;width:150px;transform:translateX(-50%);pointer-events:none;z-index:5}
-#sword-svg{position:absolute;left:50%;transform:translateX(-50%);transition:height .5s,top .5s;filter:drop-shadow(0 0 12px #ffb84d33)}
-#sword-glow{position:absolute;left:50%;transform:translateX(-50%);width:120px;border-radius:50%;background:radial-gradient(closest-side,#ffb84d2d,transparent);pointer-events:none;transition:height .5s,top .5s}
+#sword-zone{position:absolute;top:50%;left:0;right:0;height:150px;transform:translateY(-50%);pointer-events:none;z-index:5}
+#sword-svg{position:absolute;top:50%;left:0;transform:translateY(-50%);transition:width .5s,left .5s;filter:drop-shadow(0 0 12px #ffb84d33);height:120px}
+#sword-glow{position:absolute;top:50%;transform:translateY(-50%);height:120px;border-radius:50%;background:radial-gradient(closest-side,#ffb84d2d,transparent);pointer-events:none;transition:width .5s,left .5s}
 /* 激光 */
-.laser{position:absolute;left:22px;right:172px;height:2px;background:linear-gradient(90deg,transparent,#ff5d6c66 15%,#ff5d6cdd 50%,#ff5d6c66 85%,transparent);box-shadow:0 0 12px #ff5d6c88;z-index:4;pointer-events:none;transition:top .5s}
+.laser{position:absolute;top:10px;bottom:10px;width:2px;height:auto;background:linear-gradient(180deg,transparent,#ff5d6c66 15%,#ff5d6cdd 50%,#ff5d6c66 85%,transparent);box-shadow:0 0 12px #ff5d6c88;z-index:4;pointer-events:none;transition:left .5s}
 .laser::before,.laser::after{content:'';position:absolute;top:-3px;width:8px;height:8px;border-radius:50%;background:#ff5d6c;box-shadow:0 0 10px #ff5d6c}
 .laser::before{left:24px}.laser::after{right:24px}
 
@@ -143,7 +144,7 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 @keyframes floatup{0%{opacity:0;transform:translateY(6px)}15%{opacity:1}100%{opacity:0;transform:translateY(-46px)}}
 
 /* ===== 淬火面板 ===== */
-#quench{position:absolute;left:50%;top:32%;transform:translate(-50%,-50%);width:min(94%,346px);z-index:45;display:none;flex-direction:column;align-items:center;gap:8px;background:linear-gradient(180deg,#0e1420f2,#0a0e18f2);border:2px solid #4d8dd8aa;border-radius:16px;padding:14px 18px 16px;box-shadow:0 0 44px #4d8dd844}
+#quench{position:absolute;left:50%;top:26%;transform:translate(-50%,-50%);width:min(96%,224px);z-index:45;display:none;flex-direction:column;align-items:center;gap:8px;background:linear-gradient(180deg,#0e1420f2,#0a0e18f2);border:2px solid #4d8dd8aa;border-radius:16px;padding:14px 18px 16px;box-shadow:0 0 44px #4d8dd844}
 #quench.on{display:flex;animation:qin .3s ease-out}
 @keyframes qin{0%{opacity:0;transform:translate(-50%,-46%) scale(.9)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 #quench-title{font-size:21px;font-weight:900;color:#bfe3ff;letter-spacing:5px;text-shadow:0 0 16px #4d8dd8aa}
@@ -183,35 +184,21 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 <body>
 <div id="stage"><div id="app">
   <div id="hud">
-    <div id="hud-row1">
-      <div id="debt-tag">🏚️ 房租倒计时 <span id="rent-num">5:00</span></div>
-      <div id="pot-row">💧 潜在 <span id="pot-num">0</span></div>
-      <div id="gold-row"><span class="coin">🪙</span><span id="gold-num">0</span></div>
+    <div id="debt-tag">🏚️ 房租 <span id="rent-num">5:00</span></div>
+    <div id="sword-info">
+      <div id="sword-name"><span id="sword-emoji">🗡️</span><span id="sword-title">生锈匕首</span><span id="tier-tag">Tier 1/8</span></div>
+      <div id="value-wrap"><div id="value-bar"><div id="value-fill"></div><div id="value-num">0</div></div></div>
     </div>
-    <div id="hud-row2">
-      <div id="sword-info">
-        <div id="sword-name"><span id="sword-emoji">🗡️</span><span id="sword-title">生锈匕首</span><span id="tier-tag">Tier 1/6</span></div>
-        <div id="value-wrap"><div id="value-bar"><div id="value-fill"></div><div id="value-num">0</div></div></div>
-      </div>
-      <div id="charge-wrap">
-        <div id="charge-label">超神充能</div>
-        <div id="charge-bar"></div>
-        <div id="frenzy-timer"></div>
-      </div>
+    <div id="pot-row">💧 潜在 <span id="pot-num">0</span></div>
+    <div id="gold-row"><span class="coin">🪙</span><span id="gold-num">0</span></div>
+    <div id="charge-wrap">
+      <div id="charge-label">超神充能</div>
+      <div id="charge-bar"></div>
+      <div id="frenzy-timer"></div>
     </div>
-    <div id="probs-wrap">
-      <div id="probs-label">淬火档位概率</div>
-      <div class="pbar great" id="pb-great"><div class="pfill"></div><div class="ptxt"><span class="nm">大成功 ×4</span><span class="pct">8%</span></div></div>
-      <div class="pbar good" id="pb-good"><div class="pfill"></div><div class="ptxt"><span class="nm">成功 ×2</span><span class="pct">30%</span></div></div>
-      <div class="pbar normal" id="pb-normal"><div class="pfill"></div><div class="ptxt"><span class="nm">普通 ×1</span><span class="pct">42%</span></div></div>
-      <div class="pbar poor" id="pb-poor"><div class="pfill"></div><div class="ptxt"><span class="nm">失败 ×½</span><span class="pct">20%</span></div></div>
-    </div>
-    <div id="hud-row3">
-      <button class="btn gold" id="btn-start">🔥 开始锻造</button>
-      <button class="btn" id="btn-replay" disabled>🔁 重听题目</button>
-      <div id="acc-row"></div>
-      <button class="btn" id="btn-help">❓ 玩法</button>
-    </div>
+    <button class="btn gold" id="btn-start">🔥 开始锻造</button>
+    <button class="btn" id="btn-replay" disabled>🔁 重听</button>
+    <button class="btn" id="btn-help">❓</button>
   </div>
   <div id="quiz">
     <div id="quiz-title">听音 · 按顺序敲出题目 · 敲完淬火</div>
@@ -222,6 +209,13 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
    <div id="acc-strip"><span class="lab">🎯 正确率</span><b id="acc-big">—</b><span id="acc-detail2"></span></div>
    <div id="mid">
    <div id="left-col">
+    <div id="probs-wrap">
+      <div id="probs-label">淬火档位概率</div>
+      <div class="pbar great" id="pb-great"><div class="pfill"></div><div class="ptxt"><span class="nm">大成功 ×4</span><span class="pct">8%</span></div></div>
+      <div class="pbar good" id="pb-good"><div class="pfill"></div><div class="ptxt"><span class="nm">成功 ×2</span><span class="pct">30%</span></div></div>
+      <div class="pbar normal" id="pb-normal"><div class="pfill"></div><div class="ptxt"><span class="nm">普通 ×1</span><span class="pct">42%</span></div></div>
+      <div class="pbar poor" id="pb-poor"><div class="pfill"></div><div class="ptxt"><span class="nm">失败 ×½</span><span class="pct">20%</span></div></div>
+    </div>
     <div id="bucket-zone">
       <button id="quench-btn">🔥 淬 火</button>
       <div id="bucket-cap">💧 淬火桶 · 敲击积累水滴</div>
@@ -240,7 +234,6 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
       </svg>
       <div id="bucket-num">💧 ×<span id="bucket-drops">0</span></div>
     </div>
-    <div id="girl"><div class="gph idle" id="girl-ph"></div></div>
     <div id="quench">
       <div id="quench-steam">💨💨💨</div>
       <div id="quench-title">🔥 淬 火</div>
@@ -254,7 +247,10 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
     <div id="laser-top" class="laser"></div>
     <div id="laser-bot" class="laser"></div>
     <div id="sword-glow"></div>
-    <div id="sword-zone"><svg id="sword-svg" width="120" height="600" viewBox="0 0 120 600"></svg></div>
+    <div id="sword-zone"><svg id="sword-svg" width="600" height="120" viewBox="0 0 600 120"></svg></div>
+   </div>
+   <div id="girl-col">
+    <div id="girl"><div class="gph idle" id="girl-ph"></div></div>
    </div>
    </div>
   </div>
@@ -364,37 +360,36 @@ function updateSword(){
  const sw=SWORDS[S.tier],first=0,last=sw.span-1;
  const lanesEls=[...document.querySelectorAll('.lane')];
  lanesEls.forEach((el,i)=>{el.classList.toggle('cov',i>=first&&i<=last);el.classList.toggle('dim',i<first||i>last)});
- const laneH=lanesEls[0].offsetHeight,anvilH=$('anvil').offsetHeight;
- const gap=parseFloat(getComputedStyle($('lanes')).gap)||4;
- const topPx=anvilH-(last+1)*(laneH+gap)+6, botPx=anvilH-first*(laneH+gap)-6;
- const h=Math.max(120,botPx-topPx);
- $('sword-svg').style.top=topPx+'px';$('sword-svg').style.height=h+'px';
- $('sword-glow').style.top=topPx+'px';$('sword-glow').style.height=h+'px';
- $('laser-top').style.top=(topPx-4)+'px';$('laser-bot').style.top=(botPx+4)+'px';
- drawSword(sw,h);
+ const laneW=lanesEls[0].offsetWidth;
+ const leftPx=lanesEls[first].offsetLeft-2, rightPx=lanesEls[last].offsetLeft+laneW+2;
+ const w=Math.max(120,rightPx-leftPx);
+ $('sword-svg').style.left=leftPx+'px';$('sword-svg').style.width=w+'px';
+ $('sword-glow').style.left=leftPx+'px';$('sword-glow').style.width=w+'px';
+ $('laser-top').style.left=(leftPx-5)+'px';$('laser-bot').style.left=(rightPx+5)+'px';
+ drawSword(sw,w);
 }
-function drawSword(sw,hPx){
- const svg=$('sword-svg');const W=120;svg.setAttribute('viewBox',`0 0 120 600`);
- const bl=W*.22,bl2=bl/2;
- const crossW=W*.72,guardY=560,gripH=34,pomY=guardY+gripH+8;
+function drawSword(sw,wPx){
+ const svg=$('sword-svg');const H=120;svg.setAttribute('viewBox',`0 0 600 ${H}`);
+ svg.setAttribute('preserveAspectRatio','none');
+ const bl2=H*.11;
+ const tipX=596,guardX=44,gripW=30,pomX=guardX-gripW-10;
  svg.innerHTML=`
   <defs>
-    <linearGradient id="blade" x1="0" y1="0" x2="1" y2="0">
+    <linearGradient id="blade" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#6a7686"/><stop offset=".32" stop-color="#eef3fa"/>
       <stop offset=".55" stop-color="#b9c4d4"/><stop offset="1" stop-color="#59636f"/>
     </linearGradient>
   </defs>
   <g>
-    <polygon points="${W/2},4 ${W/2+bl2},${70} ${W/2+bl2},${guardY} ${W/2-bl2},${guardY} ${W/2-bl2},${70}"
+    <polygon points="${tipX},${H/2} ${guardX+80},${H/2-bl2} ${guardX},${H/2-bl2} ${guardX},${H/2+bl2} ${guardX+80},${H/2+bl2}"
       fill="url(#blade)" stroke="#2c333d" stroke-width="2"/>
-    <line x1="${W/2}" y1="16" x2="${W/2}" y2="${guardY}" stroke="#ffffffaa" stroke-width="2.5"/>
-    <path d="M ${W/2-bl2*.4} ${90} Q ${W/2+bl2*.9} ${300} ${W/2-bl2*.2} ${guardY-40}" stroke="#8fa0b566" stroke-width="3" fill="none"/>
-    <rect x="${W/2-crossW/2}" y="${guardY}" width="${crossW}" height="14" rx="6" fill="#7a5830" stroke="#3a2810" stroke-width="2"/>
-    <rect x="${W/2-9}" y="${guardY+14}" width="18" height="${gripH}" rx="7" fill="#4a3018" stroke="#2c1c0a" stroke-width="2"/>
-    ${Array.from({length:4},(_,k)=>`<line x1="${W/2-9}" y1="${guardY+20+k*8}" x2="${W/2+9}" y2="${guardY+20+k*8}" stroke="#2c1c0a" stroke-width="2"/>`).join('')}
-    <circle cx="${W/2}" cy="${pomY}" r="10" fill="#c9a06a" stroke="#6a4c2a" stroke-width="2"/>
+    <line x1="${guardX}" y1="${H/2}" x2="${tipX-16}" y2="${H/2}" stroke="#ffffffaa" stroke-width="2.5"/>
+    <path d="M ${guardX+70} ${H/2-bl2*.4} Q ${300} ${H/2+bl2*.9} ${guardX+90} ${H/2-bl2*.2}" stroke="#8fa0b566" stroke-width="3" fill="none"/>
+    <rect x="${guardX}" y="${H/2-43}" width="14" height="86" rx="6" fill="#7a5830" stroke="#3a2810" stroke-width="2"/>
+    <rect x="${pomX+10}" y="${H/2-9}" width="${gripW}" height="18" rx="7" fill="#4a3018" stroke="#2c1c0a" stroke-width="2"/>
+    ${Array.from({length:4},(_,k)=>`<line x1="${pomX+14+k*6}" y1="${H/2-9}" x2="${pomX+14+k*6}" y2="${H/2+9}" stroke="#2c1c0a" stroke-width="2"/>`).join('')}
+    <circle cx="${pomX}" cy="${H/2}" r="10" fill="#c9a06a" stroke="#6a4c2a" stroke-width="2"/>
   </g>`;
- if(sw.span<=3){svg.querySelector('g').style.transform='translateY(120px)'}
 }
 
 /* ================= 女铁匠(H3 素材自动接入,失败回退占位 SVG) ================= */

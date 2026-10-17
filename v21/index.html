@@ -111,12 +111,15 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
  clip-path:polygon(2% 17.5%,68.4% 6%,98.6% 50%,68.4% 94%,2% 82.5%,7.6% 50%);
  background:linear-gradient(165deg,rgba(255,255,255,.10),transparent 26%),linear-gradient(0deg,#434a54 0%,#333941 55%,#262a31 100%)}
 #lanes{flex:1;display:flex;flex-direction:column-reverse;padding:12px 26px 12px 34px;gap:4px;position:relative;z-index:1}
-.lane{flex:1;display:flex;flex-direction:row;align-items:center;gap:8px;padding:0 12px;border-radius:9px;border:1.5px solid #ffffff10;background:linear-gradient(90deg,#ffffff04,#ffffff08 50%,#ffffff04);transition:background .12s,border-color .12s,filter .2s;position:relative;min-height:0}
+.lane{flex:1;display:flex;flex-direction:row;position:relative;align-items:center;gap:8px;padding:0 12px;border-radius:9px;border:1.5px solid #ffffff10;background:linear-gradient(90deg,#ffffff04,#ffffff08 50%,#ffffff04);transition:background .12s,border-color .12s,filter .2s;position:relative;min-height:0}
 .lane .ln{flex:none;text-align:center;font-size:15px;font-weight:bold;text-shadow:0 0 8px currentColor}
 .lane .lk{flex:none;text-align:center;font-size:10px;opacity:.55}
 .lane.dim{filter:brightness(.32) saturate(.4)}
 .lane.cov{border-color:#ffffff28}
 .lane.cov .ln{opacity:1}
+.anchor-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:3;display:none;padding:2px 10px;border-radius:12px;background:#2a1c0fdd;border:1.5px solid #c9a06a99;color:#ffd54f;font-size:13px;font-weight:bold;cursor:pointer;pointer-events:auto}
+.lane.anchor-on .anchor-btn{display:block}
+.anchor-btn:hover{background:#4a3218ee;color:#ffe89a}
 .lane.off{display:none}
 .lane.flash-hit{background:linear-gradient(90deg,#5dff7a30,#5dff7a4d 50%,#5dff7a30)!important;border-color:#5dff7a!important}
 .lane.flash-miss{background:linear-gradient(90deg,#ff5d6c30,#ff5d6c4d 50%,#ff5d6c30)!important;border-color:#ff5d6c!important}
@@ -129,8 +132,9 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .nh-stem{position:absolute;right:-1.5px;top:7px;width:1.8px;height:34px;background:inherit;opacity:.9}
 /* 剑(竖放:柄在下do端,尖朝上高音) */
 #sword-zone{position:absolute;left:50%;top:0;bottom:0;width:150px;transform:translateX(-50%);pointer-events:none;z-index:5}
-#sword-svg{position:absolute;left:50%;transform:translateX(-50%);transition:height .5s,top .5s;filter:drop-shadow(0 0 12px #ffb84d33);width:120px}
-#sword-glow{position:absolute;left:50%;transform:translateX(-50%);width:120px;border-radius:50%;background:radial-gradient(closest-side,#ffb84d2d,transparent);pointer-events:none;transition:height .5s,top .5s}
+#sword-value{position:absolute;left:50%;transform:translate(-50%,-50%);z-index:7;pointer-events:none;font-size:20px;font-weight:bold;color:#ffe89a;text-shadow:0 0 4px #000,0 0 10px #000c,0 2px 2px #000;white-space:nowrap;transition:top .5s}
+#sword-svg{position:absolute;left:50%;transform:translateX(-50%);transition:height .5s,top .5s;filter:drop-shadow(0 0 12px #ffb84d33);width:140px}
+#sword-glow{position:absolute;left:50%;transform:translateX(-50%);width:140px;border-radius:50%;background:radial-gradient(closest-side,#ffb84d2d,transparent);pointer-events:none;transition:height .5s,top .5s}
 /* 激光(上下横线标音域) */
 .laser{position:absolute;left:12px;right:12px;height:2px;background:linear-gradient(90deg,transparent,#ff5d6c66 15%,#ff5d6cdd 50%,#ff5d6c66 85%,transparent);box-shadow:0 0 12px #ff5d6c88;z-index:4;pointer-events:none;transition:top .5s}
 .laser::before,.laser::after{content:'';position:absolute;left:-3px;width:8px;height:8px;border-radius:50%;background:#ff5d6c;box-shadow:0 0 10px #ff5d6c}
@@ -288,7 +292,7 @@ body{overflow:hidden}
     <div id="laser-top" class="laser"></div>
     <div id="laser-bot" class="laser"></div>
     <div id="sword-glow"></div>
-    <div id="sword-zone"><svg id="sword-svg" width="600" height="120" viewBox="0 0 600 120"></svg></div>
+    <div id="sword-zone"><svg id="sword-svg" width="600" height="120" viewBox="0 0 600 120"></svg><div id="sword-value"></div></div>
    </div>
    <div id="girl-col">
     <div id="girl"><div class="gph idle" id="girl-ph"></div></div>
@@ -325,6 +329,7 @@ const NOTES=[
 ];
 const NOTE_COLORS={do:'#ff6b5d',re:'#ff9d4d',mi:'#ffd54f',fa:'#7ddf6a',sol:'#4dd8c4',la:'#5da8ff',si:'#b88aff'};
 const colorOf=n=>NOTE_COLORS[n.replace(/[′″]/,'')]||'#ddd';
+const ANCHORS={0:'C4',5:'A4'}; // 音感锚点(大爷20:46令):剑覆盖时可点重听
 const SWORDS=[
  {name:'生锈匕首', emoji:'🗡️', span:3,  vis:5,  qlen:3, base:60,  sell:80},
  {name:'猎户短剑', emoji:'🔪', span:4,  vis:5,  qlen:3, base:100, sell:150},
@@ -396,6 +401,8 @@ function buildLanes(){
   const d=document.createElement('div');d.className='lane';d.dataset.i=i;
   const c=colorOf(nt.n);
   d.innerHTML=`<div class="ln" style="color:${c}">${nt.n}</div><div class="lk" style="color:${c}">${nt.d}</div>`;
+  if(ANCHORS[i]){const ab=document.createElement('div');ab.className='anchor-btn';ab.textContent='🔊'+ANCHORS[i];
+   ab.addEventListener('pointerdown',e=>{e.stopPropagation();tone(midiF(nt.m),0,.6,.3)});d.appendChild(ab)}
   const nh=document.createElement('div');nh.className='note-head';nh.dataset.i=i;
   nh.style.background=c;
   nh.innerHTML='<div class="nh-stem"></div>';
@@ -429,13 +436,14 @@ function applyWindow(){
 function updateSword(){
  const sw=SWORDS[S.tier],first=0,last=sw.span-1;
  const lanesEls=[...document.querySelectorAll('.lane')];
- lanesEls.forEach((el,i)=>{el.classList.toggle('cov',i>=first&&i<=last);el.classList.toggle('dim',i<first||i>last)});
+ lanesEls.forEach((el,i)=>{el.classList.toggle('cov',i>=first&&i<=last);el.classList.toggle('dim',i<first||i>last);el.classList.toggle('anchor-on',!!ANCHORS[i]&&i>=first&&i<=last)});
  const lanesBox=$('lanes'),laneH=lanesEls[0].offsetHeight,off=lanesBox.offsetTop;
  const topPx=off+lanesEls[last].offsetTop-2, botPx=off+lanesEls[first].offsetTop+laneH+2;
  const h=Math.max(120,botPx-topPx);
  $('sword-svg').style.top=topPx+'px';$('sword-svg').style.height=h+'px';
  $('sword-glow').style.top=topPx+'px';$('sword-glow').style.height=h+'px';
  $('laser-top').style.top=(topPx-4)+'px';$('laser-bot').style.top=(botPx+4)+'px';
+ $('sword-value').style.top=(topPx+h/2)+'px';
  drawSword(sw,h);
 }
 function drawSword(sw,hPx){
@@ -608,6 +616,7 @@ function bucketQuenchVisual(){
 /* ================= HUD ================= */
 function hud(){
  const sw=SWORDS[S.tier];
+ $('sword-value').textContent='🪙'+S.value;
  $('sword-title').textContent=sw.name+(S.dmgLv>0?` ⚠-${S.dmgLv*10}%`:'');$('sword-emoji').textContent=sw.emoji;
  $('tier-tag').textContent=`Tier ${S.tier+1}/${SWORDS.length}`;
  $('value-fill').style.width=Math.max(0,Math.min(100,S.qCount/CFG.GROW_PER*100))+'%';
@@ -761,6 +770,7 @@ function quenchPhase(){
  const probs=computeProbs(acc);
  const result=rollTier(probs);
  const payout=Math.round(S.potential*CFG.TIERS[result].mult);
+ const vBefore=S.value;
  // 居中覆盖面板(大爷19:49令:看得清,点继续才关)
  const qm=$('quench-modal');qm.classList.add('on');
  $('qm-sub').textContent=`正确率 ${Math.round(acc*100)}% · 潜在 💧${S.potential} × 档位倍率`;
@@ -769,7 +779,7 @@ function quenchPhase(){
  const strip=$('qm-strip');strip.innerHTML='';
  const keys=['great','good','keep','dmg','fail'];
  keys.forEach(k=>{const d=document.createElement('div');d.className='rslot '+k+' rolling';
-  const m=k==='dmg'?'剑损':k==='fail'?'剑碎':'×'+CFG.TIERS[k].mult;
+  const m=(k==='dmg'?'剑损':k==='fail'?'剑碎':'×'+CFG.TIERS[k].mult)+' · '+Math.round(probs[k])+'%';
   d.innerHTML=`<div class="rn">${CFG.TIERS[k].name}</div><div class="rm">${m}</div>`;strip.appendChild(d)});
  sizzle();
  setTimeout(()=>{
@@ -792,6 +802,7 @@ function quenchPhase(){
   if(result==='fail'){swordBreak()}
   S.hits=0;S.strikes=0;
   hud();
+  $('qm-result').innerHTML+=`<div style="font-size:13px;color:#cbb8a0;margin-top:6px">⚔️ 铸成价值 🪙${vBefore} → 🪙${S.value}${result==='fail'?' (碎剑退档)':''}</div>`;
   // 看完点继续才推进
   btn.style.display='inline-block';
   btn.onclick=()=>{

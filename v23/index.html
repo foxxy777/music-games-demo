@@ -224,9 +224,12 @@ body{overflow:hidden}
 /* ===== 昼夜循环(大爷17:08令):魔力条/过场/商店 ===== */
 #mp-wrap{flex:none;padding:6px 10px 10px;border-top:2px solid #4a3320;background:linear-gradient(180deg,#150d07,#0d0805)}
 #mp-label{font-size:10px;color:#c9a06a;letter-spacing:1px;margin-bottom:3px;text-align:center}
-#mp-bar{height:14px;border-radius:8px;background:#1a110a;border:1.5px solid #4a3320;overflow:hidden;position:relative}
-#mp-fill{height:100%;background:linear-gradient(90deg,#8a5cff,#5da8ff);transition:width .4s}
-#mp-num{position:absolute;inset:0;font-size:10px;color:#fff;text-align:center;line-height:14px;text-shadow:0 1px 2px #000}
+#day-dots{display:flex;gap:5px;justify-content:center;margin-top:4px}
+.day-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid #4a3320;background:#1a110a;display:flex;align-items:center;justify-content:center;font-size:10px;color:#8a7358}
+.day-dot.forging{background:#c9822a;color:#1a110a;animation:mpulse 1s infinite}
+.day-dot.done{background:#3a8a2a;color:#fff;border-color:#5db84a}
+.day-dot.broke{background:#8a2a2a;color:#ffd0c8;border-color:#b84a4a}
+#mp-sub{font-size:10px;color:#8a7358;text-align:center;margin-top:3px}
 #btn-day2{display:none}
 #night-fade{position:absolute;inset:0;z-index:200;background:#000;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;cursor:auto}
 #night-fade.on{display:flex;animation:nfade 2s ease-in-out forwards}
@@ -346,9 +349,7 @@ body{overflow:hidden}
    <div id="acc-strip"><div class="acc-left"><span class="lab">🎯 正确率</span><b id="acc-big">—</b><span id="acc-detail2"></span></div><div id="probs-strip">
       <div class="pbar great" id="pb-great"><div class="pfill"></div><div class="ptxt"><span class="nm">大成功 ×4</span><span class="pct">2%</span></div></div>
       <div class="pbar good" id="pb-good"><div class="pfill"></div><div class="ptxt"><span class="nm">成功 ×2</span><span class="pct">18%</span></div></div>
-      <div class="pbar keep" id="pb-keep"><div class="pfill"></div><div class="ptxt"><span class="nm">维持 ×1</span><span class="pct">30%</span></div></div>
-      <div class="pbar dmg" id="pb-dmg"><div class="pfill"></div><div class="ptxt"><span class="nm">损坏 剑损</span><span class="pct">20%</span></div></div>
-      <div class="pbar fail" id="pb-fail"><div class="pfill"></div><div class="ptxt"><span class="nm">失败 剑碎</span><span class="pct">30%</span></div></div>
+      <div class="pbar dmg" id="pb-dmg"><div class="pfill"></div><div class="ptxt"><span class="nm">损坏 💥剑爆</span><span class="pct">10%</span></div></div>
     </div></div>
    <div id="mid">
    <div id="left-col">
@@ -393,8 +394,9 @@ body{overflow:hidden}
    <div id="girl-col">
     <div id="girl"><div class="gph idle" id="girl-ph"></div></div>
     <div id="mp-wrap">
-      <div id="mp-label">💫 魔力</div>
-      <div id="mp-bar"><div id="mp-fill"></div><div id="mp-num">12/12</div></div>
+      <div id="mp-label">👷 铁匠 Lv.1</div>
+      <div id="day-dots"></div>
+      <div id="mp-sub">今日剑胚 3 把</div>
     </div>
     <button id="chest-btn" class="btn">🧰 箱子 <b>3</b></button>
    </div>
@@ -450,9 +452,11 @@ const CFG={
  FRENZY_GOLD:2,       // 超神内敲对立即得金/击
  POT_PER_HIT:1,       // 敲对积累魔能/击
  CONTOUR_BONUS:1,     // 轮廓全对(整体平移)保底魔能(技能可加)
- TIERS:{great:{name:'大成功',mult:4,cls:'great'},good:{name:'成功',mult:2,cls:'good'},
-        keep:{name:'维持',mult:1,cls:'keep'},dmg:{name:'损坏',mult:0,cls:'dmg'},fail:{name:'失败',mult:0,cls:'fail'}},
- PROB:{great0:.02,great1:.45, good0:.18,good1:.33, keep0:.30,keep1:.15, dmg0:.20,dmg1:.05, fail0:.30,fail1:.02},
+ TIERS:{great:{name:'大成功',mult:4,cls:'great'},good:{name:'成功',mult:2,cls:'good'},dmg:{name:'损坏',mult:0,cls:'dmg'}},
+ PROB:{great:20,good:70,dmg:10},  // 三档基础(大爷21:51令)
+ ERR_PENALTY:5,   // 每敲错一音:损坏+5%
+ FULL_BONUS:5,    // 整题全对:大成功+5%
+ SWORD_CAP_LV:2,  // 角色Lv.1封顶:剑最高Lv.2(4音域),每级2题→每把最多4题
  RENT_START:300,      // 房租秒数
  RENT_PER_FORGE:75,   // 每铸成一把 +秒
 };
@@ -482,7 +486,7 @@ const wOf=n=>{const i=SWORDS.findIndex(s=>s.name===n);return i<0?2:GRIDW[i]};
 /* ================= 状态 ================= */
 const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0,
  rentLeft:CFG.RENT_START,rentTimer:null,dmgLv:0,
- mp:12,mpMax:12,day:1,mode:'forge',cur:null,pack:[],counter:[],forgeEnded:false,soldCnt:0,
+ roleLv:1,dayLog:[],day:1,mode:'forge',cur:null,pack:[],counter:[],forgeEnded:false,soldCnt:0,
  chest:[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}],
  frenzyActive:false,frenzyEnd:0,frenzyTimer:null,pendingQuench:false,
  hits:0,strikes:0,            // 本题:敲对数/已敲数
@@ -491,26 +495,19 @@ const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0
  q:[],pos:0,revealed:false};
 const $=id=>document.getElementById(id);
 
-/* ================= 档位概率(正确率驱动) ================= */
-function lerp(a,b,t){return a+(b-a)*t}
-function computeProbs(acc){ // acc∈[0,1]
- let g=lerp(CFG.PROB.great0,CFG.PROB.great1,Math.pow(acc,1.6)),
-     go=lerp(CFG.PROB.good0,CFG.PROB.good1,acc),
-     n=lerp(CFG.PROB.keep0,CFG.PROB.keep1,acc),
-     dm=lerp(CFG.PROB.dmg0,CFG.PROB.dmg1,Math.pow(acc,1.8)),
-     f=lerp(CFG.PROB.fail0,CFG.PROB.fail1,Math.pow(acc,2.2));
- const sum=g+go+n+dm+f;
- return {great:g/sum*100,good:go/sum*100,keep:n/sum*100,dmg:dm/sum*100,fail:f/sum*100};
+/* ================= 淬火概率(大爷21:51令:三档·错音/全对驱动) ================= */
+function computeProbs(errN,fullN){ // errN=本剑累计错音,fullN=本剑累计全对题数
+ let dmg=CFG.PROB.dmg+CFG.ERR_PENALTY*(errN||0),
+     g=CFG.PROB.great+CFG.FULL_BONUS*(fullN||0);
+ if(dmg+g>100){const s=100/(dmg+g);dmg*=s;g*=s} // 超界等比压缩,成功档归零
+ return {great:g,good:Math.max(0,100-dmg-g),dmg};
 }
 function rollTier(probs){
  const r=Math.random()*100;
  if(r<probs.great)return 'great';
  if(r<probs.great+probs.good)return 'good';
- if(r<probs.great+probs.good+probs.keep)return 'keep';
- if(r<probs.great+probs.good+probs.keep+probs.dmg)return 'dmg';
- return 'fail';
+ return 'dmg';
 }
-function curAcc(){return S.strikes>0?S.hits/S.strikes:(S.totStrikes>0?S.totHits/S.totStrikes:.5)}
 
 /* ================= 音频 ================= */
 let AC=null;
@@ -773,7 +770,7 @@ function swingHammer(x,y){ // x,y 相对 app;偏移=锤头砸击面中心(SVG 23
 
 /* ================= 淬火水桶(左上,水滴可视化) ================= */
 CFG.BUCKET_CAP=10;
-CFG.GROW_PER=3;
+/* GROW_PER 退役(21:51 三档重构) */
 function updateBucket(){
  const h=Math.min(1,S.potential/CFG.BUCKET_CAP)*160;
  $('bucket-water').setAttribute('y',204-h);
@@ -808,8 +805,8 @@ function hud(){
  $('sword-value').textContent='🪙'+S.value;
  $('sword-title').textContent=sw.name+(S.dmgLv>0?` ⚠-${S.dmgLv*10}%`:'');$('sword-emoji').textContent=sw.emoji;
  $('tier-tag').textContent=`Tier ${S.tier+1}/${SWORDS.length}`;
- $('value-fill').style.width=Math.max(0,Math.min(100,S.qCount/CFG.GROW_PER*100))+'%';
- $('value-num').textContent=`成长 ${S.qCount}/${CFG.GROW_PER} 题`;
+ $('value-fill').style.width=Math.max(0,Math.min(100,S.qCount/(CFG.SWORD_CAP_LV*2)*100))+'%';
+ $('value-num').textContent=`成长 ${S.qCount}/${CFG.SWORD_CAP_LV*2} 题`;
  $('gold-num').textContent=S.gold;
  $('pot-num').textContent=S.potential;updateBucket();
  // 充能
@@ -821,9 +818,9 @@ function hud(){
  // 正确率
  if(S.totStrikes>0){const ap=Math.round(S.totHits/S.totStrikes*100)+'%';$('acc-big').textContent=ap;
   $('acc-detail2').textContent=`(${S.totHits}/${S.totStrikes})`}
- // 档位概率条
- const p=computeProbs(curAcc());
- ['great','good','keep','dmg','fail'].forEach(k=>{
+ // 档位概率条(三档·本剑错音/全对驱动,大爷21:51令)
+ const p=computeProbs(S.cur?S.cur.errN:0,S.cur?S.cur.fullN:0);
+ ['great','good','dmg'].forEach(k=>{
   const el=$('pb-'+k);el.querySelector('.pfill').style.height=p[k]+'%';
   el.querySelector('.pct').textContent=Math.round(p[k])+'%';
  });
@@ -837,10 +834,10 @@ function toast(msg,ms=1800){const t=$('toast');t.textContent=msg;t.classList.add
 
 /* ================= 碎剑(失败档,2026-10-17 大爷令:碎的是剑不是键) ================= */
 function swordBreak(){
- const old=SWORDS[S.tier];
  S.cur=null;S.value=0;S.dmgLv=0;
+ markDay('broke');
  applyWindow();hud();updateSword();
- $('quiz-hint').textContent='💥 剑碎了!从箱子再拖一把';
+ $('quiz-hint').textContent='💥 剑爆了!这把坯子没了…';
  const z=$('sword-zone');
  z.classList.remove('shatter');void z.offsetWidth;z.classList.add('shatter');
  const zr=z.getBoundingClientRect(),ar=app.getBoundingClientRect(),k=ar.width/app.offsetWidth;
@@ -852,7 +849,8 @@ function swordBreak(){
   f.style.setProperty('--fy',(Math.random()*-130-30)+'px');
   app.appendChild(f);setTimeout(()=>f.remove(),950);
  }
- toast(`💥 ${old.name} 碎了!退回 ${SWORDS[S.tier].name}`,2400);
+ toast('💥 剑爆了!锻造中断,这把坯子报废',2400);
+ checkDayEnd();
 }
 
 /* ================= 题目 ================= */
@@ -934,6 +932,7 @@ function gradeQuestion(){
  let okCnt=0;
  S.q.forEach((exp,pos)=>{if(S.typed[pos]===exp)okCnt++});
  S.hits+=okCnt;S.totHits+=okCnt;
+ if(S.cur){const missN=S.q.length-okCnt;S.cur.errN=(S.cur.errN||0)+missN;if(missN===0)S.cur.fullN=(S.cur.fullN||0)+1}
  S.potential+=okCnt*CFG.POT_PER_HIT;
  S.q.forEach((exp,pos)=>{S.marks[pos]=S.typed[pos]===exp?'hit':'miss'});
  if(S.frenzyActive){S.gold+=okCnt*CFG.FRENZY_GOLD}
@@ -974,20 +973,19 @@ function endQuestion(){
 }
 function quenchPhase(){
  S.phase='quench';hud();
- const acc=S.strikes>0?S.hits/S.strikes:0;
- const probs=computeProbs(acc);
+ const probs=computeProbs(S.cur?S.cur.errN:0,S.cur?S.cur.fullN:0);
  const result=rollTier(probs);
  const payout=Math.round(S.potential*CFG.TIERS[result].mult);
  const vBefore=S.value;
  // 居中覆盖面板(大爷19:49令:看得清,点继续才关)
  const qm=$('quench-modal');qm.classList.add('on');
- $('qm-sub').textContent=`正确率 ${Math.round(acc*100)}% · 魔能 🔮${S.potential} × 档位倍率`;
+ $('qm-sub').textContent=`本剑错音 ${S.cur?S.cur.errN:0} · 全对题 ${S.cur?S.cur.fullN:0} · 魔能 🔮${S.potential} × 倍率`;
  $('qm-result').textContent='';
  const btn=$('qm-btn');btn.style.display='none';btn.onclick=null;
  const strip=$('qm-strip');strip.innerHTML='';
- const keys=['great','good','keep','dmg','fail'];
+ const keys=['great','good','dmg'];
  keys.forEach(k=>{const d=document.createElement('div');d.className='rslot '+k+' rolling';
-  const m=(k==='dmg'?'剑损':k==='fail'?'剑碎':'×'+CFG.TIERS[k].mult)+' · '+Math.round(probs[k])+'%';
+  const m=(k==='dmg'?'💥剑爆':'×'+CFG.TIERS[k].mult)+' · '+Math.round(probs[k])+'%';
   d.innerHTML=`<div class="rn">${CFG.TIERS[k].name}</div><div class="rm">${m}</div>`;strip.appendChild(d)});
  sizzle();
  setTimeout(()=>{
@@ -998,19 +996,17 @@ function quenchPhase(){
   $('qm-result').innerHTML=result==='great'
    ?`<span style="color:#ffd54f">🌈 大成功!🔮${S.potential} × ${t.mult} = 🪙${payout}!</span>`
    :result==='dmg'
-   ?`<span style="color:#ffb87a">💥 损坏!剑受损,铸成价值 -10%…</span>`
-   :result==='fail'
-   ?`<span style="color:#ff9a8a">❌ 失败!剑碎了!🔮${S.potential} 全散!</span>`
+   ?`<span style="color:#ff9a8a">💥 损坏!剑爆了!这把坯子没了…</span>`
    :`<span style="color:#a8f0a0">${t.name}!🔮${S.potential} × ${t.mult} = 🪙${payout}</span>`;
-  playInst(result==='great'?84:(result==='dmg'||result==='fail')?55:72,0,1.2);
+  playInst(result==='great'?84:result==='dmg'?55:72,0,1.2);
   if(result==='great')setTimeout(()=>[0,4,7,12].forEach((s,i)=>playInst(72+s,i*.09)),200);
   // 结算
-  S.gold+=payout;S.value+=payout;bucketQuenchVisual();S.potential=0;
-  if(result==='dmg'){S.dmgLv=Math.min(5,S.dmgLv+1);toast(`⚠ 剑受损!铸成价值 -${S.dmgLv*10}%`,2200);hud()}
-  if(result==='fail'){swordBreak()}
-  S.hits=0;S.strikes=0;
+  if(result==='dmg'){swordBreak()}
+  else{S.gold+=payout;S.value+=payout;bucketQuenchVisual()}
+  S.potential=0;S.hits=0;S.strikes=0;
   hud();
-  $('qm-result').innerHTML+=`<div style="font-size:13px;color:#cbb8a0;margin-top:6px">⚔️ 铸成价值 🪙${vBefore} → 🪙${S.value}${result==='fail'?' (碎剑退档)':''}</div>`;
+  if(result!=='dmg')$('qm-result').innerHTML+=`<div style="font-size:13px;color:#cbb8a0;margin-top:6px">⚔️ 铸成价值 🪙${vBefore} → 🪙${S.value}</div>`;
+  else $('qm-result').innerHTML+=`<div style="font-size:13px;color:#cbb8a0;margin-top:6px">⚠️ 错音越多损坏越狠——错一音+5%,全对一题大成功+5%</div>`;
   // 看完点继续才推进
   btn.style.display='inline-block';
   btn.onclick=()=>{qm.classList.remove('on');afterQuestionDone(result)};
@@ -1048,22 +1044,23 @@ function endFrenzy(){
 
 /* ================= 昼夜循环+商店(大爷17:08令) ================= */
 function curSpan(){return S.cur&&S.cur.lv>=2?4:3}
-function newSword(){S.cur={lv:1,qDone:0,q:0};S.value=0;S.qCount=0;S.dmgLv=0;applyWindow();hud();updateSword();
- toast(`🔨 新剑开锻:匕首(3音)· 魔力 ${S.mp}`)}
+function markDay(st){if(st==='forging')S.dayLog.push('forging');
+ else{const i=S.dayLog.lastIndexOf('forging');if(i>=0)S.dayLog[i]=st;else S.dayLog.push(st)}}
+function checkDayEnd(){ // 大爷21:51令:去魔力,收工=剑胚用光且铁砧空
+ if(S.mode!=='forge'||S.cur||S.chest.length)return;
+ S.forgeEnded=true;S.phase='idle';hud();
+ $('quiz-hint').textContent='今天的剑胚用完了!点「🌅 第二天」开门营业';}
+function newSword(){S.cur={lv:1,qDone:0,q:0,errN:0,fullN:0};S.value=0;S.qCount=0;S.dmgLv=0;markDay('forging');applyWindow();hud();updateSword();
+ toast('🔨 新剑开锻:匕首(3音)· Lv.1 封顶 4 音域 · 每把最多 4 题')}
 function afterQuestionDone(result){
  if(!S.cur){S.phase='idle';hud();return}
  S.qCount++;
  S.cur.qDone++;
  if(result==='great')S.cur.q+=1;else if(result==='good')S.cur.q+=.5;
- S.mp=Math.max(0,S.mp-1);
- if(S.cur.qDone>=6){swordDone();return}
- const newLv=Math.floor(S.cur.qDone/2)+1;
+ if(S.cur.qDone>=CFG.SWORD_CAP_LV*2){swordDone();return}
+ const newLv=Math.min(CFG.SWORD_CAP_LV,Math.floor(S.cur.qDone/2)+1);
  if(newLv>S.cur.lv){S.cur.lv=newLv;applyWindow();updateSword();
-  toast(`⬆️ 剑升级!Lv.${S.cur.lv} · 音域 ${curSpan()} 音 (魔力 ${S.mp})`)}
- if(S.mp<=0){
-  const it=stashSword(true);
-  if(it)toast(`🌙 魔力见底!${it.name} 没锻完但没碎,收进箱子明天照样卖 💰${it.value}`);
-  S.forgeEnded=true;S.phase='idle';hud();$('quiz-hint').textContent='魔力耗尽!点「第二天」开门营业';return}
+  toast(`⬆️ 剑升级!Lv.${S.cur.lv} · 音域 ${curSpan()} 音`)}
  S.phase='busy';hud();
  setTimeout(()=>{S.q=genQuestion();playQuestion()},420);
 }
@@ -1073,7 +1070,7 @@ function stashSword(silent){
  const star=Math.min(4,1+Math.floor(S.cur.q));
  const val=Math.round(S.value*(1-S.dmgLv*.1)*(1+.15*(star-1)));
  const item={name:sw.name,emoji:sw.emoji,star,value:val,onShelf:false,sold:false};
- S.pack.push(item);S.forged++;S.dmgLv=0;
+ S.pack.push(item);S.forged++;S.dmgLv=0;markDay('done');
  S.cur=null;updateSword();hud();
  if(!silent){$('forge-flash').classList.add('go');setTimeout(()=>$('forge-flash').classList.remove('go'),600);
   playInst(84,0,1.2);setTimeout(()=>playInst(88,0,1),180)}
@@ -1081,10 +1078,10 @@ function stashSword(silent){
 function swordDone(){
  const item=stashSword();
  if(item)toast(`🎉 ${item.name} 铸成!品质 ${'★'.repeat(item.star)}${'☆'.repeat(4-item.star)} · 价值 ${item.value} · 收进箱子`);
- if(S.mp>0&&!S.forgeEnded&&S.chest.length){S.phase='idle';hud();
+ if(S.chest.length){S.phase='idle';hud();
   $('quiz-hint').textContent='又一把出炉!从箱子拖下一把剑坯继续'}
- else{S.forgeEnded=true;S.phase='idle';hud();
-  $('quiz-hint').textContent=S.chest.length?'今晚的活干完了!点「第二天」开门营业':'箱子空了!点「第二天」开门营业'}}
+ else checkDayEnd();
+}
 /* ================= 箱子/剑坯(大爷19:22令) ================= */
 function openChest(){
  const g=$('cm-grid');g.innerHTML='';
@@ -1247,10 +1244,12 @@ function offer(i){
 }
 function closeShop(){
  S.mode='forge';$('shop').classList.remove('on');
- S.day++;S.mp=S.mpMax;S.forgeEnded=false;S.phase='idle';
+ S.day++;S.forgeEnded=false;S.phase='idle';
  S.pack=S.pack.filter(p=>!p.sold);
+ while(S.chest.length<3)S.chest.push({name:'匕首',emoji:'🗡️'}); // 新一天补足 3 坯(大爷21:51令:3剑胚=3剑/晚)
+ S.dayLog=[];
  hud();updateSword();
- $('quiz-hint').textContent=S.chest.length?`第 ${S.day} 天 · 魔力回满!从箱子拖剑坯开锻`:`第 ${S.day} 天 · 魔力回满!(箱子空了,先卖存货)`;
+ $('quiz-hint').textContent=`第 ${S.day} 天 · 新剑坯×${S.chest.length}!从箱子拖剑坯开锻`;
 }
 $('btn-bell').onclick=nextCustomer;
 $('btn-close').onclick=()=>{if(S.mode!=='shop')return;nightFade(closeShop,'打烊',`🌙 第 ${S.day} 天结束 · 明天继续`)};
@@ -1288,7 +1287,7 @@ function gameOver(){
 function restart(){
  S.tier=0;S.value=0;S.potential=0;S.charge=0;S.gold=0;S.forged=0;S.frenzies=0;S.qCount=0;
  S.totHits=0;S.totStrikes=0;S.hits=0;S.strikes=0;S.dmgLv=0;
- S.mp=S.mpMax;S.day=1;S.mode='forge';S.pack=[];S.counter=[];S.forgeEnded=false;S.soldCnt=0;$('shop').classList.remove('on');
+ S.roleLv=1;S.dayLog=[];S.day=1;S.mode='forge';S.pack=[];S.counter=[];S.forgeEnded=false;S.soldCnt=0;$('shop').classList.remove('on');
  S.chest=[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}];S.cur=null;$('chest-modal').classList.remove('on');
  S.frenzyActive=false;S.pendingQuench=false;app.classList.remove('frenzy');
  clearInterval(S.frenzyTimer);
@@ -1327,12 +1326,13 @@ $('quench-btn').onclick=()=>{if(S.phase!=='ready')return;$('quench-btn').style.d
 $('btn-replay').onclick=()=>{if(S.phase==='input'){const p=S.pos,m=S.marks,r=S.revealed;playQuestion();S.pos=p;S.marks=m;S.revealed=r;renderSlots()}};
 $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音 · 淬火定命',
  `- 听题目(音序),<b>按顺序</b>在音道上敲出这些音<br>
-  · 敲对 <b>+1🔮魔能</b>;敲错<b>剑不碎</b>,只把淬火档位概率变差<br>
+  · 敲对 <b>+1🔮魔能</b>;敲错剑不碎,但<b>每错一音:淬火损坏率 +5%</b><br>
   · 一题敲完 → <b>淬火</b>:roll 档位,魔能 × 倍率变金币<br>
-  · 五档:<b>大成功×4 / 成功×2 / 维持×1 / 损坏(剑损-10%) / 失败(剑碎退档)</b>,敲得越正确概率越好<br>
+  · 三档:<b>大成功×4 / 成功×2 / 损坏(剑当场爆!)</b> · 基础 20/70/10,整题全对→大成功+5%<br>
+  · 角色等级封顶剑的成长:<b>Lv.1 铁匠每把剑最多 4 题,最高 4 音域</b>,每天 3 个剑坯<br>
   · 背景是五线谱:每个音的音符位置 = 它在谱上的真实位置,玩着玩着就认识谱了<br>
   · 连对 ${CFG.FRENZY_NEED} 击 → <b>⚡超神 ${CFG.FRENZY_SECS}s</b>:敲对每击 +${CFG.FRENZY_GOLD}🪙、敲错零惩罚,窗口结束大淬火一把结<br>
-  · 每${CFG.GROW_PER}题存活 → 剑长大一档(音域更宽)<br>
+  · 每 2 题剑升 1 级(3音域→4音域),4 题铸成入箱,没爆就能卖<br>
   · 横幅颜色 = 唱名颜色(do 红 re 橙 mi 黄 fa 绿 sol 青 la 蓝 si 紫)<br>
   · 右侧「🎵 乐器音色」可换 33 种实采乐器音色(逐音 YIN 验证),出题自动避开该乐器缺的音`,
  [{label:'明白,开炉!',cls:'gold',fn:hideOverlay}])};
@@ -1345,7 +1345,7 @@ $('lanes').addEventListener('pointerdown',e=>{
 });
 
 /* 测试钩子 */
-window.__api={S,NOTES,SWORDS,CFG,INST,playInst,computeProbs,rollTier,startForge,nextQuestion,hitLane,genQuestion,playQuestion,quenchPhase,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()}};
+window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,afterQuestionDone,swordBreak,placeBlank,openChest,startForge,nextQuestion,hitLane,genQuestion,playQuestion,quenchPhase,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()}};
 
 /* ================= 启动 ================= */
 buildLanes();
@@ -1360,14 +1360,16 @@ loadManifest();
  $('btn-day2').onclick=()=>{if(S.mode!=='forge')return;S.phase='idle';stashSword(true);nightFade(openShop,'第二天',`☀️ 第 ${S.day+1} 天 · 售卖日`)};
  const _hudOrig=hud;
  hud=function(){_hudOrig();
-  if(S.cur){$('tier-tag').textContent=`Lv.${S.cur.lv}/4 · 第${S.day}天`;
-   $('sword-title').textContent=SWORDS[curSpan()-3].name+(S.dmgLv>0?` 损-${S.dmgLv*10}%`:'');
-   $('value-fill').style.width=(S.cur.qDone/6*100)+'%';}
+  if(S.cur){$('tier-tag').textContent=`剑Lv.${S.cur.lv}/${CFG.SWORD_CAP_LV} · 第${S.day}天`;
+   $('sword-title').textContent=SWORDS[curSpan()-3].name;
+   $('value-fill').style.width=(S.cur.qDone/(CFG.SWORD_CAP_LV*2)*100)+'%';}
   else{$('tier-tag').textContent=`第${S.day}天 · 铁砧空`;$('value-fill').style.width='0%'}
   const cb=$('chest-btn');if(cb)cb.innerHTML=`🧰 箱子 <b>${S.chest.length}</b>`;
-  $('mp-fill').style.width=(S.mp/S.mpMax*100)+'%';
-  $('mp-num').textContent='💫 '+S.mp+'/'+S.mpMax;
-  $('btn-day2').style.display=(S.mode==='forge'&&(S.mp<=0||S.forgeEnded))?'inline-block':'none';
+  $('mp-label').textContent=`👷 铁匠 Lv.${S.roleLv}`;
+  const dd=$('day-dots');if(dd){dd.innerHTML='';S.dayLog.forEach(s=>{const d=document.createElement('div');
+   d.className='day-dot '+s;d.textContent=s==='done'?'✓':s==='broke'?'✗':'🔨';dd.appendChild(d)})}
+  const msub=$('mp-sub');if(msub)msub.textContent=`今日剑胚:剩 ${S.chest.length} 坯待锻`;
+  $('btn-day2').style.display=(S.mode==='forge'&&S.forgeEnded)?'inline-block':'none';
  };
  hud();
 })();

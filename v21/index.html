@@ -268,6 +268,13 @@ body{overflow:hidden}
 .pm-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:10px;border:2px solid #4a3320;background:#1a110a;color:#ffe9b8;font-size:14px;cursor:pointer;transition:all .12s}
 .pm-item:hover{border-color:#ffd54f}
 .pm-item .pi-val{color:#ffd54f;font-weight:bold}
+.badge{position:absolute;top:-22px;right:-30px;font-size:10px;background:#2a1c0e;border:1px solid #c9a06a88;color:#ffd54f;border-radius:8px;padding:1px 6px;font-weight:bold;white-space:nowrap}
+.cloud{position:absolute;top:-58px;left:50%;transform:translateX(-50%);font-size:24px;background:none;border:none;cursor:pointer;animation:clb 1.3s ease-in-out infinite;filter:drop-shadow(0 2px 6px #000a);padding:0;z-index:6}
+.cloud:hover{filter:drop-shadow(0 0 10px #ffd54f)}
+@keyframes clb{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+.emote{position:absolute;top:-72px;left:50%;transform:translateX(-50%) scale(0);font-size:34px;transition:transform .35s cubic-bezier(.3,-.2,.6,1.6);pointer-events:none;z-index:6}
+.emote.on{transform:translateX(-50%) scale(1)}
+.sh-star{font-size:11px;color:#ffd54f;letter-spacing:1px}
 /* ===== 遮罩层 ===== */
 #overlay{position:absolute;inset:0;background:#0a0705e8;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:50;padding:36px;text-align:center;cursor:auto}
 #overlay.on{display:flex}
@@ -960,7 +967,7 @@ function quenchPhase(){
   $('qm-result').innerHTML+=`<div style="font-size:13px;color:#cbb8a0;margin-top:6px">⚔️ 铸成价值 🪙${vBefore} → 🪙${S.value}${result==='fail'?' (碎剑退档)':''}</div>`;
   // 看完点继续才推进
   btn.style.display='inline-block';
-  btn.onclick=()=>{qm.classList.remove('on');afterQuestionDone()};
+  btn.onclick=()=>{qm.classList.remove('on');afterQuestionDone(result)};
  },1600);
 }
 
@@ -995,28 +1002,31 @@ function endFrenzy(){
 
 /* ================= 昼夜循环+商店(大爷17:08令) ================= */
 function curSpan(){return S.cur&&S.cur.lv>=2?4:3}
-function newSword(){S.cur={lv:1,qDone:0};S.value=0;S.qCount=0;S.dmgLv=0;applyWindow();hud();updateSword();
+function newSword(){S.cur={lv:1,qDone:0,q:0};S.value=0;S.qCount=0;S.dmgLv=0;applyWindow();hud();updateSword();
  toast(`🔨 新剑开锻:匕首(3音)· 魔力 ${S.mp}`)}
-function afterQuestionDone(){
+function afterQuestionDone(result){
  S.qCount++;
  S.cur.qDone++;
+ if(result==='great')S.cur.q+=1;else if(result==='good')S.cur.q+=.5;
  S.mp=Math.max(0,S.mp-1);
- if(S.cur.qDone>=4){swordDone();return}
- S.cur.lv=S.cur.qDone+1;
- applyWindow();hud();updateSword();
- toast(`⬆️ 剑升级!Lv.${S.cur.lv} · 音域 ${curSpan()} 音 (魔力 ${S.mp})`);
+ if(S.cur.qDone>=6){swordDone();return}
+ const newLv=Math.floor(S.cur.qDone/2)+1;
+ if(newLv>S.cur.lv){S.cur.lv=newLv;applyWindow();updateSword();
+  toast(`⬆️ 剑升级!Lv.${S.cur.lv} · 音域 ${curSpan()} 音 (魔力 ${S.mp})`)}
  if(S.mp<=0){S.forgeEnded=true;S.phase='idle';hud();$('quiz-hint').textContent='魔力耗尽!点「第二天」开门营业';return}
- S.phase='busy';
+ S.phase='busy';hud();
  setTimeout(()=>{S.q=genQuestion();playQuestion()},420);
 }
 function swordDone(){
  S.forged++;
  const sw=SWORDS[curSpan()-3];
- S.pack.push({name:sw.name,emoji:sw.emoji,lv:4,value:Math.round(S.value*(1-S.dmgLv*.1)),onShelf:false,sold:false});
+ const star=Math.min(4,1+Math.floor(S.cur.q));
+ const val=Math.round(S.value*(1-S.dmgLv*.1)*(1+.15*(star-1)));
+ S.pack.push({name:sw.name,emoji:sw.emoji,star,value:val,onShelf:false,sold:false});
  S.dmgLv=0;
  $('forge-flash').classList.add('go');setTimeout(()=>$('forge-flash').classList.remove('go'),600);
  playInst(84,0,1.2);setTimeout(()=>playInst(88,0,1),180);
- toast(`🎉 ${sw.name} 铸成!收进背包等售卖 · 价值 ${S.pack[S.pack.length-1].value}`);
+ toast(`🎉 ${sw.name} 铸成!品质 ${'★'.repeat(star)}${'☆'.repeat(4-star)} · 价值 ${val}`);
  if(S.mp>0&&!S.forgeEnded){newSword();S.phase='busy';setTimeout(()=>{S.q=genQuestion();playQuestion()},700)}
  else{S.forgeEnded=true;S.phase='idle';hud();$('quiz-hint').textContent='今晚的活干完了!点「第二天」开门营业'}
 }
@@ -1050,7 +1060,7 @@ function renderShelves(){
   el.innerHTML=`<div class="sh-tag">货架 ${i+1}</div>`;
   if(!p){const b=document.createElement('button');b.className='btn sh-empty';b.textContent='空空如也';
    b.onclick=()=>openPackModal(i);el.appendChild(b)}
-  else{el.innerHTML+=`<div class="sh-item">${p.emoji}</div><div class="sh-name">${p.name}</div><div class="sh-val">💰 ${p.value}</div>`}
+  else{el.innerHTML+=`<div class="sh-item">${p.emoji}</div><div class="sh-name">${p.name}</div><div class="sh-star">${'★'.repeat(p.star)}${'☆'.repeat(4-p.star)}</div><div class="sh-val">💰 ${p.value}</div>`}
  });
  renderShopGold();
 }
@@ -1059,7 +1069,7 @@ function openPackModal(slot){
  if(!avail.length){$('shop-hint').textContent='背包空空——今晚没铸出剑，或都已上架';return}
  const list=$('pm-list');list.innerHTML='';
  avail.forEach(p=>{const d=document.createElement('div');d.className='pm-item';
-  d.innerHTML=`<span>${p.emoji} ${p.name} · Lv.${p.lv}</span><span class="pi-val">💰 ${p.value}</span>`;
+  d.innerHTML=`<span>${p.emoji} ${p.name} ${'★'.repeat(p.star)}${'☆'.repeat(4-p.star)}</span><span class="pi-val">💰 ${p.value}</span>`;
   d.onclick=()=>{p.onShelf=true;S.shelf[slot]=p;$('pack-modal').classList.remove('on');renderShelves();
    $('shop-hint').textContent='上架成功!全部摆好后点「开门营业」'};
   list.appendChild(d)});
@@ -1070,40 +1080,59 @@ const CUSTS=['🧙‍♂️','🧝‍♀️','🧟','🧔','👩‍🎤','🥷']
 const FACES=['😊','😄','🤩','⭐','✨'];
 function bellOpen(){
  if(S.mode!=='shop')return;
- const stock=S.shelf.filter(p=>p&&!p.sold);
- if(!stock.length){$('shop-hint').textContent='先把剑摆上货架再营业!';return}
- $('shop-hint').textContent='营业中…冒险者进门了';
- let idx=0;
- const next=()=>{if(idx>=stock.length){$('shop-hint').textContent='全部售罄!点「打烊」收工 💰';return}
-  spawnCustomer(stock[idx++],next)};
- next();
+ const stock=()=>S.shelf.filter(p=>p&&!p.sold);
+ if(!stock().length){$('shop-hint').textContent='先把剑摆上货架再营业!';return}
+ $('shop-hint').textContent='营业中…冒险者进门了(点顾客头上的 💭 听他想买啥)';
+ let queue=stock().length;
+ const next=()=>{queue--;
+  if(queue<=0||!stock().length){$('shop-hint').textContent='今日客人都到齐了 · 点「打烊」收工 💰';return}
+  spawnCustomer(next)};
+ spawnCustomer(next);
 }
-function spawnCustomer(swordItem,done){
+function spawnCustomer(done){
+ const clv=1+Math.floor(Math.random()*4);
  const floor=$('shop-floor');
  const c=document.createElement('div');c.className='cust';
- c.innerHTML=`<span>${CUSTS[Math.floor(Math.random()*CUSTS.length)]}</span><div class="bubble"></div>`;
+ c.innerHTML=`<span>${CUSTS[Math.floor(Math.random()*CUSTS.length)]}</span>`+
+  `<div class="badge">Lv.${clv}</div><div class="emote"></div><button class="cloud" style="display:none">💭</button><div class="bubble"></div>`;
  floor.appendChild(c);
- const bub=c.querySelector('.bubble');
- const say=(t,off)=>{bub.textContent=t;bub.classList.toggle('on',!off)};
+ const bub=c.querySelector('.bubble'),cl=c.querySelector('.cloud'),em=c.querySelector('.emote');
+ const say=(t,keep)=>{bub.textContent=t;bub.classList.add('on');if(!keep)setTimeout(()=>bub.classList.remove('on'),2200)};
  const pos=el=>{const r=el.getBoundingClientRect(),f=floor.getBoundingClientRect();return{x:r.left-f.left+r.width/2,y:r.top-f.top+r.height-30}};
- const shelfEl=document.querySelectorAll('.shelf')[S.shelf.indexOf(swordItem)];
- const counterP=pos($('counter'));
- setTimeout(()=>{const s=pos(shelfEl);c.style.left=s.x+'px';c.style.top=s.y+'px'},80);
- setTimeout(()=>say('💭 这把剑…'),1900);
- setTimeout(()=>say('',1),2900);
- setTimeout(()=>{c.style.left=(counterP.x-90)+'px';c.style.top=(counterP.y-6)+'px'},3100);
- setTimeout(()=>{
-  const f=FACES[Math.min(FACES.length-1,Math.floor(Math.random()*3+Math.random()*2))];
-  say(`${f} 好剑!💰${swordItem.value}`);
-  const btn=$('ct-btn');btn.textContent=`💰 收款 +${swordItem.value}`;btn.classList.add('on');
-  btn.onclick=()=>{
-   coinSound();S.gold+=swordItem.value;swordItem.sold=true;S.soldCnt++;
-   renderShelves();btn.classList.remove('on');say('',1);
-   toast(`💰 卖出 ${swordItem.name} +${swordItem.value}`);
-   setTimeout(()=>{c.style.left='-80px'},400);
-   setTimeout(()=>{c.remove();done()},2100);
-  };
- },4700);
+ const walk=(x,y)=>{c.style.left=x+'px';c.style.top=y+'px'};
+ const shelfEls=document.querySelectorAll('.shelf');
+ const mid=shelfEls[1];
+ setTimeout(()=>walk(pos(mid).x,pos(mid).y+46),80);
+ setTimeout(()=>{if(!decided)cl.style.display='block'},2200);
+ let decided=false;
+ const decide=()=>{if(decided)return;decided=true;cl.style.display='none';
+  const stock=S.shelf.filter(p=>p&&!p.sold);
+  let best=null,bd=9;
+  stock.forEach(p=>{const d=Math.abs(p.star-clv);if(d<bd){bd=d;best=p}});
+  if(best&&bd<=1){
+   em.textContent=bd===0?'🤩':'😄';em.classList.add('on');
+   say(bd===0?'完美!正合我意!':'嗯,凑合能用!');
+   const shelfEl=shelfEls[S.shelf.indexOf(best)];
+   setTimeout(()=>walk(pos(shelfEl).x,pos(shelfEl).y+46),1500);
+   setTimeout(()=>{
+    const cp=pos($('counter'));walk(cp.x-90,cp.y-6);
+    say(`这把 ★${best.star} 的,💰${best.value} 卖我吧!`,1);
+    const btn=$('ct-btn');btn.textContent=`💰 收款 +${best.value}`;btn.classList.add('on');
+    btn.onclick=()=>{coinSound();S.gold+=best.value;best.sold=true;S.soldCnt++;
+     renderShelves();btn.classList.remove('on');em.classList.remove('on');bub.classList.remove('on');
+     toast(`💰 卖出 ${best.name}(★${best.star}) +${best.value} · 顾客 Lv.${clv}${bd===0?' 满意度拉满':''}`);
+     setTimeout(()=>{walk(-80,pos(mid).y+46)},400);
+     setTimeout(()=>{c.remove();done()},2100)};
+   },2900);
+  }else{
+   em.textContent='😠';em.classList.add('on');
+   say(`想要 ★${clv} 的剑,这都是些啥…`);
+   setTimeout(()=>{walk(60,150)},1900);
+   setTimeout(()=>{c.remove();done()},3600);
+  }
+ };
+ cl.onclick=e=>{e.stopPropagation();say(`我想要 ★${clv} 左右的剑…`);setTimeout(decide,2300)};
+ setTimeout(decide,6800);
 }
 function closeShop(){
  S.mode='forge';$('shop').classList.remove('on');
@@ -1223,7 +1252,7 @@ loadManifest();
  hud=function(){_hudOrig();
   if(S.cur){$('tier-tag').textContent=`Lv.${S.cur.lv}/4 · 第${S.day}天`;
    $('sword-title').textContent=SWORDS[curSpan()-3].name+(S.dmgLv>0?` 损-${S.dmgLv*10}%`:'');
-   $('value-fill').style.width=(S.cur.qDone/4*100)+'%';}
+   $('value-fill').style.width=(S.cur.qDone/6*100)+'%';}
   $('mp-fill').style.width=(S.mp/S.mpMax*100)+'%';
   $('mp-num').textContent='💫 '+S.mp+'/'+S.mpMax;
   $('btn-day2').style.display=(S.mode==='forge'&&(S.mp<=0||S.forgeEnded))?'inline-block':'none';

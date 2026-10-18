@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>V21 · 负债铁匠 · 打铁听音</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;user-select:none;color:#f3e9d8;overflow:hidden}
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#app{width:1280px;height:720px;flex:none;transform-origin:center center;background:radial-gradient(900px 700px at 50% 30%,#2a1c10 0%,#170f09 55%,#0a0705 100%);display:flex;flex-direction:column;overflow:hidden;position:relative}
+#app.frenzy{background:radial-gradient(900px 700px at 50% 30%,#3a1c08 0%,#241106 55%,#120803 100%)}
+#app.frenzy::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:35;box-shadow:inset 0 0 90px 24px #ff6b2daa;animation:frpulse .5s infinite}
+@keyframes frpulse{50%{box-shadow:inset 0 0 120px 34px #ff9a4dcc}}
+
+/* ===== 顶部 HUD ===== */
+#hud{flex:0 0 64px;display:flex;align-items:center;gap:14px;padding:0 16px;border-bottom:2px solid #4a3320;background:linear-gradient(180deg,#1c120a,#170f0999)}
+#hud-row1{display:flex;align-items:center;gap:10px}
+#debt-tag{font-size:12px;padding:3px 10px;border-radius:12px;background:#3a1218;border:1px solid #ff5d6c88;color:#ff9a8a;flex:none}
+#rent-num{font-weight:bold;color:#ffd54f}
+#gold-row{display:flex;align-items:center;gap:5px;font-size:16px;font-weight:bold;color:#ffd54f}
+#pot-row{display:flex;align-items:center;gap:5px;font-size:15px;font-weight:bold;color:#7ddf6a;margin-left:14px}
+#hud-row2{display:flex;align-items:flex-end;gap:12px;margin-top:7px}
+#sword-info{flex:1;min-width:0}
+#sword-name{font-size:18px;color:#ffe9b8;font-weight:bold;letter-spacing:1px;display:flex;align-items:center;gap:8px}
+#tier-tag{font-size:11px;color:#c9a06a;border:1px solid #6a4c2a;border-radius:8px;padding:1px 8px}
+#value-wrap{margin-top:4px}
+#value-bar{height:14px;background:#241505;border:1.5px solid #6a4c2a;border-radius:8px;overflow:hidden;position:relative}
+#value-fill{height:100%;width:0%;background:linear-gradient(90deg,#c9822a,#ffd54f);transition:width .25s;border-radius:8px}
+#value-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#fff;text-shadow:0 1px 3px #000}
+/* 充能条 */
+#charge-wrap{flex:none;width:170px;display:flex;flex-direction:column;gap:3px}
+#charge-label{font-size:10px;color:#c9a06a;text-align:center}
+#charge-label.fz{color:#ffb84d;font-weight:bold}
+#charge-bar{height:20px;background:#241505;border:1.5px solid #7a5830;border-radius:10px;overflow:hidden;display:flex}
+.ch-cell{flex:1;border-right:1px solid #00000055;transition:background .15s}
+.ch-cell:last-child{border-right:none}
+.ch-cell.on{background:linear-gradient(180deg,#ffb84d,#ff8a2a);box-shadow:0 0 8px #ffb84d88}
+.ch-cell.fz{background:linear-gradient(180deg,#fff3b0,#ffd54f);animation:frpulse .4s infinite}
+#frenzy-timer{font-size:11px;color:#ffb84d;font-weight:bold;text-align:center;min-height:14px}
+/* 档位概率条(5档,hud下方横跨条内) */
+#probs-strip{flex:1;display:flex;gap:5px;height:44px;min-width:0}
+.pbar{flex:1;height:44px;border:1px solid #4a3320;border-radius:7px;position:relative;overflow:hidden;background:#1a110a;transition:all .3s;min-width:0}
+.pbar .pfill{position:absolute;left:0;bottom:0;width:100%;transition:height .35s}
+.pbar .ptxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;line-height:1.15;font-weight:bold;text-shadow:0 1px 2px #000;z-index:2}
+.pbar .ptxt .pct{font-size:10px}
+.pbar.great .pfill{background:linear-gradient(180deg,#ffd54f66,#c9822a88)}
+.pbar.great .ptxt{color:#ffd54f}
+.pbar.good .pfill{background:linear-gradient(180deg,#7ddf6a55,#3a8a2a88)}
+.pbar.good .ptxt{color:#a8f0a0}
+.pbar.keep .pfill{background:linear-gradient(180deg,#c9c9c944,#8a8a8a66)}
+.pbar.keep .ptxt{color:#d8d8d8}
+.pbar.dmg .pfill{background:linear-gradient(180deg,#ff9d4d55,#8a4a1a88)}
+.pbar.dmg .ptxt{color:#ffb87a}
+.pbar.fail .pfill{background:linear-gradient(180deg,#ff5d6c55,#8a1a2688)}
+.pbar.fail .ptxt{color:#ff9a8a}
+#hud-row3{display:flex;gap:8px;margin-top:7px;align-items:center}
+.btn{padding:5px 16px;background:#33241374;border:1px solid #7a5830;border-radius:9px;color:#f3e9d8;font-size:13px;cursor:pointer;transition:all .15s}
+.btn:hover{border-color:#c9a06a;background:#4a332074}
+.btn.gold{background:linear-gradient(160deg,#a37c1c,#6d5210);border-color:#ffd54f;color:#fff6d8;font-weight:bold}
+.btn:disabled{opacity:.3;cursor:default}
+#btn-help{margin-left:auto;font-size:12px;padding:3px 12px}
+#acc-row{font-size:11px;color:#c9a06a;display:flex;gap:12px;align-items:center}
+
+/* ===== 题目区 ===== */
+#quiz{flex:0 0 126px;order:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-top:2px solid #4a3320;background:#120c0777;position:relative;padding:4px 0}
+#quiz-title{font-size:11px;color:#c9a06a;letter-spacing:1px}
+#slots{display:flex;gap:8px;align-items:center;justify-content:center;min-height:42px;flex:none}
+.qslot{width:46px;height:40px;border:2px dashed #6a4c2a;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a110a;transition:all .18s;position:relative}
+.qslot.waiting{border-style:dashed}
+.qslot.playing{border-color:#ffd54f;box-shadow:0 0 14px #ffd54f55;animation:qpulse .5s infinite}
+.qslot.hit{border-style:solid;border-color:#7ddf6a;background:linear-gradient(165deg,#1a3012,#0d1808)}
+.qslot.hit .qn{color:#a8f0a0}
+.qslot.miss{border-style:solid;border-color:#ff5d6c;background:linear-gradient(165deg,#3a1218,#1a0c10);animation:shake .35s}
+.qslot.miss .qn{color:#ff9a8a}
+.qslot .qn{font-size:15px;font-weight:bold;color:#8a6c42}
+.qslot .qsi{font-size:8px;color:#c9a06a66;margin-top:1px}
+.qslot.hit .qsi,.qslot.miss .qsi{color:#c9a06a}
+/* 我的输入行(2026-10-17 大爷令):与题目槽逐位对齐,显示实际按的音,对绿错红 */
+#my-slots{display:flex;gap:8px;align-items:center;justify-content:center;min-height:34px;flex:none}
+.mslot{width:46px;height:30px;border:1.5px dashed #4a3320;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#150d08;font-size:14px;font-weight:bold;color:#5a4428}
+.mslot.next{border-color:#ffd54f66;animation:mpulse 1s infinite}
+.mslot.ok{border-style:solid;border-color:#7ddf6a77;color:#a8f0a0;background:linear-gradient(165deg,#14240d,#0a1406)}
+.mslot.bad{border-style:solid;border-color:#ff5d6c99;color:#ff9a8a;background:linear-gradient(165deg,#2e0e14,#16070b)}
+@keyframes mpulse{50%{box-shadow:0 0 10px #ffd54f33}}
+@keyframes qpulse{50%{box-shadow:0 0 22px #ffd54faa}}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+#quiz-hint{font-size:12px;color:#8a6c42;min-height:16px;transition:color .2s}
+#quiz-hint.warn{color:#ff9a8a}
+#quiz-hint.fz{color:#ffb84d;font-weight:bold}
+
+/* ===== 铁砧区(音道+剑) ===== */
+#main{flex:1;display:flex;flex-direction:column;min-height:0}
+#mid{flex:1;display:flex;min-height:0}
+#acc-strip{flex:0 0 56px;display:flex;align-items:center;justify-content:flex-start;gap:16px;padding:0 14px;background:linear-gradient(180deg,#2a1a06,#1a1004);border-bottom:2px solid #c9a06a77}
+#acc-strip .acc-left{display:flex;align-items:center;gap:8px;flex:none}
+#acc-strip .lab{font-size:15px;color:#c9a06a;letter-spacing:2px}
+#acc-big{font-size:30px;color:#ffd54f;font-weight:800;text-shadow:0 0 16px #ffd54f55;font-family:inherit}
+#acc-detail2{font-size:12px;color:#c9a06a}
+#quench-btn{display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:40;padding:11px 20px;font-size:18px;font-weight:bold;border-radius:14px;background:linear-gradient(160deg,#8a5cff,#1a5f9e);border:2px solid #d0b3ff;color:#fff;cursor:pointer;animation:qbpulse 1.1s ease-in-out infinite;box-shadow:0 0 22px #4da3e888}
+@keyframes qbpulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.07)}}
+#left-col{width:240px;flex:none;order:2;display:flex;flex-direction:column;position:relative;border-left:2px solid #4a3320;background:linear-gradient(180deg,#150d07 0%,#0d0805 100%)}
+#girl-col{width:216px;flex:none;order:-1;display:flex;position:relative;border-right:2px solid #4a3320;background:linear-gradient(180deg,#150d07,#0d0805)}
+#bucket-zone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:12px 10px 6px;position:relative}
+#bucket{width:76%;max-width:235px;flex:none;filter:drop-shadow(0 8px 14px #000a)}
+#bucket-cap{font-size:12px;color:#7fb8e8;letter-spacing:1px;text-shadow:0 1px 2px #000}
+#bucket-num{font-size:13px;color:#d0b3ff;font-weight:600;text-shadow:0 1px 2px #000}
+/* 乐器音色选择(大爷16:50令) */
+#inst-zone{flex:none;max-height:236px;display:flex;flex-direction:column;border-top:2px solid #4a3320;padding:7px 8px 5px;background:linear-gradient(180deg,#150d07,#0d0805)}
+#inst-title{font-size:11px;color:#c9a06a;letter-spacing:2px;margin-bottom:5px;text-align:center;text-shadow:0 1px 2px #000}
+#inst-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding-right:2px;min-height:0}
+#inst-grid::-webkit-scrollbar{width:5px}
+#inst-grid::-webkit-scrollbar-thumb{background:#4a3320;border-radius:3px}
+.ibtn{font-size:10.5px;padding:5px 2px;border-radius:7px;border:1.5px solid #4a3320;background:#1a110a;color:#d8c9ae;cursor:pointer;transition:all .12s;line-height:1.25;font-family:inherit}
+.ibtn:hover{border-color:#ffd54f88;color:#ffe9b8}
+.ibtn.on{border-color:#ffd54f;background:linear-gradient(160deg,#4a3218,#2a1c0f);color:#ffe89a;box-shadow:0 0 8px #ffb84d44;font-weight:bold}
+.ibtn.load{opacity:.45;pointer-events:none}
+#bucket-water{transition:all .3s}
+#bucket-water-glow{transition:all .3s}
+.flydrop{position:absolute;z-index:36;pointer-events:none;font-size:19px;opacity:.95;transition:transform .55s cubic-bezier(.3,-.15,.65,1.05);text-shadow:0 2px 4px #0008}
+#anvil{flex:1;display:flex;position:relative;overflow:hidden;cursor:none}
+/* 铁砧俯视外形(大爷19:49令):右端尖角horn+左端砧尾 */
+#anvil::before{content:'';position:absolute;inset:0;z-index:0;
+ clip-path:polygon(1.5% 15%,68% 3%,100% 50%,68% 97%,1.5% 85%,7% 50%);
+ background:linear-gradient(165deg,#3d434c 0%,#2a2e35 45%,#181a1f 100%);
+ filter:drop-shadow(0 0 22px #000a)}
+#anvil::after{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+ clip-path:polygon(2% 17.5%,68.4% 6%,98.6% 50%,68.4% 94%,2% 82.5%,7.6% 50%);
+ background:linear-gradient(165deg,rgba(255,255,255,.10),transparent 26%),linear-gradient(0deg,#434a54 0%,#333941 55%,#262a31 100%)}
+#lanes{flex:1;display:flex;flex-direction:column-reverse;padding:12px 26px 12px 34px;gap:4px;position:relative;z-index:1}
+.lane{flex:1;display:flex;flex-direction:row;position:relative;align-items:center;gap:8px;padding:0 12px;border-radius:9px;border:1.5px solid #ffffff10;background:linear-gradient(90deg,#ffffff04,#ffffff08 50%,#ffffff04);transition:background .12s,border-color .12s,filter .2s;position:relative;min-height:0}
+.lane .ln{flex:none;text-align:center;font-size:15px;font-weight:bold;text-shadow:0 0 8px currentColor}
+.lane .lk{flex:none;text-align:center;font-size:10px;opacity:.55}
+.lane.dim{filter:brightness(.32) saturate(.4)}
+.lane.cov{border-color:#ffffff28}
+.lane.cov .ln{opacity:1}
+.anchor-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:3;display:none;padding:4px 14px;border-radius:14px;background:linear-gradient(180deg,#4a3218,#2a1c0f);border:2px solid #ffd54f;box-shadow:0 0 10px #ffb84d88,0 1px 3px #000a;color:#ffe89a;font-size:15px;font-weight:bold;cursor:pointer;pointer-events:auto;animation:anchorPulse 1.6s ease-in-out infinite}
+@keyframes anchorPulse{0%,100%{box-shadow:0 0 8px #ffb84d55,0 1px 3px #000a}50%{box-shadow:0 0 18px #ffb84dbb,0 1px 3px #000a}}
+.lane.anchor-on .anchor-btn{display:block}
+.anchor-btn:hover{background:#5a4020;color:#fff}
+.lane.off{display:none}
+.lane.flash-hit{background:linear-gradient(90deg,#5dff7a30,#5dff7a4d 50%,#5dff7a30)!important;border-color:#5dff7a!important}
+.lane.flash-miss{background:linear-gradient(90deg,#ff5d6c30,#ff5d6c4d 50%,#ff5d6c30)!important;border-color:#ff5d6c!important}
+@keyframes crackshake{0%{transform:translate(0)}20%{transform:translate(-4px,2px)}40%{transform:translate(4px,-2px)}60%{transform:translate(-3px,0)}80%{transform:translate(2px,1px)}100%{transform:translate(0)}}
+/* 五线谱底色 */
+.staff-line{position:absolute;left:1.5%;right:1.5%;height:1.6px;background:#d8c9a844;pointer-events:none;z-index:0}
+.staff-line.xl{background:#d8c9a822;border-top:1px dashed #d8c9a855;background:none}
+.staff-clef{position:absolute;left:4px;font-size:58px;line-height:1;color:#d8c9a8aa;font-family:'Noto Music','Segoe UI Symbol','Bravura',serif;z-index:0;pointer-events:none;text-shadow:0 0 8px #d8c9a833}
+.note-head{position:absolute;left:34%;top:50%;width:15px;height:10.5px;border-radius:50%;transform:translate(-50%,-50%) rotate(-16deg);z-index:1;pointer-events:none;box-shadow:0 1px 3px #0009,inset -2px -1px 2px #0005}
+.nh-stem{position:absolute;right:-1.5px;top:7px;width:1.8px;height:34px;background:inherit;opacity:.9}
+/* 剑(竖放:柄在下do端,尖朝上高音) */
+#sword-zone{position:absolute;left:50%;top:0;bottom:0;width:150px;transform:translateX(-50%);pointer-events:none;z-index:5}
+#sword-value{position:absolute;left:50%;transform:translate(-50%,-50%);z-index:7;pointer-events:none;font-size:20px;font-weight:bold;color:#ffe89a;text-shadow:0 0 4px #000,0 0 10px #000c,0 2px 2px #000;white-space:nowrap;transition:top .5s}
+#sword-svg{position:absolute;left:50%;transform:translateX(-50%);transition:height .5s,top .5s;filter:drop-shadow(0 0 12px #ffb84d33);width:140px}
+#sword-glow{position:absolute;left:50%;transform:translateX(-50%);width:140px;border-radius:50%;background:radial-gradient(closest-side,#ffb84d2d,transparent);pointer-events:none;transition:height .5s,top .5s}
+/* 激光(上下横线标音域) */
+.laser{position:absolute;left:12px;right:12px;height:2px;background:linear-gradient(90deg,transparent,#ff5d6c66 15%,#ff5d6cdd 50%,#ff5d6c66 85%,transparent);box-shadow:0 0 12px #ff5d6c88;z-index:4;pointer-events:none;transition:top .5s}
+.laser::before,.laser::after{content:'';position:absolute;left:-3px;width:8px;height:8px;border-radius:50%;background:#ff5d6c;box-shadow:0 0 10px #ff5d6c}
+.laser::before{top:-3px}.laser::after{bottom:-3px}
+/* 碎剑(失败档) */
+#sword-zone.shatter #sword-svg{animation:sshake .55s ease-out}
+@keyframes sshake{0%{filter:drop-shadow(0 0 16px #ff5d6c)}25%{transform:translateX(calc(-50% - 12px)) rotate(-4deg)}50%{transform:translateX(calc(-50% + 9px)) rotate(3deg)}75%{transform:translateX(calc(-50% - 5px))}100%{transform:translateX(-50%)}}
+.frag{position:absolute;width:11px;height:9px;background:linear-gradient(135deg,#c9d4e0,#7a848f);clip-path:polygon(0 100%,50% 0,100% 100%);z-index:20;pointer-events:none;animation:fragfly .9s ease-in forwards}
+@keyframes fragfly{to{transform:translate(var(--fx),var(--fy)) rotate(200deg);opacity:0}}
+
+/* ===== 女铁匠(素材槽:H3 视频帧就位前用占位 SVG) ===== */
+#girl{flex:1;width:100%;min-height:0;z-index:6;pointer-events:none;display:flex;align-items:flex-end;justify-content:center;padding:0 6px 8px}
+#girl .gph{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;position:relative;transition:transform .1s}
+#girl .gph.idle{animation:gbreath 2.6s ease-in-out infinite}
+#girl .gph.strike{animation:gbounce .38s ease-out}
+#girl .gph.hurt{animation:ghurt .5s ease-out}
+@keyframes gbreath{50%{transform:translateY(-6px) scale(1.012)}}
+@keyframes gbounce{0%{transform:translateY(0)}35%{transform:translateY(-26px) rotate(-3deg)}70%{transform:translateY(2px)}100%{transform:translateY(0)}}
+@keyframes ghurt{0%{transform:translateX(0)}25%{transform:translateX(-9px) rotate(2deg)}55%{transform:translateX(7px) rotate(-2deg)}80%{transform:translateX(-3px)}100%{transform:translateX(0)}}
+#girl-tag{position:absolute;top:-4px;left:50%;transform:translateX(-50%);font-size:9px;color:#c9a06a99;background:#1a110acc;padding:1px 8px;border-radius:8px;white-space:nowrap}
+
+/* ===== 铁锤本体(跟随鼠标) ===== */
+#app{touch-action:none;cursor:none;-webkit-user-select:none;user-select:none}
+body{overflow:hidden}
+#hammer{position:absolute;z-index:30;pointer-events:none;transform-origin:12% 88%;filter:drop-shadow(0 5px 9px #000c);transition:transform .05s linear,opacity .4s}
+#hammer svg{display:block}
+#hammer.swing{animation:mswing .22s cubic-bezier(.6,0,.9,1)}
+@keyframes mswing{0%{transform:rotate(8deg)}45%{transform:rotate(-52deg) translateY(10px)}100%{transform:rotate(8deg)}}
+.spark{position:absolute;font-size:15px;z-index:31;pointer-events:none;animation:sparkfly .5s ease-out forwards}
+@keyframes sparkfly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.4)}}
+.float{position:absolute;font-size:17px;font-weight:bold;z-index:32;pointer-events:none;animation:floatup 1s ease-out forwards;text-shadow:0 1px 3px #000}
+.float.plus{color:#7ddf6a}
+.float.minus{color:#ff5d6c}
+.float.gold{color:#ffd54f;font-size:19px}
+@keyframes floatup{0%{opacity:0;transform:translateY(6px)}15%{opacity:1}100%{opacity:0;transform:translateY(-46px)}}
+
+/* ===== 淬火居中面板(大爷19:49令:覆盖式展示,点继续才关) ===== */
+#quench-modal{position:fixed;inset:0;z-index:60;background:#000000ba;display:none;align-items:center;justify-content:center;cursor:auto}
+#quench-modal.on{display:flex}
+#qm-card{width:min(620px,88vw);background:linear-gradient(165deg,#2b2118,#191018 70%);border:2px solid #c9a06a90;border-radius:18px;padding:24px 30px;text-align:center;box-shadow:0 18px 60px #000c,0 0 46px #ffb84d26;animation:qmpop .3s cubic-bezier(.3,-.2,.6,1.4)}
+@keyframes qmpop{from{transform:scale(.84);opacity:0}}
+#qm-title{font-size:26px;font-weight:bold;color:#ffd54f;text-shadow:0 0 16px #ffb84d66;margin-bottom:6px}
+#qm-sub{font-size:13px;color:#cbb8a0;margin-bottom:14px}
+#qm-strip{display:flex;gap:10px;justify-content:center;margin:10px 0 14px}
+#qm-strip .rslot{width:96px;height:80px}
+#qm-result{font-size:17px;min-height:28px;margin-bottom:14px;font-weight:bold}
+#qm-btn{font-size:15px;padding:9px 32px}
+
+/* ===== 淬火面板(旧左栏版,退役保留) ===== */
+#quench{position:absolute;left:50%;top:26%;transform:translate(-50%,-50%);width:min(96%,224px);z-index:45;display:none;flex-direction:column;align-items:center;gap:8px;background:linear-gradient(180deg,#0e1420f2,#0a0e18f2);border:2px solid #4d8dd8aa;border-radius:16px;padding:14px 18px 16px;box-shadow:0 0 44px #4d8dd844}
+#quench.on{display:flex;animation:qin .3s ease-out}
+@keyframes qin{0%{opacity:0;transform:translate(-50%,-46%) scale(.9)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+#quench-title{font-size:21px;font-weight:900;color:#bfe3ff;letter-spacing:5px;text-shadow:0 0 16px #4d8dd8aa}
+#quench-sub{font-size:12px;color:#8fb8dd}
+#roll-strip{display:flex;gap:8px;height:84px;position:relative}
+.rslot{width:110px;height:84px;border:2px solid #4a3320;border-radius:10px;background:#1a110a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all .12s;position:relative}
+.rslot .rn{font-size:15px;font-weight:900}
+.rslot .rm{font-size:11px;color:#c9a06a}
+.rslot.great .rn{color:#ffd54f}.rslot.good .rn{color:#a8f0a0}.rslot.keep .rn{color:#d8d8d8}.rslot.dmg .rn{color:#ffb87a}.rslot.fail .rn{color:#ff9a8a}
+.rslot.rolling{animation:rroll .38s linear infinite}
+@keyframes rroll{0%{transform:translateY(0)}50%{transform:translateY(-7px)}100%{transform:translateY(0)}}
+.rslot.winner{border-color:currentColor;box-shadow:0 0 26px currentColor;transform:scale(1.13);z-index:2}
+.rslot.winner.great{color:#ffd54f}.rslot.winner.good{color:#a8f0a0}.rslot.winner.keep{color:#d8d8d8}.rslot.winner.dmg{color:#ffb87a}.rslot.winner.fail{color:#ff9a8a}
+#quench-steam{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:34px;opacity:0;pointer-events:none}
+#quench-steam.puff{animation:steampuff 1.1s ease-out}
+@keyframes steampuff{0%{opacity:0;transform:translateX(-50%) translateY(8px) scale(.6)}25%{opacity:.95}100%{opacity:0;transform:translateX(-50%) translateY(-46px) scale(1.5)}}
+#quench-result{font-size:19px;font-weight:900;min-height:26px}
+
+/* ===== 昼夜循环(大爷17:08令):魔力条/过场/商店 ===== */
+#mp-wrap{flex:none;padding:6px 10px 10px;border-top:2px solid #4a3320;background:linear-gradient(180deg,#150d07,#0d0805)}
+#mp-label{font-size:10px;color:#c9a06a;letter-spacing:1px;margin-bottom:3px;text-align:center}
+#mp-bar{height:14px;border-radius:8px;background:#1a110a;border:1.5px solid #4a3320;overflow:hidden;position:relative}
+#mp-fill{height:100%;background:linear-gradient(90deg,#8a5cff,#5da8ff);transition:width .4s}
+#mp-num{position:absolute;inset:0;font-size:10px;color:#fff;text-align:center;line-height:14px;text-shadow:0 1px 2px #000}
+#btn-day2{display:none}
+#night-fade{position:absolute;inset:0;z-index:200;background:#000;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;cursor:auto}
+#night-fade.on{display:flex;animation:nfade 2s ease-in-out forwards}
+@keyframes nfade{0%{opacity:0}18%{opacity:1}82%{opacity:1}100%{opacity:0}}
+#nf-text{font-size:46px;font-weight:900;color:#ffd54f;letter-spacing:10px;text-shadow:0 0 30px #ffb84d88;animation:nfpop .9s cubic-bezier(.3,-.2,.6,1.4)}
+#nf-sub{font-size:14px;color:#cbb8a0;letter-spacing:3px}
+@keyframes nfpop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+#shop{position:absolute;inset:0;z-index:90;display:none;flex-direction:column;background:linear-gradient(180deg,#1b1410 0%,#241a12 60%,#16100b 100%);cursor:auto}
+#shop.on{display:flex}
+#shop-head{flex:none;display:flex;align-items:center;justify-content:space-between;padding:10px 22px;border-bottom:2px solid #4a3320}
+#shop-title{font-size:20px;font-weight:900;color:#ffe89a;text-shadow:0 0 12px #ffb84d55}
+#shop-gold{font-size:16px;color:#ffd54f;font-weight:bold}
+#shop-stage{flex:1.25;position:relative;overflow:hidden;background:linear-gradient(180deg,#0c1118 0%,#131c28 60%,#1b2430 100%);border-bottom:2px solid #4a3320}
+#window-frame{position:absolute;left:50%;top:8px;transform:translateX(-50%);width:min(620px,86%);height:calc(100% - 16px);border:6px solid #6a4a28;border-radius:16px 16px 4px 4px;box-shadow:inset 0 0 46px #00000088,0 4px 18px #0008;pointer-events:none}
+#window-frame::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:4px;background:#6a4a28;transform:translateX(-50%)}
+#street{position:absolute;left:0;right:0;bottom:0;height:30%;background:linear-gradient(180deg,#23262e,#14161b)}
+#ps-cust{position:absolute;left:110%;bottom:16%;font-size:46px;transition:left 1.9s ease-in-out;filter:drop-shadow(0 6px 12px #000a);z-index:4}
+.pc-name{position:absolute;top:-4px;right:-52px;font-size:10px;background:#2a1c0e;border:1px solid #c9a06a88;color:#ffd54f;border-radius:8px;padding:1px 6px;font-weight:bold;white-space:nowrap}
+#ps-bubble{position:absolute;left:50%;top:12px;transform:translateX(-50%) scale(0);font-size:15px;white-space:nowrap;background:#1a110aee;border:1px solid #c9a06a66;border-radius:10px;padding:4px 12px;transition:transform .25s cubic-bezier(.3,-.2,.6,1.5);z-index:6;color:#ffe9b8}
+#ps-bubble.on{transform:translateX(-50%) scale(1)}
+#ps-counter{flex:none;display:flex;align-items:center;gap:12px;padding:8px 14px;background:linear-gradient(180deg,#4a3320,#31220f);border-bottom:3px solid #2a1c0e;min-height:86px}
+#counter-girl{font-size:36px;filter:drop-shadow(0 4px 8px #0009)}
+#ct-slots{display:flex;gap:10px;flex:1;justify-content:center}
+.ct-slot{width:118px;height:66px;border-radius:10px;border:2px dashed #c9a06a55;background:#1a110add;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:12px;color:#ffe9b8}
+.ct-slot:hover{border-color:#ffd54f}
+.ct-slot .cs-e{font-size:26px}
+.ct-slot .cs-info{display:flex;flex-direction:column;gap:1px;font-size:10px;line-height:1.2}
+.ct-slot .cs-v{color:#ffd54f}
+#ps-chest{flex:1;overflow-y:auto;padding:8px 16px;background:#120d08}
+.inv-sec{font-size:11px;color:#c9a06a;letter-spacing:2px;margin:2px 0 8px}
+#inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.inv-cell{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 6px;border-radius:10px;border:2px solid #4a3320;background:#1a110a;color:#ffe9b8;font-size:12px;cursor:pointer;transition:border-color .12s}
+.inv-cell:hover{border-color:#ffd54f}
+.inv-cell .ic-e{font-size:24px}
+.inv-cell .ic-info{display:flex;flex-direction:column;font-size:10px;line-height:1.25}
+.inv-cell .ic-v{color:#ffd54f}
+.badge{position:absolute;top:-22px;right:-30px;font-size:10px;background:#2a1c0e;border:1px solid #c9a06a88;color:#ffd54f;border-radius:8px;padding:1px 6px;font-weight:bold;white-space:nowrap}
+.emote{position:absolute;top:-72px;left:50%;transform:translateX(-50%) scale(0);font-size:34px;transition:transform .35s cubic-bezier(.3,-.2,.6,1.6);pointer-events:none;z-index:6}
+.emote.on{transform:translateX(-50%) scale(1)}
+.lane.flash-tap{filter:brightness(1.5)}
+#chest-btn{margin:6px 10px 4px;font-size:12px;padding:6px 10px}
+#chest-btn b{color:#ffd54f}
+#chest-modal{position:absolute;inset:0;z-index:150;background:#000000ba;display:none;align-items:center;justify-content:center;cursor:auto}
+#chest-modal.on{display:flex}
+#cm-card{width:min(430px,86vw);max-height:80vh;overflow-y:auto;background:linear-gradient(165deg,#2b2015,#191210 70%);border:2px solid #c9a06a90;border-radius:18px;padding:16px 20px;text-align:center;box-shadow:0 18px 60px #000c}
+#cm-title{font-size:18px;font-weight:bold;color:#ffd54f;margin-bottom:10px}
+.cm-sec{font-size:11px;color:#c9a06a;letter-spacing:1px;margin:8px 0 6px;text-align:left;border-bottom:1px dashed #4a3320;padding-bottom:3px}
+#cm-blank-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:52px}
+.cm-blank{display:flex;flex-direction:column;align-items:center;gap:2px;width:88px;padding:8px 4px;border-radius:10px;border:2px dashed #5a4020;background:#1a110a;color:#ffe9b8;font-size:12px;cursor:grab}
+.cm-blank:active{cursor:grabbing}
+.cm-blank:hover{border-color:#ffd54f}
+.cm-blank .cb-e{font-size:26px}
+#cm-done-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:40px}
+.cm-done{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:10px;border:2px solid #4a3320;background:#1a110a;color:#ffe9b8;font-size:12px}
+.cm-done .cd-v{color:#ffd54f}
+.cm-none{font-size:12px;color:#6b5844;padding:6px}
+#anvil-empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:4;pointer-events:none;font-size:15px;color:#c9a06add;letter-spacing:2px;text-shadow:0 2px 8px #000}
+#anvil.drop-ready{outline:3px dashed #ffd54f;outline-offset:-6px}
+/* ===== 遮罩层 ===== */
+#overlay{position:absolute;inset:0;background:#0a0705e8;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:50;padding:36px;text-align:center;cursor:auto}
+#overlay.on{display:flex}
+#ov-title{font-size:36px;font-weight:900;letter-spacing:4px}
+#ov-title.gold{color:#ffd54f;text-shadow:0 0 30px #ffb84d88}
+#ov-title.red{color:#ff5d6c;text-shadow:0 0 30px #ff5d6c66}
+#ov-title.blue{color:#bfe3ff;text-shadow:0 0 30px #4d8dd8aa}
+#ov-body{color:#d8c9ae;font-size:15px;line-height:1.9;max-width:560px}
+#ov-body b{color:#ffd54f}
+#ov-sword{font-size:60px}
+#ov-btns{display:flex;gap:14px;margin-top:4px}
+#toast{position:absolute;top:248px;left:50%;transform:translateX(-50%);background:#2a1c10ee;border:1px solid #ffd54f66;color:#ffe9b8;padding:8px 24px;border-radius:9px;font-size:14px;z-index:120;display:none}
+#toast.on{display:block}
+#forge-flash{position:absolute;inset:0;background:#ffd54f;opacity:0;z-index:40;pointer-events:none}
+#forge-flash.go{animation:fflash .55s ease-out}
+@keyframes fflash{12%{opacity:.55}100%{opacity:0}}
+</style>
+</head>
+<body>
+<div id="stage"><div id="app">
+  <div id="hud">
+    <div id="sword-info">
+      <div id="sword-name"><span id="sword-emoji">🗡️</span><span id="sword-title">生锈匕首</span><span id="tier-tag">Tier 1/8</span></div>
+      <div id="value-wrap"><div id="value-bar"><div id="value-fill"></div><div id="value-num">0</div></div></div>
+    </div>
+    <div id="pot-row">🔮 魔能 <span id="pot-num">0</span></div>
+    <div id="gold-row"><span class="coin">🪙</span><span id="gold-num">0</span></div>
+    <div id="charge-wrap">
+      <div id="charge-label">超神充能</div>
+      <div id="charge-bar"></div>
+      <div id="frenzy-timer"></div>
+    </div>
+    <button class="btn gold" id="btn-start">🧰 打开箱子</button>
+    <button class="btn" id="btn-replay" disabled>🔁 重听</button>
+    <button class="btn" id="btn-help">❓</button>
+  </div>
+  <div id="quench-modal"><div id="qm-card">
+  <div id="qm-title">🔥 淬 火</div>
+  <div id="qm-sub"></div>
+  <div id="qm-strip"></div>
+  <div id="qm-result"></div>
+  <button id="qm-btn" class="btn gold" style="display:none">🔨 继续锻造</button>
+ </div></div>
+<div id="quiz">
+    <div id="quiz-title">听音 · 按顺序敲出题目 · 敲完淬火</div>
+    <div id="slots"></div>
+ <div id="my-slots"></div>
+    <div id="quiz-hint">点「🧰 打开箱子」拖一把剑坯上砧</div>
+  </div>
+  <div id="main">
+   <div id="acc-strip"><div class="acc-left"><span class="lab">🎯 正确率</span><b id="acc-big">—</b><span id="acc-detail2"></span></div><div id="probs-strip">
+      <div class="pbar great" id="pb-great"><div class="pfill"></div><div class="ptxt"><span class="nm">大成功 ×4</span><span class="pct">2%</span></div></div>
+      <div class="pbar good" id="pb-good"><div class="pfill"></div><div class="ptxt"><span class="nm">成功 ×2</span><span class="pct">18%</span></div></div>
+      <div class="pbar keep" id="pb-keep"><div class="pfill"></div><div class="ptxt"><span class="nm">维持 ×1</span><span class="pct">30%</span></div></div>
+      <div class="pbar dmg" id="pb-dmg"><div class="pfill"></div><div class="ptxt"><span class="nm">损坏 剑损</span><span class="pct">20%</span></div></div>
+      <div class="pbar fail" id="pb-fail"><div class="pfill"></div><div class="ptxt"><span class="nm">失败 剑碎</span><span class="pct">30%</span></div></div>
+    </div></div>
+   <div id="mid">
+   <div id="left-col">
+    <div id="bucket-zone">
+      <button id="quench-btn">🔥 淬 火</button>
+      <div id="bucket-cap">🔮 注魔池 · 敲击积累魔能</div>
+      <svg id="bucket" viewBox="0 0 200 230">
+        <defs><clipPath id="bkc"><path d="M36,42 L32,200 Q100,222 168,200 L164,42 Q100,56 36,42"/></clipPath></defs>
+        <path d="M36,42 L32,200 Q100,222 168,200 L164,42" fill="#5c3d20" stroke="#2f1f0e" stroke-width="3"/>
+        <path d="M78,44 L75,214" stroke="#3f2a14" stroke-width="2" fill="none"/>
+        <path d="M122,44 L125,214" stroke="#3f2a14" stroke-width="2" fill="none"/>
+        <g clip-path="url(#bkc)">
+          <rect id="bucket-water" x="20" y="204" width="160" height="0" fill="#8a5cff" opacity="0.88"/>
+          <rect id="bucket-water-glow" x="20" y="202" width="160" height="3" fill="#d0b3ff" opacity="0"/>
+        </g>
+        <path d="M33,110 Q100,128 167,110" fill="none" stroke="#8d949e" stroke-width="7"/>
+        <path d="M31,165 Q100,183 169,165" fill="none" stroke="#8d949e" stroke-width="7"/>
+        <ellipse cx="100" cy="42" rx="64" ry="13" fill="none" stroke="#8a5a2e" stroke-width="5"/>
+      </svg>
+      <div id="bucket-num">🔮 ×<span id="bucket-drops">0</span></div>
+    </div>
+    <div id="inst-zone">
+      <div id="inst-title">🎵 乐器音色</div>
+      <div id="inst-grid"></div>
+    </div>
+    <div id="quench">
+      <div id="quench-steam">💨💨💨</div>
+      <div id="quench-title">🔥 淬 火</div>
+      <div id="quench-sub">概率付诸实践…</div>
+      <div id="roll-strip"></div>
+      <div id="quench-result"></div>
+    </div>
+   </div>
+   <div id="anvil">
+    <div id="anvil-empty">🧰 从箱子拖一把剑坯上来</div>
+    <div id="lanes"></div>
+    <div id="laser-top" class="laser"></div>
+    <div id="laser-bot" class="laser"></div>
+    <div id="sword-glow"></div>
+    <div id="sword-zone"><svg id="sword-svg" width="600" height="120" viewBox="0 0 600 120"></svg><div id="sword-value"></div></div>
+   </div>
+   <div id="girl-col">
+    <div id="girl"><div class="gph idle" id="girl-ph"></div></div>
+    <div id="mp-wrap">
+      <div id="mp-label">💫 魔力</div>
+      <div id="mp-bar"><div id="mp-fill"></div><div id="mp-num">12/12</div></div>
+    </div>
+    <button id="chest-btn" class="btn">🧰 箱子 <b>3</b></button>
+   </div>
+   </div>
+  </div>
+  <div id="shop">
+    <div id="shop-head">
+      <div id="shop-title">🏪 铁匠铺 · 柜台售卖</div>
+      <div id="shop-gold">💰 <span id="shop-gold-num">0</span></div>
+    </div>
+        <div id="shop-stage">
+      <div id="window-frame"></div>
+      <div id="street"></div>
+      <div id="ps-cust"><span id="pc-face">🧑</span><div class="pc-name" id="pc-name"></div><div class="emote" id="pc-emote"></div></div>
+      <div id="ps-bubble"></div>
+    </div>
+    <div id="ps-counter">
+      <div id="counter-girl">🧑‍🌾</div>
+      <div id="ct-slots"></div>
+    </div>
+    <div id="ps-chest">
+      <div class="inv-sec">🧰 箱子 · 点剑上柜台</div>
+      <div id="inv-grid"></div>
+    </div>
+    <div id="shop-foot">
+      <button id="btn-bell" class="btn gold">🛎️ 下一位顾客</button>
+      <div id="shop-hint">点击空货架，把铸好的剑摆上去</div>
+      <button id="btn-close" class="btn">🌙 打烊</button>
+    </div>
+  </div>
+  <div id="chest-modal"><div id="cm-card">
+    <div id="cm-title">🧰 工具箱</div>
+    <div class="cm-sec">剑坯 · 拖到铁砧开锻(直接点也行)</div>
+    <div id="cm-blank-list"></div>
+    <div class="cm-sec">成品 · 没碎的都在,第二天上架卖</div>
+    <div id="cm-done-list"></div>
+    <button id="cm-close" class="btn">关上箱子</button>
+  </div></div>
+  <div id="night-fade"><div id="nf-text">第二天</div><div id="nf-sub"></div></div>
+  <div id="forge-flash"></div>
+  <div id="toast"></div>
+  <div id="overlay">
+    <div id="ov-sword">⚔️</div>
+    <div id="ov-title"></div>
+    <div id="ov-body"></div>
+    <div id="ov-btns"></div>
+  </div>
+</div></div>
+<script>
+/* ================= 配置(全部可调参数) ================= */
+const CFG={
+ FRENZY_NEED:10,      // 连对敲击数 → 超神
+ FRENZY_SECS:8,       // 超神窗口秒数
+ FRENZY_GOLD:2,       // 超神内敲对立即得金/击
+ POT_PER_HIT:1,       // 敲对积累魔能/击
+ CONTOUR_BONUS:1,     // 轮廓全对(整体平移)保底魔能(技能可加)
+ TIERS:{great:{name:'大成功',mult:4,cls:'great'},good:{name:'成功',mult:2,cls:'good'},
+        keep:{name:'维持',mult:1,cls:'keep'},dmg:{name:'损坏',mult:0,cls:'dmg'},fail:{name:'失败',mult:0,cls:'fail'}},
+ PROB:{great0:.02,great1:.45, good0:.18,good1:.33, keep0:.30,keep1:.15, dmg0:.20,dmg1:.05, fail0:.30,fail1:.02},
+ RENT_START:300,      // 房租秒数
+ RENT_PER_FORGE:75,   // 每铸成一把 +秒
+};
+const NOTES=[
+ {m:60,n:'do', d:'C4'},{m:62,n:'re', d:'D4'},{m:64,n:'mi', d:'E4'},{m:65,n:'fa', d:'F4'},
+ {m:67,n:'sol',d:'G4'},{m:69,n:'la', d:'A4'},{m:71,n:'si', d:'B4'},
+ {m:72,n:'do′',d:'C5'},{m:74,n:'re′',d:'D5'},{m:76,n:'mi′',d:'E5'},{m:77,n:'fa′',d:'F5'},
+ {m:79,n:'sol′',d:'G5'},{m:81,n:'la′',d:'A5'},{m:83,n:'si′',d:'B5'},{m:84,n:'do″',d:'C6'}
+];
+const NOTE_COLORS={do:'#ff6b5d',re:'#ff9d4d',mi:'#ffd54f',fa:'#7ddf6a',sol:'#4dd8c4',la:'#5da8ff',si:'#b88aff'};
+const colorOf=n=>NOTE_COLORS[n.replace(/[′″]/,'')]||'#ddd';
+const ANCHORS={0:'C4',5:'A4'}; // 音感锚点(大爷20:46令):剑覆盖时可点重听
+const SWORDS=[
+ {name:'生锈匕首', emoji:'🗡️', span:3,  vis:5,  qlen:3, base:60,  sell:80},
+ {name:'猎户短剑', emoji:'🔪', span:4,  vis:5,  qlen:3, base:100, sell:150},
+ {name:'学徒直剑', emoji:'🩸', span:5,  vis:8,  qlen:3, base:140, sell:220},
+ {name:'骑士长剑', emoji:'⚔️', span:6,  vis:8,  qlen:3, base:180, sell:300},
+ {name:'双手大剑', emoji:'🗡️', span:8,  vis:10, qlen:3, base:240, sell:420},
+ {name:'门卫巨剑', emoji:'🗿', span:10, vis:10, qlen:3, base:320, sell:600},
+ {name:'巨人格斗剑', emoji:'🪓', span:12, vis:12, qlen:3, base:420, sell:900},
+ {name:'青龙偃月刀', emoji:'🐉', span:15, vis:15, qlen:3, base:600, sell:1288}
+];
+
+/* ================= 状态 ================= */
+const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0,
+ rentLeft:CFG.RENT_START,rentTimer:null,dmgLv:0,
+ mp:12,mpMax:12,day:1,mode:'forge',cur:null,pack:[],counter:[null,null,null,null],forgeEnded:false,soldCnt:0,
+ chest:[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}],
+ frenzyActive:false,frenzyEnd:0,frenzyTimer:null,pendingQuench:false,
+ hits:0,strikes:0,            // 本题:敲对数/已敲数
+ totHits:0,totStrikes:0,      // 全局统计
+ phase:'idle', // idle|playing|input|quench|busy|over
+ q:[],pos:0,revealed:false};
+const $=id=>document.getElementById(id);
+
+/* ================= 档位概率(正确率驱动) ================= */
+function lerp(a,b,t){return a+(b-a)*t}
+function computeProbs(acc){ // acc∈[0,1]
+ let g=lerp(CFG.PROB.great0,CFG.PROB.great1,Math.pow(acc,1.6)),
+     go=lerp(CFG.PROB.good0,CFG.PROB.good1,acc),
+     n=lerp(CFG.PROB.keep0,CFG.PROB.keep1,acc),
+     dm=lerp(CFG.PROB.dmg0,CFG.PROB.dmg1,Math.pow(acc,1.8)),
+     f=lerp(CFG.PROB.fail0,CFG.PROB.fail1,Math.pow(acc,2.2));
+ const sum=g+go+n+dm+f;
+ return {great:g/sum*100,good:go/sum*100,keep:n/sum*100,dmg:dm/sum*100,fail:f/sum*100};
+}
+function rollTier(probs){
+ const r=Math.random()*100;
+ if(r<probs.great)return 'great';
+ if(r<probs.great+probs.good)return 'good';
+ if(r<probs.great+probs.good+probs.keep)return 'keep';
+ if(r<probs.great+probs.good+probs.keep+probs.dmg)return 'dmg';
+ return 'fail';
+}
+function curAcc(){return S.strikes>0?S.hits/S.strikes:(S.totStrikes>0?S.totHits/S.totStrikes:.5)}
+
+/* ================= 音频 ================= */
+let AC=null;
+function au(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}
+function tone(f,when=0,dur=.42,vol=.22){const c=au(),t=c.currentTime+when;const o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.value=f;o.connect(g);g.connect(c.destination);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.028);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.start(t);o.stop(t+dur+.05)}
+function clankNeutral(){const c=au(),t=c.currentTime;const o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.setValueAtTime(760,t);o.frequency.exponentialRampToValueAtTime(560,t+.08);g.gain.setValueAtTime(.08,t);g.gain.exponentialRampToValueAtTime(.0001,t+.12);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.13)}
+function clank(ok){const c=au(),t=c.currentTime;const o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.setValueAtTime(ok?1240:340,t);o.frequency.exponentialRampToValueAtTime(ok?880:180,t+.09);g.gain.setValueAtTime(.09,t);g.gain.exponentialRampToValueAtTime(.0001,t+.13);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.15)}
+function sizzle(){ // 淬火蒸汽嘶声:白噪声+带通
+ const c=au(),t=c.currentTime,dur=1.1;
+ const buf=c.createBuffer(1,c.sampleRate*dur,c.sampleRate),d=buf.getChannelData(0);
+ for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);
+ const src=c.createBufferSource();src.buffer=buf;
+ const f=c.createBiquadFilter();f.type='bandpass';f.frequency.setValueAtTime(5200,t);f.frequency.exponentialRampToValueAtTime(1600,t+dur);f.Q.value=.8;
+ const g=c.createGain();g.gain.setValueAtTime(.24,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+ src.connect(f);f.connect(g);g.connect(c.destination);src.start(t);
+}
+/* ================= 乐器音色(大爷16:50令):33乐器实采(均YIN验证)+电子音兜底 ================= */
+const INST={cur:'synth',def:null,bank:{},loading:null};
+const RAWN={};NOTES.forEach(n=>RAWN[n.m]=n.n.replace('′','1').replace('″','2'));
+function instAvail(){if(INST.cur==='synth'||!INST.def)return null;const f=INST.def.instruments.find(x=>x.id===INST.cur);return f?new Set(f.midi):null}
+async function loadManifest(){
+ try{const r=await fetch('../assets/v21/samples/manifest.json');if(!r.ok)return;INST.def=await r.json();buildInstGrid()}catch(e){}
+}
+async function loadInst(id){
+ if(INST.bank[id])return INST.bank[id];
+ if(INST.loading)return null;
+ INST.loading=id;const set={};
+ const ins=INST.def.instruments.find(x=>x.id===id);
+ if(ins){const base='../assets/v21/samples/'+id+'/';
+  await Promise.all(ins.midi.map(m=>fetch(base+id+'_'+RAWN[m]+'_m'+m+'.mp3').then(r=>r.arrayBuffer()).then(b=>au().decodeAudioData(b)).then(buf=>{set[m]=buf}).catch(()=>{})))}
+ INST.loading=null;
+ if(Object.keys(set).length)INST.bank[id]=set;
+ return Object.keys(set).length?set:null;
+}
+function playInst(m,when=0,vol=1){
+ const b=INST.bank[INST.cur];
+ if(b&&b[m]){const c=au(),t=c.currentTime+when,s=c.createBufferSource(),g=c.createGain();
+  g.gain.setValueAtTime(.85*vol,t);s.buffer=b[m];s.connect(g);g.connect(c.destination);s.start(t);return}
+ tone(midiF(m),when,.4,.22); // 缺采样/电子音→三角波兜底
+}
+function buildInstGrid(){
+ const g=$('inst-grid');g.innerHTML='';
+ const mk=(id,name)=>{const b=document.createElement('button');b.className='ibtn'+(INST.cur===id?' on':'');b.textContent=name;b.dataset.id=id;
+  b.onclick=async()=>{
+   if(INST.cur===id||INST.loading)return;
+   if(id==='synth'){INST.cur='synth';g.querySelectorAll('.ibtn').forEach(x=>x.classList.toggle('on',x.dataset.id==='synth'));toast('🎵 已切换:电子音');return}
+   b.classList.add('load');toast('🎵 加载 '+name+' …');
+   const set=await loadInst(id);b.classList.remove('load');
+   if(!set){toast(name+' 加载失败,保留当前音色');return}
+   INST.cur=id;g.querySelectorAll('.ibtn').forEach(x=>x.classList.toggle('on',x.dataset.id===id));
+   toast('🎵 已切换: '+name);playInst(72,0,1);
+  };g.appendChild(b)};
+ mk('synth','电子音');
+ INST.def.instruments.forEach(i=>mk(i.id,i.name));
+}
+function frenzyJingle(){[0,2,4,7,9].forEach((s,i)=>playInst(72+s,i*.07,.9))}
+document.addEventListener('pointerdown',()=>au(),{once:true});
+const midiF=m=>440*Math.pow(2,(m-69)/12);
+
+/* ================= 布局 ================= */
+const app=$('app');
+function fit(){const k=Math.min(innerWidth/app.offsetWidth,innerHeight/app.offsetHeight);app.style.transform=`scale(${k})`}
+addEventListener('resize',fit);fit();
+
+function buildLanes(){
+ const box=$('lanes');box.innerHTML='';
+ NOTES.forEach((nt,i)=>{
+  const d=document.createElement('div');d.className='lane';d.dataset.i=i;
+  const c=colorOf(nt.n);
+  d.innerHTML=`<div class="ln" style="color:${c}">${nt.n}</div><div class="lk" style="color:${c}">${nt.d}</div>`;
+  if(ANCHORS[i]){const ab=document.createElement('div');ab.className='anchor-btn';ab.textContent='🔊'+ANCHORS[i];
+   ab.addEventListener('pointerdown',e=>{e.stopPropagation();playInst(nt.m,0,1.4)});d.appendChild(ab)}
+  const nh=document.createElement('div');nh.className='note-head';nh.dataset.i=i;
+  nh.style.background=c;
+  nh.innerHTML='<div class="nh-stem"></div>';
+  nh.querySelector('.nh-stem').style.background=c;
+  d.appendChild(nh);
+  box.appendChild(d);
+ });
+ // 音窗+五线谱:按当前剑档窗口重建(大爷19:49令:初期少音随剑长开窗)
+ requestAnimationFrame(()=>applyWindow());
+}
+function rebuildStaff(){ // 按可见横条几何重画谱线/谱号
+ const box=$('lanes');
+ box.querySelectorAll('.staff-line,.staff-clef').forEach(e=>e.remove());
+ const els=[...box.querySelectorAll('.lane:not(.off)')];
+ const n=els.length;if(!n)return;
+ const c0=els[0].offsetTop+els[0].offsetHeight/2, cT=els[n-1].offsetTop+els[n-1].offsetHeight/2;
+ // 五线谱乐理对齐(2026-10-17 大爷报bug修复):第一线=E4(mi,索引2),第二线=G4(sol,4),第三线=B4(si,6),第四线=D5(re′,8),第五线=F5(fa′,10)
+ // 旧版从g=0(C4)起画,整谱低一档,音符谱面位置与音高错位(大爷21:55报)
+ for(let g=2;g<=10&&g<n;g+=2){
+  const l=document.createElement('div');l.className='staff-line'+((g===2||g===10)?' xl':'');
+  l.style.top=(cT+(n-1-g)/Math.max(1,n-1)*(c0-cT))+'px';box.appendChild(l);
+ }
+ const clef=document.createElement('div');clef.className='staff-clef';clef.textContent='𝄞';
+ const g4y=cT+(n-1-4)/Math.max(1,n-1)*(c0-cT);
+ clef.style.top=(g4y-20)+'px';box.appendChild(clef);
+}
+function applyWindow(){
+ const vis=SWORDS[curSpan()-3].vis;
+ document.querySelectorAll('#lanes .lane').forEach((el,i)=>el.classList.toggle('off',i>=vis));
+ requestAnimationFrame(rebuildStaff);
+ updateSword();
+}
+function updateSword(){
+ if(!S.cur){
+  document.querySelectorAll('.lane').forEach(el=>{el.classList.add('dim');el.classList.remove('cov','anchor-on')});
+  $('sword-svg').innerHTML='';$('sword-value').style.display='none';
+  $('laser-top').style.display='none';$('laser-bot').style.display='none';
+  $('anvil-empty').style.display='flex';return}
+ $('anvil-empty').style.display='none';
+ $('laser-top').style.display='block';$('laser-bot').style.display='block';$('sword-value').style.display='block';
+ const sw=SWORDS[curSpan()-3],first=0,last=sw.span-1;
+ const lanesEls=[...document.querySelectorAll('.lane')];
+ lanesEls.forEach((el,i)=>{el.classList.toggle('cov',i>=first&&i<=last);el.classList.toggle('dim',i<first||i>last);el.classList.toggle('anchor-on',!!ANCHORS[i]&&i>=first&&i<=last)});
+ const lanesBox=$('lanes'),laneH=lanesEls[0].offsetHeight,off=lanesBox.offsetTop;
+ const topPx=off+lanesEls[last].offsetTop-2, botPx=off+lanesEls[first].offsetTop+laneH+2;
+ const h=Math.max(120,botPx-topPx);
+ $('sword-svg').style.top=topPx+'px';$('sword-svg').style.height=h+'px';
+ $('sword-glow').style.top=topPx+'px';$('sword-glow').style.height=h+'px';
+ $('laser-top').style.top=(topPx-4)+'px';$('laser-bot').style.top=(botPx+4)+'px';
+ $('sword-value').style.top=(topPx+h/2)+'px';
+ drawSword(sw,h);
+}
+function drawSword(sw,hPx){
+ const svg=$('sword-svg');const W=120;svg.setAttribute('viewBox',`0 0 120 600`);
+ const bl=W*.22,bl2=bl/2;
+ const crossW=W*.72,guardY=560,gripH=34,pomY=guardY+gripH+8;
+ svg.innerHTML=`
+  <defs>
+    <linearGradient id="blade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6a7686"/><stop offset=".32" stop-color="#eef3fa"/>
+      <stop offset=".55" stop-color="#b9c4d4"/><stop offset="1" stop-color="#59636f"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <polygon points="${W/2},4 ${W/2+bl2},${70} ${W/2+bl2},${guardY} ${W/2-bl2},${guardY} ${W/2-bl2},${70}"
+      fill="url(#blade)" stroke="#2c333d" stroke-width="2"/>
+    <line x1="${W/2}" y1="16" x2="${W/2}" y2="${guardY}" stroke="#ffffffaa" stroke-width="2.5"/>
+    <path d="M ${W/2-bl2*.4} ${90} Q ${W/2+bl2*.9} ${300} ${W/2-bl2*.2} ${guardY-40}" stroke="#8fa0b566" stroke-width="3" fill="none"/>
+    <rect x="${W/2-crossW/2}" y="${guardY}" width="${crossW}" height="14" rx="6" fill="#7a5830" stroke="#3a2810" stroke-width="2"/>
+    <rect x="${W/2-9}" y="${guardY+14}" width="18" height="${gripH}" rx="7" fill="#4a3018" stroke="#2c1c0a" stroke-width="2"/>
+    ${Array.from({length:4},(_,k)=>`<line x1="${W/2-9}" y1="${guardY+20+k*8}" x2="${W/2+9}" y2="${guardY+20+k*8}" stroke="#2c1c0a" stroke-width="2"/>`).join('')}
+    <circle cx="${W/2}" cy="${pomY}" r="10" fill="#c9a06a" stroke="#6a4c2a" stroke-width="2"/>
+  </g>`;
+ if(sw.span<=3){svg.querySelector('g').style.transform='translateY(120px)'}
+}
+
+/* ================= 女铁匠(H3 素材自动接入,失败回退占位 SVG) ================= */
+/* 素材就位路径:v21/assets/girl/{idle,strike,hurt}/f0.png..fN.png(透明背景帧序列) */
+/* 播放器探测首帧,在位=帧序列模式;不在位=占位 SVG 模式(接口不变) */
+const GIRL_META={idle:{n:16,fps:8,loop:true},strike:{n:16,fps:14,loop:false},hurt:{n:16,fps:10,loop:false}};
+const girlPh=$('girl-ph');
+const girlImg=document.createElement('img');
+girlImg.id='girl-sprite';girlImg.style.cssText='display:none;width:auto;height:100%;object-fit:contain;filter:drop-shadow(0 6px 12px #000a)';
+$('girl').appendChild(girlImg);
+let spriteMode=false,curState='idle',curFrame=0,frameTimer=null;
+(function probeSprite(){
+ const t=new Image();
+ t.onload=()=>{spriteMode=true;girlImg.style.display='block';girlPh.style.display='none';playGirl('idle')};
+ t.src='assets/girl/idle/f0.png';
+})();
+function showFrame(state,i){
+ girlImg.src=`assets/girl/${state}/f${i}.png`;
+}
+function playGirl(state){
+ curState=state;curFrame=0;
+ clearInterval(frameTimer);
+ const m=GIRL_META[state];
+ showFrame(state,0);
+ frameTimer=setInterval(()=>{
+  curFrame++;
+  if(curFrame>=m.n){
+   if(m.loop){curFrame=0}
+   else{clearInterval(frameTimer);playGirl('idle');return}
+  }
+  showFrame(state,curFrame);
+ },1000/m.fps);
+}
+girlPh.innerHTML=`
+<svg width="216" height="400" viewBox="0 0 216 400">
+ <defs>
+  <radialGradient id="gg" cx=".5" cy=".35" r=".8"><stop offset="0" stop-color="#ffd9e8"/><stop offset="1" stop-color="#e8a8c8"/></radialGradient>
+  <linearGradient id="apron" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a4a2a"/><stop offset="1" stop-color="#5a2e18"/></linearGradient>
+ </defs>
+ <g>
+  <!-- 双马尾 -->
+  <ellipse cx="52" cy="150" rx="20" ry="52" fill="#7a4a28"/>
+  <ellipse cx="164" cy="150" rx="20" ry="52" fill="#7a4a28"/>
+  <!-- 身体+围裙 -->
+  <path d="M108 120 C 60 128 52 190 58 300 L 158 300 C 164 190 156 128 108 120 Z" fill="url(#gg)" stroke="#c988a8" stroke-width="2"/>
+  <!-- 大胸(占位比例,素材后换) -->
+  <ellipse cx="84" cy="185" rx="27" ry="24" fill="#ffe4ef" stroke="#d8a0bc" stroke-width="2"/>
+  <ellipse cx="132" cy="185" rx="27" ry="24" fill="#ffe4ef" stroke="#d8a0bc" stroke-width="2"/>
+  <!-- 围裙 -->
+  <path d="M74 210 L142 210 L152 300 L64 300 Z" fill="url(#apron)" stroke="#3a2810" stroke-width="2"/>
+  <text x="108" y="266" font-size="15" fill="#ffd9a8" text-anchor="middle" font-weight="bold">鉄</text>
+  <!-- 脸 -->
+  <circle cx="108" cy="88" r="46" fill="url(#gg)" stroke="#c988a8" stroke-width="2"/>
+  <!-- 呆毛 -->
+  <path d="M108 42 Q 100 20 118 12" stroke="#7a4a28" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <!-- 刘海+眼睛(呆萌) -->
+  <path d="M66 74 Q 108 30 150 74 Q 130 60 108 62 Q 86 60 66 74" fill="#7a4a28"/>
+  <circle cx="90" cy="94" r="7" fill="#3a2a1a"/><circle cx="126" cy="94" r="7" fill="#3a2a1a"/>
+  <circle cx="93" cy="91" r="2.4" fill="#fff"/><circle cx="129" cy="91" r="2.4" fill="#fff"/>
+  <path d="M84 82 Q 90 77 96 82" stroke="#5a3a20" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M120 82 Q 126 77 132 82" stroke="#5a3a20" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <ellipse cx="108" cy="112" rx="6" ry="4" fill="#ffb8c8"/>
+  <path d="M100 122 Q 108 129 116 122" stroke="#c95878" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- 腮红 -->
+  <ellipse cx="72" cy="106" rx="7" ry="4" fill="#ffb8c8aa"/>
+  <ellipse cx="144" cy="106" rx="7" ry="4" fill="#ffb8c8aa"/>
+  <!-- 持锤右手 -->
+  <rect x="146" y="196" width="58" height="10" rx="5" fill="#8a6238" stroke="#4a3018" stroke-width="2" transform="rotate(-24 146 200)"/>
+  <rect x="188" y="176" width="26" height="30" rx="5" fill="#9aa4b0" stroke="#4a5560" stroke-width="2" transform="rotate(-24 196 190)"/>
+ </g>
+</svg>
+<div id="girl-tag">女铁匠 · 二次元手绘素材生成中(占位)</div>`;
+let girlTm=null;
+function setGirl(state,ms){
+ if(spriteMode){ // 素材模式:切序列,一次性状态播完自动回 idle
+  if(state!=='idle'&&(curState!==state||true))playGirl(state);
+  return;
+ }
+ girlPh.classList.remove('idle','strike','hurt');void girlPh.offsetWidth;
+ girlPh.classList.add(state);
+ clearTimeout(girlTm);
+ if(state!=='idle')girlTm=setTimeout(()=>{girlPh.classList.remove('strike','hurt');void girlPh.offsetWidth;girlPh.classList.add('idle')},ms||500);
+}
+
+/* ================= 铁锤本体(跟随鼠标) ================= */
+const hammerEl=document.createElement('div');
+hammerEl.id='hammer';
+hammerEl.innerHTML=`<svg width="86" height="86" viewBox="0 0 86 86">
+ <rect x="14" y="30" width="52" height="12" rx="5" fill="#8a6238" stroke="#4a3018" stroke-width="2.5" transform="rotate(38 40 36)"/>
+ <g transform="rotate(38 40 36)">
+  <rect x="8" y="14" width="42" height="34" rx="6" fill="#9aa4b0" stroke="#4a5560" stroke-width="2.5"/>
+  <rect x="14" y="20" width="30" height="9" rx="3" fill="#c9d4e0"/>
+  <rect x="14" y="35" width="30" height="7" rx="3" fill="#7a848f"/>
+ </g>
+</svg>`;
+app.appendChild(hammerEl);
+/* 坐标换算:client→app(必须除以缩放系数,手机/窄窗口必备) */
+function toApp(cx,cy){const r=app.getBoundingClientRect(),k=r.width/app.offsetWidth;return{x:(cx-r.left)/k,y:(cy-r.top)/k}}
+let lastPt=null,hideTm=null;
+function placeHammer(cx,cy){
+ const p=toApp(cx,cy);lastPt={x:p.x,y:p.y,t:Date.now()};
+ hammerEl.style.left=(p.x-24)+'px';hammerEl.style.top=(p.y-39)+'px';
+ hammerEl.style.opacity=1;clearTimeout(hideTm);
+}
+app.addEventListener('pointermove',e=>{placeHammer(e.clientX,e.clientY)},{passive:true});
+app.addEventListener('pointerdown',e=>{placeHammer(e.clientX,e.clientY)});
+app.addEventListener('pointerup',e=>{if(e.pointerType!=='mouse')hideTm=setTimeout(()=>hammerEl.style.opacity=0,600)});
+app.addEventListener('pointerleave',()=>{hammerEl.style.opacity=0});
+app.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')hammerEl.style.opacity=1});
+function swingHammer(x,y){ // x,y 相对 app;偏移=锤头砸击面中心(SVG 23.9,38.7)对准指针
+ hammerEl.style.left=(x-24)+'px';hammerEl.style.top=(y-39)+'px';
+ hammerEl.classList.remove('swing');void hammerEl.offsetWidth;hammerEl.classList.add('swing');
+}
+
+/* ================= 淬火水桶(左上,水滴可视化) ================= */
+CFG.BUCKET_CAP=10;
+CFG.GROW_PER=3;
+function updateBucket(){
+ const h=Math.min(1,S.potential/CFG.BUCKET_CAP)*160;
+ $('bucket-water').setAttribute('y',204-h);
+ $('bucket-water').setAttribute('height',h);
+ $('bucket-water-glow').setAttribute('y',Math.max(0,202-h));
+ $('bucket-water-glow').setAttribute('opacity',h>3?0.9:0);
+ $('bucket-drops').textContent=S.potential;
+}
+function bucketPt(){ // 桶口中心(app 坐标,缩放安全)
+ const r=$('bucket').getBoundingClientRect(),a=app.getBoundingClientRect(),k=a.width/app.offsetWidth;
+ return {x:(r.left-a.left)/k+r.width/k/2,y:(r.top-a.top)/k+16};
+}
+function flyDrop(hx,hy){
+ const p=bucketPt(),d=document.createElement('div');d.className='flydrop';d.textContent='🔮';
+ d.style.left=hx+'px';d.style.top=hy+'px';app.appendChild(d);
+ requestAnimationFrame(()=>{d.style.transform=`translate(${p.x-hx}px,${p.y-hy}px) scale(.5)`});
+ setTimeout(()=>d.remove(),640);
+}
+function bucketQuenchVisual(){
+ $('bucket-water').setAttribute('height',0);$('bucket-water').setAttribute('y',204);
+ $('bucket-water-glow').setAttribute('opacity',0);
+ const p=bucketPt();
+ for(let i=0;i<7;i++){const s=document.createElement('div');s.className='spark';s.textContent='🔮';
+  const ang=-Math.PI/2+(Math.random()-.5)*1.7,v=55+Math.random()*75;
+  s.style.setProperty('--dx',Math.cos(ang)*v+'px');s.style.setProperty('--dy',Math.sin(ang)*v+'px');
+  s.style.left=p.x+'px';s.style.top=p.y+'px';app.appendChild(s);setTimeout(()=>s.remove(),720);}
+}
+
+/* ================= HUD ================= */
+function hud(){
+ const sw=SWORDS[S.tier];
+ $('sword-value').textContent='🪙'+S.value;
+ $('sword-title').textContent=sw.name+(S.dmgLv>0?` ⚠-${S.dmgLv*10}%`:'');$('sword-emoji').textContent=sw.emoji;
+ $('tier-tag').textContent=`Tier ${S.tier+1}/${SWORDS.length}`;
+ $('value-fill').style.width=Math.max(0,Math.min(100,S.qCount/CFG.GROW_PER*100))+'%';
+ $('value-num').textContent=`成长 ${S.qCount}/${CFG.GROW_PER} 题`;
+ $('gold-num').textContent=S.gold;
+ $('pot-num').textContent=S.potential;updateBucket();
+ // 充能
+ const cb=$('charge-bar');cb.innerHTML='';
+ for(let i=0;i<CFG.FRENZY_NEED;i++){const c=document.createElement('div');
+  c.className='ch-cell'+(i<S.charge?' on':'')+(S.frenzyActive?' fz':'');cb.appendChild(c)}
+ if(S.frenzyActive){$('charge-label').textContent='⚡ 超神中!';$('charge-label').classList.add('fz')}
+ else{$('charge-label').textContent=`超神充能 ${S.charge}/${CFG.FRENZY_NEED}`;$('charge-label').classList.remove('fz')}
+ // 正确率
+ if(S.totStrikes>0){const ap=Math.round(S.totHits/S.totStrikes*100)+'%';$('acc-big').textContent=ap;
+  $('acc-detail2').textContent=`(${S.totHits}/${S.totStrikes})`}
+ // 档位概率条
+ const p=computeProbs(curAcc());
+ ['great','good','keep','dmg','fail'].forEach(k=>{
+  const el=$('pb-'+k);el.querySelector('.pfill').style.height=p[k]+'%';
+  el.querySelector('.pct').textContent=Math.round(p[k])+'%';
+ });
+ $('btn-start').disabled=S.phase!=='idle';
+ $('btn-replay').disabled=!(S.phase==='input'||S.phase==='playing');
+}
+function fmtT(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function toast(msg,ms=1800){const t=$('toast');t.textContent=msg;t.classList.add('on');clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('on'),ms)}
+
+/* ================= 房租已取消(2026-10-17 大爷令) ================= */
+
+/* ================= 碎剑(失败档,2026-10-17 大爷令:碎的是剑不是键) ================= */
+function swordBreak(){
+ const old=SWORDS[S.tier];
+ S.cur=null;S.value=0;S.dmgLv=0;
+ applyWindow();hud();updateSword();
+ $('quiz-hint').textContent='💥 剑碎了!从箱子再拖一把';
+ const z=$('sword-zone');
+ z.classList.remove('shatter');void z.offsetWidth;z.classList.add('shatter');
+ const zr=z.getBoundingClientRect(),ar=app.getBoundingClientRect(),k=ar.width/app.offsetWidth;
+ for(let i=0;i<9;i++){
+  const f=document.createElement('div');f.className='frag';
+  f.style.left=((zr.left-ar.left)/k+40+(Math.random()*80-40))+'px';
+  f.style.top=((zr.top-ar.top)/k+Math.random()*(zr.height/k))+'px';
+  f.style.setProperty('--fx',(Math.random()*160-80)+'px');
+  f.style.setProperty('--fy',(Math.random()*-130-30)+'px');
+  app.appendChild(f);setTimeout(()=>f.remove(),950);
+ }
+ toast(`💥 ${old.name} 碎了!退回 ${SWORDS[S.tier].name}`,2400);
+}
+
+/* ================= 题目 ================= */
+function genQuestion(){
+ const span=curSpan();let pool=NOTES.slice(0,span);
+ const av=instAvail();if(av){const f=pool.filter(n=>av.has(n.m));if(f.length>=4)pool=f} // 乐器缺音时只在可用音内出题
+ const q=[];let prev=-1;
+ for(let i=0;i<3;i++){
+  let idx;
+  if(prev<0)idx=Math.floor(Math.random()*pool.length);
+  else{const step=[-2,-1,-1,0,0,1,1,2,3][Math.floor(Math.random()*9)];idx=Math.min(pool.length-1,Math.max(0,prev+step));if(idx===prev&&Math.random()<.7)idx=Math.min(pool.length-1,Math.max(0,idx+(Math.random()<.5?1:-1)));}
+  q.push(idx);prev=idx;
+ }
+ return q;
+}
+function renderSlots(state){
+ const box=$('slots');box.innerHTML='';
+ S.q.forEach((ni,i)=>{
+  const nt=NOTES[ni];const d=document.createElement('div');
+  let cls='qslot',inner='?';
+  if(S.phase==='playing'){cls+= i===S.pos?' playing':' waiting'}
+  else if(i<S.pos){
+   if(S.marks&&S.marks[i]==='pending'){cls+=' waiting';inner='?'}
+   else{cls+= (S.marks&&S.marks[i]==='miss')?' miss':' hit';inner=nt.n}
+  }
+  else if(S.revealed){cls+=' hit';inner=nt.n}
+  d.className=cls;
+  const c=colorOf(nt.n);
+  const shown=cls.includes('hit')||cls.includes('miss');
+  d.innerHTML=`<div class="qn" style="color:${shown?c:'#8a6c42'}">${shown?nt.n:inner}</div><div class="qsi">${i+1}</div>`;
+  box.appendChild(d);
+ });
+ // 我的输入行:逐位对照(上=题目,下=实际按的音)
+ const my=$('my-slots');my.innerHTML='';
+ S.q.forEach((ni,i)=>{
+  const d2=document.createElement('div');let cls='mslot',txt='·';
+  if(S.typed&&S.typed[i]!==undefined){const t=S.typed[i];txt=NOTES[t].n;cls+=(S.marks[i]==='pending')?' next':(S.marks[i]==='hit')?' ok':' bad'}
+  else if(S.phase==='input'&&i===S.pos){cls+=' next'}
+  d2.className=cls;d2.innerHTML=`<span>${txt}</span>`;my.appendChild(d2);
+ });
+}
+function playQuestion(){
+ S.phase='playing';S.pos=0;S.revealed=false;S.marks=[];S.typed=[];hud();renderSlots();
+ S.q.forEach((ni,i)=>playInst(NOTES[ni].m,.16+i*.46));
+ const total=.16+S.q.length*.46+.3;
+ setTimeout(()=>{if(S.phase!=='playing')return;S.phase='input';renderSlots();
+  $('quiz-hint').textContent=S.frenzyActive?'⚡ 超神连打!按顺序敲!':'轮到你:按顺序敲!';hud()},total*1000);
+ $('quiz-hint').textContent='🔊 仔细听…';
+}
+
+/* ================= 敲击判定(音高+顺序;错≠失败,只改概率) ================= */
+function hitLane(i){
+ if(S.phase!=='input')return;
+ const nt=NOTES[i];
+ playInst(nt.m,0);
+ const laneEl=document.querySelector(`.lane[data-i="${i}"]`);
+ const rect=laneEl.getBoundingClientRect(),appR=app.getBoundingClientRect(),sk=appR.width/app.offsetWidth;
+ const fresh=lastPt&&Date.now()-lastPt.t<500;
+ const hx=fresh?lastPt.x:(rect.left-appR.left+rect.width/2)/sk,
+       hy=fresh?lastPt.y:(rect.top-appR.top+rect.height/2)/sk;
+ swingHammer(hx,hy);
+ spawnSparks(hx,hy);
+ clankNeutral();
+ S.strikes++;S.totStrikes++;
+ S.typed[S.pos]=i;
+ S.marks[S.pos]='pending';
+ setGirl('strike',380);
+ laneEl.classList.add('flash-tap');setTimeout(()=>laneEl.classList.remove('flash-tap'),240);
+ S.pos++;renderSlots();
+ if(S.pos>=S.q.length){
+  S.phase='grading';hud();
+  $('quiz-hint').textContent='敲完了…判卷中';
+  setTimeout(gradeQuestion,700);
+ }
+}
+
+/* ================= 盲打判卷(大爷17:51令):敲完三音再统一对答案 ================= */
+function gradeQuestion(){
+ let okCnt=0;
+ S.q.forEach((exp,pos)=>{if(S.typed[pos]===exp)okCnt++});
+ S.hits+=okCnt;S.totHits+=okCnt;
+ S.potential+=okCnt*CFG.POT_PER_HIT;
+ S.q.forEach((exp,pos)=>{S.marks[pos]=S.typed[pos]===exp?'hit':'miss'});
+ if(S.frenzyActive){S.gold+=okCnt*CFG.FRENZY_GOLD}
+ else{S.charge=Math.min(CFG.FRENZY_NEED,S.charge+okCnt);if(okCnt===0)S.charge=0}
+ renderSlots();hud();
+ const step=380;
+ S.q.forEach((exp,pos)=>{setTimeout(()=>{
+  clank(S.marks[pos]==='hit');
+  if(S.marks[pos]==='miss'){
+   const expN=NOTES[exp].n,gotN=S.typed[pos]!==undefined?NOTES[S.typed[pos]].n:'·';
+   $('quiz-hint').textContent=`✘ 第${pos+1}音 应为 ${expN},你敲了 ${gotN}`;
+   $('quiz-hint').classList.add('warn');setTimeout(()=>$('quiz-hint').classList.remove('warn'),900);
+  }
+ },pos*step)});
+ if(okCnt===S.q.length)$('quiz-hint').textContent=`✔ ${S.q.length}/${S.q.length} 全对!魔能+${okCnt*CFG.POT_PER_HIT}🔮`;
+ const dShift=S.typed[0]-S.q[0];
+ const contour=dShift!==0&&S.q.every((exp,i)=>S.typed[i]-exp===dShift);
+ if(contour){S.potential+=CFG.CONTOUR_BONUS;hud()}
+ setTimeout(()=>{
+  if(!S.frenzyActive&&S.charge>=CFG.FRENZY_NEED)startFrenzy();
+  endQuestion();
+  if(contour)$('quiz-hint').textContent=`🎵 轮廓全对(整体${dShift>0?'+':''}${dShift}音)!保底+${CFG.CONTOUR_BONUS}🔮 · 点淬火`;
+ },S.q.length*step+450);
+}
+/* ================= 一题结束 → 淬火 ================= */
+function endQuestion(){
+ if(S.frenzyActive){ // 超神期间:快速连发,攒到窗口结束一次性大淬火
+  S.pendingQuench=true;S.phase='busy';
+  $('quiz-hint').textContent='⚡ 超神连打!魔能累积中…';
+  setTimeout(()=>{if(S.phase==='busy'){S.q=genQuestion();playQuestion()}},420);
+  return;
+ }
+ S.phase='ready';
+ const qb=$('quench-btn');
+ qb.innerHTML=`🔥 淬 火 · 🔮${S.potential}`;
+ qb.style.display='block';
+ $('quiz-hint').textContent='敲完了!点水桶上方按钮淬火';
+}
+function quenchPhase(){
+ S.phase='quench';hud();
+ const acc=S.strikes>0?S.hits/S.strikes:0;
+ const probs=computeProbs(acc);
+ const result=rollTier(probs);
+ const payout=Math.round(S.potential*CFG.TIERS[result].mult);
+ const vBefore=S.value;
+ // 居中覆盖面板(大爷19:49令:看得清,点继续才关)
+ const qm=$('quench-modal');qm.classList.add('on');
+ $('qm-sub').textContent=`正确率 ${Math.round(acc*100)}% · 魔能 🔮${S.potential} × 档位倍率`;
+ $('qm-result').textContent='';
+ const btn=$('qm-btn');btn.style.display='none';btn.onclick=null;
+ const strip=$('qm-strip');strip.innerHTML='';
+ const keys=['great','good','keep','dmg','fail'];
+ keys.forEach(k=>{const d=document.createElement('div');d.className='rslot '+k+' rolling';
+  const m=(k==='dmg'?'剑损':k==='fail'?'剑碎':'×'+CFG.TIERS[k].mult)+' · '+Math.round(probs[k])+'%';
+  d.innerHTML=`<div class="rn">${CFG.TIERS[k].name}</div><div class="rm">${m}</div>`;strip.appendChild(d)});
+ sizzle();
+ setTimeout(()=>{
+  strip.querySelectorAll('.rslot').forEach(d=>d.classList.remove('rolling'));
+  const winEl=strip.querySelector('.rslot.'+result);
+  winEl.classList.add('winner');
+  const t=CFG.TIERS[result];
+  $('qm-result').innerHTML=result==='great'
+   ?`<span style="color:#ffd54f">🌈 大成功!🔮${S.potential} × ${t.mult} = 🪙${payout}!</span>`
+   :result==='dmg'
+   ?`<span style="color:#ffb87a">💥 损坏!剑受损,铸成价值 -10%…</span>`
+   :result==='fail'
+   ?`<span style="color:#ff9a8a">❌ 失败!剑碎了!🔮${S.potential} 全散!</span>`
+   :`<span style="color:#a8f0a0">${t.name}!🔮${S.potential} × ${t.mult} = 🪙${payout}</span>`;
+  playInst(result==='great'?84:(result==='dmg'||result==='fail')?55:72,0,1.2);
+  if(result==='great')setTimeout(()=>[0,4,7,12].forEach((s,i)=>playInst(72+s,i*.09)),200);
+  // 结算
+  S.gold+=payout;S.value+=payout;bucketQuenchVisual();S.potential=0;
+  if(result==='dmg'){S.dmgLv=Math.min(5,S.dmgLv+1);toast(`⚠ 剑受损!铸成价值 -${S.dmgLv*10}%`,2200);hud()}
+  if(result==='fail'){swordBreak()}
+  S.hits=0;S.strikes=0;
+  hud();
+  $('qm-result').innerHTML+=`<div style="font-size:13px;color:#cbb8a0;margin-top:6px">⚔️ 铸成价值 🪙${vBefore} → 🪙${S.value}${result==='fail'?' (碎剑退档)':''}</div>`;
+  // 看完点继续才推进
+  btn.style.display='inline-block';
+  btn.onclick=()=>{qm.classList.remove('on');afterQuestionDone(result)};
+ },1600);
+}
+
+/* ================= 超神(Frenzy) ================= */
+function startFrenzy(){
+ S.frenzyActive=true;S.frenzies++;
+ S.frenzyEnd=Date.now()+CFG.FRENZY_SECS*1000;
+ app.classList.add('frenzy');
+ frenzyJingle();
+ toast(`⚡ 超神!${CFG.FRENZY_SECS} 秒疯狂打击:敲对每击 +${CFG.FRENZY_GOLD}🪙,敲错零惩罚!`,2600);
+ $('quiz-hint').textContent='⚡ 超神连打!';$('quiz-hint').classList.add('fz');
+ clearInterval(S.frenzyTimer);
+ S.frenzyTimer=setInterval(()=>{
+  const left=(S.frenzyEnd-Date.now())/1000;
+  $('frenzy-timer').textContent=left>0?'⏱ '+left.toFixed(1)+'s':'';
+  if(left<=0)endFrenzy();
+ },100);
+ hud();
+}
+function endFrenzy(){
+ clearInterval(S.frenzyTimer);S.frenzyTimer=null;
+ S.frenzyActive=false;S.charge=0;
+ app.classList.remove('frenzy');
+ $('frenzy-timer').textContent='';$('quiz-hint').classList.remove('fz');
+ S.pendingQuench=true;
+ hud();
+ // 当前题敲完立即大淬火
+ if(S.phase==='input'&&S.pos>=S.q.length){quenchPhase()}
+ else if(S.phase==='busy'){S.q=genQuestion();playQuestion()}
+ // playing/input 未敲完:等该题敲完 endQuestion 会走 quench(pendingQuench 兜底)
+}
+
+/* ================= 昼夜循环+商店(大爷17:08令) ================= */
+function curSpan(){return S.cur&&S.cur.lv>=2?4:3}
+function newSword(){S.cur={lv:1,qDone:0,q:0};S.value=0;S.qCount=0;S.dmgLv=0;applyWindow();hud();updateSword();
+ toast(`🔨 新剑开锻:匕首(3音)· 魔力 ${S.mp}`)}
+function afterQuestionDone(result){
+ if(!S.cur){S.phase='idle';hud();return}
+ S.qCount++;
+ S.cur.qDone++;
+ if(result==='great')S.cur.q+=1;else if(result==='good')S.cur.q+=.5;
+ S.mp=Math.max(0,S.mp-1);
+ if(S.cur.qDone>=6){swordDone();return}
+ const newLv=Math.floor(S.cur.qDone/2)+1;
+ if(newLv>S.cur.lv){S.cur.lv=newLv;applyWindow();updateSword();
+  toast(`⬆️ 剑升级!Lv.${S.cur.lv} · 音域 ${curSpan()} 音 (魔力 ${S.mp})`)}
+ if(S.mp<=0){
+  const it=stashSword(true);
+  if(it)toast(`🌙 魔力见底!${it.name} 没锻完但没碎,收进箱子明天照样卖 💰${it.value}`);
+  S.forgeEnded=true;S.phase='idle';hud();$('quiz-hint').textContent='魔力耗尽!点「第二天」开门营业';return}
+ S.phase='busy';hud();
+ setTimeout(()=>{S.q=genQuestion();playQuestion()},420);
+}
+function stashSword(silent){
+ if(!S.cur)return null;
+ const sw=SWORDS[curSpan()-3];
+ const star=Math.min(4,1+Math.floor(S.cur.q));
+ const val=Math.round(S.value*(1-S.dmgLv*.1)*(1+.15*(star-1)));
+ const item={name:sw.name,emoji:sw.emoji,star,value:val,onShelf:false,sold:false};
+ S.pack.push(item);S.forged++;S.dmgLv=0;
+ S.cur=null;updateSword();hud();
+ if(!silent){$('forge-flash').classList.add('go');setTimeout(()=>$('forge-flash').classList.remove('go'),600);
+  playInst(84,0,1.2);setTimeout(()=>playInst(88,0,1),180)}
+ return item}
+function swordDone(){
+ const item=stashSword();
+ if(item)toast(`🎉 ${item.name} 铸成!品质 ${'★'.repeat(item.star)}${'☆'.repeat(4-item.star)} · 价值 ${item.value} · 收进箱子`);
+ if(S.mp>0&&!S.forgeEnded&&S.chest.length){S.phase='idle';hud();
+  $('quiz-hint').textContent='又一把出炉!从箱子拖下一把剑坯继续'}
+ else{S.forgeEnded=true;S.phase='idle';hud();
+  $('quiz-hint').textContent=S.chest.length?'今晚的活干完了!点「第二天」开门营业':'箱子空了!点「第二天」开门营业'}}
+/* ================= 箱子/剑坯(大爷19:22令) ================= */
+function openChest(){
+ const bl=$('cm-blank-list');bl.innerHTML='';
+ if(!S.chest.length)bl.innerHTML='<div class="cm-none">箱子空了——先把存货卖掉换新坯</div>';
+ S.chest.forEach((b,i)=>{const d=document.createElement('div');d.className='cm-blank';d.draggable=true;
+  d.innerHTML=`<div class="cb-e">${b.emoji}</div><div>${b.name}</div>`;
+  d.ondragstart=e=>{e.dataTransfer.setData('text/plain',''+i);e.dataTransfer.effectAllowed='move'};
+  d.onclick=()=>placeBlank(i);
+  bl.appendChild(d)});
+ const dl=$('cm-done-list');dl.innerHTML='';
+ if(!S.pack.length)dl.innerHTML='<div class="cm-none">还没铸出剑</div>';
+ S.pack.forEach(p=>{const d=document.createElement('div');d.className='cm-done';
+  d.innerHTML=`<span>${p.emoji} ${p.name} ${'★'.repeat(p.star)}${'☆'.repeat(4-p.star)}</span><span class="cd-v">💰${p.value}</span>`;
+  d.onclick=()=>toast('明天开店,把货架摆上它就有人来买');
+  dl.appendChild(d)});
+ $('chest-modal').classList.add('on');
+}
+function placeBlank(i){
+ if(S.mode!=='forge')return;
+ if(S.phase==='playing'||S.phase==='input'||S.phase==='grading'||S.phase==='quench')return;
+ if(S.cur){toast('铁砧上有剑,先把它锻完或收工');return}
+ if(!S.chest[i])return;
+ S.chest.splice(i,1);
+ $('chest-modal').classList.remove('on');
+ newSword();
+ $('quiz-hint').textContent='剑坯上砧!听题开锻';
+ nextQuestion();
+}
+$('cm-close').onclick=()=>$('chest-modal').classList.remove('on');
+$('chest-btn').onclick=()=>{if(S.mode!=='forge')return;openChest()};
+(function(){const a=$('anvil');
+ a.addEventListener('dragover',e=>{e.preventDefault();a.classList.add('drop-ready')});
+ a.addEventListener('dragleave',()=>a.classList.remove('drop-ready'));
+ a.addEventListener('drop',e=>{e.preventDefault();a.classList.remove('drop-ready');
+  const i=+e.dataTransfer.getData('text/plain');placeBlank(i)});
+})();
+function endForgeDay(){
+ if(S.mode!=='forge')return;
+ const it=stashSword(true);
+ S.forgeEnded=true;S.phase='idle';hud();
+ toast(it?`🌙 收工!${it.name} 没碎——收进箱子,明天照样卖 💰${it.value}`:'收工!点「第二天」去卖货');
+}
+function coinSound(){const c=au(),t=c.currentTime;
+ [[1568,0],[2093,.09]].forEach(([f,d])=>{const o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.value=f;
+ g.gain.setValueAtTime(.0001,t+d);g.gain.exponentialRampToValueAtTime(.11,t+d+.012);g.gain.exponentialRampToValueAtTime(.0001,t+d+.3);
+ o.connect(g);g.connect(c.destination);o.start(t+d);o.stop(t+d+.32)})}
+function nightFade(cb,txt,sub){
+ const nf=$('night-fade');$('nf-text').textContent=txt||'第二天';$('nf-sub').textContent=sub||'';
+ nf.classList.remove('on');void nf.offsetWidth;nf.classList.add('on');
+ setTimeout(()=>{cb&&cb()},1000);
+ setTimeout(()=>{nf.classList.remove('on')},2050);
+}
+/* ================= Probably-Stolen 柜台售卖(v22 实验) ================= */
+const CUST_TYPES=[
+ {e:'🛡️',n:'战士',hi:'好剑!就它了!',no:'呸,这不是我要的'},
+ {e:'🧙',n:'法师',hi:'魔力波动不错,收了',no:'气息不对,拿走'},
+ {e:'🥷',n:'盗贼',hi:'轻!快!趁手…成交',no:'太扎眼,不买'},
+ {e:'🧝',n:'游侠',hi:'森林会记得这份手艺',no:'再看看吧…'},
+ {e:'🧔',n:'村民',hi:'给儿子的成人礼,谢啦',no:'贵了贵了!'}];
+let CUST=null;
+function openShop(){
+ S.mode='shop';$('shop').classList.add('on');
+ S.counter=[null,null,null,null];S.pack.forEach(p=>{p.onShelf=false});
+ renderCounter();renderInv();renderShopGold();
+ $('ps-cust').style.left='110%';CUST=null;
+ $('shop-hint').textContent='点箱子里的剑摆上柜台,再点「🛎️ 下一位」招客';
+}
+function renderShopGold(){$('shop-gold-num').textContent=S.gold}
+function renderCounter(){
+ const box=$('ct-slots');box.innerHTML='';
+ S.counter.forEach((p,i)=>{const d=document.createElement('div');d.className='ct-slot';
+  if(p){d.innerHTML='<span class="cs-e">'+p.emoji+'</span><span class="cs-info"><span>'+p.name+'</span><span class="cs-v">💰'+p.value+' ★'+p.star+'</span></span>';
+   d.onclick=()=>offer(i)}
+  else{d.innerHTML='<span style="color:#6b5844">空位</span>';
+   d.onclick=()=>{if(S.pack.filter(x=>!x.sold&&!S.counter.includes(x)).length)toast('点下方箱子里的剑放到柜台');else toast('箱子空了——今晚没货')}}
+  box.appendChild(d)});
+}
+function renderInv(){
+ const g=$('inv-grid');g.innerHTML='';
+ const avail=S.pack.filter(p=>!p.sold);
+ if(!avail.length){g.innerHTML='<div style="color:#6b5844;font-size:12px;padding:8px">箱子空空——没铸出剑,或都卖完了</div>';return}
+ avail.forEach(p=>{const d=document.createElement('div');d.className='inv-cell';
+  d.innerHTML='<span class="ic-e">'+p.emoji+'</span><span class="ic-info"><span>'+p.name+'</span><span class="ic-v">💰'+p.value+' ★'+p.star+'</span></span>';
+  d.onclick=()=>{const i=S.counter.indexOf(null);if(i<0){toast('柜台满了——先卖掉或等顾客走');return}
+   S.counter[i]=p;renderCounter()};
+  g.appendChild(d)});
+}
+function say(t,keep){const b=$('ps-bubble');b.textContent=t;b.classList.add('on');
+ if(!keep)setTimeout(()=>b.classList.remove('on'),2600)}
+function emote(t){const e=$('pc-emote');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1800)}
+function nextCustomer(){
+ if(S.mode!=='shop')return;
+ if(CUST){$('shop-hint').textContent='这位客人还没走呢——点柜台上的剑卖给他';return}
+ const t=CUST_TYPES[Math.floor(Math.random()*CUST_TYPES.length)];
+ const tierMax=Math.min(3,S.day);
+ const want=Math.random()<.22?null:SWORDS[Math.floor(Math.random()*(tierMax+1))];
+ const mult=+(0.9+Math.random()*0.55).toFixed(2);
+ CUST={t,want,mult,fails:0};
+ $('pc-face').textContent=t.e;$('pc-name').textContent=t.n;
+ $('ps-cust').style.left='110%';
+ setTimeout(()=>{$('ps-cust').style.left='50%'},80);
+ setTimeout(()=>{
+  if(!CUST)return;
+  say(CUST.want?('想买一把「'+CUST.want.name+'」,出得起价'):'想要一把 ★2 以上的剑,啥都行');
+  $('shop-hint').textContent=CUST.want?('他在等「'+CUST.want.name+'」——点柜台上那把卖他'):'把 ★2 以上的剑摆上柜台卖他';
+ },2000);
+}
+function offer(i){
+ const p=S.counter[i];if(!p)return;
+ if(!CUST){$('shop-hint').textContent='柜台前没人——点「🛎️ 下一位」先招个客人';return}
+ const ok=CUST.want?(p.name===CUST.want.name):(p.star>=2);
+ if(ok){
+  const price=Math.round(p.value*CUST.mult);
+  coinSound();S.gold+=price;S.soldCnt++;p.sold=true;S.counter[i]=null;
+  say(CUST.t.hi+' 💰+'+price,1);emote(CUST.mult>=1.2?'🤩':'😄');
+  toast('💰 卖出 '+p.name+'(★'+p.star+') +'+price+' (×'+CUST.mult+')');
+  renderCounter();renderInv();renderShopGold();
+  setTimeout(()=>{$('ps-cust').style.left='-20%';
+   setTimeout(()=>{CUST=null;$('ps-bubble').classList.remove('on');
+    $('shop-hint').textContent=S.pack.some(x=>!x.sold)?'点「🛎️ 下一位」继续招客':'存货清空!点「🌙 打烊」收工'},1400)},900);
+ }else{
+  CUST.fails++;emote('😠');say(CUST.t.no);
+  if(CUST.fails>=2){say(CUST.t.no+'…算了,告辞!');
+   setTimeout(()=>{$('ps-cust').style.left='110%';
+    setTimeout(()=>{CUST=null;$('ps-bubble').classList.remove('on');
+     $('shop-hint').textContent='点「🛎️ 下一位」招下一位'},1400)},900)}
+ }
+}
+function closeShop(){
+ S.mode='forge';$('shop').classList.remove('on');
+ S.day++;S.mp=S.mpMax;S.forgeEnded=false;S.phase='idle';
+ S.pack=S.pack.filter(p=>!p.sold);
+ hud();updateSword();
+ $('quiz-hint').textContent=S.chest.length?`第 ${S.day} 天 · 魔力回满!从箱子拖剑坯开锻`:`第 ${S.day} 天 · 魔力回满!(箱子空了,先卖存货)`;
+}
+$('btn-bell').onclick=nextCustomer;
+$('btn-close').onclick=()=>{if(S.mode!=='shop')return;nightFade(closeShop,'打烊',`🌙 第 ${S.day} 天结束 · 明天继续`)};
+
+/* ================= 成功/结束 ================= */
+function growSword(){
+ if(S.tier>=SWORDS.length-1){S.gold+=50;toast('⚔️ 已是最高档!铁匠之神!奖励 🪙50',2200);hud();return}
+ S.tier++;
+ applyWindow();
+ $('forge-flash').classList.add('go');setTimeout(()=>$('forge-flash').classList.remove('go'),600);
+ toast(`⚔️ 剑长大了!${SWORDS[S.tier].emoji} ${SWORDS[S.tier].name} · 音域扩至 ${SWORDS[S.tier].span} 音`,2600);
+ hud();updateSword();
+}
+function forgeSuccess(){
+ S.phase='busy';S.forged++;
+ const sw=SWORDS[S.tier];
+ const sell=Math.round(sw.sell*(1-S.dmgLv*.1));
+ S.gold+=sell;S.dmgLv=0;
+ hud();
+ $('forge-flash').classList.add('go');setTimeout(()=>$('forge-flash').classList.remove('go'),600);
+ const last=S.tier+1>=SWORDS.length;
+ showOverlay('gold',sw.emoji,`${sw.name} 铸成!`,
+  `淬火收益攒满 <b>${sw.base}</b>,宝剑出炉!<br>卖出得 <b>🪙${sell}</b> · 累计 <b>🪙${S.gold}</b><br>${last?'你已是铁匠之神!':'下一把剑更长,音域更宽,题目更长——'}`,
+  last?[{label:'🔄 再战一局',cls:'gold',fn:()=>{hideOverlay();restart()}}]
+      :[{label:'🔨 下一把剑',cls:'gold',fn:()=>{hideOverlay();S.tier++;startForge()}}]);
+}
+function gameOver(){
+ if(S.phase==='over')return;
+ S.phase='over';clearInterval(S.rentTimer);clearInterval(S.frenzyTimer);
+ const acc=S.totStrikes>0?Math.round(S.totHits/S.totStrikes*100):0;
+ showOverlay('blue','🏚️','房租到期!',
+  `房东把你赶出了铁匠铺…<br>铸成 <b>${S.forged}</b> 把剑 · 身家 <b>🪙${S.gold}</b><br>正确率 <b>${acc}%</b>(${S.totHits}/${S.totStrikes}) · 超神 <b>${S.frenzies}</b> 次<br>最高锻造到 <b>${SWORDS[S.tier].name}</b>`,
+  [{label:'🔥 重开铁匠铺',cls:'gold',fn:()=>{hideOverlay();restart()}}]);
+}
+function restart(){
+ S.tier=0;S.value=0;S.potential=0;S.charge=0;S.gold=0;S.forged=0;S.frenzies=0;S.qCount=0;
+ S.totHits=0;S.totStrikes=0;S.hits=0;S.strikes=0;S.dmgLv=0;
+ S.mp=S.mpMax;S.day=1;S.mode='forge';S.pack=[];S.counter=[null,null,null,null];S.forgeEnded=false;S.soldCnt=0;$('shop').classList.remove('on');
+ S.chest=[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}];S.cur=null;$('chest-modal').classList.remove('on');
+ S.frenzyActive=false;S.pendingQuench=false;app.classList.remove('frenzy');
+ clearInterval(S.frenzyTimer);
+ applyWindow();
+ startForge();
+}
+function showOverlay(kind,emoji,title,body,btns){
+ const ov=$('overlay');ov.classList.add('on');
+ $('ov-title').textContent=title;$('ov-title').className=kind==='gold'?'gold':kind==='blue'?'blue':'red';
+ $('ov-sword').textContent=emoji;$('ov-body').innerHTML=body;
+ const bx=$('ov-btns');bx.innerHTML='';
+ btns.forEach(b=>{const el=document.createElement('button');el.className='btn '+(b.cls||'');el.textContent=b.label;el.onclick=b.fn;bx.appendChild(el)});
+}
+function hideOverlay(){$('overlay').classList.remove('on')}
+
+/* ================= 粒子/飘字 ================= */
+function spawnSparks(x,y){
+ for(let k=0;k<5;k++){const s=document.createElement('div');s.className='spark';s.textContent=['✨','⚡','·','✦'][k%4];
+  s.style.left=x+'px';s.style.top=y+'px';
+  s.style.setProperty('--dx',(Math.random()*90-45)+'px');s.style.setProperty('--dy',(-30-Math.random()*60)+'px');
+  app.appendChild(s);setTimeout(()=>s.remove(),520)}
+}
+function floatText(x,y,txt,cls){const f=document.createElement('div');f.className='float '+cls;f.textContent=txt;
+ f.style.left=(x-24)+'px';f.style.top=(y-14)+'px';
+ app.appendChild(f);setTimeout(()=>f.remove(),1050)}
+
+/* ================= 流程 ================= */
+function startForge(){
+ S.value=0;S.potential=0;S.charge=0;S.hits=0;S.strikes=0;S.pendingQuench=false;
+ S.cur=null;S.phase='idle';hud();updateSword();
+ $('quiz-hint').textContent='点「🧰 箱子」拖一把剑坯上砧开锻';
+}
+function nextQuestion(){S.q=genQuestion();S.pos=0;S.revealed=false;S.marks=[];playQuestion()}
+$('btn-start').onclick=()=>{if(S.phase==='over')return;openChest()};
+$('quench-btn').onclick=()=>{if(S.phase!=='ready')return;$('quench-btn').style.display='none';quenchPhase()};
+$('btn-replay').onclick=()=>{if(S.phase==='input'){const p=S.pos,m=S.marks,r=S.revealed;playQuestion();S.pos=p;S.marks=m;S.revealed=r;renderSlots()}};
+$('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音 · 淬火定命',
+ `- 听题目(音序),<b>按顺序</b>在音道上敲出这些音<br>
+  · 敲对 <b>+1🔮魔能</b>;敲错<b>剑不碎</b>,只把淬火档位概率变差<br>
+  · 一题敲完 → <b>淬火</b>:roll 档位,魔能 × 倍率变金币<br>
+  · 五档:<b>大成功×4 / 成功×2 / 维持×1 / 损坏(剑损-10%) / 失败(剑碎退档)</b>,敲得越正确概率越好<br>
+  · 背景是五线谱:每个音的音符位置 = 它在谱上的真实位置,玩着玩着就认识谱了<br>
+  · 连对 ${CFG.FRENZY_NEED} 击 → <b>⚡超神 ${CFG.FRENZY_SECS}s</b>:敲对每击 +${CFG.FRENZY_GOLD}🪙、敲错零惩罚,窗口结束大淬火一把结<br>
+  · 每${CFG.GROW_PER}题存活 → 剑长大一档(音域更宽)<br>
+  · 横幅颜色 = 唱名颜色(do 红 re 橙 mi 黄 fa 绿 sol 青 la 蓝 si 紫)<br>
+  · 右侧「🎵 乐器音色」可换 33 种实采乐器音色(逐音 YIN 验证),出题自动避开该乐器缺的音`,
+ [{label:'明白,开炉!',cls:'gold',fn:hideOverlay}])};
+
+/* 音道点击(用 app 坐标判定,锤子即光标) */
+$('lanes').addEventListener('pointerdown',e=>{
+ const laneEl=e.target.closest('.lane');if(!laneEl)return;
+ placeHammer(e.clientX,e.clientY);
+ hitLane(+laneEl.dataset.i);
+});
+
+/* 测试钩子 */
+window.__api={S,NOTES,SWORDS,CFG,INST,playInst,computeProbs,rollTier,startForge,nextQuestion,hitLane,genQuestion,playQuestion,quenchPhase,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()}};
+
+/* ================= 启动 ================= */
+buildLanes();
+loadManifest();
+/* 昼夜循环按钮注入+HUD覆盖(大爷17:08令) */
+(function(){
+ const hudBox=$('hud');
+ const mk=(id,txt,cls)=>{const b=document.createElement('button');b.className='btn '+(cls||'');b.id=id;b.textContent=txt;hudBox.appendChild(b);return b};
+ mk('btn-skill','🌳 技能树');mk('btn-endforge','🏁 结束铸造');mk('btn-day2','🌅 第二天','gold');
+ $('btn-skill').onclick=()=>showOverlay('blue','🌳','技能树','工匠的成长之路——技能树系统开发中,敬请期待。',[{label:'继续干活',fn:hideOverlay}]);
+ $('btn-endforge').onclick=endForgeDay;
+ $('btn-day2').onclick=()=>{if(S.mode!=='forge')return;S.phase='idle';stashSword(true);nightFade(openShop,'第二天',`☀️ 第 ${S.day+1} 天 · 售卖日`)};
+ const _hudOrig=hud;
+ hud=function(){_hudOrig();
+  if(S.cur){$('tier-tag').textContent=`Lv.${S.cur.lv}/4 · 第${S.day}天`;
+   $('sword-title').textContent=SWORDS[curSpan()-3].name+(S.dmgLv>0?` 损-${S.dmgLv*10}%`:'');
+   $('value-fill').style.width=(S.cur.qDone/6*100)+'%';}
+  else{$('tier-tag').textContent=`第${S.day}天 · 铁砧空`;$('value-fill').style.width='0%'}
+  const cb=$('chest-btn');if(cb)cb.innerHTML=`🧰 箱子 <b>${S.chest.length}</b>`;
+  $('mp-fill').style.width=(S.mp/S.mpMax*100)+'%';
+  $('mp-num').textContent='💫 '+S.mp+'/'+S.mpMax;
+  $('btn-day2').style.display=(S.mode==='forge'&&(S.mp<=0||S.forgeEnded))?'inline-block':'none';
+ };
+ hud();
+})();
+requestAnimationFrame(()=>requestAnimationFrame(()=>{hud();updateSword()}));
+addEventListener('resize',()=>setTimeout(updateSword,80));
+</script>
+</body>
+</html>

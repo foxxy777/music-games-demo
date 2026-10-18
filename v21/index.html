@@ -275,6 +275,7 @@ body{overflow:hidden}
 .emote{position:absolute;top:-72px;left:50%;transform:translateX(-50%) scale(0);font-size:34px;transition:transform .35s cubic-bezier(.3,-.2,.6,1.6);pointer-events:none;z-index:6}
 .emote.on{transform:translateX(-50%) scale(1)}
 .sh-star{font-size:11px;color:#ffd54f;letter-spacing:1px}
+.lane.flash-tap{filter:brightness(1.5)}
 /* ===== 遮罩层 ===== */
 #overlay{position:absolute;inset:0;background:#0a0705e8;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:50;padding:36px;text-align:center;cursor:auto}
 #overlay.on{display:flex}
@@ -488,6 +489,7 @@ function curAcc(){return S.strikes>0?S.hits/S.strikes:(S.totStrikes>0?S.totHits/
 let AC=null;
 function au(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}
 function tone(f,when=0,dur=.42,vol=.22){const c=au(),t=c.currentTime+when;const o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.value=f;o.connect(g);g.connect(c.destination);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.028);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.start(t);o.stop(t+dur+.05)}
+function clankNeutral(){const c=au(),t=c.currentTime;const o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.setValueAtTime(760,t);o.frequency.exponentialRampToValueAtTime(560,t+.08);g.gain.setValueAtTime(.08,t);g.gain.exponentialRampToValueAtTime(.0001,t+.12);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.13)}
 function clank(ok){const c=au(),t=c.currentTime;const o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.setValueAtTime(ok?1240:340,t);o.frequency.exponentialRampToValueAtTime(ok?880:180,t+.09);g.gain.setValueAtTime(.09,t);g.gain.exponentialRampToValueAtTime(.0001,t+.13);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.15)}
 function sizzle(){ // 淬火蒸汽嘶声:白噪声+带通
  const c=au(),t=c.currentTime,dur=1.1;
@@ -837,7 +839,10 @@ function renderSlots(state){
   const nt=NOTES[ni];const d=document.createElement('div');
   let cls='qslot',inner='?';
   if(S.phase==='playing'){cls+= i===S.pos?' playing':' waiting'}
-  else if(i<S.pos){cls+= (S.marks&&S.marks[i]==='miss')?' miss':' hit';inner=nt.n}
+  else if(i<S.pos){
+   if(S.marks&&S.marks[i]==='pending'){cls+=' waiting';inner='?'}
+   else{cls+= (S.marks&&S.marks[i]==='miss')?' miss':' hit';inner=nt.n}
+  }
   else if(S.revealed){cls+=' hit';inner=nt.n}
   d.className=cls;
   const c=colorOf(nt.n);
@@ -849,7 +854,7 @@ function renderSlots(state){
  const my=$('my-slots');my.innerHTML='';
  S.q.forEach((ni,i)=>{
   const d2=document.createElement('div');let cls='mslot',txt='·';
-  if(S.typed&&S.typed[i]!==undefined){const t=S.typed[i];txt=NOTES[t].n;cls+=(S.marks[i]==='hit')?' ok':' bad'}
+  if(S.typed&&S.typed[i]!==undefined){const t=S.typed[i];txt=NOTES[t].n;cls+=(S.marks[i]==='pending')?' next':(S.marks[i]==='hit')?' ok':' bad'}
   else if(S.phase==='input'&&i===S.pos){cls+=' next'}
   d2.className=cls;d2.innerHTML=`<span>${txt}</span>`;my.appendChild(d2);
  });
@@ -869,49 +874,51 @@ function hitLane(i){
  const nt=NOTES[i];
  playInst(nt.m,0);
  const laneEl=document.querySelector(`.lane[data-i="${i}"]`);
- const expect=S.q[S.pos];
  const rect=laneEl.getBoundingClientRect(),appR=app.getBoundingClientRect(),sk=appR.width/app.offsetWidth;
  const fresh=lastPt&&Date.now()-lastPt.t<500;
  const hx=fresh?lastPt.x:(rect.left-appR.left+rect.width/2)/sk,
        hy=fresh?lastPt.y:(rect.top-appR.top+rect.height/2)/sk;
  swingHammer(hx,hy);
  spawnSparks(hx,hy);
+ clankNeutral();
  S.strikes++;S.totStrikes++;
- if(i===expect){
-  clank(true);
-  S.hits++;S.totHits++;
-  S.potential+=CFG.POT_PER_HIT;
-  flyDrop(hx,hy);
-  S.marks[S.pos]='hit';S.typed[S.pos]=i;
-  laneEl.classList.add('flash-hit');setTimeout(()=>laneEl.classList.remove('flash-hit'),260);
-  setGirl('strike',380);
-  if(S.frenzyActive){ // 超神:立即结算金币
-   S.gold+=CFG.FRENZY_GOLD;
-   floatText(hx,hy,`+${CFG.FRENZY_GOLD}🪙`,'gold');
-  }else{
-   S.charge=Math.min(CFG.FRENZY_NEED,S.charge+1);
-   floatText(hx,hy,`+${CFG.POT_PER_HIT}🔮`,'plus');
-   if(S.charge>=CFG.FRENZY_NEED)startFrenzy();
-  }
-  S.pos++;renderSlots();hud();
-  if(S.pos>=S.q.length)endQuestion();
- }else{
-  clank(false);
-  S.marks[S.pos]='miss';S.typed[S.pos]=i;
-  if(!S.frenzyActive){ // 超神豁免:敲错零惩罚
-   S.charge=0;
-   floatText(hx,hy,'概率↓','minus');
-  }
-  laneEl.classList.add('flash-miss');setTimeout(()=>laneEl.classList.remove('flash-miss'),340);
-  setGirl('hurt',560);
-  const wrongN=NOTES[i].n, expN=NOTES[expect].n;
-  $('quiz-hint').textContent=`✘ 应为 ${expN},敲成了 ${wrongN}(剑不碎,继续!)`;
-  $('quiz-hint').classList.add('warn');setTimeout(()=>$('quiz-hint').classList.remove('warn'),1600);
-  S.pos++;renderSlots();hud();
-  if(S.pos>=S.q.length)endQuestion();
+ S.typed[S.pos]=i;
+ S.marks[S.pos]='pending';
+ setGirl('strike',380);
+ laneEl.classList.add('flash-tap');setTimeout(()=>laneEl.classList.remove('flash-tap'),240);
+ S.pos++;renderSlots();
+ if(S.pos>=S.q.length){
+  S.phase='grading';hud();
+  $('quiz-hint').textContent='敲完了…判卷中';
+  setTimeout(gradeQuestion,700);
  }
 }
 
+/* ================= 盲打判卷(大爷17:51令):敲完三音再统一对答案 ================= */
+function gradeQuestion(){
+ let okCnt=0;
+ S.q.forEach((exp,pos)=>{if(S.typed[pos]===exp)okCnt++});
+ S.hits+=okCnt;S.totHits+=okCnt;
+ S.potential+=okCnt*CFG.POT_PER_HIT;
+ S.q.forEach((exp,pos)=>{S.marks[pos]=S.typed[pos]===exp?'hit':'miss'});
+ if(S.frenzyActive){S.gold+=okCnt*CFG.FRENZY_GOLD}
+ else{S.charge=Math.min(CFG.FRENZY_NEED,S.charge+okCnt);if(okCnt===0)S.charge=0}
+ renderSlots();hud();
+ const step=380;
+ S.q.forEach((exp,pos)=>{setTimeout(()=>{
+  clank(S.marks[pos]==='hit');
+  if(S.marks[pos]==='miss'){
+   const expN=NOTES[exp].n,gotN=S.typed[pos]!==undefined?NOTES[S.typed[pos]].n:'·';
+   $('quiz-hint').textContent=`✘ 第${pos+1}音 应为 ${expN},你敲了 ${gotN}`;
+   $('quiz-hint').classList.add('warn');setTimeout(()=>$('quiz-hint').classList.remove('warn'),900);
+  }
+ },pos*step)});
+ if(okCnt===S.q.length)$('quiz-hint').textContent=`✔ ${S.q.length}/${S.q.length} 全对!魔能+${okCnt*CFG.POT_PER_HIT}🔮`;
+ setTimeout(()=>{
+  if(!S.frenzyActive&&S.charge>=CFG.FRENZY_NEED)startFrenzy();
+  endQuestion();
+ },S.q.length*step+450);
+}
 /* ================= 一题结束 → 淬火 ================= */
 function endQuestion(){
  if(S.frenzyActive){ // 超神期间:快速连发,攒到窗口结束一次性大淬火

@@ -276,6 +276,24 @@ body{overflow:hidden}
 .emote.on{transform:translateX(-50%) scale(1)}
 .sh-star{font-size:11px;color:#ffd54f;letter-spacing:1px}
 .lane.flash-tap{filter:brightness(1.5)}
+#chest-btn{margin:6px 10px 4px;font-size:12px;padding:6px 10px}
+#chest-btn b{color:#ffd54f}
+#chest-modal{position:absolute;inset:0;z-index:150;background:#000000ba;display:none;align-items:center;justify-content:center;cursor:auto}
+#chest-modal.on{display:flex}
+#cm-card{width:min(430px,86vw);max-height:80vh;overflow-y:auto;background:linear-gradient(165deg,#2b2015,#191210 70%);border:2px solid #c9a06a90;border-radius:18px;padding:16px 20px;text-align:center;box-shadow:0 18px 60px #000c}
+#cm-title{font-size:18px;font-weight:bold;color:#ffd54f;margin-bottom:10px}
+.cm-sec{font-size:11px;color:#c9a06a;letter-spacing:1px;margin:8px 0 6px;text-align:left;border-bottom:1px dashed #4a3320;padding-bottom:3px}
+#cm-blank-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:52px}
+.cm-blank{display:flex;flex-direction:column;align-items:center;gap:2px;width:88px;padding:8px 4px;border-radius:10px;border:2px dashed #5a4020;background:#1a110a;color:#ffe9b8;font-size:12px;cursor:grab}
+.cm-blank:active{cursor:grabbing}
+.cm-blank:hover{border-color:#ffd54f}
+.cm-blank .cb-e{font-size:26px}
+#cm-done-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:40px}
+.cm-done{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:10px;border:2px solid #4a3320;background:#1a110a;color:#ffe9b8;font-size:12px}
+.cm-done .cd-v{color:#ffd54f}
+.cm-none{font-size:12px;color:#6b5844;padding:6px}
+#anvil-empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:4;pointer-events:none;font-size:15px;color:#c9a06add;letter-spacing:2px;text-shadow:0 2px 8px #000}
+#anvil.drop-ready{outline:3px dashed #ffd54f;outline-offset:-6px}
 /* ===== 遮罩层 ===== */
 #overlay{position:absolute;inset:0;background:#0a0705e8;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:50;padding:36px;text-align:center;cursor:auto}
 #overlay.on{display:flex}
@@ -308,7 +326,7 @@ body{overflow:hidden}
       <div id="charge-bar"></div>
       <div id="frenzy-timer"></div>
     </div>
-    <button class="btn gold" id="btn-start">🔥 开始锻造</button>
+    <button class="btn gold" id="btn-start">🧰 打开箱子</button>
     <button class="btn" id="btn-replay" disabled>🔁 重听</button>
     <button class="btn" id="btn-help">❓</button>
   </div>
@@ -323,7 +341,7 @@ body{overflow:hidden}
     <div id="quiz-title">听音 · 按顺序敲出题目 · 敲完淬火</div>
     <div id="slots"></div>
  <div id="my-slots"></div>
-    <div id="quiz-hint">点击「开始锻造」点火开炉</div>
+    <div id="quiz-hint">点「🧰 打开箱子」拖一把剑坯上砧</div>
   </div>
   <div id="main">
    <div id="acc-strip"><div class="acc-left"><span class="lab">🎯 正确率</span><b id="acc-big">—</b><span id="acc-detail2"></span></div><div id="probs-strip">
@@ -366,6 +384,7 @@ body{overflow:hidden}
     </div>
    </div>
    <div id="anvil">
+    <div id="anvil-empty">🧰 从箱子拖一把剑坯上来</div>
     <div id="lanes"></div>
     <div id="laser-top" class="laser"></div>
     <div id="laser-bot" class="laser"></div>
@@ -378,6 +397,7 @@ body{overflow:hidden}
       <div id="mp-label">💫 魔力</div>
       <div id="mp-bar"><div id="mp-fill"></div><div id="mp-num">12/12</div></div>
     </div>
+    <button id="chest-btn" class="btn">🧰 箱子 <b>3</b></button>
    </div>
    </div>
   </div>
@@ -405,6 +425,14 @@ body{overflow:hidden}
       <button id="btn-close" class="btn">🌙 打烊</button>
     </div>
   </div>
+  <div id="chest-modal"><div id="cm-card">
+    <div id="cm-title">🧰 工具箱</div>
+    <div class="cm-sec">剑坯 · 拖到铁砧开锻(直接点也行)</div>
+    <div id="cm-blank-list"></div>
+    <div class="cm-sec">成品 · 没碎的都在,第二天上架卖</div>
+    <div id="cm-done-list"></div>
+    <button id="cm-close" class="btn">关上箱子</button>
+  </div></div>
   <div id="pack-modal"><div id="pm-card">
     <div id="pm-title">📦 选择要上架的装备</div>
     <div id="pm-list"></div>
@@ -458,6 +486,7 @@ const SWORDS=[
 const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0,
  rentLeft:CFG.RENT_START,rentTimer:null,dmgLv:0,
  mp:12,mpMax:12,day:1,mode:'forge',cur:null,pack:[],shelf:[null,null,null],forgeEnded:false,soldCnt:0,
+ chest:[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}],
  frenzyActive:false,frenzyEnd:0,frenzyTimer:null,pendingQuench:false,
  hits:0,strikes:0,            // 本题:敲对数/已敲数
  totHits:0,totStrikes:0,      // 全局统计
@@ -590,6 +619,13 @@ function applyWindow(){
  updateSword();
 }
 function updateSword(){
+ if(!S.cur){
+  document.querySelectorAll('.lane').forEach(el=>{el.classList.add('dim');el.classList.remove('cov','anchor-on')});
+  $('sword-svg').innerHTML='';$('sword-value').style.display='none';
+  $('laser-top').style.display='none';$('laser-bot').style.display='none';
+  $('anvil-empty').style.display='flex';return}
+ $('anvil-empty').style.display='none';
+ $('laser-top').style.display='block';$('laser-bot').style.display='block';$('sword-value').style.display='block';
  const sw=SWORDS[curSpan()-3],first=0,last=sw.span-1;
  const lanesEls=[...document.querySelectorAll('.lane')];
  lanesEls.forEach((el,i)=>{el.classList.toggle('cov',i>=first&&i<=last);el.classList.toggle('dim',i<first||i>last);el.classList.toggle('anchor-on',!!ANCHORS[i]&&i>=first&&i<=last)});
@@ -805,8 +841,9 @@ function toast(msg,ms=1800){const t=$('toast');t.textContent=msg;t.classList.add
 /* ================= 碎剑(失败档,2026-10-17 大爷令:碎的是剑不是键) ================= */
 function swordBreak(){
  const old=SWORDS[S.tier];
- S.cur={lv:1,qDone:0};S.value=0;S.dmgLv=0;
- applyWindow();hud();
+ S.cur=null;S.value=0;S.dmgLv=0;
+ applyWindow();hud();updateSword();
+ $('quiz-hint').textContent='💥 剑碎了!从箱子再拖一把';
  const z=$('sword-zone');
  z.classList.remove('shatter');void z.offsetWidth;z.classList.add('shatter');
  const zr=z.getBoundingClientRect(),ar=app.getBoundingClientRect(),k=ar.width/app.offsetWidth;
@@ -1017,6 +1054,7 @@ function curSpan(){return S.cur&&S.cur.lv>=2?4:3}
 function newSword(){S.cur={lv:1,qDone:0,q:0};S.value=0;S.qCount=0;S.dmgLv=0;applyWindow();hud();updateSword();
  toast(`🔨 新剑开锻:匕首(3音)· 魔力 ${S.mp}`)}
 function afterQuestionDone(result){
+ if(!S.cur){S.phase='idle';hud();return}
  S.qCount++;
  S.cur.qDone++;
  if(result==='great')S.cur.q+=1;else if(result==='good')S.cur.q+=.5;
@@ -1025,27 +1063,72 @@ function afterQuestionDone(result){
  const newLv=Math.floor(S.cur.qDone/2)+1;
  if(newLv>S.cur.lv){S.cur.lv=newLv;applyWindow();updateSword();
   toast(`⬆️ 剑升级!Lv.${S.cur.lv} · 音域 ${curSpan()} 音 (魔力 ${S.mp})`)}
- if(S.mp<=0){S.forgeEnded=true;S.phase='idle';hud();$('quiz-hint').textContent='魔力耗尽!点「第二天」开门营业';return}
+ if(S.mp<=0){
+  const it=stashSword(true);
+  if(it)toast(`🌙 魔力见底!${it.name} 没锻完但没碎,收进箱子明天照样卖 💰${it.value}`);
+  S.forgeEnded=true;S.phase='idle';hud();$('quiz-hint').textContent='魔力耗尽!点「第二天」开门营业';return}
  S.phase='busy';hud();
  setTimeout(()=>{S.q=genQuestion();playQuestion()},420);
 }
-function swordDone(){
- S.forged++;
+function stashSword(silent){
+ if(!S.cur)return null;
  const sw=SWORDS[curSpan()-3];
  const star=Math.min(4,1+Math.floor(S.cur.q));
  const val=Math.round(S.value*(1-S.dmgLv*.1)*(1+.15*(star-1)));
- S.pack.push({name:sw.name,emoji:sw.emoji,star,value:val,onShelf:false,sold:false});
- S.dmgLv=0;
- $('forge-flash').classList.add('go');setTimeout(()=>$('forge-flash').classList.remove('go'),600);
- playInst(84,0,1.2);setTimeout(()=>playInst(88,0,1),180);
- toast(`🎉 ${sw.name} 铸成!品质 ${'★'.repeat(star)}${'☆'.repeat(4-star)} · 价值 ${val}`);
- if(S.mp>0&&!S.forgeEnded){newSword();S.phase='busy';setTimeout(()=>{S.q=genQuestion();playQuestion()},700)}
- else{S.forgeEnded=true;S.phase='idle';hud();$('quiz-hint').textContent='今晚的活干完了!点「第二天」开门营业'}
+ const item={name:sw.name,emoji:sw.emoji,star,value:val,onShelf:false,sold:false};
+ S.pack.push(item);S.forged++;S.dmgLv=0;
+ S.cur=null;updateSword();hud();
+ if(!silent){$('forge-flash').classList.add('go');setTimeout(()=>$('forge-flash').classList.remove('go'),600);
+  playInst(84,0,1.2);setTimeout(()=>playInst(88,0,1),180)}
+ return item}
+function swordDone(){
+ const item=stashSword();
+ if(item)toast(`🎉 ${item.name} 铸成!品质 ${'★'.repeat(item.star)}${'☆'.repeat(4-item.star)} · 价值 ${item.value} · 收进箱子`);
+ if(S.mp>0&&!S.forgeEnded&&S.chest.length){S.phase='idle';hud();
+  $('quiz-hint').textContent='又一把出炉!从箱子拖下一把剑坯继续'}
+ else{S.forgeEnded=true;S.phase='idle';hud();
+  $('quiz-hint').textContent=S.chest.length?'今晚的活干完了!点「第二天」开门营业':'箱子空了!点「第二天」开门营业'}}
+/* ================= 箱子/剑坯(大爷19:22令) ================= */
+function openChest(){
+ const bl=$('cm-blank-list');bl.innerHTML='';
+ if(!S.chest.length)bl.innerHTML='<div class="cm-none">箱子空了——先把存货卖掉换新坯</div>';
+ S.chest.forEach((b,i)=>{const d=document.createElement('div');d.className='cm-blank';d.draggable=true;
+  d.innerHTML=`<div class="cb-e">${b.emoji}</div><div>${b.name}</div>`;
+  d.ondragstart=e=>{e.dataTransfer.setData('text/plain',''+i);e.dataTransfer.effectAllowed='move'};
+  d.onclick=()=>placeBlank(i);
+  bl.appendChild(d)});
+ const dl=$('cm-done-list');dl.innerHTML='';
+ if(!S.pack.length)dl.innerHTML='<div class="cm-none">还没铸出剑</div>';
+ S.pack.forEach(p=>{const d=document.createElement('div');d.className='cm-done';
+  d.innerHTML=`<span>${p.emoji} ${p.name} ${'★'.repeat(p.star)}${'☆'.repeat(4-p.star)}</span><span class="cd-v">💰${p.value}</span>`;
+  d.onclick=()=>toast('明天开店,把货架摆上它就有人来买');
+  dl.appendChild(d)});
+ $('chest-modal').classList.add('on');
 }
+function placeBlank(i){
+ if(S.mode!=='forge')return;
+ if(S.phase==='playing'||S.phase==='input'||S.phase==='grading'||S.phase==='quench')return;
+ if(S.cur){toast('铁砧上有剑,先把它锻完或收工');return}
+ if(!S.chest[i])return;
+ S.chest.splice(i,1);
+ $('chest-modal').classList.remove('on');
+ newSword();
+ $('quiz-hint').textContent='剑坯上砧!听题开锻';
+ nextQuestion();
+}
+$('cm-close').onclick=()=>$('chest-modal').classList.remove('on');
+$('chest-btn').onclick=()=>{if(S.mode!=='forge')return;openChest()};
+(function(){const a=$('anvil');
+ a.addEventListener('dragover',e=>{e.preventDefault();a.classList.add('drop-ready')});
+ a.addEventListener('dragleave',()=>a.classList.remove('drop-ready'));
+ a.addEventListener('drop',e=>{e.preventDefault();a.classList.remove('drop-ready');
+  const i=+e.dataTransfer.getData('text/plain');placeBlank(i)});
+})();
 function endForgeDay(){
  if(S.mode!=='forge')return;
+ const it=stashSword(true);
  S.forgeEnded=true;S.phase='idle';hud();
- toast('收工!点「第二天」去卖货');
+ toast(it?`🌙 收工!${it.name} 没碎——收进箱子,明天照样卖 💰${it.value}`:'收工!点「第二天」去卖货');
 }
 function coinSound(){const c=au(),t=c.currentTime;
  [[1568,0],[2093,.09]].forEach(([f,d])=>{const o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.value=f;
@@ -1152,8 +1235,8 @@ function closeShop(){
  S.mode='forge';$('shop').classList.remove('on');
  S.day++;S.mp=S.mpMax;S.forgeEnded=false;S.phase='idle';
  S.pack=S.pack.filter(p=>!p.sold);
- hud();newSword();
- $('quiz-hint').textContent=`第 ${S.day} 天 · 魔力回满!继续锻造`;
+ hud();updateSword();
+ $('quiz-hint').textContent=S.chest.length?`第 ${S.day} 天 · 魔力回满!从箱子拖剑坯开锻`:`第 ${S.day} 天 · 魔力回满!(箱子空了,先卖存货)`;
 }
 $('btn-bell').onclick=bellOpen;
 $('btn-close').onclick=()=>{if(S.mode!=='shop')return;nightFade(closeShop,'打烊',`🌙 第 ${S.day} 天结束 · 明天继续`)};
@@ -1192,6 +1275,7 @@ function restart(){
  S.tier=0;S.value=0;S.potential=0;S.charge=0;S.gold=0;S.forged=0;S.frenzies=0;S.qCount=0;
  S.totHits=0;S.totStrikes=0;S.hits=0;S.strikes=0;S.dmgLv=0;
  S.mp=S.mpMax;S.day=1;S.mode='forge';S.pack=[];S.shelf=[null,null,null];S.forgeEnded=false;S.soldCnt=0;$('shop').classList.remove('on');
+ S.chest=[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}];S.cur=null;$('chest-modal').classList.remove('on');
  S.frenzyActive=false;S.pendingQuench=false;app.classList.remove('frenzy');
  clearInterval(S.frenzyTimer);
  applyWindow();
@@ -1220,13 +1304,11 @@ function floatText(x,y,txt,cls){const f=document.createElement('div');f.classNam
 /* ================= 流程 ================= */
 function startForge(){
  S.value=0;S.potential=0;S.charge=0;S.hits=0;S.strikes=0;S.pendingQuench=false;
- S.phase='idle';newSword();hud();updateSword();
- $('quiz-hint').textContent='点火!开始出题';
- toast(`🔥 开炉:${SWORDS[S.tier].name} · 每${CFG.GROW_PER}题长大一次`);
- nextQuestion();
+ S.cur=null;S.phase='idle';hud();updateSword();
+ $('quiz-hint').textContent='点「🧰 箱子」拖一把剑坯上砧开锻';
 }
 function nextQuestion(){S.q=genQuestion();S.pos=0;S.revealed=false;S.marks=[];playQuestion()}
-$('btn-start').onclick=()=>{if(S.phase!=='idle')return;startForge()};
+$('btn-start').onclick=()=>{if(S.phase==='over')return;openChest()};
 $('quench-btn').onclick=()=>{if(S.phase!=='ready')return;$('quench-btn').style.display='none';quenchPhase()};
 $('btn-replay').onclick=()=>{if(S.phase==='input'){const p=S.pos,m=S.marks,r=S.revealed;playQuestion();S.pos=p;S.marks=m;S.revealed=r;renderSlots()}};
 $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音 · 淬火定命',
@@ -1261,12 +1343,14 @@ loadManifest();
  mk('btn-skill','🌳 技能树');mk('btn-endforge','🏁 结束铸造');mk('btn-day2','🌅 第二天','gold');
  $('btn-skill').onclick=()=>showOverlay('blue','🌳','技能树','工匠的成长之路——技能树系统开发中,敬请期待。',[{label:'继续干活',fn:hideOverlay}]);
  $('btn-endforge').onclick=endForgeDay;
- $('btn-day2').onclick=()=>{if(S.mode!=='forge')return;S.phase='idle';nightFade(openShop,'第二天',`☀️ 第 ${S.day+1} 天 · 售卖日`)};
+ $('btn-day2').onclick=()=>{if(S.mode!=='forge')return;S.phase='idle';stashSword(true);nightFade(openShop,'第二天',`☀️ 第 ${S.day+1} 天 · 售卖日`)};
  const _hudOrig=hud;
  hud=function(){_hudOrig();
   if(S.cur){$('tier-tag').textContent=`Lv.${S.cur.lv}/4 · 第${S.day}天`;
    $('sword-title').textContent=SWORDS[curSpan()-3].name+(S.dmgLv>0?` 损-${S.dmgLv*10}%`:'');
    $('value-fill').style.width=(S.cur.qDone/6*100)+'%';}
+  else{$('tier-tag').textContent=`第${S.day}天 · 铁砧空`;$('value-fill').style.width='0%'}
+  const cb=$('chest-btn');if(cb)cb.innerHTML=`🧰 箱子 <b>${S.chest.length}</b>`;
   $('mp-fill').style.width=(S.mp/S.mpMax*100)+'%';
   $('mp-num').textContent='💫 '+S.mp+'/'+S.mpMax;
   $('btn-day2').style.display=(S.mode==='forge'&&(S.mp<=0||S.forgeEnded))?'inline-block':'none';

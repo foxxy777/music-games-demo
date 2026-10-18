@@ -427,6 +427,7 @@ const CFG={
  FRENZY_SECS:8,       // 超神窗口秒数
  FRENZY_GOLD:2,       // 超神内敲对立即得金/击
  POT_PER_HIT:1,       // 敲对积累魔能/击
+ CONTOUR_BONUS:1,     // 轮廓全对(整体平移)保底魔能(技能可加)
  TIERS:{great:{name:'大成功',mult:4,cls:'great'},good:{name:'成功',mult:2,cls:'good'},
         keep:{name:'维持',mult:1,cls:'keep'},dmg:{name:'损坏',mult:0,cls:'dmg'},fail:{name:'失败',mult:0,cls:'fail'}},
  PROB:{great0:.02,great1:.45, good0:.18,good1:.33, keep0:.30,keep1:.15, dmg0:.20,dmg1:.05, fail0:.30,fail1:.02},
@@ -914,6 +915,10 @@ function gradeQuestion(){
   }
  },pos*step)});
  if(okCnt===S.q.length)$('quiz-hint').textContent=`✔ ${S.q.length}/${S.q.length} 全对!魔能+${okCnt*CFG.POT_PER_HIT}🔮`;
+ const dShift=S.typed[0]-S.q[0];
+ const contour=dShift!==0&&S.q.every((exp,i)=>S.typed[i]-exp===dShift);
+ if(contour){S.potential+=CFG.CONTOUR_BONUS;hud();
+  setTimeout(()=>$('quiz-hint').textContent=`🎵 轮廓全对(整体${dShift>0?'+':''}${dShift}音)!保底+${CFG.CONTOUR_BONUS}🔮`,S.q.length*step)}
  setTimeout(()=>{
   if(!S.frenzyActive&&S.charge>=CFG.FRENZY_NEED)startFrenzy();
   endQuestion();
@@ -1109,7 +1114,9 @@ function spawnCustomer(done){
  const walk=(x,y)=>{c.style.left=x+'px';c.style.top=y+'px'};
  const shelfEls=document.querySelectorAll('.shelf');
  const mid=shelfEls[1];
- setTimeout(()=>walk(pos(mid).x,pos(mid).y+46),80);
+ const stocked=S.shelf.map((p,i)=>p&&!p.sold?i:-1).filter(i=>i>=0);
+ const lookAt=shelfEls[stocked.length?stocked[0]:1];
+ setTimeout(()=>walk(pos(lookAt).x,pos(lookAt).y+46),80);
  setTimeout(()=>{if(!decided)cl.style.display='block'},2200);
  let decided=false;
  const decide=()=>{if(decided)return;decided=true;cl.style.display='none';

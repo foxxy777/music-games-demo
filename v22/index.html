@@ -1159,7 +1159,7 @@ function renderInv(){
  avail.forEach(p=>{const d=document.createElement('div');d.className='inv-cell';
   d.innerHTML='<span class="ic-e">'+p.emoji+'</span><span class="ic-info"><span>'+p.name+'</span><span class="ic-v">💰'+p.value+' ★'+p.star+'</span></span>';
   d.onclick=()=>{const i=S.counter.indexOf(null);if(i<0){toast('柜台满了——先卖掉或等顾客走');return}
-   S.counter[i]=p;renderCounter()};
+   S.counter[i]=p;renderCounter();renderInv()};;
   g.appendChild(d)});
 }
 function say(t,keep){const b=$('ps-bubble');b.textContent=t;b.classList.add('on');

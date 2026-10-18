@@ -292,6 +292,19 @@ body{overflow:hidden}
 .cm-done .cd-v{color:#ffd54f;font-size:9px}
 .cm-done:hover{border-color:#ffd54f}
 .cm-none{font-size:12px;color:#6b5844;padding:6px;grid-column:1/-1;text-align:center;align-self:center}
+#cal-modal{position:absolute;inset:0;z-index:150;background:#000000ba;display:none;align-items:center;justify-content:center;cursor:auto}
+#cal-modal.on{display:flex}
+#cal-card{width:min(430px,86vw);background:linear-gradient(165deg,#2b2015,#191210 70%);border:2px solid #c9a06a90;border-radius:18px;padding:14px 18px;text-align:center;box-shadow:0 18px 60px #000c}
+#cal-title{font-size:15px;font-weight:bold;color:#ffd54f;margin-bottom:10px}
+#cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-d{position:relative;height:44px;border-radius:8px;border:1px solid #3a2a18;background:#1a110a;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ffe9b8;font-size:13px}
+.cal-d b{font-weight:bold}
+.cal-d i{position:absolute;top:2px;right:4px;font-style:normal;font-size:9px;color:#ffd54f}
+.cal-d.rent{border-color:#b0453a;background:#2a110d}
+.cal-d.rent b{color:#ff8a7a}
+.cal-d.past{opacity:.35}
+.cal-d.today{outline:2px solid #ffd54f}
+#cal-legend{font-size:10px;color:#8a7455;margin-top:8px}
 #anvil-empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:4;pointer-events:none;font-size:15px;color:#c9a06add;letter-spacing:2px;text-shadow:0 2px 8px #000}
 #anvil.drop-ready{outline:3px dashed #ffd54f;outline-offset:-6px}
 #ct-slots.drop-ready{outline:3px dashed #ffd54f;outline-offset:-4px}
@@ -431,6 +444,12 @@ body{overflow:hidden}
       <button id="btn-close" class="btn">🌙 打烊</button>
     </div>
   </div>
+  <div id="cal-modal"><div id="cal-card">
+    <div id="cal-title">📅 交租日历</div>
+    <div id="cal-grid"></div>
+    <div id="cal-legend">💰=交租日 · 金框=今天 · 灰=已过</div>
+    <button id="cal-close" class="btn">关上</button>
+  </div></div>
   <div id="night-fade"><div id="nf-text">第二天</div><div id="nf-sub"></div></div>
   <div id="forge-flash"></div>
   <div id="toast"></div>
@@ -454,8 +473,7 @@ const CFG={
  ERR_PENALTY:5,   // 每敲错一音:损坏+5%
  FULL_BONUS:5,    // 整题全对:大成功+5%
  SWORD_CAP_LV:2,  // 角色Lv.1封顶:剑最高Lv.2(4音域),每级2题→每把最多4题
- RENT_START:300,      // 房租秒数
- RENT_PER_FORGE:75,   // 每铸成一把 +秒
+ RENT:20,             // 房租(金币,每7天一收)
 };
 const NOTES=[
  {m:60,n:'do', d:'C4'},{m:62,n:'re', d:'D4'},{m:64,n:'mi', d:'E4'},{m:65,n:'fa', d:'F4'},
@@ -482,7 +500,7 @@ const wOf=n=>{const i=SWORDS.findIndex(s=>s.name===n);return i<0?2:GRIDW[i]};
 
 /* ================= 状态 ================= */
 const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0,
- rentLeft:CFG.RENT_START,rentTimer:null,dmgLv:0,
+ dmgLv:0,
  roleLv:1,dayLog:[],day:1,mode:'forge',cur:null,pack:[],counter:[],forgeEnded:false,soldCnt:0,
  chest:[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}],
  frenzyActive:false,frenzyEnd:0,frenzyTimer:null,pendingQuench:false,
@@ -1098,6 +1116,21 @@ function renderChest(){
  for(let k=used;k<48;k++){const e=document.createElement('div');e.className='dock-empty';g.appendChild(e)}
  $('dock-cap').textContent='格 '+used+'/48';
 }
+/* ================= 日历+房租(大爷22:55令) ================= */
+function openCal(){
+ const total=Math.max(35,Math.ceil(S.day/7)*7);
+ let h='';
+ for(let d=1;d<=total;d++){
+  const cls=['cal-d'];
+  if(d%7===0)cls.push('rent');
+  if(d<S.day)cls.push('past');
+  if(d===S.day)cls.push('today');
+  h+=`<div class="${cls.join(' ')}">${d%7===0?'💰':''}<b>${d}</b>${d===S.day?'<i>今</i>':''}</div>`;
+ }
+ $('cal-grid').innerHTML=h;
+ $('cal-title').textContent=`📅 交租日历 · 每 7 天房租 ${CFG.RENT}💰`;
+ $('cal-modal').classList.add('on');
+}
 function placeBlank(i){
  if(S.mode!=='forge')return;
  if(S.phase==='playing'||S.phase==='input'||S.phase==='grading'||S.phase==='quench')return;
@@ -1238,11 +1271,17 @@ function offer(i){
 }
 function closeShop(){
  S.mode='forge';$('shop').classList.remove('on');
+ const rentDay=(S.day%7===0); // 大爷22:55令:每7天交房租,交租日打烊时收
  S.day++;S.forgeEnded=false;S.phase='idle';
  S.pack=S.pack.filter(p=>!p.sold);
  while(S.chest.length<3)S.chest.push({name:'匕首',emoji:'🗡️'}); // 新一天补足 3 坯(大爷21:51令:3剑胚=3剑/晚)
  S.dayLog=[];
  hud();updateSword();
+ if(rentDay){
+  if(S.gold<CFG.RENT){gameOver();return}
+  S.gold-=CFG.RENT;hud();
+  toast(`🏠 第 ${S.day-1} 天房租 -${CFG.RENT}💰 · 余 ${S.gold}💰`,2600);
+ }
  $('quiz-hint').textContent=`第 ${S.day} 天 · 新剑坯×${S.chest.length}!从箱子拖剑坯开锻`;
 }
 $('btn-bell').onclick=nextCustomer;
@@ -1339,7 +1378,7 @@ $('lanes').addEventListener('pointerdown',e=>{
 });
 
 /* 测试钩子 */
-window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,afterQuestionDone,swordBreak,placeBlank,renderChest,startForge,nextQuestion,hitLane,genQuestion,playQuestion,quenchPhase,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()}};
+window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,afterQuestionDone,swordBreak,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,genQuestion,playQuestion,quenchPhase,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()}};
 
 /* ================= 启动 ================= */
 buildLanes();
@@ -1348,7 +1387,8 @@ loadManifest();
 (function(){
  const hudBox=$('hud');
  const mk=(id,txt,cls)=>{const b=document.createElement('button');b.className='btn '+(cls||'');b.id=id;b.textContent=txt;hudBox.appendChild(b);return b};
- mk('btn-skill','🌳 技能树');mk('btn-endforge','🏁 结束铸造');mk('btn-day2','🌅 第二天','gold');
+ mk('btn-cal','📅 日历');mk('btn-skill','🌳 技能树');mk('btn-endforge','🏁 结束铸造');mk('btn-day2','🌅 第二天','gold');
+ $('btn-cal').onclick=openCal;$('cal-close').onclick=()=>$('cal-modal').classList.remove('on');
  $('btn-skill').onclick=()=>showOverlay('blue','🌳','技能树','工匠的成长之路——技能树系统开发中,敬请期待。',[{label:'继续干活',fn:hideOverlay}]);
  $('btn-endforge').onclick=endForgeDay;
  $('btn-day2').onclick=()=>{if(S.mode!=='forge')return;S.phase='idle';stashSword(true);nightFade(openShop,'第二天',`☀️ 第 ${S.day+1} 天 · 售卖日`)};

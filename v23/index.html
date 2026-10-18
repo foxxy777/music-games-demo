@@ -291,6 +291,8 @@ body{overflow:hidden}
 .cm-none{font-size:12px;color:#6b5844;padding:6px;grid-column:1/-1;text-align:center;align-self:center}
 #anvil-empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:4;pointer-events:none;font-size:15px;color:#c9a06add;letter-spacing:2px;text-shadow:0 2px 8px #000}
 #anvil.drop-ready{outline:3px dashed #ffd54f;outline-offset:-6px}
+#ct-slots.drop-ready{outline:3px dashed #ffd54f;outline-offset:-4px}
+#ps-chest.drop-ready{outline:3px dashed #ffd54f;outline-offset:-4px}
 /* ===== 遮罩层 ===== */
 #overlay{position:absolute;inset:0;background:#0a0705e8;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:50;padding:36px;text-align:center;cursor:auto}
 #overlay.on{display:flex}
@@ -1121,6 +1123,25 @@ $('chest-btn').onclick=()=>{if(S.mode!=='forge')return;openChest()};
  a.addEventListener('drop',e=>{e.preventDefault();a.classList.remove('drop-ready');
   const i=+e.dataTransfer.getData('text/plain');placeBlank(i)});
 })();
+/* v23 箱子↔柜台双向拖拽(大爷21:17查格令补齐) */
+(function(){
+ const ct=$('ct-slots');
+ ct.addEventListener('dragover',e=>{if(![...(e.dataTransfer?.types||[])].includes('text/plain'))return;e.preventDefault();ct.classList.add('drop-ready')});
+ ct.addEventListener('dragleave',()=>ct.classList.remove('drop-ready'));
+ ct.addEventListener('drop',e=>{e.preventDefault();ct.classList.remove('drop-ready');
+  const d=e.dataTransfer.getData('text/plain');if(!d||!d.startsWith('inv:'))return;
+  const p=S.pack[+d.slice(4)];if(!p||p.sold||S.counter.includes(p))return;
+  const w=wOf(p.name),cur=S.counter.reduce((a,x)=>a+wOf(x.name),0);
+  if(cur+w>16){toast('柜台摆不下了('+cur+'+'+w+'格 > 16)——先卖掉几把');return}
+  S.counter.push(p);renderCounter();renderInv()});
+ const chest=$('ps-chest');
+ chest.addEventListener('dragover',e=>{if(![...(e.dataTransfer?.types||[])].includes('text/plain'))return;e.preventDefault();chest.classList.add('drop-ready')});
+ chest.addEventListener('dragleave',()=>chest.classList.remove('drop-ready'));
+ chest.addEventListener('drop',e=>{e.preventDefault();chest.classList.remove('drop-ready');
+  const d=e.dataTransfer.getData('text/plain');if(!d||!d.startsWith('ct:'))return;
+  const i=+d.slice(3);if(!S.counter[i])return;
+  const back=S.counter.splice(i,1)[0];renderCounter();renderInv();toast(back.name+' 收回箱子')});
+})();
 function endForgeDay(){
  if(S.mode!=='forge')return;
  const it=stashSword(true);
@@ -1160,6 +1181,8 @@ function renderCounter(){
   const d=document.createElement('div');d.className='ct-bar';d.style.gridColumn='span '+wOf(p.name);
   d.innerHTML='<span class="cs-e">'+p.emoji+'</span><span class="cs-info"><span>'+p.name+'</span><span class="cs-v">💰'+p.value+' ★'+p.star+'</span></span>';
   d.onclick=()=>offer(i);
+  d.draggable=true;d.title='拖回箱子或点击推销';
+  d.ondragstart=e=>{e.dataTransfer.setData('text/plain','ct:'+i);e.dataTransfer.effectAllowed='move'};
   box.appendChild(d)});
  $('ct-cap').textContent='格 '+used+'/16';
 }
@@ -1175,6 +1198,8 @@ function renderInv(){
   d.onclick=()=>{const w=wOf(p.name),cur=S.counter.reduce((a,x)=>a+wOf(x.name),0);
    if(cur+w>16){toast('柜台摆不下了('+cur+'+'+w+'格 > 16)——先卖掉几把');return}
    S.counter.push(p);renderCounter();renderInv()};
+  d.draggable=true;d.title='拖到上方柜台或点击上架';
+  d.ondragstart=e=>{e.dataTransfer.setData('text/plain','inv:'+S.pack.indexOf(p));e.dataTransfer.effectAllowed='move'};
   g.appendChild(d)});
  if(sec)sec.textContent='格 '+used+'/48';
 }

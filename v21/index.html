@@ -917,11 +917,11 @@ function gradeQuestion(){
  if(okCnt===S.q.length)$('quiz-hint').textContent=`✔ ${S.q.length}/${S.q.length} 全对!魔能+${okCnt*CFG.POT_PER_HIT}🔮`;
  const dShift=S.typed[0]-S.q[0];
  const contour=dShift!==0&&S.q.every((exp,i)=>S.typed[i]-exp===dShift);
- if(contour){S.potential+=CFG.CONTOUR_BONUS;hud();
-  setTimeout(()=>$('quiz-hint').textContent=`🎵 轮廓全对(整体${dShift>0?'+':''}${dShift}音)!保底+${CFG.CONTOUR_BONUS}🔮`,S.q.length*step)}
+ if(contour){S.potential+=CFG.CONTOUR_BONUS;hud()}
  setTimeout(()=>{
   if(!S.frenzyActive&&S.charge>=CFG.FRENZY_NEED)startFrenzy();
   endQuestion();
+  if(contour)$('quiz-hint').textContent=`🎵 轮廓全对(整体${dShift>0?'+':''}${dShift}音)!保底+${CFG.CONTOUR_BONUS}🔮 · 点淬火`;
  },S.q.length*step+450);
 }
 /* ================= 一题结束 → 淬火 ================= */

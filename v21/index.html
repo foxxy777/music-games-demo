@@ -63,19 +63,26 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #acc-row{font-size:11px;color:#c9a06a;display:flex;gap:12px;align-items:center}
 
 /* ===== 题目区 ===== */
-#quiz{flex:0 0 78px;order:2;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:22px;border-top:2px solid #4a3320;background:#120c0777;position:relative}
-#quiz-title{font-size:13px;color:#c9a06a;letter-spacing:2px}
-#slots{display:flex;gap:10px;align-items:center;justify-content:center;min-height:50px;flex:none}
-.qslot{width:52px;height:48px;border:2px dashed #6a4c2a;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a110a;transition:all .18s;position:relative}
+#quiz{flex:0 0 126px;order:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-top:2px solid #4a3320;background:#120c0777;position:relative;padding:4px 0}
+#quiz-title{font-size:11px;color:#c9a06a;letter-spacing:1px}
+#slots{display:flex;gap:8px;align-items:center;justify-content:center;min-height:42px;flex:none}
+.qslot{width:46px;height:40px;border:2px dashed #6a4c2a;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a110a;transition:all .18s;position:relative}
 .qslot.waiting{border-style:dashed}
 .qslot.playing{border-color:#ffd54f;box-shadow:0 0 14px #ffd54f55;animation:qpulse .5s infinite}
 .qslot.hit{border-style:solid;border-color:#7ddf6a;background:linear-gradient(165deg,#1a3012,#0d1808)}
 .qslot.hit .qn{color:#a8f0a0}
 .qslot.miss{border-style:solid;border-color:#ff5d6c;background:linear-gradient(165deg,#3a1218,#1a0c10);animation:shake .35s}
 .qslot.miss .qn{color:#ff9a8a}
-.qslot .qn{font-size:18px;font-weight:bold;color:#8a6c42}
-.qslot .qsi{font-size:9px;color:#c9a06a66;margin-top:1px}
+.qslot .qn{font-size:15px;font-weight:bold;color:#8a6c42}
+.qslot .qsi{font-size:8px;color:#c9a06a66;margin-top:1px}
 .qslot.hit .qsi,.qslot.miss .qsi{color:#c9a06a}
+/* 我的输入行(2026-10-17 大爷令):与题目槽逐位对齐,显示实际按的音,对绿错红 */
+#my-slots{display:flex;gap:8px;align-items:center;justify-content:center;min-height:34px;flex:none}
+.mslot{width:46px;height:30px;border:1.5px dashed #4a3320;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#150d08;font-size:14px;font-weight:bold;color:#5a4428}
+.mslot.next{border-color:#ffd54f66;animation:mpulse 1s infinite}
+.mslot.ok{border-style:solid;border-color:#7ddf6a77;color:#a8f0a0;background:linear-gradient(165deg,#14240d,#0a1406)}
+.mslot.bad{border-style:solid;border-color:#ff5d6c99;color:#ff9a8a;background:linear-gradient(165deg,#2e0e14,#16070b)}
+@keyframes mpulse{50%{box-shadow:0 0 10px #ffd54f33}}
 @keyframes qpulse{50%{box-shadow:0 0 22px #ffd54faa}}
 @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 #quiz-hint{font-size:12px;color:#8a6c42;min-height:16px;transition:color .2s}
@@ -98,6 +105,16 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #bucket{width:76%;max-width:235px;flex:none;filter:drop-shadow(0 8px 14px #000a)}
 #bucket-cap{font-size:12px;color:#7fb8e8;letter-spacing:1px;text-shadow:0 1px 2px #000}
 #bucket-num{font-size:13px;color:#d0b3ff;font-weight:600;text-shadow:0 1px 2px #000}
+/* 乐器音色选择(大爷16:50令) */
+#inst-zone{flex:none;max-height:236px;display:flex;flex-direction:column;border-top:2px solid #4a3320;padding:7px 8px 5px;background:linear-gradient(180deg,#150d07,#0d0805)}
+#inst-title{font-size:11px;color:#c9a06a;letter-spacing:2px;margin-bottom:5px;text-align:center;text-shadow:0 1px 2px #000}
+#inst-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding-right:2px;min-height:0}
+#inst-grid::-webkit-scrollbar{width:5px}
+#inst-grid::-webkit-scrollbar-thumb{background:#4a3320;border-radius:3px}
+.ibtn{font-size:10.5px;padding:5px 2px;border-radius:7px;border:1.5px solid #4a3320;background:#1a110a;color:#d8c9ae;cursor:pointer;transition:all .12s;line-height:1.25;font-family:inherit}
+.ibtn:hover{border-color:#ffd54f88;color:#ffe9b8}
+.ibtn.on{border-color:#ffd54f;background:linear-gradient(160deg,#4a3218,#2a1c0f);color:#ffe89a;box-shadow:0 0 8px #ffb84d44;font-weight:bold}
+.ibtn.load{opacity:.45;pointer-events:none}
 #bucket-water{transition:all .3s}
 #bucket-water-glow{transition:all .3s}
 .flydrop{position:absolute;z-index:36;pointer-events:none;font-size:19px;opacity:.95;transition:transform .55s cubic-bezier(.3,-.15,.65,1.05);text-shadow:0 2px 4px #0008}
@@ -173,7 +190,7 @@ body{overflow:hidden}
 @keyframes floatup{0%{opacity:0;transform:translateY(6px)}15%{opacity:1}100%{opacity:0;transform:translateY(-46px)}}
 
 /* ===== 淬火居中面板(大爷19:49令:覆盖式展示,点继续才关) ===== */
-#quench-modal{position:fixed;inset:0;z-index:60;background:#000000ba;display:none;align-items:center;justify-content:center}
+#quench-modal{position:fixed;inset:0;z-index:60;background:#000000ba;display:none;align-items:center;justify-content:center;cursor:auto}
 #quench-modal.on{display:flex}
 #qm-card{width:min(620px,88vw);background:linear-gradient(165deg,#2b2118,#191018 70%);border:2px solid #c9a06a90;border-radius:18px;padding:24px 30px;text-align:center;box-shadow:0 18px 60px #000c,0 0 46px #ffb84d26;animation:qmpop .3s cubic-bezier(.3,-.2,.6,1.4)}
 @keyframes qmpop{from{transform:scale(.84);opacity:0}}
@@ -205,7 +222,7 @@ body{overflow:hidden}
 #quench-result{font-size:19px;font-weight:900;min-height:26px}
 
 /* ===== 遮罩层 ===== */
-#overlay{position:absolute;inset:0;background:#0a0705e8;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:50;padding:36px;text-align:center}
+#overlay{position:absolute;inset:0;background:#0a0705e8;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:50;padding:36px;text-align:center;cursor:auto}
 #overlay.on{display:flex}
 #ov-title{font-size:36px;font-weight:900;letter-spacing:4px}
 #ov-title.gold{color:#ffd54f;text-shadow:0 0 30px #ffb84d88}
@@ -250,6 +267,7 @@ body{overflow:hidden}
 <div id="quiz">
     <div id="quiz-title">听音 · 按顺序敲出题目 · 敲完淬火</div>
     <div id="slots"></div>
+ <div id="my-slots"></div>
     <div id="quiz-hint">点击「开始锻造」点火开炉</div>
   </div>
   <div id="main">
@@ -279,6 +297,10 @@ body{overflow:hidden}
         <ellipse cx="100" cy="42" rx="64" ry="13" fill="none" stroke="#8a5a2e" stroke-width="5"/>
       </svg>
       <div id="bucket-num">🔮 ×<span id="bucket-drops">0</span></div>
+    </div>
+    <div id="inst-zone">
+      <div id="inst-title">🎵 乐器音色</div>
+      <div id="inst-grid"></div>
     </div>
     <div id="quench">
       <div id="quench-steam">💨💨💨</div>
@@ -387,7 +409,46 @@ function sizzle(){ // 淬火蒸汽嘶声:白噪声+带通
  const g=c.createGain();g.gain.setValueAtTime(.24,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
  src.connect(f);f.connect(g);g.connect(c.destination);src.start(t);
 }
-function frenzyJingle(){[0,2,4,7,9].forEach((s,i)=>tone(midiF(72+s),i*.07,.3,.2))}
+/* ================= 乐器音色(大爷16:50令):33乐器实采(均YIN验证)+电子音兜底 ================= */
+const INST={cur:'synth',def:null,bank:{},loading:null};
+const RAWN={};NOTES.forEach(n=>RAWN[n.m]=n.n.replace('′','1').replace('″','2'));
+function instAvail(){if(INST.cur==='synth'||!INST.def)return null;const f=INST.def.instruments.find(x=>x.id===INST.cur);return f?new Set(f.midi):null}
+async function loadManifest(){
+ try{const r=await fetch('../assets/v21/samples/manifest.json');if(!r.ok)return;INST.def=await r.json();buildInstGrid()}catch(e){}
+}
+async function loadInst(id){
+ if(INST.bank[id])return INST.bank[id];
+ if(INST.loading)return null;
+ INST.loading=id;const set={};
+ const ins=INST.def.instruments.find(x=>x.id===id);
+ if(ins){const base='../assets/v21/samples/'+id+'/';
+  await Promise.all(ins.midi.map(m=>fetch(base+id+'_'+RAWN[m]+'_m'+m+'.mp3').then(r=>r.arrayBuffer()).then(b=>au().decodeAudioData(b)).then(buf=>{set[m]=buf}).catch(()=>{})))}
+ INST.loading=null;
+ if(Object.keys(set).length)INST.bank[id]=set;
+ return Object.keys(set).length?set:null;
+}
+function playInst(m,when=0,vol=1){
+ const b=INST.bank[INST.cur];
+ if(b&&b[m]){const c=au(),t=c.currentTime+when,s=c.createBufferSource(),g=c.createGain();
+  g.gain.setValueAtTime(.85*vol,t);s.buffer=b[m];s.connect(g);g.connect(c.destination);s.start(t);return}
+ tone(midiF(m),when,.4,.22); // 缺采样/电子音→三角波兜底
+}
+function buildInstGrid(){
+ const g=$('inst-grid');g.innerHTML='';
+ const mk=(id,name)=>{const b=document.createElement('button');b.className='ibtn'+(INST.cur===id?' on':'');b.textContent=name;b.dataset.id=id;
+  b.onclick=async()=>{
+   if(INST.cur===id||INST.loading)return;
+   if(id==='synth'){INST.cur='synth';g.querySelectorAll('.ibtn').forEach(x=>x.classList.toggle('on',x.dataset.id==='synth'));toast('🎵 已切换:电子音');return}
+   b.classList.add('load');toast('🎵 加载 '+name+' …');
+   const set=await loadInst(id);b.classList.remove('load');
+   if(!set){toast(name+' 加载失败,保留当前音色');return}
+   INST.cur=id;g.querySelectorAll('.ibtn').forEach(x=>x.classList.toggle('on',x.dataset.id===id));
+   toast('🎵 已切换: '+name);playInst(72,0,1);
+  };g.appendChild(b)};
+ mk('synth','电子音');
+ INST.def.instruments.forEach(i=>mk(i.id,i.name));
+}
+function frenzyJingle(){[0,2,4,7,9].forEach((s,i)=>playInst(72+s,i*.07,.9))}
 document.addEventListener('pointerdown',()=>au(),{once:true});
 const midiF=m=>440*Math.pow(2,(m-69)/12);
 
@@ -403,7 +464,7 @@ function buildLanes(){
   const c=colorOf(nt.n);
   d.innerHTML=`<div class="ln" style="color:${c}">${nt.n}</div><div class="lk" style="color:${c}">${nt.d}</div>`;
   if(ANCHORS[i]){const ab=document.createElement('div');ab.className='anchor-btn';ab.textContent='🔊'+ANCHORS[i];
-   ab.addEventListener('pointerdown',e=>{e.stopPropagation();tone(midiF(nt.m),0,.6,.3)});d.appendChild(ab)}
+   ab.addEventListener('pointerdown',e=>{e.stopPropagation();playInst(nt.m,0,1.4)});d.appendChild(ab)}
   const nh=document.createElement('div');nh.className='note-head';nh.dataset.i=i;
   nh.style.background=c;
   nh.innerHTML='<div class="nh-stem"></div>';
@@ -420,8 +481,10 @@ function rebuildStaff(){ // 按可见横条几何重画谱线/谱号
  const els=[...box.querySelectorAll('.lane:not(.off)')];
  const n=els.length;if(!n)return;
  const c0=els[0].offsetTop+els[0].offsetHeight/2, cT=els[n-1].offsetTop+els[n-1].offsetHeight/2;
- for(let g=0;g<n;g+=2){
-  const l=document.createElement('div');l.className='staff-line'+((g===0||(g===14&&n>=15))?' xl':'');
+ // 五线谱乐理对齐(2026-10-17 大爷报bug修复):第一线=E4(mi,索引2),第二线=G4(sol,4),第三线=B4(si,6),第四线=D5(re′,8),第五线=F5(fa′,10)
+ // 旧版从g=0(C4)起画,整谱低一档,音符谱面位置与音高错位(大爷21:55报)
+ for(let g=2;g<=10&&g<n;g+=2){
+  const l=document.createElement('div');l.className='staff-line'+((g===2||g===10)?' xl':'');
   l.style.top=(cT+(n-1-g)/Math.max(1,n-1)*(c0-cT))+'px';box.appendChild(l);
  }
  const clef=document.createElement('div');clef.className='staff-clef';clef.textContent='𝄞';
@@ -668,7 +731,8 @@ function swordBreak(){
 
 /* ================= 题目 ================= */
 function genQuestion(){
- const sw=SWORDS[S.tier];const pool=NOTES.slice(0,sw.span);
+ const sw=SWORDS[S.tier];let pool=NOTES.slice(0,sw.span);
+ const av=instAvail();if(av){const f=pool.filter(n=>av.has(n.m));if(f.length>=4)pool=f} // 乐器缺音时只在可用音内出题
  const q=[];let prev=-1;
  for(let i=0;i<sw.qlen;i++){
   let idx;
@@ -692,10 +756,18 @@ function renderSlots(state){
   d.innerHTML=`<div class="qn" style="color:${shown?c:'#8a6c42'}">${shown?nt.n:inner}</div><div class="qsi">${i+1}</div>`;
   box.appendChild(d);
  });
+ // 我的输入行:逐位对照(上=题目,下=实际按的音)
+ const my=$('my-slots');my.innerHTML='';
+ S.q.forEach((ni,i)=>{
+  const d2=document.createElement('div');let cls='mslot',txt='·';
+  if(S.typed&&S.typed[i]!==undefined){const t=S.typed[i];txt=NOTES[t].n;cls+=(S.marks[i]==='hit')?' ok':' bad'}
+  else if(S.phase==='input'&&i===S.pos){cls+=' next'}
+  d2.className=cls;d2.innerHTML=`<span>${txt}</span>`;my.appendChild(d2);
+ });
 }
 function playQuestion(){
- S.phase='playing';S.pos=0;S.revealed=false;S.marks=[];hud();renderSlots();
- S.q.forEach((ni,i)=>tone(midiF(NOTES[ni].m),.16+i*.46,.4));
+ S.phase='playing';S.pos=0;S.revealed=false;S.marks=[];S.typed=[];hud();renderSlots();
+ S.q.forEach((ni,i)=>playInst(NOTES[ni].m,.16+i*.46));
  const total=.16+S.q.length*.46+.3;
  setTimeout(()=>{if(S.phase!=='playing')return;S.phase='input';renderSlots();
   $('quiz-hint').textContent=S.frenzyActive?'⚡ 超神连打!按顺序敲!':'轮到你:按顺序敲!';hud()},total*1000);
@@ -706,7 +778,7 @@ function playQuestion(){
 function hitLane(i){
  if(S.phase!=='input')return;
  const nt=NOTES[i];
- tone(midiF(nt.m),0,.4);
+ playInst(nt.m,0);
  const laneEl=document.querySelector(`.lane[data-i="${i}"]`);
  const expect=S.q[S.pos];
  const rect=laneEl.getBoundingClientRect(),appR=app.getBoundingClientRect(),sk=appR.width/app.offsetWidth;
@@ -721,7 +793,7 @@ function hitLane(i){
   S.hits++;S.totHits++;
   S.potential+=CFG.POT_PER_HIT;
   flyDrop(hx,hy);
-  S.marks[S.pos]='hit';
+  S.marks[S.pos]='hit';S.typed[S.pos]=i;
   laneEl.classList.add('flash-hit');setTimeout(()=>laneEl.classList.remove('flash-hit'),260);
   setGirl('strike',380);
   if(S.frenzyActive){ // 超神:立即结算金币
@@ -736,7 +808,7 @@ function hitLane(i){
   if(S.pos>=S.q.length)endQuestion();
  }else{
   clank(false);
-  S.marks[S.pos]='miss';
+  S.marks[S.pos]='miss';S.typed[S.pos]=i;
   if(!S.frenzyActive){ // 超神豁免:敲错零惩罚
    S.charge=0;
    floatText(hx,hy,'概率↓','minus');
@@ -795,8 +867,8 @@ function quenchPhase(){
    :result==='fail'
    ?`<span style="color:#ff9a8a">❌ 失败!剑碎了!🔮${S.potential} 全散!</span>`
    :`<span style="color:#a8f0a0">${t.name}!🔮${S.potential} × ${t.mult} = 🪙${payout}</span>`;
-  tone(midiF(result==='great'?84:(result==='dmg'||result==='fail')?55:72),0,.5,.26);
-  if(result==='great')setTimeout(()=>[0,4,7,12].forEach((s,i)=>tone(midiF(72+s),i*.09,.35,.22)),200);
+  playInst(result==='great'?84:(result==='dmg'||result==='fail')?55:72,0,1.2);
+  if(result==='great')setTimeout(()=>[0,4,7,12].forEach((s,i)=>playInst(72+s,i*.09)),200);
   // 结算
   S.gold+=payout;S.value+=payout;bucketQuenchVisual();S.potential=0;
   if(result==='dmg'){S.dmgLv=Math.min(5,S.dmgLv+1);toast(`⚠ 剑受损!铸成价值 -${S.dmgLv*10}%`,2200);hud()}
@@ -924,7 +996,8 @@ $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音 · 淬�
   · 背景是五线谱:每个音的音符位置 = 它在谱上的真实位置,玩着玩着就认识谱了<br>
   · 连对 ${CFG.FRENZY_NEED} 击 → <b>⚡超神 ${CFG.FRENZY_SECS}s</b>:敲对每击 +${CFG.FRENZY_GOLD}🪙、敲错零惩罚,窗口结束大淬火一把结<br>
   · 每${CFG.GROW_PER}题存活 → 剑长大一档(音域更宽)<br>
-  · 横幅颜色 = 唱名颜色(do 红 re 橙 mi 黄 fa 绿 sol 青 la 蓝 si 紫)`,
+  · 横幅颜色 = 唱名颜色(do 红 re 橙 mi 黄 fa 绿 sol 青 la 蓝 si 紫)<br>
+  · 右侧「🎵 乐器音色」可换 33 种实采乐器音色(逐音 YIN 验证),出题自动避开该乐器缺的音`,
  [{label:'明白,开炉!',cls:'gold',fn:hideOverlay}])};
 
 /* 音道点击(用 app 坐标判定,锤子即光标) */
@@ -935,10 +1008,11 @@ $('lanes').addEventListener('pointerdown',e=>{
 });
 
 /* 测试钩子 */
-window.__api={S,NOTES,SWORDS,CFG,computeProbs,rollTier,startForge,nextQuestion,hitLane,genQuestion,playQuestion,quenchPhase,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()}};
+window.__api={S,NOTES,SWORDS,CFG,INST,playInst,computeProbs,rollTier,startForge,nextQuestion,hitLane,genQuestion,playQuestion,quenchPhase,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()}};
 
 /* ================= 启动 ================= */
 buildLanes();
+loadManifest();
 requestAnimationFrame(()=>requestAnimationFrame(()=>{hud();updateSword()}));
 addEventListener('resize',()=>setTimeout(updateSword,80));
 </script>

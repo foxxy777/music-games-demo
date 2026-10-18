@@ -1154,7 +1154,7 @@ function renderCounter(){
 }
 function renderInv(){
  const g=$('inv-grid');g.innerHTML='';
- const avail=S.pack.filter(p=>!p.sold);
+ const avail=S.pack.filter(p=>!p.sold&&!S.counter.includes(p));
  if(!avail.length){g.innerHTML='<div style="color:#6b5844;font-size:12px;padding:8px">箱子空空——没铸出剑,或都卖完了</div>';return}
  avail.forEach(p=>{const d=document.createElement('div');d.className='inv-cell';
   d.innerHTML='<span class="ic-e">'+p.emoji+'</span><span class="ic-info"><span>'+p.name+'</span><span class="ic-v">💰'+p.value+' ★'+p.star+'</span></span>';
@@ -1184,6 +1184,7 @@ function nextCustomer(){
 }
 function offer(i){
  const p=S.counter[i];if(!p)return;
+ if(p.sold){S.counter[i]=null;renderCounter();toast('这把已经卖掉了');return}
  if(!CUST){$('shop-hint').textContent='柜台前没人——点「🛎️ 下一位」先招个客人';return}
  const ok=CUST.want?(p.name===CUST.want.name):(p.star>=2);
  if(ok){

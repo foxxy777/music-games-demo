@@ -341,7 +341,7 @@ body{overflow:hidden}
       <div id="charge-bar"></div>
       <div id="frenzy-timer"></div>
     </div>
-    <button class="btn gold" id="btn-start">🧰 打开箱子</button>
+    <button class="btn gold" id="btn-forge">🔨 开始铸造</button>
     <button class="btn" id="btn-replay" disabled>🔁 重听</button>
     <button class="btn" id="btn-help">❓</button>
   </div>
@@ -356,7 +356,7 @@ body{overflow:hidden}
     <div id="quiz-title">听音 · 按顺序敲出题目 · 敲完淬火</div>
     <div id="slots"></div>
  <div id="my-slots"></div>
-    <div id="quiz-hint">点「🧰 打开箱子」拖一把剑坯上砧</div>
+    <div id="quiz-hint">点「🔨 开始铸造」把剑坯上砧开锻</div>
   </div>
   <div id="main">
    <div id="acc-strip"><div class="acc-left"><span class="lab">🎯 正确率</span><b id="acc-big">—</b><span id="acc-detail2"></span></div><div id="probs-strip">
@@ -397,7 +397,7 @@ body{overflow:hidden}
     </div>
    </div>
    <div id="anvil">
-    <div id="anvil-empty">🧰 从箱子拖一把剑坯上来</div>
+    <div id="anvil-empty">💤 待铸</div>
     <div id="lanes"></div>
     <div id="laser-top" class="laser"></div>
     <div id="laser-bot" class="laser"></div>
@@ -839,7 +839,7 @@ function hud(){
   const el=$('pb-'+k);el.querySelector('.pfill').style.height=p[k]+'%';
   el.querySelector('.pct').textContent=Math.round(p[k])+'%';
  });
- $('btn-start').disabled=S.phase!=='idle';
+ $('btn-forge').disabled=S.phase!=='idle';
  $('btn-replay').disabled=!(S.phase==='input'||S.phase==='playing');
 }
 function fmtT(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
@@ -1094,7 +1094,7 @@ function swordDone(){
  const item=stashSword();
  if(item)toast(`🎉 ${item.name} 铸成!品质 ${'★'.repeat(item.star)}${'☆'.repeat(4-item.star)} · 价值 ${item.value} · 收进箱子`);
  if(S.chest.length){S.phase='idle';hud();
-  $('quiz-hint').textContent='又一把出炉!从箱子拖下一把剑坯继续'}
+  $('quiz-hint').textContent='又一把出炉!点「🔨 开始铸造」锻下一把'}
  else checkDayEnd();
 }
 /* ================= 箱子/剑坯(大爷19:22令) ================= */
@@ -1282,7 +1282,7 @@ function closeShop(){
   S.gold-=CFG.RENT;hud();
   toast(`🏠 第 ${S.day-1} 天房租 -${CFG.RENT}💰 · 余 ${S.gold}💰`,2600);
  }
- $('quiz-hint').textContent=`第 ${S.day} 天 · 新剑坯×${S.chest.length}!从箱子拖剑坯开锻`;
+ $('quiz-hint').textContent=`第 ${S.day} 天 · 新剑坯×${S.chest.length}!点「🔨 开始铸造」开锻`;
 }
 $('btn-bell').onclick=nextCustomer;
 $('btn-close').onclick=()=>{if(S.mode!=='shop')return;nightFade(closeShop,'打烊',`🌙 第 ${S.day} 天结束 · 明天继续`)};
@@ -1351,10 +1351,10 @@ function floatText(x,y,txt,cls){const f=document.createElement('div');f.classNam
 function startForge(){
  S.value=0;S.potential=0;S.charge=0;S.hits=0;S.strikes=0;S.pendingQuench=false;
  S.cur=null;S.phase='idle';hud();updateSword();
- $('quiz-hint').textContent='从下方工具箱拖一把剑坯上砧开锻';
+ $('quiz-hint').textContent='点「🔨 开始铸造」把剑坯上砧开锻';
 }
 function nextQuestion(){S.q=genQuestion();S.pos=0;S.revealed=false;S.marks=[];playQuestion()}
-$('btn-start').onclick=()=>{if(S.phase==='over')return;renderChest()};
+$('btn-forge').onclick=()=>{if(S.phase==='over')return;if(!S.chest.length){toast('剑坯用完了!点「🏁 结束铸造」收工');return}placeBlank(0)};
 $('quench-btn').onclick=()=>{if(S.phase!=='ready')return;$('quench-btn').style.display='none';quenchPhase()};
 $('btn-replay').onclick=()=>{if(S.phase==='input'){const p=S.pos,m=S.marks,r=S.revealed;playQuestion();S.pos=p;S.marks=m;S.revealed=r;renderSlots()}};
 $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音 · 淬火定命',

@@ -605,7 +605,7 @@ const wIcon=(cat,lv)=>{const W=WEAPONS[cat||'sword'];return W.icons?W.icons[Math
 const wOf=n=>{for(const k in WEAPONS){const i=WEAPONS[k].names.indexOf(n);if(i>=0)return GRIDW[i]}return 2};
 
 /* ================= 状态 ================= */
-const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0,
+const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0,gStreak:0,gBonus:0,
  dmgLv:0,
  roleLv:1,dayLog:[],day:1,mode:'forge',cur:null,anvils:[],up:{anvil:0,sword:0,armor:0,bow:0,wand:0,shield:0,artSlot:0},pack:[],counter:[],forgeEnded:false,soldCnt:0,
  chest:[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}],
@@ -632,7 +632,7 @@ function gainXP(n){
  hud();}
 function computeProbs(errN,fullN,iron){ // errN=本剑累计错音,fullN=本剑累计全对题数;盔甲/玄铁降损坏,魔杖升大成功
  let dmg=Math.max(0,CFG.PROB.dmg+CFG.ERR_PENALTY*(errN||0)-S.perm.armor*5-(iron!==undefined?iron:(S.cur&&S.cur.iron||0))),
-     g=CFG.PROB.great+CFG.FULL_BONUS*(fullN||0)+S.perm.wand*5+S.sk.quench*2;
+     g=CFG.PROB.great+CFG.FULL_BONUS*(fullN||0)+S.perm.wand*5+S.sk.quench*2+(S.art.includes('dice')?(S.gBonus||0):0); // 🎲命运骰(00:48令)
  if(dmg+g>100){const s=100/(dmg+g);dmg*=s;g*=s} // 超界等比压缩,成功档归零
  return {great:g,good:Math.max(0,100-dmg-g),dmg};
 }
@@ -1156,11 +1156,24 @@ function hitLane(i){
 }
 
 /* ================= 盲打判卷(大爷17:51令):敲完三音再统一对答案 ================= */
+function diceFail(){ // 🎲命运骰(大爷00:48令):答错一音,砧上剑当场爆,龙鳞可逐剑救(救下的按现状收工入箱)
+ S.gStreak=0;S.gBonus=0;
+ const rolling=[...S.anvils];S.anvils=[];syncFocus();
+ let savedN=0;
+ rolling.forEach(sw=>{
+  if(S.dragon>0){S.dragon--;savedN++;const it=makeItem(sw);S.pack.push(it);toast('🐉 龙鳞碎裂!'+it.name+' 按现状收工',2200)}
+  else{markDay('broke');swordBreakFx()}
+ });
+ S.phase='idle';updateSword();renderRack();hud();
+ $('quench-btn').style.display='none';
+ $('quiz-hint').textContent=savedN?'🎲 命运骰·失手!'+savedN+' 剑靠龙鳞保住(收工入箱) · 连击清零':'🎲 命运骰·失手!剑当场爆碎 · 连击清零';
+}
 function gradeQuestion(){
  let okCnt=0;
  S.q.forEach((exp,pos)=>{if(S.typed[pos]===exp)okCnt++});
  S.hits+=okCnt;S.totHits+=okCnt;
- {const missN=S.q.length-okCnt;S.anvils.forEach(sw=>{sw.errN+=missN;if(missN===0)sw.fullN++})} // 多砧:错音两边都吃(大爷拍板)
+ const missN=S.q.length-okCnt;S.anvils.forEach(sw=>{sw.errN+=missN;if(missN===0)sw.fullN++}); // 多砧:错音两边都吃(大爷拍板)
+ if(S.art.includes('dice')&&missN===0){const b0=Math.floor((S.gStreak||0)/3);S.gStreak+=okCnt;const b1=Math.floor(S.gStreak/3);if(b1>b0){S.gBonus=b1*10;toast('🎲 命运骰·连击 '+S.gStreak+' 音!大成功 +'+S.gBonus+'%',2200);hud()}} // 🎲命运骰(大爷00:48令):每3音大成功+10%当日累计
  S.potential+=okCnt*CFG.POT_PER_HIT;
  {let xg=okCnt*5;if(okCnt===S.q.length&&okCnt>0)xg=Math.round(xg*1.1);if(xg>0)gainXP(xg)} // 主角经验:敲对+5/音·全对+10%(大爷00:34令)
  S.q.forEach((exp,pos)=>{S.marks[pos]=S.typed[pos]===exp?'hit':'miss'});
@@ -1181,6 +1194,7 @@ function gradeQuestion(){
  const contour=dShift!==0&&S.q.every((exp,i)=>S.typed[i]-exp===dShift);
  if(contour){S.potential+=CFG.CONTOUR_BONUS;hud()}
  setTimeout(()=>{
+  if(S.art.includes('dice')&&missN>0){diceFail();return} // 🎲命运骰(大爷00:48令):答错一音当场终止
   if(!S.frenzyActive&&S.charge>=CFG.FRENZY_NEED)startFrenzy();
   endQuestion();
   if(contour)$('quiz-hint').textContent=`🎵 轮廓全对(整体${dShift>0?'+':''}${dShift}音)!保底+${CFG.CONTOUR_BONUS}🔮 · 点淬火`;
@@ -1400,7 +1414,8 @@ const GOODS_FIXED=[
  {id:'artslot',e:'🧿',n:'神器位',art:1,d:''}];
 const ARTIFACTS=[
  {id:'eye',e:'👁️',n:'神器·先知之眼',price:250,stock:1,art:1,d:'神器:听题时第一个音自动显示音名(占 1 神器槽)'},
- {id:'fairy',e:'🧚',n:'神器·赠礼妖精',price:300,stock:1,art:1,d:'神器:每天清晨自动送来 3 件低级装备(占 1 神器槽)'}];
+ {id:'fairy',e:'🧚',n:'神器·赠礼妖精',price:300,stock:1,art:1,d:'神器:每天清晨自动送来 3 件低级装备(占 1 神器槽)'},
+ {id:'dice',e:'🎲',n:'神器·命运骰',price:350,stock:1,art:1,d:'神器:连击答对每 3 音大成功+10%(当日累计);答错一音当场爆剑终止铸造(占 1 神器槽)'}];
 const curArt=()=>ARTIFACTS.find(a=>!S.art.includes(a.id))||ARTIFACTS[0];
 const blankInfo=g=>{const lv=Math.max(1,Math.min(S.roleLv,SWORDS.length));const W=WEAPONS[g.cat];
  return {lv,name:W.names[lv-1],emoji:(W.icons?W.icons[lv-1]:W.icon),base:Math.round(g.base+g.step*lv)}};
@@ -1667,7 +1682,7 @@ function closeShop(){
   for(let i=0;i<3&&S.chest.length<45;i++){const b=FB[Math.floor(Math.random()*FB.length)];S.chest.push({name:b[0],emoji:b[1],lv:1,cat:b[2]})}
   toast('🧚 赠礼妖精送来 3 件低级装备!',2600);
  }
- S.dayLog=[];questRollover();S.refreshCnt=0;
+ S.dayLog=[];S.gStreak=0;S.gBonus=0;questRollover();S.refreshCnt=0;
  hud();updateSword();
  if(rentDay){
   if(S.gold<CFG.RENT){gameOver();return}
@@ -1713,7 +1728,7 @@ function restart(){
  S.tier=0;S.value=0;S.potential=0;S.charge=0;S.gold=0;S.forged=0;S.frenzies=0;S.qCount=0;
  S.totHits=0;S.totStrikes=0;S.hits=0;S.strikes=0;S.dmgLv=0;
  S.roleLv=1;S.dayLog=[];S.day=1;S.mode='forge';S.pack=[];S.counter=[];S.forgeEnded=false;S.soldCnt=0;$('shop').classList.remove('on');
- S.perm={armor:0,wand:0,relic:0};S.dragon=0;S.ironNext=0;S.eventMult=1;S.eventTxt='';S.mkt=[];S.bought={};S.refreshCnt=0;
+ S.gStreak=0;S.gBonus=0;S.perm={armor:0,wand:0,relic:0};S.dragon=0;S.ironNext=0;S.eventMult=1;S.eventTxt='';S.mkt=[];S.bought={};S.refreshCnt=0;
  S.xp=0;S.sp=0;S.sk={sell:0,buy:0,xp:0,quench:0};S.art=[];
  S.up={anvil:0,sword:0,armor:0,bow:0,wand:0,artSlot:0};S.anvils=[];syncFocus();renderRack();
  S.qDay=0;S.qBoard={};S.qActive={};renderQStrip();
@@ -1808,7 +1823,7 @@ $('btn-dbg').onclick=dbgGold;$('btn-dbg2').onclick=dbgGold;
   $('mp-label').textContent=`👷 铁匠 Lv.${S.roleLv}`;
   const dd=$('day-dots');if(dd){dd.innerHTML='';S.dayLog.forEach(s=>{const d=document.createElement('div');
    d.className='day-dot '+s;d.textContent=s==='done'?'✓':s==='broke'?'✗':'🔨';dd.appendChild(d)})}
-  const msub=$('mp-sub');if(msub)msub.textContent=S.roleLv>=SWORDS.length?`经验 MAX · 技能点 ${S.sp} · 坯 ${S.chest.length}`:`经验 ${S.xp}/${xpNext()} · 技能点 ${S.sp} · 坯 ${S.chest.length}`;
+  const msub=$('mp-sub');if(msub)msub.textContent=(S.roleLv>=SWORDS.length?`经验 MAX · 技能点 ${S.sp} · 坯 ${S.chest.length}`:`经验 ${S.xp}/${xpNext()} · 技能点 ${S.sp} · 坯 ${S.chest.length}`)+(S.art.includes('dice')?` · 🎲连击${S.gStreak||0}(+${S.gBonus||0}%)`:'');
  const xf=$('xp-fill');if(xf)xf.style.width=(S.roleLv>=SWORDS.length?100:Math.min(100,S.xp/xpNext()*100))+'%';
   $('btn-day2').style.display=(S.mode==='forge'&&S.forgeEnded)?'inline-block':'none';
  };

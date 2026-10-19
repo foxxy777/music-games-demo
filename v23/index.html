@@ -26,7 +26,22 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #anvil-rack .rk.on{border-color:#ffd54f;color:#ffd54f;background:rgba(60,42,16,.55)}
 #anvil-rack .rk i{font-style:normal;font-size:10px;color:#c9a06a}
 #upg-modal{position:absolute;inset:0;z-index:150;background:#000000ba;display:none;align-items:center;justify-content:center;cursor:auto}
-#upg-modal.on{display:flex}
+#upg-modal.on{display:flex}#q-modal{position:absolute;inset:0;z-index:150;background:#000000ba;display:none;align-items:center;justify-content:center}
+#q-modal.on{display:flex}
+#q-card{background:#241a10;border:1px solid #5a4028;border-radius:12px;padding:14px 16px;width:min(92vw,540px);max-height:84vh;overflow:auto}
+#q-card .qh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+#q-sub{font-size:11px;color:#c9a06a;margin-bottom:8px}
+.q-row{display:flex;align-items:center;gap:8px;border:1px solid #4a3320;border-radius:8px;padding:8px 10px;margin-bottom:6px;background:#1c140c;flex-wrap:wrap}
+.q-g{font-weight:700;min-width:104px;font-size:13px}
+.q-e{margin-right:4px}
+.q-txt{font-size:12px;color:#e8d9c3;flex:1}
+.q-pay{color:#ffd54f;font-size:12px}
+.q-btn{background:#7a4d1d;color:#ffe;border:0;border-radius:6px;padding:4px 14px;cursor:pointer;font-size:12px}
+.q-live{font-size:12px;color:#8fd18f}
+.q-done{font-size:12px;color:#9a9}
+#q-strip{display:none;gap:6px;padding:2px 2px 4px;flex-wrap:wrap}
+#q-strip .qc{font-size:10px;color:#ffe9c8;background:#3a2a16;border:1px solid #5a4028;border-radius:8px;padding:2px 8px;cursor:pointer}
+
 #upg-card{width:min(620px,88vw);max-height:88vh;overflow-y:auto;background:linear-gradient(165deg,#2b2015,#191210 70%);border:2px solid #c9a06a90;border-radius:18px;padding:14px 18px;box-shadow:0 18px 60px #000c}
 #upg-card h3{color:#ffd54f;margin:2px 0 10px;font-size:17px}
 .upg-row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px dashed #4a3320}
@@ -419,6 +434,7 @@ body{overflow:hidden}
     </div>
    </div>
    <div id="anvil-rack"></div>
+<div id="q-strip"></div>
    <div id="anvil">
     <div id="anvil-empty">💤 待铸</div>
     <div id="lanes"></div>
@@ -477,7 +493,12 @@ body{overflow:hidden}
     <div id="cal-legend">💰=交租日 · 金框=今天 · 灰=已过</div>
     <button id="cal-close" class="btn">关上</button>
   </div></div>
-  <div id="upg-modal"><div id="upg-card">
+  <div id="q-modal"><div id="q-card">
+<div class="qh"><b>📋 协会任务板</b><button id="q-close" style="background:none;border:1px solid #5a4028;border-radius:6px;color:#c9a06a;cursor:pointer;padding:2px 8px">✕</button></div>
+<div id="q-sub">四大协会每天发单 · 按时交付得金币 · 超时作废</div>
+<div id="q-list"></div>
+</div></div>
+<div id="upg-modal"><div id="upg-card">
     <h3>🏗️ 升级铁匠铺 · 🪙<span id="upg-gold">0</span></h3>
     <div id="upg-tabs"><button id="ut-upg" class="utab on">🏗️ 铺面升级</button><button id="ut-skill" class="utab">✨ 技艺·技能点</button></div>
     <div id="upg-list"></div>
@@ -1182,7 +1203,7 @@ function quenchPhase(){
   S.anvils=S.anvils.filter(sw=>!res.find(o=>o.sw===sw&&(o.r==='dmg'||done.includes(sw))));
   res.filter(o=>o.r==='dmg').forEach(()=>markDay('broke'));
   if(res.some(o=>o.r==='dmg')){swordBreakFx();toast('💥 剑爆了!这把坯子报废',2400)}
-  done.forEach(sw=>{const it=makeItem(sw);S.pack.push(it);S.forged++;markDay('done');
+  done.forEach(sw=>{const it=makeItem(sw);S.pack.push(it);S.forged++;markDay('done');questProg(it,sw);
    toast(`🎉 ${it.name} 铸成!品质 ${'★'.repeat(it.star)}${'☆'.repeat(4-it.star)} · 价值 ${it.value} · 收进箱子`)});
   bucketQuenchVisual();
   S.potential=0;S.hits=0;S.strikes=0;
@@ -1422,6 +1443,70 @@ function renderMerchant(){
  $('m-sell-cap').textContent=avail.length?avail.length+' 把待售':'空';
  $('shop-hint').textContent='点货架买 · 点剑卖 · 「🌙 离开·安睡」进明天';
 }
+/* ================= 协会任务板(大爷00:35令) ================= */
+const GUILDS=[
+ {id:'sword',e:'\u2694\uFE0F',n:'\u5251\u58EB\u534F\u4F1A',cat:'sword'},
+ {id:'thief',e:'\uD83C\uDFF9',n:'\u76D7\u8D3C\u534F\u4F1A',cat:'bow'},
+ {id:'mage',e:'\uD83D\uDD0E',n:'\u9B54\u6CD5\u5E08\u534F\u4F1A',cat:'wand'},
+ {id:'dwarf',e:'\uD83E\uDDD4',n:'\u77EE\u4EBA\u534F\u4F1A',cat:'armor'}];
+function genQuest(g){
+ const cap=Math.max(1,Math.min(swordCap(),S.roleLv));
+ const lv=1+Math.floor(Math.random()*cap);
+ const n=1+Math.floor(Math.random()*(S.roleLv>=4?3:2));
+ const days=2+Math.floor(Math.random()*3);
+ const reward=Math.round((60+40*lv)*n*(days===2?2.2:days===3?1.8:1.5)/5)*5;
+ return {cat:g.cat,lv:lv,n:n,days:days,reward:reward,prog:0,deadline:0,done:false};}
+function ensureBoard(){
+ S.qDay=S.qDay||0;S.qBoard=S.qBoard||{};S.qActive=S.qActive||{};
+ if(S.qDay===S.day)return;
+ GUILDS.forEach(g=>{if(!S.qActive[g.id])S.qBoard[g.id]=genQuest(g)});
+ S.qDay=S.day;}
+function openQuest(){ensureBoard();renderQuest();$('q-modal').classList.add('on')}
+function qAccept(gid){
+ ensureBoard();
+ if(S.qActive[gid])return;
+ const q=S.qBoard[gid];if(!q||q.done)return;
+ S.qActive[gid]=q;q.deadline=S.day+q.days-1;q.prog=0;
+ toast('\uD83D\uDCCC 接下'+guildOf(gid).n+'订单 · '+q.days+'天内 '+q.n+' 件 '+(WLBL[q.cat]||q.cat)+' Lv\u2265'+q.lv,2200);
+ renderQuest();renderQStrip();}
+function guildOf(gid){return GUILDS.find(g=>g.id===gid)}
+function questProg(it,sw){
+ if(!S.qActive||!Object.keys(S.qActive).length)return;
+ GUILDS.forEach(g=>{const q=S.qActive[g.id];if(!q)return;
+  const ic=(sw&&sw.cat)||(it.cat||'sword');const il=(sw&&sw.lv)||it.lv||1;
+  if(ic===q.cat&&il>=q.lv){
+   q.prog++;
+   if(q.prog>=q.n){S.gold+=q.reward;delete S.qActive[g.id];if(S.qBoard[g.id])S.qBoard[g.id].done=true;
+    toast('\uD83C\uDF89 '+g.n+'订单交付！+'+q.reward+'\uD83D\uDCB0',2400);hud();}
+   else toast('\uD83D\uDCCC '+g.n+'进度 '+q.prog+'/'+q.n,1600);}});
+ renderQStrip();}
+function questRollover(){
+ if(!S.qActive)return;
+ GUILDS.forEach(g=>{const q=S.qActive[g.id];if(!q)return;
+  if(S.day>q.deadline){delete S.qActive[g.id];toast('\u274C '+g.n+'订单超时，协会摇头走了',2400)}});
+ renderQStrip();}
+function renderQStrip(){
+ const el=document.getElementById('q-strip');if(!el)return;
+ S.qActive=S.qActive||{};
+ const ks=Object.keys(S.qActive);
+ el.style.display=ks.length?'flex':'none';
+ el.innerHTML=ks.map(k=>{const q=S.qActive[k];const g=guildOf(k);
+  return '<div class="qc">'+g.e+' '+q.prog+'/'+q.n+' 剩'+(q.deadline-S.day+1)+'天</div>'}).join('');}
+function renderQuest(){
+ ensureBoard();
+ const list=document.getElementById('q-list');if(!list)return;
+ list.innerHTML=GUILDS.map(g=>{
+  const live=S.qActive&&S.qActive[g.id];
+  const q=S.qBoard[g.id];
+  let right='';
+  if(live)right='<div class="q-live">进行中 '+live.prog+'/'+live.n+' · 剩'+(live.deadline-S.day+1)+'天</div>';
+  else if(q&&q.done)right='<div class="q-done">\u2705 已交付</div>';
+  else if(q)right='<button class="q-btn" data-g="'+g.id+'">接单</button>';
+  const qt=q?'<div class="q-txt">'+q.days+'天内锻造 '+q.n+' 件 '+(WLBL[q.cat]||q.cat)+' Lv\u2265'+q.lv+'</div><div class="q-pay">\uD83D\uDCB0 '+q.reward+'</div>':'';
+  return '<div class="q-row"><div class="q-g"><span class="q-e">'+g.e+'</span>'+g.n+'</div>'+qt+right+'</div>';
+ }).join('');
+ list.querySelectorAll('.q-btn').forEach(b=>b.onclick=()=>qAccept(b.getAttribute('data-g')));
+}
 function closeShop(){
  S.mode='forge';$('shop').classList.remove('on');
  const rentDay=(S.day%7===0); // 大爷22:55令:每7天交房租,交租日打烊时收
@@ -1429,7 +1514,7 @@ function closeShop(){
  S.pack=S.pack.filter(p=>!p.sold);
  while(S.chest.length<3)S.chest.push({name:'匕首',emoji:'🗡️',lv:1}); // 新一天补足 3 坯(大爷21:51令:3剑胚=3剑/晚)
  if(S.perm.relic){const inc=S.perm.relic*10;S.gold+=inc;toast('💎 锈怀表走时 +'+inc+'💰',2000)} // 遗物:每日被动收益
- S.dayLog=[];
+ S.dayLog=[];questRollover();
  hud();updateSword();
  if(rentDay){
   if(S.gold<CFG.RENT){gameOver();return}
@@ -1477,6 +1562,7 @@ function restart(){
  S.perm={armor:0,wand:0,relic:0};S.dragon=0;S.ironNext=0;S.eventMult=1;S.eventTxt='';S.mkt=[];S.bought={};
  S.xp=0;S.sp=0;S.sk={sell:0,buy:0,xp:0,quench:0};S.art=[];
  S.up={anvil:0,sword:0,armor:0,bow:0,wand:0,artSlot:0};S.anvils=[];syncFocus();renderRack();
+ S.qDay=0;S.qBoard={};S.qActive={};renderQStrip();
  S.chest=[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}];renderChest();
  S.frenzyActive=false;S.pendingQuench=false;app.classList.remove('frenzy');
  clearInterval(S.frenzyTimer);
@@ -1543,9 +1629,12 @@ loadManifest();
 (function(){
  const hudBox=$('hud');
  const mk=(id,txt,cls)=>{const b=document.createElement('button');b.className='btn '+(cls||'');b.id=id;b.textContent=txt;hudBox.appendChild(b);return b};
+mk('btn-quest','📋 任务板');
  mk('btn-cal','📅 日历');mk('btn-upg','🏗️ 升级铺子');mk('btn-skill','🌳 技能树');mk('btn-endforge','🏁 结束铸造');mk('btn-day2','🧙 第二天·商人','gold');
  $('btn-cal').onclick=openCal;$('cal-close').onclick=()=>$('cal-modal').classList.remove('on');
  $('btn-upg').onclick=openUpg;$('upg-close').onclick=()=>$('upg-modal').classList.remove('on');
+ $('btn-quest').onclick=openQuest;$('q-close').onclick=()=>$('q-modal').classList.remove('on');
+ $('q-strip').onclick=openQuest;renderQStrip();
 $('ut-upg').onclick=()=>upgTab('upg');$('ut-skill').onclick=()=>upgTab('skill');
  $('btn-skill').onclick=()=>showOverlay('blue','🌳','技能树','工匠的成长之路——技能树系统开发中,敬请期待。',[{label:'继续干活',fn:hideOverlay}]);
  $('btn-endforge').onclick=endForgeDay;

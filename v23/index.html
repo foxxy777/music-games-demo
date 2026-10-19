@@ -19,6 +19,8 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #debt-tag{font-size:12px;padding:3px 10px;border-radius:12px;background:#3a1218;border:1px solid #ff5d6c88;color:#ff9a8a;flex:none}
 #rent-num{font-weight:bold;color:#ffd54f}
 #gold-row{display:flex;align-items:center;gap:5px;font-size:16px;font-weight:bold;color:#ffd54f}
+#btn-dbg,#btn-dbg2{background:none;border:1px dashed rgba(255,213,79,.45);border-radius:6px;color:#ffd54f;font-size:12px;line-height:1;padding:3px 5px;cursor:pointer;opacity:.65}
+#btn-dbg:hover,#btn-dbg2:hover{opacity:1;background:rgba(255,213,79,.12)}
 #pot-row{display:flex;align-items:center;gap:5px;font-size:15px;font-weight:bold;color:#7ddf6a;margin-left:14px}
 #hud-row2{display:flex;align-items:flex-end;gap:12px;margin-top:7px}
 #sword-info{flex:1;min-width:0}
@@ -331,7 +333,7 @@ body{overflow:hidden}
       <div id="value-wrap"><div id="value-bar"><div id="value-fill"></div><div id="value-num">0</div></div></div>
     </div>
     <div id="pot-row">🔮 魔能 <span id="pot-num">0</span></div>
-    <div id="gold-row"><span class="coin">🪙</span><span id="gold-num">0</span></div>
+    <div id="gold-row"><span class="coin">🪙</span><span id="gold-num">0</span><button id="btn-dbg" title="debug +99999">🐞</button></div>
     <div id="charge-wrap">
       <div id="charge-label">超神充能</div>
       <div id="charge-bar"></div>
@@ -418,7 +420,7 @@ body{overflow:hidden}
     <div id="shop-head">
       <div id="shop-title">🧙‍♂️ 流浪商人 · 「独眼」格罗兹</div>
       <div id="mkt-banner"></div>
-      <div id="shop-gold">💰 <span id="shop-gold-num">0</span></div>
+      <div id="shop-gold">💰 <span id="shop-gold-num">0</span><button id="btn-dbg2" title="debug +99999">🐞</button></div>
     </div>
     <div id="m-body">
       <div id="m-left">
@@ -1376,6 +1378,8 @@ loadManifest();
  $('btn-cal').onclick=openCal;$('cal-close').onclick=()=>$('cal-modal').classList.remove('on');
  $('btn-skill').onclick=()=>showOverlay('blue','🌳','技能树','工匠的成长之路——技能树系统开发中,敬请期待。',[{label:'继续干活',fn:hideOverlay}]);
  $('btn-endforge').onclick=endForgeDay;
+const dbgGold=()=>{S.gold+=99999;hud();renderShopGold();toast('🐞 debug +99999💰')};
+$('btn-dbg').onclick=dbgGold;$('btn-dbg2').onclick=dbgGold;
  $('btn-day2').onclick=()=>{if(S.mode!=='forge')return;S.phase='idle';stashSword(true);nightFade(openMerchant,'流浪商人',`🌆 第 ${S.day} 天傍晚 · 「独眼」格罗兹到访`)};
  const _hudOrig=hud;
  hud=function(){_hudOrig();

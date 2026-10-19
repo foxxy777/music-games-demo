@@ -520,7 +520,16 @@ const SWORDS=[
 ];
 /* v23 格子系统(大爷20:52拍板·Probably-Stolen式): 剑按档位占格——匕首2格~偃月刀8格, 箱子8×6/柜台8×2 */
 const GRIDW=[2,3,4,5,6,7,8,8];
-const wOf=n=>{const i=SWORDS.findIndex(s=>s.name===n);return i<0?2:GRIDW[i]};
+/* ================= 武器大类(大爷00:27令):盔甲🛡️钢琴/弓箭🏹小提琴/魔杖🪥人声·同款升级音域成长 ================= */
+const WLBL={sword:'剑',armor:'盔甲',bow:'弓箭',wand:'魔杖'};
+const WEAPONS={
+ sword:{names:SWORDS.map(s=>s.name),icons:SWORDS.map(s=>s.emoji),snd:null},
+ armor:{names:['布甲','皮甲','锁子甲','骑士铠','符文重铠','龙鳞甲','圣辉铠','神铸天铠'],icon:'🛡️',snd:'piano_acoustic'},
+ bow:{names:['短弓','长弓','猎弓','战弓','复合弓','精灵弓','龙骨弓','魔导长弓'],icon:'🏹',snd:'violin'},
+ wand:{names:['木杖','学徒杖','橡木杖','水晶杖','贤者之杖','星辰杖','龙语杖','世界树枝'],icon:'🪥',snd:'voice'}};
+const wName=(cat,lv)=>{const W=WEAPONS[cat||'sword'];return W.names[Math.max(0,Math.min(7,lv-1))]};
+const wIcon=(cat,lv)=>{const W=WEAPONS[cat||'sword'];return W.icons?W.icons[Math.max(0,Math.min(7,lv-1))]:W.icon};
+const wOf=n=>{for(const k in WEAPONS){const i=WEAPONS[k].names.indexOf(n);if(i>=0)return GRIDW[i]}return 2};
 
 /* ================= 状态 ================= */
 const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0,
@@ -553,17 +562,17 @@ function rollTier(probs){
 const anvilN=()=>1+S.up.anvil; // 100💰/级·最多10级(1砧→11砧)
 function syncFocus(){S.cur=S.anvils[0]||null;S.value=S.cur?S.cur.value:0;S.dmgLv=S.cur?S.cur.dmgLv:0}
 function makeItem(sw){
- const s=SWORDS[Math.max(0,Math.min(SWORDS.length,sw.lv))-1];
+ const cat=sw.cat||'sword';
  const star=Math.min(4,1+Math.floor(sw.q));
  const val=Math.round(sw.value*(1-sw.dmgLv*.1)*(1+.15*(star-1)));
- return {name:s.name,emoji:s.emoji,star,value:val,cat:'sword',sold:false};
+ return {name:wName(cat,sw.lv),emoji:wIcon(cat,sw.lv),star,value:val,cat,sold:false};
 }
 function renderRack(){
  const r=$('anvil-rack');if(!r)return;
  let h='';
  for(let i=0;i<anvilN();i++){
   const sw=S.anvils[i];
-  h+=sw?`<div class="rk on" title="${SWORDS[sw.lv-1].name} Lv.${sw.lv}${sw.iron?' · 🪨玄铁':''}"><span>${SWORDS[sw.lv-1].emoji} Lv${sw.lv}</span><i>题 ${sw.qDone}/${swordCap()*2}</i></div>`
+  h+=sw?`<div class="rk on" title="${sw.name} Lv.${sw.lv}${sw.iron?' · 🪨玄铁':''}"><span>${sw.emoji} Lv${sw.lv}</span><i>题 ${sw.qDone}/${swordCap()*2}</i></div>`
        :`<div class="rk">💤 空砧</div>`;
  }
  r.innerHTML=h;
@@ -619,7 +628,17 @@ function instAvail(){if(INST.cur==='synth'||!INST.def)return null;const f=INST.d
 async function loadManifest(){
  try{const r=await fetch('../assets/v21/samples/manifest.json');if(!r.ok)return;INST.def=await r.json();buildInstGrid()}catch(e){}
 }
+async function loadVoice(){ // 人声音色库(大爷00:27令):27音母本(xstudio_split_new)转mp3;白键do~si′全,do″缺→电子音兕底
+ if(INST.bank.voice)return INST.bank.voice;
+ if(INST.loading)return null;
+ INST.loading='voice';const set={};
+ await Promise.all([60,62,64,65,67,69,71,72,74,76,77,79,81,83,84].map(m=>fetch('../assets/v23/voice/voice_m'+m+'.mp3').then(r=>r.arrayBuffer()).then(b=>au().decodeAudioData(b)).then(buf=>{set[m]=buf}).catch(()=>{})));
+ INST.loading=null;
+ if(Object.keys(set).length)INST.bank.voice=set;
+ return INST.bank.voice||null;
+}
 async function loadInst(id){
+ if(id==='voice')return loadVoice();
  if(INST.bank[id])return INST.bank[id];
  if(INST.loading)return null;
  INST.loading=id;const set={};
@@ -630,11 +649,17 @@ async function loadInst(id){
  if(Object.keys(set).length)INST.bank[id]=set;
  return Object.keys(set).length?set:null;
 }
-function playInst(m,when=0,vol=1){
- const b=INST.bank[INST.cur];
+function playInst(m,when=0,vol=1,id){
+ const b=INST.bank[id||INST.cur];
  if(b&&b[m]){const c=au(),t=c.currentTime+when,s=c.createBufferSource(),g=c.createGain();
   g.gain.setValueAtTime(.85*vol,t);s.buffer=b[m];s.connect(g);g.connect(c.destination);s.start(t);return}
  tone(midiF(m),when,.4,.22); // 缺采样/电子音→三角波兜底
+}
+function catPlay(m,when=0,vol=1){ // 武器音色路由(大爷00:27令):剑=玩家乐器,盔甲=钢琴,弓箭=小提琴,魔杖=人声
+ const cat=(S.cur&&S.cur.cat)||'sword';
+ const W=WEAPONS[cat],id=(W&&W.snd)?W.snd:INST.cur;
+ if(id&&id!=='synth'&&!INST.bank[id]&&!INST.loading)loadInst(id);
+ playInst(m,when,vol,id==='synth'?null:id);
 }
 function buildInstGrid(){
  const g=$('inst-grid');g.innerHTML='';
@@ -976,7 +1001,7 @@ function renderSlots(state){
 }
 function playQuestion(){
  S.phase='playing';S.pos=0;S.revealed=false;S.marks=[];S.typed=[];hud();renderSlots();
- S.q.forEach((ni,i)=>playInst(NOTES[ni].m,.16+i*.46));
+ S.q.forEach((ni,i)=>catPlay(NOTES[ni].m,.16+i*.46));
  const total=.16+S.q.length*.46+.3;
  setTimeout(()=>{if(S.phase!=='playing')return;S.phase='input';renderSlots();
   $('quiz-hint').textContent=S.frenzyActive?'⚡ 超神连打!按顺序敲!':'轮到你:按顺序敲!';hud()},total*1000);
@@ -987,7 +1012,7 @@ function playQuestion(){
 function hitLane(i){
  if(S.phase!=='input')return;
  const nt=NOTES[i];
- playInst(nt.m,0);
+ catPlay(nt.m,0);
  const laneEl=document.querySelector(`.lane[data-i="${i}"]`);
  const rect=laneEl.getBoundingClientRect(),appR=app.getBoundingClientRect(),sk=appR.width/app.offsetWidth;
  const fresh=lastPt&&Date.now()-lastPt.t<500;
@@ -1078,7 +1103,7 @@ function quenchPhase(){
   let html='';
   res.forEach(o=>{
    strip.querySelector('.rslot.'+o.r).classList.add('winner');
-   const nm=`${SWORDS[o.sw.lv-1].name} Lv.${o.sw.lv}`;
+   const nm=`${o.sw.name} Lv.${o.sw.lv}`;
    if(o.saved)html+=`<div style="color:#bfe3ff">🐉 ${nm}:龙鳞碎裂,剑保住了!(维持 · 收益 🪙0)</div>`;
    else if(o.r==='dmg')html+=`<div style="color:#ff9a8a">💥 ${nm}:损坏!这把坯子报废…</div>`;
    else html+=`<div style="color:${o.r==='great'?'#ffd54f':'#a8f0a0'}">${o.r==='great'?'🌈':'✅'} ${nm}:🔮${S.potential} × ${CFG.TIERS[o.r].mult} = 🪙${o.payout}${o.r==='great'?' 大成功!':''}</div>`;
@@ -1155,12 +1180,15 @@ function checkDayEnd(){ // 大爷21:51令:去魔力,收工=剑胚用光且铁砧
  if(S.mode!=='forge'||S.anvils.length||S.chest.length)return;
  S.forgeEnded=true;S.phase='idle';hud();
  $('quiz-hint').textContent='今天的剑胚用完了!点「🧙 第二天·商人」买卖装备';}
-function newSword(lv=1){
+function newSword(lv=1,cat){
+ cat=cat||'sword';
  if(S.anvils.length>=anvilN()){toast('铁砧满了!先锻完,或去「🏗️ 升级铺子」加砧');return false}
  lv=Math.max(1,Math.min(SWORDS.length,lv||1));
- const sw={name:SWORDS[lv-1].name,emoji:SWORDS[lv-1].emoji,lv,qDone:0,q:0,errN:0,fullN:0,iron:S.ironNext||0,value:0,dmgLv:0};
+ const W=WEAPONS[cat];
+ const sw={name:W.names[lv-1],emoji:(W.icons?W.icons[lv-1]:W.icon),cat,lv,qDone:0,q:0,errN:0,fullN:0,iron:S.ironNext||0,value:0,dmgLv:0};
  S.ironNext=0;S.anvils.push(sw);syncFocus();markDay('forging');applyWindow();hud();updateSword();renderRack();
- toast(S.anvils.length>1?`⚒️ 第 ${S.anvils.length} 把剑上砧!同题共锻,淬火各 roll`:'🔨 新剑开锻:'+SWORDS[lv-1].name+'('+SWORDS[lv-1].span+'音)· 封顶 Lv.'+swordCap()+' · 每级 2 题');
+ const snd=W.snd;if(snd&&!INST.bank[snd])loadInst(snd); // 武器音色懒加载
+ toast(S.anvils.length>1?`⚒️ 第 ${S.anvils.length} 件武器上砧!同题共锻,淬火各 roll`:`🔨 新${WLBL[cat]}开锻:`+W.names[lv-1]+' · 封顶 Lv.'+swordCap()+' · 每级 2 题');
  return true}
 function stashAll(silent){ // 收工/第二天:在场剑全按当前价值入箱(没碎就能卖,大爷拍板)
  const items=S.anvils.map(sw=>makeItem(sw));
@@ -1173,9 +1201,9 @@ function stashAll(silent){ // 收工/第二天:在场剑全按当前价值入箱
 function renderChest(){
  const g=$('dock-grid');g.innerHTML='';
  let used=0;
- S.chest.forEach((b,i)=>{used+=wOf('匕首');
-  const d=document.createElement('div');d.className='cm-blank';d.draggable=true;d.style.gridColumn='span '+wOf('匕首');
-  d.innerHTML='<span class="cb-e">'+b.emoji+'</span><span>剑坯·'+b.name+'</span>';
+ S.chest.forEach((b,i)=>{used+=wOf(b.name)||2;
+  const d=document.createElement('div');d.className='cm-blank';d.draggable=true;d.style.gridColumn='span '+(wOf(b.name)||2);
+  d.innerHTML='<span class="cb-e">'+b.emoji+'</span><span>'+WLBL[b.cat||'sword']+'坯·'+b.name+'</span>';
   d.ondragstart=e=>{e.dataTransfer.setData('text/plain',''+i);e.dataTransfer.effectAllowed='move'};
   d.onclick=()=>placeBlank(i);
   g.appendChild(d)});
@@ -1209,7 +1237,7 @@ function placeBlank(i){
  if(S.anvils.length>=anvilN()){toast('铁砧满了!先锻完,或去「🏗️ 升级铺子」加砧');return}
  if(!S.chest[i])return;
  const b=S.chest.splice(i,1)[0];renderChest();
- const ok=newSword(b&&b.lv||1);
+ const ok=newSword(b&&b.lv||1,b&&b.cat);
  if(!ok){S.chest.splice(i,0,b);renderChest();return}
  $('quiz-hint').textContent=S.anvils.length>1?'又一把上砧!同题共锻':'剑坯上砧!听题开锻';
  if(S.anvils.length===1)nextQuestion();
@@ -1241,6 +1269,9 @@ function nightFade(cb,txt,sub){
 /* ================= 单人商人(23:11大爷令:StS式·柜台招客废弃) ================= */
 const GOODS_FIXED=[
  {id:'blank',e:'🗡️',n:'剑坯·匕首',price:30,stock:99,d:'补 1 个剑坯——今天还能多锻一把(Lv.1·3音)'},
+ {id:'blankA',e:'🛡️',n:'盔甲坯·布甲',price:60,stock:3,d:'盔甲坯(Lv.1·钢琴音色·卖价吃盔甲类升级加成)'},
+ {id:'blankB',e:'🏹',n:'弓箭坯·短弓',price:60,stock:3,d:'弓箭坯(Lv.1·小提琴音色·卖价吃弓箭类升级加成)'},
+ {id:'blankW',e:'🪥',n:'魔杖坯·木杖',price:80,stock:3,d:'魔杖坯(Lv.1·人声吟唱·卖价吃魔杖类升级加成)'},
  {id:'armor',e:'🛡️',n:'皮甲·盔甲',price:80,stock:2,d:'永久:每次淬火损坏率 -5%(可叠加)'},
  {id:'wand',e:'🪄',n:'橡木魔杖',price:120,stock:2,d:'永久:大成功概率 +5%(可叠加)'}];
 const GOODS_RAND=[
@@ -1267,8 +1298,11 @@ function openMerchant(){
 function renderShopGold(){$('shop-gold-num').textContent=S.gold}
 function mSay(t){$('m-talk').textContent=t}
 function applyGood(g){
- if(g.id==='blank')S.chest.push({name:'匕首',emoji:'🗡️',lv:1});
- else if(g.id==='blank2')S.chest.push({name:'猎户短剑',emoji:'🔪',lv:2});
+ if(g.id==='blank')S.chest.push({name:'匕首',emoji:'🗡️',lv:1,cat:'sword'});
+ else if(g.id==='blank2')S.chest.push({name:'猎户短剑',emoji:'🔪',lv:2,cat:'sword'});
+ else if(g.id==='blankA')S.chest.push({name:'布甲',emoji:'🛡️',lv:1,cat:'armor'});
+ else if(g.id==='blankB')S.chest.push({name:'短弓',emoji:'🏹',lv:1,cat:'bow'});
+ else if(g.id==='blankW')S.chest.push({name:'木杖',emoji:'🪥',lv:1,cat:'wand'});
  else if(g.id==='armor')S.perm.armor++;
  else if(g.id==='wand')S.perm.wand++;
  else if(g.id==='relic')S.perm.relic++;
@@ -1451,8 +1485,8 @@ $('btn-dbg').onclick=dbgGold;$('btn-dbg2').onclick=dbgGold;
  $('btn-day2').onclick=()=>{if(S.mode!=='forge')return;S.phase='idle';stashAll(true);nightFade(openMerchant,'流浪商人',`🌆 第 ${S.day} 天傍晚 · 「独眼」格罗兹到访`)};
  const _hudOrig=hud;
  hud=function(){_hudOrig();
-  if(S.cur){$('tier-tag').textContent=`剑Lv.${S.cur.lv}/${swordCap()} · 第${S.day}天`;
-   $('sword-title').textContent=SWORDS[curSpan()-3].name;
+  if(S.cur){$('tier-tag').textContent=`${WLBL[S.cur.cat||'sword']}Lv.${S.cur.lv}/${swordCap()} · 第${S.day}天`;
+   $('sword-title').textContent=S.cur.name;$('sword-emoji').textContent=S.cur.emoji;
    $('value-fill').style.width=(S.cur.qDone/(swordCap()*2)*100)+'%';}
   else{$('tier-tag').textContent=`第${S.day}天 · 铁砧空`;$('value-fill').style.width='0%'}
   renderChest();renderRack();

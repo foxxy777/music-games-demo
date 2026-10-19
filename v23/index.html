@@ -1397,7 +1397,11 @@ const GOODS_FIXED=[
  {id:'blankS',e:'🛡️',cat:'shield',base:45,step:15,stock:3,lvG:1,d:'盾牌坯(铜管音色)——档位随铁匠等级长'},
  {id:'armor',e:'🛡️',n:'皮甲·盔甲',price:80,stock:2,d:'永久:每次淬火损坏率 -5%(可叠加)'},
  {id:'wand',e:'🪄',n:'橡木魔杖',price:120,stock:2,d:'永久:大成功概率 +5%(可叠加)'},
- {id:'eye',e:'👁️',n:'神器·先知之眼',price:250,stock:1,art:1,d:'神器:听题时第一个音自动显示音名(占 1 神器槽)'}];
+ {id:'artslot',e:'🧿',n:'神器位',art:1,d:''}];
+const ARTIFACTS=[
+ {id:'eye',e:'👁️',n:'神器·先知之眼',price:250,stock:1,art:1,d:'神器:听题时第一个音自动显示音名(占 1 神器槽)'},
+ {id:'fairy',e:'🧚',n:'神器·赠礼妖精',price:300,stock:1,art:1,d:'神器:每天清晨自动送来 3 件低级装备(占 1 神器槽)'}];
+const curArt=()=>ARTIFACTS.find(a=>!S.art.includes(a.id))||ARTIFACTS[0];
 const blankInfo=g=>{const lv=Math.max(1,Math.min(S.roleLv,SWORDS.length));const W=WEAPONS[g.cat];
  return {lv,name:W.names[lv-1],emoji:(W.icons?W.icons[lv-1]:W.icon),base:Math.round(g.base+g.step*lv)}};
 const GOODS_RAND=[
@@ -1410,7 +1414,7 @@ const M_SAY=['手艺不错,下次还来!','独眼识货,童叟无欺。','这价
 function rollShelf(keepBought){
  const pool=[...GOODS_RAND],picks=[];
  while(picks.length<4&&pool.length)picks.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
- S.mkt=[...GOODS_FIXED,...picks];if(keepBought){GOODS_RAND.forEach(g=>delete S.bought[g.id])}else S.bought={};
+ S.mkt=[...GOODS_FIXED.map(g=>g.art?curArt():g),...picks];if(keepBought){GOODS_RAND.forEach(g=>delete S.bought[g.id])}else S.bought={};
  const r=Math.random();
  if(r<.18){S.eventMult=1.25;S.eventTxt='📈 今日行情:剑类收购 +25%'}
  else if(r<.33){S.eventMult=.85;S.eventTxt='📉 今日行情:剑类收购 -15%'}
@@ -1426,7 +1430,7 @@ function mSay(t){$('m-talk').textContent=t}
 function applyGood(g){
  if(g.lvG){const bi=blankInfo(g);S.chest.push({name:bi.name,emoji:bi.emoji,lv:bi.lv,cat:g.cat})}
  else if(g.id==='blank2')S.chest.push({name:'猎户短剑',emoji:'🔪',lv:2,cat:'sword'});
- else if(g.id==='eye'){S.art.push('eye');toast('👁️ 先知之眼入槽!下次听题起效',2400)}
+ else if(g.art){S.art.push(g.id);S.mkt[S.mkt.findIndex(x=>x.art)]=curArt();toast(g.id==='eye'?'👁️ 先知之眼入槽!下次听题起效':'🧚 赠礼妖精入槽!明天清晨起效',2400)}
  else if(g.id==='armor')S.perm.armor++;
  else if(g.id==='wand')S.perm.wand++;
  else if(g.id==='relic')S.perm.relic++;
@@ -1657,8 +1661,12 @@ function closeShop(){
  const rentDay=(S.day%7===0); // 大爷22:55令:每7天交房租,交租日打烊时收
  S.day++;S.forgeEnded=false;S.phase='idle';
  S.pack=S.pack.filter(p=>!p.sold);
- while(S.chest.length<3)S.chest.push({name:'匕首',emoji:'🗡️',lv:1}); // 新一天补足 3 坯(大爷21:51令:3剑胚=3剑/晚)
  if(S.perm.relic){const inc=S.perm.relic*10;S.gold+=inc;toast('💎 锈怀表走时 +'+inc+'💰',2000)} // 遗物:每日被动收益
+ if(S.art.includes('fairy')){ // 🧚赠礼妖精(大爷00:37令):每晨自动送3件低级装备(免费补坯已取消)
+  const FB=[['匕首','🗡️','sword'],['布甲','⛓️','armor'],['短弓','🏹','bow'],['木杖','🪄','wand'],['小圆盾','🛡️','shield']];
+  for(let i=0;i<3&&S.chest.length<45;i++){const b=FB[Math.floor(Math.random()*FB.length)];S.chest.push({name:b[0],emoji:b[1],lv:1,cat:b[2]})}
+  toast('🧚 赠礼妖精送来 3 件低级装备!',2600);
+ }
  S.dayLog=[];questRollover();S.refreshCnt=0;
  hud();updateSword();
  if(rentDay){

@@ -242,38 +242,36 @@ body{overflow:hidden}
 #shop-head{flex:none;display:flex;align-items:center;justify-content:space-between;padding:10px 22px;border-bottom:2px solid #4a3320}
 #shop-title{font-size:20px;font-weight:900;color:#ffe89a;text-shadow:0 0 12px #ffb84d55}
 #shop-gold{font-size:16px;color:#ffd54f;font-weight:bold}
-#shop-stage{flex:1.25;position:relative;overflow:hidden;background:linear-gradient(180deg,#0c1118 0%,#131c28 60%,#1b2430 100%);border-bottom:2px solid #4a3320}
-#window-frame{position:absolute;left:50%;top:8px;transform:translateX(-50%);width:min(620px,86%);height:calc(100% - 16px);border:6px solid #6a4a28;border-radius:16px 16px 4px 4px;box-shadow:inset 0 0 46px #00000088,0 4px 18px #0008;pointer-events:none}
-#window-frame::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:4px;background:#6a4a28;transform:translateX(-50%)}
-#street{position:absolute;left:0;right:0;bottom:0;height:30%;background:linear-gradient(180deg,#23262e,#14161b)}
-#ps-cust{position:absolute;left:110%;bottom:16%;font-size:46px;transition:left 1.9s ease-in-out;filter:drop-shadow(0 6px 12px #000a);z-index:4}
-.pc-name{position:absolute;top:-4px;right:-52px;font-size:10px;background:#2a1c0e;border:1px solid #c9a06a88;color:#ffd54f;border-radius:8px;padding:1px 6px;font-weight:bold;white-space:nowrap}
-#ps-bubble{position:absolute;left:50%;top:12px;transform:translateX(-50%) scale(0);font-size:15px;white-space:nowrap;background:#1a110aee;border:1px solid #c9a06a66;border-radius:10px;padding:4px 12px;transition:transform .25s cubic-bezier(.3,-.2,.6,1.5);z-index:6;color:#ffe9b8}
-#ps-bubble.on{transform:translateX(-50%) scale(1)}
-#ps-counter{flex:none;display:flex;align-items:center;gap:12px;padding:8px 14px;background:linear-gradient(180deg,#4a3320,#31220f);border-bottom:3px solid #2a1c0e;min-height:86px}
-#counter-girl{font-size:36px;filter:drop-shadow(0 4px 8px #0009)}
-#ct-slots{display:grid;grid-template-columns:repeat(8,1fr);grid-auto-rows:44px;grid-auto-flow:row dense;gap:4px;flex:1;align-self:center;min-height:calc(44px*2 + 4px);background-image:repeating-linear-gradient(90deg,#1d140c 0 calc(12.5% - 4px),transparent calc(12.5% - 4px) 12.5%),repeating-linear-gradient(0deg,#1d140c 0 44px,transparent 44px 48px);border:1px solid #2e2114;border-radius:8px;padding:4px}
-.ct-bar{grid-row:span 1;display:flex;align-items:center;justify-content:center;gap:5px;border-radius:6px;border:1.5px solid #7a5a30;background:linear-gradient(180deg,#4a3016,#2e1e0e);color:#ffe9b8;cursor:pointer;font-size:11px;padding:0 4px;overflow:hidden;white-space:nowrap;transition:border-color .12s,box-shadow .12s;position:relative}
-.ct-bar:hover{border-color:#ffd54f;box-shadow:0 0 10px #ffd54f44}
-.ct-bar .cs-e{font-size:19px;flex:none}
-.ct-bar .cs-info{display:flex;flex-direction:column;font-size:9px;line-height:1.15;overflow:hidden}
-.ct-bar .cs-v{color:#ffd54f}
-.ct-bar.deny{animation:ctdeny .5s ease}
-@keyframes ctdeny{0%,100%{border-color:#7a5a30}30%,60%{border-color:#ff5d6c;box-shadow:0 0 12px #ff5d6c88;background:#3a1216}}
-#ct-cap{font-size:10px;color:#c9a06a;align-self:flex-end;padding-bottom:2px;flex:none}
-#ps-chest{flex:1;overflow-y:auto;padding:8px 16px;background:#120d08}
+#mkt-banner{font-size:12px;color:#ffd54f;background:#2a1c0e;border:1px solid #c9a06a66;border-radius:8px;padding:2px 10px;display:none}
+#mkt-banner.on{display:inline-block}
+#m-body{flex:1;display:flex;gap:12px;padding:12px 16px;min-height:0}
+#m-left{flex:0 0 168px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:linear-gradient(165deg,#241a12,#16100b);border:1.5px solid #4a3320;border-radius:14px;padding:12px;text-align:center}
+#m-face{font-size:62px;filter:drop-shadow(0 6px 14px #000a)}
+#m-name{color:#ffe89a;font-weight:900;font-size:15px}
+#m-talk{color:#cbb8a0;font-size:12px;line-height:1.6}
+#m-col{flex:1;display:flex;flex-direction:column;gap:10px;min-height:0}
+#m-shelf-wrap,#m-sell-wrap{flex:1;display:flex;flex-direction:column;gap:5px;min-height:0}
+#m-shelf{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-content:start;scrollbar-width:thin}
+#m-shelf::-webkit-scrollbar,#m-sell::-webkit-scrollbar{width:8px}
+#m-shelf::-webkit-scrollbar-thumb,#m-sell::-webkit-scrollbar-thumb{background:#6b4a26;border-radius:4px}
+.mcard{border:1.5px solid #5a4020;border-radius:10px;background:linear-gradient(180deg,#3a2812,#241708);padding:8px 10px;display:flex;flex-direction:column;gap:3px;cursor:pointer;transition:border-color .12s,box-shadow .12s}
+.mcard:hover{border-color:#ffd54f;box-shadow:0 0 12px #ffd54f33}
+.mcard.off{opacity:.38;cursor:not-allowed;filter:grayscale(.6)}
+.mcard .mc-top{display:flex;align-items:center;gap:6px}
+.mcard .mc-e{font-size:22px}
+.mcard .mc-n{color:#ffe9b8;font-weight:bold;font-size:12.5px;flex:1}
+.mcard .mc-p{color:#ffd54f;font-weight:900;font-size:13px}
+.mcard .mc-d{color:#b8a385;font-size:10.5px;line-height:1.45}
+#m-sell{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:46px;grid-auto-flow:row dense;gap:5px;align-content:start;background-image:repeating-linear-gradient(90deg,#1d140c 0 calc(25% - 5px),transparent calc(25% - 5px) 25%),repeating-linear-gradient(0deg,#1d140c 0 46px,transparent 46px 51px);border:1px solid #2e2114;border-radius:8px;padding:5px;min-height:calc(46px*2 + 10px)}
+#m-belt{flex:none;display:flex;gap:8px;align-items:center;padding:6px 16px;border-top:1px dashed #4a3320;font-size:11px;color:#c9a06a;flex-wrap:wrap;overflow-y:auto;max-height:64px}
 .inv-sec{font-size:11px;color:#c9a06a;letter-spacing:2px;margin:2px 0 8px;display:flex;justify-content:space-between;align-items:center}
 .inv-sec .sec-cap{letter-spacing:0;color:#8a7455;font-size:10px}
-#inv-grid{display:grid;grid-template-columns:repeat(8,1fr);grid-auto-rows:48px;grid-auto-flow:row dense;gap:5px;position:relative;min-height:calc(48px*6 + 5px*5);background-image:repeating-linear-gradient(90deg,#1d140c 0 calc(12.5% - 5px),transparent calc(12.5% - 5px) 12.5%),repeating-linear-gradient(0deg,#1d140c 0 48px,transparent 48px 53px);border:1px solid #2e2114;border-radius:8px;padding:5px}
 .inv-cell{grid-row:span 1;display:flex;align-items:center;justify-content:center;gap:5px;border-radius:6px;border:1.5px solid #5a4020;background:linear-gradient(180deg,#3a2812,#241708);color:#ffe9b8;font-size:11px;cursor:pointer;transition:border-color .12s;overflow:hidden;white-space:nowrap;padding:0 4px}
 .inv-cell:hover{border-color:#ffd54f}
 .inv-cell .ic-e{font-size:20px;flex:none}
 .inv-cell .ic-info{display:flex;flex-direction:column;font-size:9px;line-height:1.2;overflow:hidden}
 .inv-cell .ic-v{color:#ffd54f}
 .inv-cell.tier-glow{box-shadow:inset 0 0 14px #ffd54f22}
-.badge{position:absolute;top:-22px;right:-30px;font-size:10px;background:#2a1c0e;border:1px solid #c9a06a88;color:#ffd54f;border-radius:8px;padding:1px 6px;font-weight:bold;white-space:nowrap}
-.emote{position:absolute;top:-72px;left:50%;transform:translateX(-50%) scale(0);font-size:34px;transition:transform .35s cubic-bezier(.3,-.2,.6,1.6);pointer-events:none;z-index:6}
-.emote.on{transform:translateX(-50%) scale(1)}
 .lane.flash-tap{filter:brightness(1.5)}
 #chest-dock{flex:0 0 158px;min-height:0;display:flex;flex-direction:column;gap:5px;padding:6px 10px 8px;border-top:2px solid #4a3320;background:linear-gradient(180deg,#171009,#0e0906)}
 .dock-head{font-size:11px;color:#c9a06a;letter-spacing:1px;display:flex;justify-content:space-between;border-bottom:1px dashed #4a3320;padding-bottom:3px}
@@ -307,8 +305,6 @@ body{overflow:hidden}
 #cal-legend{font-size:10px;color:#8a7455;margin-top:8px}
 #anvil-empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:4;pointer-events:none;font-size:15px;color:#c9a06add;letter-spacing:2px;text-shadow:0 2px 8px #000}
 #anvil.drop-ready{outline:3px dashed #ffd54f;outline-offset:-6px}
-#ct-slots.drop-ready{outline:3px dashed #ffd54f;outline-offset:-4px}
-#ps-chest.drop-ready{outline:3px dashed #ffd54f;outline-offset:-4px}
 /* ===== 遮罩层 ===== */
 #overlay{position:absolute;inset:0;background:#0a0705e8;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:50;padding:36px;text-align:center;cursor:auto}
 #overlay.on{display:flex}
@@ -420,28 +416,31 @@ body{overflow:hidden}
   </div>
   <div id="shop">
     <div id="shop-head">
-      <div id="shop-title">🏪 铁匠铺 · 柜台售卖</div>
+      <div id="shop-title">🧙‍♂️ 流浪商人 · 「独眼」格罗兹</div>
+      <div id="mkt-banner"></div>
       <div id="shop-gold">💰 <span id="shop-gold-num">0</span></div>
     </div>
-        <div id="shop-stage">
-      <div id="window-frame"></div>
-      <div id="street"></div>
-      <div id="ps-cust"><span id="pc-face">🧑</span><div class="pc-name" id="pc-name"></div><div class="emote" id="pc-emote"></div></div>
-      <div id="ps-bubble"></div>
+    <div id="m-body">
+      <div id="m-left">
+        <div id="m-face">🧙‍♂️</div>
+        <div id="m-name">「独眼」格罗兹</div>
+        <div id="m-talk">好铁匠，看看货？你的剑，我按手艺收。</div>
+      </div>
+      <div id="m-col">
+        <div id="m-shelf-wrap">
+          <div class="inv-sec"><span>🛒 今日货架 · 点卡买入</span><span class="sec-cap" id="m-shelf-cap"></span></div>
+          <div id="m-shelf"></div>
+        </div>
+        <div id="m-sell-wrap">
+          <div class="inv-sec"><span>⚔️ 收购 · 点剑即卖（锻出多少卖多少）</span><span class="sec-cap" id="m-sell-cap"></span></div>
+          <div id="m-sell"></div>
+        </div>
+      </div>
     </div>
-    <div id="ps-counter">
-      <div id="counter-girl">🧑‍🌾</div>
-      <div id="ct-slots"></div>
-      <div id="ct-cap">格 0/16</div>
-    </div>
-    <div id="ps-chest">
-      <div class="inv-sec"><span>🧰 箱子 · 点剑上柜台</span><span class="sec-cap"></span></div>
-      <div id="inv-grid"></div>
-    </div>
+    <div id="m-belt"></div>
     <div id="shop-foot">
-      <button id="btn-bell" class="btn gold">🛎️ 下一位顾客</button>
-      <div id="shop-hint">点击空货架，把铸好的剑摆上去</div>
-      <button id="btn-close" class="btn">🌙 打烊</button>
+      <div id="shop-hint">点货架买 · 点剑卖 · 离开后进入明天</div>
+      <button id="btn-close" class="btn gold">🌙 离开 · 安睡</button>
     </div>
   </div>
   <div id="cal-modal"><div id="cal-card">
@@ -504,6 +503,7 @@ const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0
  roleLv:1,dayLog:[],day:1,mode:'forge',cur:null,pack:[],counter:[],forgeEnded:false,soldCnt:0,
  chest:[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}],
  frenzyActive:false,frenzyEnd:0,frenzyTimer:null,pendingQuench:false,
+ perm:{armor:0,wand:0,relic:0},dragon:0,ironNext:0,eventMult:1,eventTxt:'',mkt:[],bought:{},
  hits:0,strikes:0,            // 本题:敲对数/已敲数
  totHits:0,totStrikes:0,      // 全局统计
  phase:'idle', // idle|playing|input|quench|busy|over
@@ -511,9 +511,10 @@ const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0
 const $=id=>document.getElementById(id);
 
 /* ================= 淬火概率(大爷21:51令:三档·错音/全对驱动) ================= */
-function computeProbs(errN,fullN){ // errN=本剑累计错音,fullN=本剑累计全对题数
- let dmg=CFG.PROB.dmg+CFG.ERR_PENALTY*(errN||0),
-     g=CFG.PROB.great+CFG.FULL_BONUS*(fullN||0);
+function swordCap(){return CFG.SWORD_CAP_LV+(S.roleLv-1)} // 技能书:铁匠Lv↑→剑成长上限↑(23:11商人令)
+function computeProbs(errN,fullN){ // errN=本剑累计错音,fullN=本剑累计全对题数;盔甲/玄铁降损坏,魔杖升大成功
+ let dmg=Math.max(0,CFG.PROB.dmg+CFG.ERR_PENALTY*(errN||0)-S.perm.armor*5-(S.cur&&S.cur.iron||0)),
+     g=CFG.PROB.great+CFG.FULL_BONUS*(fullN||0)+S.perm.wand*5;
  if(dmg+g>100){const s=100/(dmg+g);dmg*=s;g*=s} // 超界等比压缩,成功档归零
  return {great:g,good:Math.max(0,100-dmg-g),dmg};
 }
@@ -820,8 +821,8 @@ function hud(){
  $('sword-value').textContent='🪙'+S.value;
  $('sword-title').textContent=sw.name+(S.dmgLv>0?` ⚠-${S.dmgLv*10}%`:'');$('sword-emoji').textContent=sw.emoji;
  $('tier-tag').textContent=`Tier ${S.tier+1}/${SWORDS.length}`;
- $('value-fill').style.width=Math.max(0,Math.min(100,S.qCount/(CFG.SWORD_CAP_LV*2)*100))+'%';
- $('value-num').textContent=`成长 ${S.qCount}/${CFG.SWORD_CAP_LV*2} 题`;
+ $('value-fill').style.width=Math.max(0,Math.min(100,S.qCount/(swordCap()*2)*100))+'%';
+ $('value-num').textContent=`成长 ${S.qCount}/${swordCap()*2} 题`;
  $('gold-num').textContent=S.gold;
  $('pot-num').textContent=S.potential;updateBucket();
  // 充能
@@ -989,8 +990,10 @@ function endQuestion(){
 function quenchPhase(){
  S.phase='quench';hud();
  const probs=computeProbs(S.cur?S.cur.errN:0,S.cur?S.cur.fullN:0);
- const result=rollTier(probs);
- const payout=Math.round(S.potential*CFG.TIERS[result].mult);
+ let result=rollTier(probs);
+ const saved=result==='dmg'&&S.dragon>0; // 🐉龙鳞:爆剑免疫一次(23:11商人货架)
+ if(saved){S.dragon--;result='good'}
+ const payout=saved?0:Math.round(S.potential*CFG.TIERS[result].mult);
  const vBefore=S.value;
  // 居中覆盖面板(大爷19:49令:看得清,点继续才关)
  const qm=$('quench-modal');qm.classList.add('on');
@@ -1008,7 +1011,9 @@ function quenchPhase(){
   const winEl=strip.querySelector('.rslot.'+result);
   winEl.classList.add('winner');
   const t=CFG.TIERS[result];
-  $('qm-result').innerHTML=result==='great'
+  $('qm-result').innerHTML=saved
+   ?`<span style="color:#bfe3ff">🐉 龙鳞碎裂,剑保住了!(维持 · 收益 🪙0)</span>`
+   :result==='great'
    ?`<span style="color:#ffd54f">🌈 大成功!🔮${S.potential} × ${t.mult} = 🪙${payout}!</span>`
    :result==='dmg'
    ?`<span style="color:#ff9a8a">💥 损坏!剑爆了!这把坯子没了…</span>`
@@ -1058,22 +1063,23 @@ function endFrenzy(){
 }
 
 /* ================= 昼夜循环+商店(大爷17:08令) ================= */
-function curSpan(){return S.cur&&S.cur.lv>=2?4:3}
+function curSpan(){return SWORDS[Math.max(0,Math.min(SWORDS.length,(S.cur?S.cur.lv:1))-1)].span} // 按剑级取音域(支持Lv3+)
 function markDay(st){if(st==='forging')S.dayLog.push('forging');
  else{const i=S.dayLog.lastIndexOf('forging');if(i>=0)S.dayLog[i]=st;else S.dayLog.push(st)}}
 function checkDayEnd(){ // 大爷21:51令:去魔力,收工=剑胚用光且铁砧空
  if(S.mode!=='forge'||S.cur||S.chest.length)return;
  S.forgeEnded=true;S.phase='idle';hud();
- $('quiz-hint').textContent='今天的剑胚用完了!点「🌅 第二天」开门营业';}
-function newSword(){S.cur={lv:1,qDone:0,q:0,errN:0,fullN:0};S.value=0;S.qCount=0;S.dmgLv=0;markDay('forging');applyWindow();hud();updateSword();
- toast('🔨 新剑开锻:匕首(3音)· Lv.1 封顶 4 音域 · 每把最多 4 题')}
+ $('quiz-hint').textContent='今天的剑胚用完了!点「🧙 第二天·商人」买卖装备';}
+function newSword(lv=1){S.cur={lv,qDone:0,q:0,errN:0,fullN:0,iron:S.ironNext||0};S.ironNext=0;S.value=0;S.qCount=0;S.dmgLv=0;markDay('forging');applyWindow();hud();updateSword();
+ const sw=SWORDS[lv-1];
+ toast('🔨 新剑开锻:'+sw.name+'('+sw.span+'音)· 封顶 Lv.'+swordCap()+' · 每级 2 题')}
 function afterQuestionDone(result){
  if(!S.cur){S.phase='idle';hud();return}
  S.qCount++;
  S.cur.qDone++;
  if(result==='great')S.cur.q+=1;else if(result==='good')S.cur.q+=.5;
- if(S.cur.qDone>=CFG.SWORD_CAP_LV*2){swordDone();return}
- const newLv=Math.min(CFG.SWORD_CAP_LV,Math.floor(S.cur.qDone/2)+1);
+ if(S.cur.qDone>=swordCap()*2){swordDone();return}
+ const newLv=Math.min(swordCap(),Math.floor(S.cur.qDone/2)+1);
  if(newLv>S.cur.lv){S.cur.lv=newLv;applyWindow();updateSword();
   toast(`⬆️ 剑升级!Lv.${S.cur.lv} · 音域 ${curSpan()} 音`)}
  S.phase='busy';hud();
@@ -1110,7 +1116,7 @@ function renderChest(){
  S.pack.forEach(p=>{used+=wOf(p.name);
   const d=document.createElement('div');d.className='cm-done';d.style.gridColumn='span '+wOf(p.name);
   d.innerHTML='<span>'+p.emoji+' '+p.name+' '+'★'.repeat(p.star)+'</span><span class="cd-v">💰'+p.value+'</span>';
-  d.onclick=()=>toast('明天开店,摆上柜台就有人来买');
+  d.onclick=()=>toast('傍晚见商人,点一下就卖');
   g.appendChild(d)});
  if(!S.chest.length&&!S.pack.length)g.innerHTML='<div class="cm-none">箱子空了——先把存货卖掉换新坯</div>';
  for(let k=used;k<48;k++){const e=document.createElement('div');e.className='dock-empty';g.appendChild(e)}
@@ -1136,8 +1142,8 @@ function placeBlank(i){
  if(S.phase==='playing'||S.phase==='input'||S.phase==='grading'||S.phase==='quench')return;
  if(S.cur){toast('铁砧上有剑,先把它锻完或收工');return}
  if(!S.chest[i])return;
- S.chest.splice(i,1);renderChest();
- newSword();
+ const b=S.chest.splice(i,1)[0];renderChest();
+ newSword(b&&b.lv||1);
  $('quiz-hint').textContent='剑坯上砧!听题开锻';
  nextQuestion();
 }
@@ -1147,25 +1153,7 @@ function placeBlank(i){
  a.addEventListener('drop',e=>{e.preventDefault();a.classList.remove('drop-ready');
   const i=+e.dataTransfer.getData('text/plain');placeBlank(i)});
 })();
-/* v23 箱子↔柜台双向拖拽(大爷21:17查格令补齐) */
-(function(){
- const ct=$('ct-slots');
- ct.addEventListener('dragover',e=>{if(![...(e.dataTransfer?.types||[])].includes('text/plain'))return;e.preventDefault();ct.classList.add('drop-ready')});
- ct.addEventListener('dragleave',()=>ct.classList.remove('drop-ready'));
- ct.addEventListener('drop',e=>{e.preventDefault();ct.classList.remove('drop-ready');
-  const d=e.dataTransfer.getData('text/plain');if(!d||!d.startsWith('inv:'))return;
-  const p=S.pack[+d.slice(4)];if(!p||p.sold||S.counter.includes(p))return;
-  const w=wOf(p.name),cur=S.counter.reduce((a,x)=>a+wOf(x.name),0);
-  if(cur+w>16){toast('柜台摆不下了('+cur+'+'+w+'格 > 16)——先卖掉几把');return}
-  S.counter.push(p);renderCounter();renderInv()});
- const chest=$('ps-chest');
- chest.addEventListener('dragover',e=>{if(![...(e.dataTransfer?.types||[])].includes('text/plain'))return;e.preventDefault();chest.classList.add('drop-ready')});
- chest.addEventListener('dragleave',()=>chest.classList.remove('drop-ready'));
- chest.addEventListener('drop',e=>{e.preventDefault();chest.classList.remove('drop-ready');
-  const d=e.dataTransfer.getData('text/plain');if(!d||!d.startsWith('ct:'))return;
-  const i=+d.slice(3);if(!S.counter[i])return;
-  const back=S.counter.splice(i,1)[0];renderCounter();renderInv();toast(back.name+' 收回箱子')});
-})();
+/* 柜台双向拖拽已随柜台系统废弃(23:11大爷令:单人商人界面) */
 function endForgeDay(){
  if(S.mode!=='forge')return;
  const it=stashSword(true);
@@ -1182,99 +1170,96 @@ function nightFade(cb,txt,sub){
  setTimeout(()=>{cb&&cb()},1000);
  setTimeout(()=>{nf.classList.remove('on')},2050);
 }
-/* ================= Probably-Stolen 柜台售卖(v22 实验) ================= */
-const CUST_TYPES=[
- {e:'🛡️',n:'战士',hi:'好剑!就它了!',no:'呸,这不是我要的'},
- {e:'🧙',n:'法师',hi:'魔力波动不错,收了',no:'气息不对,拿走'},
- {e:'🥷',n:'盗贼',hi:'轻!快!趁手…成交',no:'太扎眼,不买'},
- {e:'🧝',n:'游侠',hi:'森林会记得这份手艺',no:'再看看吧…'},
- {e:'🧔',n:'村民',hi:'给儿子的成人礼,谢啦',no:'贵了贵了!'}];
-let CUST=null;
-function openShop(){
+/* ================= 单人商人(23:11大爷令:StS式·柜台招客废弃) ================= */
+const GOODS_FIXED=[
+ {id:'blank',e:'🗡️',n:'剑坯·匕首',price:30,stock:99,d:'补 1 个剑坯——今天还能多锻一把(Lv.1·3音)'},
+ {id:'armor',e:'🛡️',n:'皮甲·盔甲',price:80,stock:2,d:'永久:每次淬火损坏率 -5%(可叠加)'},
+ {id:'wand',e:'🪄',n:'橡木魔杖',price:120,stock:2,d:'永久:大成功概率 +5%(可叠加)'}];
+const GOODS_RAND=[
+ {id:'blank2',e:'🔪',n:'剑坯·猎户短剑',price:90,stock:2,d:'补 1 个高档剑坯(Lv.2 起锻·4音)'},
+ {id:'book',e:'📖',n:'技能书·锻造心得',price:100,stock:1,d:'铁匠 Lv+1——剑成长上限 +1 级'},
+ {id:'dragon',e:'🐉',n:'龙鳞',price:60,stock:2,d:'消耗:剑要爆时自动碎裂护剑一次'},
+ {id:'iron',e:'🪨',n:'玄铁锭',price:50,stock:2,d:'消耗:下一把剑损坏率 -10%'},
+ {id:'relic',e:'💎',n:'遗物·锈怀表',price:200,stock:1,d:'永久:每天安睡时 +10💰'}];
+const M_SAY=['手艺不错,下次还来!','独眼识货,童叟无欺。','这价公道——铁匠朋友。'];
+function rollShelf(){
+ const pool=[...GOODS_RAND],picks=[];
+ while(picks.length<4&&pool.length)picks.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+ S.mkt=[...GOODS_FIXED,...picks];S.bought={};
+ const r=Math.random();
+ if(r<.18){S.eventMult=1.25;S.eventTxt='📈 今日行情:剑类收购 +25%'}
+ else if(r<.33){S.eventMult=.85;S.eventTxt='📉 今日行情:剑类收购 -15%'}
+ else{S.eventMult=1;S.eventTxt=''}
+}
+function openMerchant(){
  S.mode='shop';$('shop').classList.add('on');
- S.counter=[];S.pack.forEach(p=>{p.onShelf=false});
- renderCounter();renderInv();renderShopGold();
- $('ps-cust').style.left='110%';CUST=null;
- $('shop-hint').textContent='点箱子里的剑摆上柜台,再点「🛎️ 下一位」招客';
+ S.pack.forEach(p=>{p.sold=false});
+ rollShelf();renderMerchant();renderShopGold();
 }
 function renderShopGold(){$('shop-gold-num').textContent=S.gold}
-function renderCounter(){
- const box=$('ct-slots');box.innerHTML='';
- let used=0;
- S.counter.forEach((p,i)=>{used+=wOf(p.name);
-  const d=document.createElement('div');d.className='ct-bar';d.style.gridColumn='span '+wOf(p.name);
-  d.innerHTML='<span class="cs-e">'+p.emoji+'</span><span class="cs-info"><span>'+p.name+'</span><span class="cs-v">💰'+p.value+' ★'+p.star+'</span></span>';
-  d.onclick=()=>offer(i);
-  d.draggable=true;d.title='拖回箱子或点击推销';
-  d.ondragstart=e=>{e.dataTransfer.setData('text/plain','ct:'+i);e.dataTransfer.effectAllowed='move'};
-  box.appendChild(d)});
- $('ct-cap').textContent='格 '+used+'/16';
+function mSay(t){$('m-talk').textContent=t}
+function applyGood(g){
+ if(g.id==='blank')S.chest.push({name:'匕首',emoji:'🗡️',lv:1});
+ else if(g.id==='blank2')S.chest.push({name:'猎户短剑',emoji:'🔪',lv:2});
+ else if(g.id==='armor')S.perm.armor++;
+ else if(g.id==='wand')S.perm.wand++;
+ else if(g.id==='relic')S.perm.relic++;
+ else if(g.id==='book')S.roleLv++;
+ else if(g.id==='dragon')S.dragon++;
+ else if(g.id==='iron')S.ironNext+=10;
+ toast('🛒 买入 '+g.n+' -💰'+g.price);
+ mSay(M_SAY[Math.floor(Math.random()*M_SAY.length)]);
 }
-function renderInv(){
- const g=$('inv-grid');g.innerHTML='';
- const sec=g.previousElementSibling.querySelector('.sec-cap');
- const avail=S.pack.filter(p=>!p.sold&&!S.counter.includes(p));
- if(!avail.length){g.innerHTML='<div style="color:#6b5844;font-size:12px;padding:8px;grid-column:1/-1">箱子空空——没铸出剑,或都卖完了</div>';if(sec)sec.textContent='格 0/48';return}
- let used=0;
- avail.forEach(p=>{used+=wOf(p.name);
+function mSell(i){
+ const avail=S.pack.filter(p=>!p.sold);const p=avail[i];if(!p)return;
+ p.sold=true;const price=Math.round(p.value*S.eventMult);
+ coinSound();S.gold+=price;S.soldCnt++;
+ toast(`💰 卖出 ${p.name} ★${p.star} +${price}`+(S.eventMult!==1?` (行情${S.eventMult>1?'+':''}${Math.round((S.eventMult-1)*100)}%)`:''));
+ renderMerchant();renderShopGold();
+}
+function ownTags(){
+ const t=[];
+ if(S.perm.armor)t.push(`🛡️×${S.perm.armor}(损坏-${S.perm.armor*5}%)`);
+ if(S.perm.wand)t.push(`🪄×${S.perm.wand}(大成功+${S.perm.wand*5}%)`);
+ if(S.perm.relic)t.push(`💎×${S.perm.relic}(日+${S.perm.relic*10}💰)`);
+ if(S.dragon)t.push(`🐉×${S.dragon}`);
+ if(S.ironNext)t.push(`🪨(下把-${S.ironNext}%)`);
+ if(S.roleLv>1)t.push(`📖 Lv.${S.roleLv}(剑上限${swordCap()})`);
+ return t.length?'家底:'+t.join(' · '):'还没置办产业——买点永久品攒家底';
+}
+function renderMerchant(){
+ const shelf=$('m-shelf');shelf.innerHTML='';
+ S.mkt.forEach(g=>{
+  const bought=S.bought[g.id]||0;
+  const full=(g.id==='book'&&S.roleLv>=SWORDS.length)||bought>=g.stock;
+  const d=document.createElement('div');d.className='mcard'+(full?' off':'');
+  d.innerHTML=`<div class="mc-top"><span class="mc-e">${g.e}</span><span class="mc-n">${g.n}</span><span class="mc-p">💰${g.price}</span></div><div class="mc-d">${g.d}</div>`+(full?`<div class="mc-d" style="color:#ff9a8a">${(g.id==='book'&&S.roleLv>=SWORDS.length)?'铁匠已满级':'今日售罄'}</div>`:'');
+  d.onclick=()=>{if(full){toast('这件今天买不了');return}
+   if(S.gold<g.price){toast('钱不够——先卖点剑');return}
+   S.gold-=g.price;S.bought[g.id]=bought+1;applyGood(g);renderShopGold();renderMerchant()};
+  shelf.appendChild(d)});
+ const sel=$('m-sell');sel.innerHTML='';
+ const avail=S.pack.filter(p=>!p.sold);
+ if(!avail.length)sel.innerHTML='<div class="cm-none">今天没铸出剑——明天锻了再来卖</div>';
+ else avail.forEach((p,i)=>{
   const d=document.createElement('div');d.className='inv-cell';d.style.gridColumn='span '+wOf(p.name);
-  d.innerHTML='<span class="ic-e">'+p.emoji+'</span><span class="ic-info"><span>'+p.name+'</span><span class="ic-v">💰'+p.value+' ★'+p.star+'</span></span>';
-  d.onclick=()=>{const w=wOf(p.name),cur=S.counter.reduce((a,x)=>a+wOf(x.name),0);
-   if(cur+w>16){toast('柜台摆不下了('+cur+'+'+w+'格 > 16)——先卖掉几把');return}
-   S.counter.push(p);renderCounter();renderInv()};
-  d.draggable=true;d.title='拖到上方柜台或点击上架';
-  d.ondragstart=e=>{e.dataTransfer.setData('text/plain','inv:'+S.pack.indexOf(p));e.dataTransfer.effectAllowed='move'};
-  g.appendChild(d)});
- if(sec)sec.textContent='格 '+used+'/48';
-}
-function say(t,keep){const b=$('ps-bubble');b.textContent=t;b.classList.add('on');
- if(!keep)setTimeout(()=>b.classList.remove('on'),2600)}
-function emote(t){const e=$('pc-emote');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1800)}
-function nextCustomer(){
- if(S.mode!=='shop')return;
- if(CUST){$('shop-hint').textContent='这位客人还没走呢——点柜台上的剑卖给他';return}
- const t=CUST_TYPES[Math.floor(Math.random()*CUST_TYPES.length)];
- const tierMax=Math.min(3,S.day);
- const want=Math.random()<.22?null:SWORDS[Math.floor(Math.random()*(tierMax+1))];
- const mult=+(0.9+Math.random()*0.55).toFixed(2);
- CUST={t,want,mult,fails:0};
- $('pc-face').textContent=t.e;$('pc-name').textContent=t.n;
- $('ps-cust').style.left='110%';
- setTimeout(()=>{$('ps-cust').style.left='50%'},80);
- setTimeout(()=>{
-  if(!CUST)return;
-  say(CUST.want?('想买一把「'+CUST.want.name+'」,出得起价'):'想要一把 ★2 以上的剑,啥都行');
-  $('shop-hint').textContent=CUST.want?('他在等「'+CUST.want.name+'」——点柜台上那把卖他'):'把 ★2 以上的剑摆上柜台卖他';
- },2000);
-}
-function offer(i){
- const p=S.counter[i];if(!p)return;
- if(p.sold){S.counter.splice(i,1);renderCounter();toast('这把已经卖掉了');return}
- if(!CUST){$('shop-hint').textContent='柜台前没人——点「🛎️ 下一位」先招个客人';return}
- const ok=CUST.want?(p.name===CUST.want.name):(p.star>=2);
- if(ok){
-  const price=Math.round(p.value*CUST.mult);
-  coinSound();S.gold+=price;S.soldCnt++;p.sold=true;S.counter.splice(i,1);
-  say(CUST.t.hi+' 💰+'+price,1);emote(CUST.mult>=1.2?'🤩':'😄');
-  toast('💰 卖出 '+p.name+'(★'+p.star+') +'+price+' (×'+CUST.mult+')');
-  renderCounter();renderInv();renderShopGold();
-  setTimeout(()=>{$('ps-cust').style.left='-20%';
-   setTimeout(()=>{CUST=null;$('ps-bubble').classList.remove('on');
-    $('shop-hint').textContent=S.pack.some(x=>!x.sold)?'点「🛎️ 下一位」继续招客':'存货清空!点「🌙 打烊」收工'},1400)},900);
- }else{
-  CUST.fails++;emote('😠');say(CUST.t.no);
-  if(CUST.fails>=2){say(CUST.t.no+'…算了,告辞!');
-   setTimeout(()=>{$('ps-cust').style.left='110%';
-    setTimeout(()=>{CUST=null;$('ps-bubble').classList.remove('on');
-     $('shop-hint').textContent='点「🛎️ 下一位」招下一位'},1400)},900)}
- }
+  d.innerHTML=`<span class="ic-e">${p.emoji}</span><span class="ic-info"><span>${p.name} ★${p.star}</span><span class="ic-v">💰${Math.round(p.value*S.eventMult)}</span></span>`;
+  d.title='点击卖给商人';d.onclick=()=>mSell(i);
+  sel.appendChild(d)});
+ $('m-belt').textContent=ownTags();
+ const mb=$('mkt-banner');
+ if(S.eventTxt){mb.textContent=S.eventTxt;mb.classList.add('on')}else{mb.textContent='';mb.classList.remove('on')}
+ $('m-shelf-cap').textContent=S.mkt.length+' 种';
+ $('m-sell-cap').textContent=avail.length?avail.length+' 把待售':'空';
+ $('shop-hint').textContent='点货架买 · 点剑卖 · 「🌙 离开·安睡」进明天';
 }
 function closeShop(){
  S.mode='forge';$('shop').classList.remove('on');
  const rentDay=(S.day%7===0); // 大爷22:55令:每7天交房租,交租日打烊时收
  S.day++;S.forgeEnded=false;S.phase='idle';
  S.pack=S.pack.filter(p=>!p.sold);
- while(S.chest.length<3)S.chest.push({name:'匕首',emoji:'🗡️'}); // 新一天补足 3 坯(大爷21:51令:3剑胚=3剑/晚)
+ while(S.chest.length<3)S.chest.push({name:'匕首',emoji:'🗡️',lv:1}); // 新一天补足 3 坯(大爷21:51令:3剑胚=3剑/晚)
+ if(S.perm.relic){const inc=S.perm.relic*10;S.gold+=inc;toast('💎 锈怀表走时 +'+inc+'💰',2000)} // 遗物:每日被动收益
  S.dayLog=[];
  hud();updateSword();
  if(rentDay){
@@ -1284,8 +1269,7 @@ function closeShop(){
  }
  $('quiz-hint').textContent=`第 ${S.day} 天 · 新剑坯×${S.chest.length}!点「🔨 开始铸造」开锻`;
 }
-$('btn-bell').onclick=nextCustomer;
-$('btn-close').onclick=()=>{if(S.mode!=='shop')return;nightFade(closeShop,'打烊',`🌙 第 ${S.day} 天结束 · 明天继续`)};
+$('btn-close').onclick=()=>{if(S.mode!=='shop')return;nightFade(closeShop,'安睡',`🌙 第 ${S.day} 天结束 · 明天继续`)};
 
 /* ================= 成功/结束 ================= */
 function growSword(){
@@ -1321,6 +1305,7 @@ function restart(){
  S.tier=0;S.value=0;S.potential=0;S.charge=0;S.gold=0;S.forged=0;S.frenzies=0;S.qCount=0;
  S.totHits=0;S.totStrikes=0;S.hits=0;S.strikes=0;S.dmgLv=0;
  S.roleLv=1;S.dayLog=[];S.day=1;S.mode='forge';S.pack=[];S.counter=[];S.forgeEnded=false;S.soldCnt=0;$('shop').classList.remove('on');
+ S.perm={armor:0,wand:0,relic:0};S.dragon=0;S.ironNext=0;S.eventMult=1;S.eventTxt='';S.mkt=[];S.bought={};
  S.chest=[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}];S.cur=null;renderChest();
  S.frenzyActive=false;S.pendingQuench=false;app.classList.remove('frenzy');
  clearInterval(S.frenzyTimer);
@@ -1378,7 +1363,7 @@ $('lanes').addEventListener('pointerdown',e=>{
 });
 
 /* 测试钩子 */
-window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,afterQuestionDone,swordBreak,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,genQuestion,playQuestion,quenchPhase,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()}};
+window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,afterQuestionDone,swordBreak,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,genQuestion,playQuestion,quenchPhase,swordCap,openMerchant,renderMerchant,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()}};
 
 /* ================= 启动 ================= */
 buildLanes();
@@ -1387,16 +1372,16 @@ loadManifest();
 (function(){
  const hudBox=$('hud');
  const mk=(id,txt,cls)=>{const b=document.createElement('button');b.className='btn '+(cls||'');b.id=id;b.textContent=txt;hudBox.appendChild(b);return b};
- mk('btn-cal','📅 日历');mk('btn-skill','🌳 技能树');mk('btn-endforge','🏁 结束铸造');mk('btn-day2','🌅 第二天','gold');
+ mk('btn-cal','📅 日历');mk('btn-skill','🌳 技能树');mk('btn-endforge','🏁 结束铸造');mk('btn-day2','🧙 第二天·商人','gold');
  $('btn-cal').onclick=openCal;$('cal-close').onclick=()=>$('cal-modal').classList.remove('on');
  $('btn-skill').onclick=()=>showOverlay('blue','🌳','技能树','工匠的成长之路——技能树系统开发中,敬请期待。',[{label:'继续干活',fn:hideOverlay}]);
  $('btn-endforge').onclick=endForgeDay;
- $('btn-day2').onclick=()=>{if(S.mode!=='forge')return;S.phase='idle';stashSword(true);nightFade(openShop,'第二天',`☀️ 第 ${S.day+1} 天 · 售卖日`)};
+ $('btn-day2').onclick=()=>{if(S.mode!=='forge')return;S.phase='idle';stashSword(true);nightFade(openMerchant,'流浪商人',`🌆 第 ${S.day} 天傍晚 · 「独眼」格罗兹到访`)};
  const _hudOrig=hud;
  hud=function(){_hudOrig();
-  if(S.cur){$('tier-tag').textContent=`剑Lv.${S.cur.lv}/${CFG.SWORD_CAP_LV} · 第${S.day}天`;
+  if(S.cur){$('tier-tag').textContent=`剑Lv.${S.cur.lv}/${swordCap()} · 第${S.day}天`;
    $('sword-title').textContent=SWORDS[curSpan()-3].name;
-   $('value-fill').style.width=(S.cur.qDone/(CFG.SWORD_CAP_LV*2)*100)+'%';}
+   $('value-fill').style.width=(S.cur.qDone/(swordCap()*2)*100)+'%';}
   else{$('tier-tag').textContent=`第${S.day}天 · 铁砧空`;$('value-fill').style.width='0%'}
   renderChest();
   $('mp-label').textContent=`👷 铁匠 Lv.${S.roleLv}`;

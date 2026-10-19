@@ -1554,7 +1554,7 @@ function renderMerchant(){
 /* ================= 协会任务板(大爷00:35令) ================= */
 const GUILDS=[
  {id:'sword',e:'\u2694\uFE0F',n:'\u5251\u58EB\u534F\u4F1A',cat:'sword'},
- {id:'thief',e:'\uD83C\uDFF9',n:'\u76D7\u8D3C\u534F\u4F1A',cat:'bow'},
+ {id:'archer',e:'\uD83C\uDFF9',n:'\u5F13\u7BAD\u624B\u534F\u4F1A',cat:'bow'},
  {id:'mage',e:'\uD83D\uDD0E',n:'\u9B54\u6CD5\u5E08\u534F\u4F1A',cat:'wand'},
  {id:'dwarf',e:'\uD83E\uDDD4',n:'\u77EE\u4EBA\u534F\u4F1A',cat:'armor'}];
 function genQuest(g){
@@ -1671,6 +1671,8 @@ function loadGame(){
  let d=null;try{d=JSON.parse(localStorage.getItem('ft_save'))}catch(e){}
  if(!d||d.v!==1||!d.S){toast('\u26A0\uFE0F \u5B58\u6863\u65E0\u6548',1600);return false}
  Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,d.S);if(!S.char)S.char='smith';
+  if(S.qActive&&S.qActive.thief){S.qActive.archer=S.qActive.thief;delete S.qActive.thief}
+  if(S.qBoard&&S.qBoard.thief){S.qBoard.archer=S.qBoard.thief;delete S.qBoard.thief}
  if(['playing','input','quench','busy'].includes(S.phase)){S.phase='idle';S.q=[];S.pos=0;S.revealed=false;S.pendingQuench=false}
  S.mode='forge';$('shop').classList.remove('on');
  S.frenzyActive=false;S.frenzyTimer=null;app.classList.remove('frenzy');

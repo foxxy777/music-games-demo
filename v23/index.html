@@ -376,6 +376,15 @@ body{overflow:hidden}
 #ov-body{color:#d8c9ae;font-size:15px;line-height:1.9;max-width:560px}
 #ov-body b{color:#ffd54f}
 #ov-sword{font-size:60px}
+.char-row{display:flex;gap:14px;justify-content:center;margin:12px 0 4px;flex-wrap:wrap}
+.char-card{width:196px;padding:16px 12px 14px;background:#241c10;border:1px solid #6b5a34;border-radius:12px;text-align:center;cursor:pointer;transition:.15s;position:relative}
+.char-card:hover{border-color:#e8c56a;transform:translateY(-3px)}
+.char-card.locked{filter:grayscale(.85);opacity:.55;cursor:not-allowed}
+.char-card.locked:hover{transform:none;border-color:#6b5a34}
+.char-emoji{font-size:46px;line-height:1}
+.char-name{font-weight:800;margin:8px 0 5px;color:#f0dfae}
+.char-desc{font-size:12.5px;color:#b9a77a;min-height:36px;line-height:1.45}
+.char-lock{position:absolute;top:8px;right:10px;font-size:18px}
 #ov-btns{display:flex;gap:14px;margin-top:4px}
 #toast{position:absolute;top:248px;left:50%;transform:translateX(-50%);background:#2a1c10ee;border:1px solid #ffd54f66;color:#ffe9b8;padding:8px 24px;border-radius:9px;font-size:14px;z-index:120;display:none}
 #toast.on{display:block}
@@ -1622,7 +1631,7 @@ function saveGame(auto){
 function loadGame(){
  let d=null;try{d=JSON.parse(localStorage.getItem('ft_save'))}catch(e){}
  if(!d||d.v!==1||!d.S){toast('\u26A0\uFE0F \u5B58\u6863\u65E0\u6548',1600);return false}
- Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,d.S);
+ Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,d.S);if(!S.char)S.char='smith';
  if(['playing','input','quench','busy'].includes(S.phase)){S.phase='idle';S.q=[];S.pos=0;S.revealed=false;S.pendingQuench=false}
  S.mode='forge';$('shop').classList.remove('on');
  S.frenzyActive=false;S.frenzyTimer=null;app.classList.remove('frenzy');
@@ -1630,11 +1639,22 @@ function loadGame(){
  toast('\uD83D\uDCC2 \u5DF2\u8BFB\u53D6\u5B58\u6863',1800);refreshMenuState();return true;
 }
 function refreshMenuState(){const b=document.getElementById('btn-menu-continue');if(b)b.disabled=!hasSave()}
+const CHARS=[
+{id:'smith',name:'女铁匠',emoji:'⚒️',desc:'主动锻造型·亲自抡锤听音锻剑,从三块剑坯起家还清负债'},
+{id:'merchant',name:'商人',emoji:'🧳',lock:true},
+{id:'sister',name:'妹妹',emoji:'🌙',lock:true}];
+function showCharSelect(){
+ showOverlay('blue','🧑‍🏭',LANG==='en'?'Choose Your Hero':'选择你的角色','',[{label:LANG==='en'?'Back':'返回',fn:hideOverlay}]);
+ $('ov-body').innerHTML='<div class="char-row">'+CHARS.map((c,i)=>'<div class="char-card'+(c.lock?' locked':'')+'" data-i="'+i+'">'+(c.lock?'<div class="char-lock">🔒</div>':'')+'<div class="char-emoji">'+c.emoji+'</div><div class="char-name">'+c.name+'</div><div class="char-desc">'+(c.lock?'？？？':c.desc)+'</div></div>').join('')+'</div>';
+ [...$('ov-body').querySelectorAll('.char-card')].forEach(el=>{el.onclick=()=>{const c=CHARS[+el.dataset.i];
+  if(c.lock){toast('🔒 '+c.name+' 尚未解锁',1600);return}
+  S.char=c.id;hideOverlay();restart();closeMenu();refreshMenuState();toast('⚔️ 已选择:'+c.name+' '+c.emoji,1800)}});
+}
 document.getElementById('btn-menu-start').onclick=()=>{
  if(hasSave()){showOverlay('red','\uD83C\uDFAE',(LANG==='en'?'Start a new run? Your current save will be overwritten.':'\u5F00\u65B0\u6863\u4F1A\u8986\u76D6\u73B0\u6709\u5B58\u6863,\u786E\u5B9A?'),'',[
-  {label:(LANG==='en'?'Start New':'\u5F00\u65B0\u6863'),cls:'gold',fn:()=>{hideOverlay();try{localStorage.removeItem('ft_save')}catch(e){}restart();closeMenu();refreshMenuState()}},
+  {label:(LANG==='en'?'Start New':'\u5F00\u65B0\u6863'),cls:'gold',fn:()=>{hideOverlay();try{localStorage.removeItem('ft_save')}catch(e){}showCharSelect();refreshMenuState()}},
   {label:(LANG==='en'?'Cancel':'\u53D6\u6D88'),fn:hideOverlay}]);return}
- restart();closeMenu();refreshMenuState()};
+ showCharSelect();refreshMenuState()};
 document.getElementById('btn-menu-continue').onclick=()=>{
  if(!hasSave()){toast((LANG==='en'?'No save yet':'\u6682\u65E0\u5B58\u6863'),1600);return}
  if(loadGame())closeMenu()};

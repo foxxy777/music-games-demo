@@ -41,6 +41,21 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .q-done{font-size:12px;color:#9a9}
 #q-strip{display:none;gap:6px;padding:2px 2px 4px;flex-wrap:wrap}
 #q-strip .qc{font-size:10px;color:#ffe9c8;background:#3a2a16;border:1px solid #5a4028;border-radius:8px;padding:2px 8px;cursor:pointer}
+#menu-modal{position:absolute;inset:0;z-index:300;background:radial-gradient(900px 700px at 50% 35%,#2a1c10 0%,#120b06 60%,#050302 100%);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+#menu-modal.on{display:flex}
+#menu-title{font-size:36px;font-weight:800;color:#ffd54f;text-shadow:0 3px 16px #000,0 0 40px #a06a2e55;letter-spacing:2px}
+#menu-sub{font-size:14px;color:#c9a06a;margin-bottom:16px}
+.mbtn{font-size:18px;padding:12px 46px;background:linear-gradient(180deg,#8a5724,#6b3f16);border:1px solid #a06a2e;border-radius:10px;color:#ffe9c8;cursor:pointer;min-width:280px;text-align:center}
+.mbtn:hover{filter:brightness(1.15);box-shadow:0 0 18px #a06a2e66}
+#opt-modal{position:absolute;inset:0;z-index:310;background:#000000ba;display:none;align-items:center;justify-content:center}
+#opt-modal.on{display:flex}
+#opt-card{background:#241a10;border:1px solid #5a4028;border-radius:12px;padding:16px 20px;width:min(92vw,480px)}
+#opt-card .qh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.opt-row{display:flex;gap:8px;align-items:center;margin:12px 0;flex-wrap:wrap}
+.opt-l{font-size:13px;color:#c9a06a;min-width:70px}
+.opt-b{padding:6px 14px;background:#1c140c;border:1px solid #4a3320;border-radius:8px;color:#e8d9c3;cursor:pointer;font-size:12px}
+.opt-b.on{border-color:#ffd54f;color:#ffd54f;background:#3a2a16}
+
 
 #upg-card{width:min(620px,88vw);max-height:88vh;overflow-y:auto;background:linear-gradient(165deg,#2b2015,#191210 70%);border:2px solid #c9a06a90;border-radius:18px;padding:14px 18px;box-shadow:0 18px 60px #000c}
 #upg-card h3{color:#ffd54f;margin:2px 0 10px;font-size:17px}
@@ -493,7 +508,18 @@ body{overflow:hidden}
     <div id="cal-legend">💰=交租日 · 金框=今天 · 灰=已过</div>
     <button id="cal-close" class="btn">关上</button>
   </div></div>
-  <div id="q-modal"><div id="q-card">
+  <div id="menu-modal">
+ <div id="menu-title"></div>
+ <div id="menu-sub"></div>
+ <button class="mbtn" id="btn-menu-start"></button>
+ <button class="mbtn" id="btn-menu-mod"></button>
+ <button class="mbtn" id="btn-menu-opt"></button>
+</div>
+<div id="opt-modal"><div id="opt-card">
+ <div class="qh"><b id="opt-title"></b><button id="opt-close" style="background:none;border:1px solid #5a4028;border-radius:6px;color:#c9a06a;cursor:pointer;padding:2px 8px">\u2715</button></div>
+ <div id="opt-rows"></div>
+</div></div>
+<div id="q-modal"><div id="q-card">
 <div class="qh"><b>📋 协会任务板</b><button id="q-close" style="background:none;border:1px solid #5a4028;border-radius:6px;color:#c9a06a;cursor:pointer;padding:2px 8px">✕</button></div>
 <div id="q-sub">四大协会每天发单 · 按时交付得金币 · 超时作废</div>
 <div id="q-list"></div>
@@ -1507,6 +1533,50 @@ function renderQuest(){
  }).join('');
  list.querySelectorAll('.q-btn').forEach(b=>b.onclick=()=>qAccept(b.getAttribute('data-g')));
 }
+/* ================= 开始菜单+选项(大爷00:43令) ================= */
+const I18N={
+ zh:{cal:'\uD83D\uDCC5 \u65E5\u5386',upg:'\uD83C\uDFD7\uFE0F \u5347\u7EA7\u94FA\u5B50',skill:'\uD83C\uDF33 \u6280\u80FD\u6811',endf:'\uD83C\uDF19 \u7ED3\u675F\u94F8\u9020',day2:'\uD83D\uDED2 \u7B2C\u4E8C\u5929\u00B7\u5546\u4EBA',quest:'\uD83D\uDCCB \u4EFB\u52A1\u677F',opt:'\u2699\uFE0F \u9009\u9879',mstart:'\uD83D\uDD28 \u5F00\u59CB\u94F8\u9020',mmod:'\uD83E\uDE9B Mod \u5DE5\u574A',mopt:'\u2699\uFE0F \u9009\u9879',mtitle:'\u8D1F\u503A\u94C1\u5320 \u00B7 \u6253\u94C1\u542C\u97F3',msub:'\u542C\u97F3\u9AD8 \u00B7 \u953B\u795E\u5251 \u00B7 \u8FD8\u6E05\u623F\u79DF',res:'\u5206\u8FA8\u7387',lang:'\u8BED\u8A00',optt:'\u9009\u9879'},
+ en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'\uD83C\uDF19 End Day',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83D\uDD28 Start Forging',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mtitle:'Debt Smith \u00B7 Forge by Ear',msub:'Hear the pitch \u00B7 Forge the blade \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options'}};
+let LANG='zh';try{LANG=localStorage.getItem('ft_lang')||'zh'}catch(e){}
+let CUR_RES=[1280,720];
+function t(k){return (I18N[LANG]&&I18N[LANG][k])||I18N.zh[k]||k}
+function setLang(l){LANG=l;try{localStorage.setItem('ft_lang',l)}catch(e){}applyLang()}
+function setRes(w,h2){CUR_RES=[w,h2];app.style.width=w+'px';app.style.height=h2+'px';try{localStorage.setItem('ft_res',w+'x'+h2)}catch(e){}fit();setTimeout(updateSword,80);renderOpts()}
+function applyLang(){
+ const M=[['cal','btn-cal'],['upg','btn-upg'],['skill','btn-skill'],['endf','btn-endforge'],['day2','btn-day2'],['quest','btn-quest'],['opt','btn-opt']];
+ M.forEach(p=>{const el=document.getElementById(p[1]);if(el)el.textContent=t(p[0])});
+ const mt=document.getElementById('menu-title');if(mt)mt.textContent=t('mtitle');
+ const ms=document.getElementById('menu-sub');if(ms)ms.textContent=t('msub');
+ const b1=document.getElementById('btn-menu-start');if(b1)b1.textContent=t('mstart');
+ const b2=document.getElementById('btn-menu-mod');if(b2)b2.textContent=t('mmod');
+ const b3=document.getElementById('btn-menu-opt');if(b3)b3.textContent=t('mopt');
+ const ot=document.getElementById('opt-title');if(ot)ot.textContent=t('optt');
+ renderOpts()}
+function renderOpts(){
+ const box=document.getElementById('opt-rows');if(!box)return;
+ const reses=[[1280,720],[1600,900],[1920,1080],[2560,1440]];
+ box.innerHTML='<div class="opt-row"><span class="opt-l">'+t('res')+'</span>'+
+  reses.map(r=>'<button class="opt-b'+(CUR_RES[0]===r[0]?' on':'')+'" data-w="'+r[0]+'" data-h="'+r[1]+'">'+r[0]+'\u00D7'+r[1]+'</button>').join('')+
+  '</div><div class="opt-row"><span class="opt-l">'+t('lang')+'</span>'+
+  '<button class="opt-b'+(LANG==='zh'?' on':'')+'" data-l="zh">\u4E2D\u6587</button>'+
+  '<button class="opt-b'+(LANG==='en'?' on':'')+'" data-l="en">English</button></div>';
+ box.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{setRes(+b.getAttribute('data-w'),+b.getAttribute('data-h'));renderOpts()});
+ box.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{setLang(b.getAttribute('data-l'));renderOpts()});
+}
+function openMenu(){document.getElementById('menu-modal').classList.add('on')}
+function closeMenu(){document.getElementById('menu-modal').classList.remove('on')}
+function openOpts(){renderOpts();document.getElementById('opt-modal').classList.add('on')}
+function closeOpts(){document.getElementById('opt-modal').classList.remove('on')}
+function applySettings(){
+ let r=[];try{r=(localStorage.getItem('ft_res')||'').split('x')}catch(e){}
+ if(r.length===2&&+r[0]&&+r[1])setRes(+r[0],+r[1]);
+ applyLang()}
+document.getElementById('btn-menu-start').onclick=closeMenu;
+document.getElementById('btn-menu-mod').onclick=()=>{showOverlay('blue','\uD83E\uDE9B',(LANG==='en'?'Mod Workshop':'Mod \u5DE5\u574A'),
+ (LANG==='en'?'Mod Workshop is under development \u2014 custom instruments, songs and scenarios will open in future versions.':'\u521B\u610F\u5DE5\u574A\u5F00\u53D1\u4E2D\u2014\u2014\u73A9\u5BB6\u81EA\u5236\u4E50\u5668 / \u66F2\u76EE / \u5267\u672C\u5C06\u5728\u672A\u6765\u7248\u672C\u5F00\u653E\u3002'),
+ [{label:(LANG==='en'?'Back':'\u8FD4\u56DE'),fn:hideOverlay}])};
+document.getElementById('btn-menu-opt').onclick=openOpts;
+document.getElementById('opt-close').onclick=closeOpts;
 function closeShop(){
  S.mode='forge';$('shop').classList.remove('on');
  const rentDay=(S.day%7===0); // 大爷22:55令:每7天交房租,交租日打烊时收
@@ -1634,6 +1704,9 @@ mk('btn-quest','📋 任务板');
  $('btn-cal').onclick=openCal;$('cal-close').onclick=()=>$('cal-modal').classList.remove('on');
  $('btn-upg').onclick=openUpg;$('upg-close').onclick=()=>$('upg-modal').classList.remove('on');
  $('btn-quest').onclick=openQuest;$('q-close').onclick=()=>$('q-modal').classList.remove('on');
+ mk('btn-opt',t('opt'));
+ $('btn-opt').onclick=openOpts;
+ applySettings();openMenu();
  $('q-strip').onclick=openQuest;renderQStrip();
 $('ut-upg').onclick=()=>upgTab('upg');$('ut-skill').onclick=()=>upgTab('skill');
  $('btn-skill').onclick=()=>showOverlay('blue','🌳','技能树','工匠的成长之路——技能树系统开发中,敬请期待。',[{label:'继续干活',fn:hideOverlay}]);

@@ -579,6 +579,7 @@ const CFG={
  FRENZY_SECS:8,       // 超神窗口秒数
  FRENZY_TAP:1,        // 超神摇钱:每击基价💰(装饰品以后挂S.laneDeco提价;大爷20:55令)
  POT_PER_HIT:1,       // 敲对积累魔能/击
+ Q_MISS_MAX:3,        // 答题错误容忍(大爷21:55令):每错一次本题魔能上限-1,三错作废
  CONTOUR_BONUS:1,     // 轮廓全对(整体平移)保底魔能(技能可加)
  TIERS:{great:{name:'大成功',mult:4,cls:'great'},good:{name:'成功',mult:2,cls:'good'},dmg:{name:'损坏',mult:0,cls:'dmg'}},
  PROB:{great:20,good:70,dmg:10},  // 三档基础(大爷21:51令)
@@ -625,7 +626,7 @@ const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0
  dmgLv:0,
  roleLv:1,dayLog:[],day:1,mode:'forge',cur:null,anvils:[],up:{anvil:0,sword:0,armor:0,bow:0,wand:0,shield:0,artSlot:0},pack:[],counter:[],forgeEnded:false,soldCnt:0,
  chest:[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}],
- frenzyActive:false,frenzyEnd:0,frenzyTimer:null,pendingQuench:false,laneDeco:null,frenzyGold:0,
+ frenzyActive:false,frenzyEnd:0,frenzyTimer:null,pendingQuench:false,laneDeco:null,frenzyGold:0,qMiss:0,
  perm:{armor:0,wand:0,relic:0},dragon:0,ironNext:0,eventMult:1,eventTxt:'',mkt:[],bought:{},refreshCnt:0,
  xp:0,sp:0,sk:{sell:0,buy:0,xp:0,quench:0},art:[],
  hits:0,strikes:0,            // 本题:敲对数/已敲数
@@ -1173,7 +1174,7 @@ function revealEye(){ // 👁️先知之眼(大爷00:34令):听题时第一个�
  const t=document.createElement('div');t.className='eye-hint';t.textContent='👁️① '+NOTES[S.q[0]].n;
  lane.appendChild(t);}
 function playQuestion(){
- S.phase='playing';S.pos=0;S.revealed=false;S.marks=[];S.typed=[];hud();renderSlots();
+ S.phase='playing';S.pos=0;S.revealed=false;S.marks=[];S.typed=[];S.qMiss=0;hud();renderSlots(); // qMiss 每题重置(大爷21:55令)
  document.querySelectorAll('.eye-hint').forEach(e=>e.remove());
  S.q.forEach((ni,i)=>catPlay(NOTES[ni].m,.16+i*.46));
  const total=.16+S.q.length*.46+.3;
@@ -1206,6 +1207,37 @@ function hitLane(i){
   return;
  }
  S.strikes++;
+ // 即时判定(大爷21:55令):点错立即标错位、从头重答;每错一次本题魔能上限-1,三错作废
+ if(i!==S.q[S.pos]){
+  S.qMiss=(S.qMiss||0)+1;
+  S.typed[S.pos]=i;S.marks[S.pos]='miss'; // 错位标记:三个格子下面那行(我的输入)对应格标红
+  renderSlots();
+  S.anvils.forEach(sw=>{sw.errN+=1}); // 错音惩罚保留:剑损坏率(大爷拍板双向)
+  clank(false);
+  if(S.qMiss>=CFG.Q_MISS_MAX){ // 三错作废:本题白答,直接下一题
+   S.charge=0;
+   $('quench-btn').style.display='none';
+   S.phase='grading';hud();
+   $('quiz-hint').textContent='✘✘✘ 三次全错,本题作废!下一题…';
+   $('quiz-hint').classList.add('warn');setTimeout(()=>$('quiz-hint').classList.remove('warn'),1200);
+   setTimeout(()=>{
+    if(S.phase!=='grading')return;
+    if(S.art.includes('dice'))diceFail(); // 🎲命运骰:作废=题答错,当场爆剑(大爷00:48令新制等价)
+    else{snark('wrong');afterBatch()}
+   },900);
+  }else{
+   const left=CFG.Q_MISS_MAX-S.qMiss;
+   $('quiz-hint').textContent=`✘ 第${S.pos+1}音敲错了!从头重敲 · 本题魔能上限-1🔮 · 剩${left}次机会`;
+   $('quiz-hint').classList.add('warn');setTimeout(()=>$('quiz-hint').classList.remove('warn'),900);
+   S.phase='retry';hud(); // retry=冷却,锁输入
+   setTimeout(()=>{
+    if(S.phase!=='retry')return;
+    S.phase='input';S.pos=0;S.typed=[];S.marks=[];renderSlots();
+    $('quiz-hint').textContent='从头再来:按顺序敲!';hud();
+   },850);
+  }
+  return;
+ }
  S.typed[S.pos]=i;
  S.marks[S.pos]='pending';
  S.pos++;renderSlots();
@@ -1236,7 +1268,7 @@ function gradeQuestion(){
  S.hits+=okCnt;S.totHits+=okCnt;
  const missN=S.q.length-okCnt;S.anvils.forEach(sw=>{sw.errN+=missN;if(missN===0)sw.fullN++}); // 多砧:错音两边都吃(大爷拍板)
  if(S.art.includes('dice')&&missN===0){const b0=Math.floor((S.gStreak||0)/3);S.gStreak+=okCnt;const b1=Math.floor(S.gStreak/3);if(b1>b0){S.gBonus=b1*10;toast('🎲 命运骰·连击 '+S.gStreak+' 音!大成功 +'+S.gBonus+'%',2200);hud();snark('streak',true)}} // 🎲命运骰(大爷00:48令):每3音大成功+10%当日累计
- S.potential+=okCnt*CFG.POT_PER_HIT;
+ S.potential+=Math.max(0,okCnt*CFG.POT_PER_HIT-(S.qMiss||0)); // 错次扣减(大爷21:55令):每错一次本题魔能-1
  {let xg=okCnt*5;if(okCnt===S.q.length&&okCnt>0)xg=Math.round(xg*1.1);if(xg>0)gainXP(xg)} // 主角经验:敲对+5/音·全对+10%(大爷00:34令)
  S.q.forEach((exp,pos)=>{S.marks[pos]=S.typed[pos]===exp?'hit':'miss'});
  // 超神旧给金机制已删(大爷20:55令):超神不出题,点音阶赚钱见 hitLane;charge 只在正常判卷累积
@@ -1251,7 +1283,7 @@ function gradeQuestion(){
    $('quiz-hint').classList.add('warn');setTimeout(()=>$('quiz-hint').classList.remove('warn'),900);
   }
  },pos*step)});
- if(okCnt===S.q.length)$('quiz-hint').textContent=`✔ ${S.q.length}/${S.q.length} 全对!魔能+${okCnt*CFG.POT_PER_HIT}🔮`;snark('perfect');
+ if(okCnt===S.q.length){const net=Math.max(0,okCnt*CFG.POT_PER_HIT-(S.qMiss||0));$('quiz-hint').textContent=`✔ ${S.q.length}/${S.q.length} 全对!魔能+${net}🔮`+(S.qMiss?`(错${S.qMiss}次 -${S.qMiss})`:'');snark('perfect');}
  const dShift=S.typed[0]-S.q[0];
  const contour=dShift!==0&&S.q.every((exp,i)=>S.typed[i]-exp===dShift);
  if(contour){S.potential+=CFG.CONTOUR_BONUS;hud()}

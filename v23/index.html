@@ -318,7 +318,14 @@ body{overflow:hidden}
 #m-talk{color:#cbb8a0;font-size:12px;line-height:1.6}
 #m-col{flex:1;display:flex;flex-direction:column;gap:10px;min-height:0}
 #m-shelf-wrap,#m-sell-wrap{flex:1;display:flex;flex-direction:column;gap:5px;min-height:0}
-#m-shelf{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-content:start;scrollbar-width:thin}
+#m-shelf{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:2px;scrollbar-width:thin}
+.mrow{display:flex;flex-direction:column;gap:4px}
+.mh{font-size:11px;font-weight:900;letter-spacing:1.5px;color:#e8c98a;padding:3px 4px 5px;border-bottom:1px dashed #6b4a26;display:flex;align-items:center;gap:5px}
+.mh::before{content:'';width:8px;height:8px;border-radius:2px;flex:none}
+.mh-mat::before{background:#e8963c}
+.mh-use::before{background:#4fc3a1}
+.mh-perm::before{background:#ffd54f}
+.mrow-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:6px}
 #m-shelf::-webkit-scrollbar,#m-sell::-webkit-scrollbar{width:8px}
 #m-shelf::-webkit-scrollbar-thumb,#m-sell::-webkit-scrollbar-thumb{background:#6b4a26;border-radius:4px}
 .mcard{border:1.5px solid #5a4020;border-radius:10px;background:linear-gradient(180deg,#3a2812,#241708);padding:8px 10px;display:flex;flex-direction:column;gap:3px;cursor:pointer;transition:border-color .12s,box-shadow .12s}
@@ -1510,28 +1517,28 @@ function nightFade(cb,txt,sub){
  setTimeout(()=>{nf.classList.remove('on')},2050);
 }
 /* ================= 单人商人(23:11大爷令:StS式·柜台招客废弃) ================= */
-const GOODS_FIXED=[
- {id:'blank',e:'🗡️',cat:'sword',base:15,step:15,stock:99,lvG:1,d:'剑坯——档位随铁匠等级长,越高档音域越宽越值钱'},
- {id:'blankA',e:'🛡️',cat:'armor',base:45,step:15,stock:3,lvG:1,d:'盔甲坯(钢琴音色)——档位随铁匠等级长'},
- {id:'blankB',e:'🏹',cat:'bow',base:45,step:15,stock:3,lvG:1,d:'弓箭坯(小提琴音色)——档位随铁匠等级长'},
- {id:'blankW',e:'🪄',cat:'wand',base:65,step:15,stock:3,lvG:1,d:'魔杖坯(人声吟唱)——档位随铁匠等级长'},
- {id:'blankS',e:'🛡️',cat:'shield',base:45,step:15,stock:3,lvG:1,d:'盾牌坯(铜管音色)——档位随铁匠等级长'},
- {id:'armor',e:'🛡️',n:'皮甲·盔甲',price:80,stock:2,d:'永久:每次淬火损坏率 -5%(可叠加)'},
- {id:'wand',e:'🪄',n:'橡木魔杖',price:120,stock:2,d:'永久:大成功概率 +5%(可叠加)'},
- {id:'artslot',e:'🧿',n:'神器位',art:1,d:''}];
+const GOODS_FIXED=[ // kind 分区(大爷23:26令):mat=基础素材 use=一次性 perm=永久家当
+ {id:'blank',e:'🗡️',cat:'sword',kind:'mat',base:15,step:15,stock:99,lvG:1,d:'剑坯——档位随铁匠等级长,越高档音域越宽越值钱'},
+ {id:'blankA',e:'🛡️',cat:'armor',kind:'mat',base:45,step:15,stock:3,lvG:1,d:'盔甲坯(钢琴音色)——档位随铁匠等级长'},
+ {id:'blankB',e:'🏹',cat:'bow',kind:'mat',base:45,step:15,stock:3,lvG:1,d:'弓箭坯(小提琴音色)——档位随铁匠等级长'},
+ {id:'blankW',e:'🪄',cat:'wand',kind:'mat',base:65,step:15,stock:3,lvG:1,d:'魔杖坯(人声吟唱)——档位随铁匠等级长'},
+ {id:'blankS',e:'🛡️',cat:'shield',kind:'mat',base:45,step:15,stock:3,lvG:1,d:'盾牌坯(铜管音色)——档位随铁匠等级长'},
+ {id:'armor',e:'🛡️',kind:'perm',n:'皮甲·盔甲',price:80,stock:2,d:'永久:每次淬火损坏率 -5%(可叠加)'},
+ {id:'wand',e:'🪄',kind:'perm',n:'橡木魔杖',price:120,stock:2,d:'永久:大成功概率 +5%(可叠加)'},
+ {id:'artslot',e:'🧿',kind:'perm',n:'神器位',art:1,d:''}];
 const ARTIFACTS=[
- {id:'eye',e:'👁️',n:'神器·先知之眼',price:250,stock:1,art:1,d:'神器:听题时第一个音自动显示音名(占 1 神器槽)'},
- {id:'fairy',e:'🧚',n:'神器·赠礼妖精',price:300,stock:1,art:1,d:'神器:每天清晨自动送来 3 件低级装备(占 1 神器槽)'},
- {id:'dice',e:'🎲',n:'神器·命运骰',price:350,stock:1,art:1,d:'神器:连击答对每 3 音大成功+10%(当日累计);答错一音当场爆剑终止铸造(占 1 神器槽)'}];
+ {id:'eye',e:'👁️',kind:'perm',n:'神器·先知之眼',price:250,stock:1,art:1,d:'神器:听题时第一个音自动显示音名(占 1 神器槽)'},
+ {id:'fairy',e:'🧚',kind:'perm',n:'神器·赠礼妖精',price:300,stock:1,art:1,d:'神器:每天清晨自动送来 3 件低级装备(占 1 神器槽)'},
+ {id:'dice',e:'🎲',kind:'perm',n:'神器·命运骰',price:350,stock:1,art:1,d:'神器:连击答对每 3 音大成功+10%(当日累计);答错一音当场爆剑终止铸造(占 1 神器槽)'}];
 const curArt=()=>ARTIFACTS.find(a=>!S.art.includes(a.id))||ARTIFACTS[0];
 const blankInfo=g=>{const lv=Math.max(1,Math.min(S.roleLv,SWORDS.length));const W=WEAPONS[g.cat];
  return {lv,name:W.names[lv-1],emoji:(W.icons?W.icons[lv-1]:W.icon),base:Math.round(g.base+g.step*lv)}};
 const GOODS_RAND=[
- {id:'blank2',e:'🔪',n:'剑坯·猎户短剑',price:90,stock:2,d:'补 1 个高档剑坯(Lv.2 起锻·4音)'},
- {id:'book',e:'📖',n:'技能书·锻造心得',price:100,stock:1,d:'铁匠 Lv+1——剑成长上限 +1 级'},
- {id:'dragon',e:'🐉',n:'龙鳞',price:60,stock:2,d:'消耗:剑要爆时自动碎裂护剑一次'},
- {id:'iron',e:'🪨',n:'玄铁锭',price:50,stock:2,d:'消耗:下一把剑损坏率 -10%'},
- {id:'relic',e:'💎',n:'遗物·锈怀表',price:200,stock:1,d:'永久:每天安睡时 +10💰'}];
+ {id:'blank2',e:'🔪',kind:'mat',n:'剑坯·猎户短剑',price:90,stock:2,d:'补 1 个高档剑坯(Lv.2 起锻·4音)'},
+ {id:'book',e:'📖',kind:'perm',n:'技能书·锻造心得',price:100,stock:1,d:'永久:铁匠 Lv+1——剑成长上限 +1 级'},
+ {id:'dragon',e:'🐉',kind:'use',n:'龙鳞',price:60,stock:2,d:'消耗:剑要爆时自动碎裂护剑一次'},
+ {id:'iron',e:'🪨',kind:'use',n:'玄铁锭',price:50,stock:2,d:'消耗:下一把剑损坏率 -10%'},
+ {id:'relic',e:'💎',kind:'perm',n:'遗物·锈怀表',price:200,stock:1,d:'永久:每天安睡时 +10💰'}];
 const M_SAY=['手艺不错,下次还来!','独眼识货,童叟无欺。','这价公道——铁匠朋友。'];
 function rollShelf(keepBought){
  const pool=[...GOODS_RAND],picks=[];
@@ -1583,7 +1590,14 @@ function ownTags(){
 }
 function renderMerchant(){
  const shelf=$('m-shelf');shelf.innerHTML='';
- S.mkt.forEach(g=>{
+ // 分区货架(大爷23:26令):基础素材/一次性/永久 三块,各带标签头
+ [['mat','⚒️ 基础素材 · 铸造坯料'],['use','🧪 一次性 · 消耗道具'],['perm','👕 永久家当 · 衣物神器']].forEach(([k,label])=>{
+  const items=S.mkt.filter(g=>g.kind===k);if(!items.length)return;
+  const row=document.createElement('div');row.className='mrow mrow-'+k;
+  row.innerHTML=`<div class="mh mh-${k}">${label}</div>`;
+  const box=document.createElement('div');box.className='mrow-cards';
+  row.appendChild(box);shelf.appendChild(row);
+  items.forEach(g=>{
   const bought=S.bought[g.id]||0;
   const bi=g.lvG?blankInfo(g):null;
   const cost=Math.max(1,Math.round((g.lvG?bi.base:g.price)*(1-S.sk.buy*.05)));
@@ -1592,12 +1606,13 @@ function renderMerchant(){
   const full=(g.id==='book'&&S.roleLv>=SWORDS.length)||bought>=g.stock||owned||noSlot;
   const nm=g.lvG?`${WLBL[g.cat]}坯·${bi.name} Lv.${bi.lv}`:g.n;
   const dd=g.lvG?`${g.d}(当前 Lv.${bi.lv} · ${SWORDS[bi.lv-1].span}音)`:g.art?`${g.d}<br>神器槽 ${S.art.length}/${artSlots()}`:g.d;
-  const d=document.createElement('div');d.className='mcard'+(full?' off':'');
+  const d=document.createElement('div');d.className='mcard'+(full?' off':'');d.dataset.gid=g.id;
   d.innerHTML=`<div class="mc-top"><span class="mc-e">${g.lvG?bi.emoji:g.e}</span><span class="mc-n">${nm}</span><span class="mc-p">💰${cost}</span></div><div class="mc-d">${dd}</div>`+(full?`<div class="mc-d" style="color:#ff9a8a">${owned?'已供奉':noSlot?'神器槽已满(升级铺子可扩)':(g.id==='book'&&S.roleLv>=SWORDS.length)?'铁匠已满级':'今日售罄'}</div>`:'');
   d.onclick=()=>{if(full){toast('这件今天买不了');return}
    if(S.gold<cost){toast('钱不够——先卖点装备');return}
    S.gold-=cost;S.bought[g.id]=bought+1;applyGood(g);renderShopGold();renderMerchant()};
-  shelf.appendChild(d)});
+  box.appendChild(d)});
+ });
  const sel=$('m-sell');sel.innerHTML='';
  const avail=S.pack.filter(p=>!p.sold);
  if(!avail.length)sel.innerHTML='<div class="cm-none">今天没铸出剑——明天锻了再来卖</div>';

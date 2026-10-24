@@ -413,7 +413,7 @@ body{overflow:hidden}
       <div id="sword-name"><span id="sword-emoji">🗡️</span><span id="sword-title">生锈匕首</span><span id="tier-tag">Tier 1/8</span></div>
       <div id="value-wrap"><div id="value-bar"><div id="value-fill"></div><div id="value-num">0</div></div></div>
     </div>
-    <div id="pot-row">🔮 魔能 <span id="pot-num">0</span></div>
+    <div id="pot-row">💰 价值 <span id="pot-num">0</span></div>
     <div id="gold-row"><span class="coin">🪙</span><span id="gold-num">0</span><button id="btn-dbg" title="debug +99999">🐞</button></div>
     <div id="charge-wrap">
       <div id="charge-label">超神充能</div>
@@ -447,7 +447,7 @@ body{overflow:hidden}
    <div id="left-col">
     <div id="bucket-zone">
       <button id="quench-btn">🔥 淬 火</button>
-      <div id="bucket-cap">🔮 注魔池 · 敲击积累魔能</div>
+      <div id="bucket-cap">💰 价值池 · 敲击积累价值</div>
       <svg id="bucket" viewBox="0 0 200 230">
         <defs><clipPath id="bkc"><path d="M36,42 L32,200 Q100,222 168,200 L164,42 Q100,56 36,42"/></clipPath></defs>
         <path d="M36,42 L32,200 Q100,222 168,200 L164,42" fill="#5c3d20" stroke="#2f1f0e" stroke-width="3"/>
@@ -585,9 +585,9 @@ const CFG={
  FRENZY_NEED:10,      // 连对敲击数 → 超神
  FRENZY_SECS:8,       // 超神窗口秒数
  FRENZY_TAP:1,        // 超神摇钱:每击基价💰(装饰品以后挂S.laneDeco提价;大爷20:55令)
- POT_PER_HIT:1,       // 敲对积累魔能/击
- Q_MISS_MAX:3,        // 答题错误容忍(大爷21:55令):每错一次本题魔能上限-1,三错作废
- CONTOUR_BONUS:1,     // 轮廓全对(整体平移)保底魔能(技能可加)
+ POT_PER_HIT:1,       // 敲对积累价值/击
+ Q_MISS_MAX:3,        // 答题错误容忍(大爷21:55令):每错一次本题价值上限-1,三错作废
+ CONTOUR_BONUS:1,     // 轮廓全对(整体平移)保底价值(技能可加)
  TIERS:{great:{name:'大成功',mult:4,cls:'great'},good:{name:'成功',mult:2,cls:'good'},dmg:{name:'损坏',mult:0,cls:'dmg'}},
  PROB:{great:20,good:70,dmg:10},  // 三档基础(大爷21:51令)
  ERR_PENALTY:5,   // 每敲错一音:损坏+5%
@@ -629,7 +629,7 @@ const wIcon=(cat,lv)=>{const W=WEAPONS[cat||'sword'];return W.icons?W.icons[Math
 const wOf=n=>{for(const k in WEAPONS){const i=WEAPONS[k].names.indexOf(n);if(i>=0)return GRIDW[i]}return 2};
 
 /* ================= 状态 ================= */
-const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0,gStreak:0,gBonus:0,
+const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0,gStreak:0,gBonus:0,charms:{},
  dmgLv:0,
  roleLv:1,dayLog:[],day:1,mode:'forge',cur:null,anvils:[],up:{anvil:0,sword:0,armor:0,bow:0,wand:0,shield:0,artSlot:0},pack:[],counter:[],forgeEnded:false,soldCnt:0,
  chest:[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}],
@@ -1046,7 +1046,8 @@ function flyGold(hx,hy,v){ // 超神摇钱:金币飞字(大爷20:55令)
  setTimeout(()=>{d.style.opacity='0'},420);
  setTimeout(()=>d.remove(),820);
 }
-function frenzyTapVal(i){return CFG.FRENZY_TAP+((S.laneDeco&&S.laneDeco[i])||0)} // 装饰品(以后商人卖)挂这提价
+function charmOf(i){return (S.charms&&S.charms['charm-'+NOTES[i].n.replace('′','')])||0}
+function frenzyTapVal(i){return CFG.FRENZY_TAP+charmOf(i)} // 音阶护符(大爷01:35令):敲中对应唱名(任何八度)超神每击+1💰;答题侧加成见 gradeQuestion
 function bucketQuenchVisual(){
  $('bucket-water').setAttribute('height',0);$('bucket-water').setAttribute('y',204);
  $('bucket-water-glow').setAttribute('opacity',0);
@@ -1215,7 +1216,7 @@ function hitLane(i){
  }
  S.totStrikes++;
  S.strikes++;
- // 即时判定(大爷21:55令):点错立即标错位、从头重答;每错一次本题魔能上限-1,三错作废
+ // 即时判定(大爷21:55令):点错立即标错位、从头重答;每错一次本题价值上限-1,三错作废
  if(i!==S.q[S.pos]){
   if(S.inputGraceUntil&&Date.now()<S.inputGraceUntil){ // 超神余波宽限:惯性错击吞掉,不罚不重开不计数
    $('quiz-hint').textContent='⚡ 稳一稳,超神结束了!听好题再敲';
@@ -1239,7 +1240,7 @@ function hitLane(i){
    },900);
   }else{
    const left=CFG.Q_MISS_MAX-S.qMiss;
-   $('quiz-hint').textContent=`✘ 第${S.pos+1}音敲错了!从头重敲 · 本题魔能上限-1🔮 · 剩${left}次机会`;
+   $('quiz-hint').textContent=`✘ 第${S.pos+1}音敲错了!从头重敲 · 本题价值上限-1💰 · 剩${left}次机会`;
    $('quiz-hint').classList.add('warn');setTimeout(()=>$('quiz-hint').classList.remove('warn'),900);
    S.phase='retry';hud(); // retry=冷却,锁输入
    setTimeout(()=>{
@@ -1280,7 +1281,9 @@ function gradeQuestion(){
  S.hits+=okCnt;S.totHits+=okCnt;
  const missN=S.q.length-okCnt;S.anvils.forEach(sw=>{sw.errN+=missN;if(missN===0)sw.fullN++}); // 多砧:错音两边都吃(大爷拍板)
  if(S.art.includes('dice')&&missN===0){const b0=Math.floor((S.gStreak||0)/3);S.gStreak+=okCnt;const b1=Math.floor(S.gStreak/3);if(b1>b0){S.gBonus=b1*10;toast('🎲 命运骰·连击 '+S.gStreak+' 音!大成功 +'+S.gBonus+'%',2200);hud();snark('streak',true)}} // 🎲命运骰(大爷00:48令):每3音大成功+10%当日累计
- S.potential+=Math.max(0,okCnt*CFG.POT_PER_HIT-(S.qMiss||0)); // 错次扣减(大爷21:55令):每错一次本题魔能-1
+ const charmBonus=S.q.reduce((s,exp,pos)=>s+(S.typed[pos]===exp?charmOf(exp):0),0); // 音阶护符(大爷01:35令):敲中护符音每音额外+1价值
+ const netQ=Math.max(0,okCnt*CFG.POT_PER_HIT+charmBonus-(S.qMiss||0)); // 错次扣减(大爷21:55令):每错一次本题价值-1
+ S.potential+=netQ;
  {let xg=okCnt*5;if(okCnt===S.q.length&&okCnt>0)xg=Math.round(xg*1.1);if(xg>0)gainXP(xg)} // 主角经验:敲对+5/音·全对+10%(大爷00:34令)
  S.q.forEach((exp,pos)=>{S.marks[pos]=S.typed[pos]===exp?'hit':'miss'});
  // 超神旧给金机制已删(大爷20:55令):超神不出题,点音阶赚钱见 hitLane;charge 只在正常判卷累积
@@ -1295,7 +1298,7 @@ function gradeQuestion(){
    $('quiz-hint').classList.add('warn');setTimeout(()=>$('quiz-hint').classList.remove('warn'),900);
   }
  },pos*step)});
- if(okCnt===S.q.length){const net=Math.max(0,okCnt*CFG.POT_PER_HIT-(S.qMiss||0));$('quiz-hint').textContent=`✔ ${S.q.length}/${S.q.length} 全对!魔能+${net}🔮`+(S.qMiss?`(错${S.qMiss}次 -${S.qMiss})`:'');snark('perfect');}
+ if(okCnt===S.q.length){$('quiz-hint').textContent=`✔ ${S.q.length}/${S.q.length} 全对!价值+${netQ}💰`+(charmBonus?`(🎵护符+${charmBonus})`:'')+(S.qMiss?`(错${S.qMiss}次 -${S.qMiss})`:'');snark('perfect');}
  const dShift=S.typed[0]-S.q[0];
  const contour=dShift!==0&&S.q.every((exp,i)=>S.typed[i]-exp===dShift);
  if(contour){S.potential+=CFG.CONTOUR_BONUS;hud()}
@@ -1304,7 +1307,7 @@ function gradeQuestion(){
   if(missN>0||okCnt<S.q.length)snark('wrong');
   if(!S.frenzyActive&&S.charge>=CFG.FRENZY_NEED)startFrenzy();
   endQuestion();
-  if(contour)$('quiz-hint').textContent=`🎵 轮廓全对(整体${dShift>0?'+':''}${dShift}音)!保底+${CFG.CONTOUR_BONUS}🔮 · 点淬火`;
+  if(contour)$('quiz-hint').textContent=`🎵 轮廓全对(整体${dShift>0?'+':''}${dShift}音)!保底+${CFG.CONTOUR_BONUS}💰 · 点兑换`;
  },S.q.length*step+450);
 }
 /* ================= 一题结束 → 淬火 ================= */
@@ -1315,7 +1318,7 @@ function endQuestion(){
  }
  S.phase='ready';
  const qb=$('quench-btn');
- qb.innerHTML=`🔥 淬 火 · 🔮${S.potential}`;
+ qb.innerHTML=`🔥 兑 换 · 💰${S.potential}`;
  qb.style.display='block';
  $('quiz-hint').textContent='敲完了!点水桶上方按钮淬火';
 }
@@ -1331,7 +1334,7 @@ function quenchPhase(){
  });
  if(res.some(x=>x.r==='great'))snark('great',true);else if(res.some(x=>x.r==='dmg'))snark('break',true);else snark('good');
  const qm=$('quench-modal');qm.classList.add('on');
- $('qm-sub').textContent=`共锻 ${rolling.length} 剑 · 本题魔能 🔮${S.potential} × 倍率 · 每剑各 roll`+(S.dragon?` · 🐉×${S.dragon}`:'');
+ $('qm-sub').textContent=`共锻 ${rolling.length} 剑 · 本题价值 💰${S.potential} × 倍率 · 每剑各 roll`+(S.dragon?` · 🐉×${S.dragon}`:'');
  $('qm-result').textContent='';
  const btn=$('qm-btn');btn.style.display='none';btn.onclick=null;
  const strip=$('qm-strip');strip.innerHTML='';
@@ -1348,7 +1351,7 @@ function quenchPhase(){
    const nm=`${o.sw.name} Lv.${o.sw.lv}`;
    if(o.saved)html+=`<div style="color:#bfe3ff">🐉 ${nm}:龙鳞碎裂,剑保住了!(维持 · 收益 🪙0)</div>`;
    else if(o.r==='dmg')html+=`<div style="color:#ff9a8a">💥 ${nm}:损坏!这把坯子报废…</div>`;
-   else html+=`<div style="color:${o.r==='great'?'#ffd54f':'#a8f0a0'}">${o.r==='great'?'🌈':'✅'} ${nm}:🔮${S.potential} × ${CFG.TIERS[o.r].mult} = 🪙${o.payout}${o.r==='great'?' 大成功!':''}</div>`;
+   else html+=`<div style="color:${o.r==='great'?'#ffd54f':'#a8f0a0'}">${o.r==='great'?'🌈':'✅'} ${nm}:💰${S.potential} × ${CFG.TIERS[o.r].mult} = 🪙${o.payout}${o.r==='great'?' 大成功!':''}</div>`;
   });
   playInst(res.some(o=>o.r==='great')?84:res.some(o=>o.r==='dmg')?55:72,0,1.2);
   if(res.some(o=>o.r==='great'))setTimeout(()=>[0,4,7,12].forEach((s,i)=>playInst(72+s,i*.09)),200);
@@ -1525,6 +1528,14 @@ const GOODS_FIXED=[ // kind 分区(大爷23:26令):mat=基础素材 use=一次�
  {id:'blankS',e:'🛡️',cat:'shield',kind:'mat',base:45,step:15,stock:3,lvG:1,d:'盾牌坯(铜管音色)——档位随铁匠等级长'},
  {id:'armor',e:'🛡️',kind:'perm',n:'皮甲·盔甲',price:80,stock:2,d:'永久:每次淬火损坏率 -5%(可叠加)'},
  {id:'wand',e:'🪄',kind:'perm',n:'橡木魔杖',price:120,stock:2,d:'永久:大成功概率 +5%(可叠加)'},
+ // 音阶护符(大爷01:35令):永久品,敲中对应唱名(任何八度)每次敲击+1——答题+1价值·超神+1💰,价格递增
+ {id:'charm-do',e:'🎵',kind:'perm',n:'音阶护符·do',price:125,stock:1,d:'永久:敲中 do 音(任意八度)每次+1 · 答题+1价值/超神+1💰'},
+ {id:'charm-re',e:'🎵',kind:'perm',n:'音阶护符·re',price:150,stock:1,d:'永久:敲中 re 音(任意八度)每次+1 · 答题+1价值/超神+1💰'},
+ {id:'charm-mi',e:'🎵',kind:'perm',n:'音阶护符·mi',price:175,stock:1,d:'永久:敲中 mi 音(任意八度)每次+1 · 答题+1价值/超神+1💰'},
+ {id:'charm-fa',e:'🎵',kind:'perm',n:'音阶护符·fa',price:200,stock:1,d:'永久:敲中 fa 音(任意八度)每次+1 · 答题+1价值/超神+1💰'},
+ {id:'charm-sol',e:'🎵',kind:'perm',n:'音阶护符·sol',price:225,stock:1,d:'永久:敲中 sol 音(任意八度)每次+1 · 答题+1价值/超神+1💰'},
+ {id:'charm-la',e:'🎵',kind:'perm',n:'音阶护符·la',price:250,stock:1,d:'永久:敲中 la 音(任意八度)每次+1 · 答题+1价值/超神+1💰'},
+ {id:'charm-si',e:'🎵',kind:'perm',n:'音阶护符·si',price:275,stock:1,d:'永久:敲中 si 音(任意八度)每次+1 · 答题+1价值/超神+1💰'},
  {id:'artslot',e:'🧿',kind:'perm',n:'神器位',art:1,d:''}];
 const ARTIFACTS=[
  {id:'eye',e:'👁️',kind:'perm',n:'神器·先知之眼',price:250,stock:1,art:1,d:'神器:听题时第一个音自动显示音名(占 1 神器槽)'},
@@ -1566,6 +1577,7 @@ function applyGood(g){
  else if(g.id==='book'){S.roleLv++;S.sp++;toast('📖 铁匠等级+1,技能点+1',2000)}
  else if(g.id==='dragon')S.dragon++;
  else if(g.id==='iron')S.ironNext+=10;
+ else if(g.id.startsWith('charm-')){S.charms[g.id]=1;toast('🎵 '+g.n.split('·')[1]+' 护符入册!敲中该音每次+1',2400)}
  toast('🛒 买入 '+g.n+' -💰'+g.price);if(!g.art&&Math.random()<.4)snark('buy');
  mSay(M_SAY[Math.floor(Math.random()*M_SAY.length)]);
 }
@@ -1585,6 +1597,7 @@ function ownTags(){
  if(S.ironNext)t.push(`🪨(下把-${S.ironNext}%)`);
  if(S.roleLv>1)t.push(`📖 Lv.${S.roleLv}(剑上限${swordCap()})`);
  if(S.sk.sell)t.push(`📈卖+${S.sk.sell*10}%`);if(S.sk.buy)t.push(`🤝买-${S.sk.buy*5}%`);
+if(Object.keys(S.charms||{}).length)t.push(`🎵×${Object.keys(S.charms).length}(敲中+1)`);
  if(S.art.length)t.push(`👁️神器×${S.art.length}/${artSlots()}`);
  return t.length?'家底:'+t.join(' · '):'还没置办产业——买点永久品攒家底';
 }
@@ -1607,7 +1620,7 @@ function renderMerchant(){
   const nm=g.lvG?`${WLBL[g.cat]}坯·${bi.name} Lv.${bi.lv}`:g.n;
   const dd=g.lvG?`${g.d}(当前 Lv.${bi.lv} · ${SWORDS[bi.lv-1].span}音)`:g.art?`${g.d}<br>神器槽 ${S.art.length}/${artSlots()}`:g.d;
   const d=document.createElement('div');d.className='mcard'+(full?' off':'');d.dataset.gid=g.id;
-  d.innerHTML=`<div class="mc-top"><span class="mc-e">${g.lvG?bi.emoji:g.e}</span><span class="mc-n">${nm}</span><span class="mc-p">💰${cost}</span></div><div class="mc-d">${dd}</div>`+(full?`<div class="mc-d" style="color:#ff9a8a">${owned?'已供奉':noSlot?'神器槽已满(升级铺子可扩)':(g.id==='book'&&S.roleLv>=SWORDS.length)?'铁匠已满级':'今日售罄'}</div>`:'');
+  d.innerHTML=`<div class="mc-top"><span class="mc-e">${g.lvG?bi.emoji:g.e}</span><span class="mc-n">${nm}</span><span class="mc-p">💰${cost}</span></div><div class="mc-d">${dd}</div>`+(full?`<div class="mc-d" style="color:#ff9a8a">${owned?'已供奉':noSlot?'神器槽已满(升级铺子可扩)':(g.id==='book'&&S.roleLv>=SWORDS.length)?'铁匠已满级':g.id.startsWith('charm-')?'已收录':'今日售罄'}</div>`:'');
   d.onclick=()=>{if(full){toast('这件今天买不了');return}
    if(S.gold<cost){toast('钱不够——先卖点装备');return}
    S.gold-=cost;S.bought[g.id]=bought+1;applyGood(g);renderShopGold();renderMerchant()};
@@ -1747,7 +1760,7 @@ function saveGame(auto){
 function loadGame(){
  let d=null;try{d=JSON.parse(localStorage.getItem('ft_save'))}catch(e){}
  if(!d||d.v!==1||!d.S){toast('\u26A0\uFE0F \u5B58\u6863\u65E0\u6548',1600);return false}
- Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,d.S);if(!S.char)S.char='smith';
+ Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,d.S);if(!S.char)S.char='smith';if(!S.charms)S.charms={};
   if(S.qActive&&S.qActive.thief){S.qActive.archer=S.qActive.thief;delete S.qActive.thief}
   if(S.qBoard&&S.qBoard.thief){S.qBoard.archer=S.qBoard.thief;delete S.qBoard.thief}
  if(['playing','input','quench','busy'].includes(S.phase)){S.phase='idle';S.q=[];S.pos=0;S.revealed=false;S.pendingQuench=false}
@@ -1864,7 +1877,7 @@ function gameOver(){
   [{label:'🔥 重开铁匠铺',cls:'gold',fn:()=>{hideOverlay();restart()}}]);
 }
 function restart(){
- S.tier=0;S.value=0;S.potential=0;S.charge=0;S.gold=0;S.forged=0;S.frenzies=0;S.qCount=0;
+ S.tier=0;S.value=0;S.potential=0;S.charge=0;S.gold=0;S.forged=0;S.frenzies=0;S.qCount=0;S.charms={};
  S.totHits=0;S.totStrikes=0;S.hits=0;S.strikes=0;S.dmgLv=0;
  S.roleLv=1;S.dayLog=[];S.day=1;S.mode='forge';S.pack=[];S.counter=[];S.forgeEnded=false;S.soldCnt=0;$('shop').classList.remove('on');
  S.gStreak=0;S.gBonus=0;S.perm={armor:0,wand:0,relic:0};S.dragon=0;S.ironNext=0;S.eventMult=1;S.eventTxt='';S.mkt=[];S.bought={};S.refreshCnt=0;
@@ -1909,8 +1922,8 @@ $('quench-btn').onclick=()=>{if(S.phase!=='ready')return;$('quench-btn').style.d
 $('btn-replay').onclick=()=>{if(S.phase==='input'){const p=S.pos,m=S.marks,r=S.revealed;playQuestion();S.pos=p;S.marks=m;S.revealed=r;renderSlots()}};
 $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音 · 淬火定命',
  `- 听题目(音序),<b>按顺序</b>在音道上敲出这些音<br>
-  · 敲对 <b>+1🔮魔能</b>;敲错剑不碎,但<b>每错一音:淬火损坏率 +5%</b><br>
-  · 一题敲完 → <b>淬火</b>:roll 档位,魔能 × 倍率变金币<br>
+  · 敲对 <b>+1💰价值</b>(音阶护符可加价);敲错剑不碎,但<b>每错一音:淬火损坏率 +5%</b><br>
+  · 一题敲完 → <b>淬火=兑换</b>:roll 档位,价值 × 倍率落成金币<br>
   · 三档:<b>大成功×4 / 成功×2 / 损坏(剑当场爆!)</b> · 基础 20/70/10,整题全对→大成功+5%<br>
   · 角色等级封顶剑的成长:<b>Lv.1 铁匠每把剑最多 4 题,最高 4 音域</b>,每天 3 个剑坯<br>
   · 背景是五线谱:每个音的音符位置 = 它在谱上的真实位置,玩着玩着就认识谱了<br>

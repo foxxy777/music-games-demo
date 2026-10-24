@@ -1265,8 +1265,8 @@ function gradeQuestion(){
 }
 /* ================= 一题结束 → 淬火 ================= */
 function endQuestion(){
- if(S.frenzyActive){ // 超神摇钱:不出题(大爷20:55令),攒的魔能窗口结束大淬火
-  S.pendingQuench=true;S.phase='frenzy';
+ if(S.frenzyActive){ // 超神摇钱:不出题(大爷20:55令);窗口结束直接回正常循环(大爷21:34令)
+  S.phase='frenzy';
   return;
  }
  S.phase='ready';
@@ -1371,10 +1371,10 @@ function endFrenzy(){
  document.querySelectorAll('.lane.gold-lane').forEach(el=>el.classList.remove('gold-lane'));
  const earned=S.frenzyGold||0;
  if(earned>0)toast(`💰 超神摇钱收工:这一波 +${earned}💰!`,2000);
- S.pendingQuench=true;
+ S.pendingQuench=false;
  hud();
- // 攒的魔能一次性大淬火(原设计保留);砧上无剑回待机
- if(S.anvils.length){quenchPhase()}
+ // 超神结束不触发大淬火,直接回正常循环:重新出题、以后照常淬火(大爷21:34令)
+ if(S.anvils.length){S.phase='busy';setTimeout(()=>{if(S.phase==='busy'){S.q=genQuestion();playQuestion()}},420)}
  else{S.phase='idle';$('quiz-hint').textContent='拖剑坯上砧开锻'}
 }
 

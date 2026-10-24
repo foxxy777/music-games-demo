@@ -626,7 +626,7 @@ const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0
  dmgLv:0,
  roleLv:1,dayLog:[],day:1,mode:'forge',cur:null,anvils:[],up:{anvil:0,sword:0,armor:0,bow:0,wand:0,shield:0,artSlot:0},pack:[],counter:[],forgeEnded:false,soldCnt:0,
  chest:[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}],
- frenzyActive:false,frenzyEnd:0,frenzyTimer:null,pendingQuench:false,laneDeco:null,frenzyGold:0,qMiss:0,
+ frenzyActive:false,frenzyEnd:0,frenzyTimer:null,pendingQuench:false,laneDeco:null,frenzyGold:0,qMiss:0,inputGraceUntil:0,
  perm:{armor:0,wand:0,relic:0},dragon:0,ironNext:0,eventMult:1,eventTxt:'',mkt:[],bought:{},refreshCnt:0,
  xp:0,sp:0,sk:{sell:0,buy:0,xp:0,quench:0},art:[],
  hits:0,strikes:0,            // 本题:敲对数/已敲数
@@ -1179,6 +1179,7 @@ function playQuestion(){
  S.q.forEach((ni,i)=>catPlay(NOTES[ni].m,.16+i*.46));
  const total=.16+S.q.length*.46+.3;
  setTimeout(()=>{if(S.phase!=='playing')return;S.phase='input';renderSlots();revealEye();
+  S.inputGraceUntil=Date.now()-S.frenzyEnd<3500?Date.now()+1200:0; // 超神余波宽限(大爷22:29令):狂点惯性期错判不罚
   $('quiz-hint').textContent=S.frenzyActive?'⚡ 超神连打!按顺序敲!':'轮到你:按顺序敲!';hud()},total*1000);
  $('quiz-hint').textContent='🔊 仔细听…';
 }
@@ -1196,7 +1197,6 @@ function hitLane(i){
  swingHammer(hx,hy);
  spawnSparks(hx,hy);
  clankNeutral();
- S.totStrikes++;
  setGirl('strike',380);
  laneEl.classList.add('flash-tap');setTimeout(()=>laneEl.classList.remove('flash-tap'),240);
  if(S.frenzyActive){ // 超神摇钱(大爷20:55令):不出题,点音阶就赚,装饰品以后提价
@@ -1204,11 +1204,16 @@ function hitLane(i){
   S.gold+=v;S.frenzyGold=(S.frenzyGold||0)+v;
   flyGold(hx,hy,v);
   hud();
-  return;
+  return; // 超神点击不计任何答题统计(大爷22:29令):不进 totStrikes/errN/qMiss
  }
+ S.totStrikes++;
  S.strikes++;
  // 即时判定(大爷21:55令):点错立即标错位、从头重答;每错一次本题魔能上限-1,三错作废
  if(i!==S.q[S.pos]){
+  if(S.inputGraceUntil&&Date.now()<S.inputGraceUntil){ // 超神余波宽限:惯性错击吞掉,不罚不重开不计数
+   $('quiz-hint').textContent='⚡ 稳一稳,超神结束了!听好题再敲';
+   return;
+  }
   S.qMiss=(S.qMiss||0)+1;
   S.typed[S.pos]=i;S.marks[S.pos]='miss'; // 错位标记:三个格子下面那行(我的输入)对应格标红
   renderSlots();

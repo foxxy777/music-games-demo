@@ -407,6 +407,29 @@ body{overflow:hidden}
 #cal-legend{font-size:10px;color:#8a7455;margin-top:8px}
 #anvil-empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:4;pointer-events:none;font-size:15px;color:#c9a06add;letter-spacing:2px;text-shadow:0 2px 8px #000}
 #anvil.drop-ready{outline:3px dashed #ffd54f;outline-offset:-6px}
+/* ===== v29 砧板标记行(大爷10-25令:横向彩色小条·成绩史·连击进化·药水槽) ===== */
+#mark-row{flex:none;display:flex;align-items:center;gap:6px;min-height:24px;padding:3px 10px;background:linear-gradient(180deg,#191009,#110a06);border-top:1px dashed #4a3320;overflow-x:auto;scrollbar-width:none}
+#mark-row::-webkit-scrollbar{display:none}
+#mark-row .mr-lab{flex:none;font-size:10px;color:#c9a06a;letter-spacing:1px;white-space:nowrap}
+#mark-marks{display:flex;gap:5px;align-items:center;min-height:16px}
+.mk{flex:none;width:32px;height:15px;border-radius:4px;border:1px solid #00000099;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;color:#fff;text-shadow:0 1px 2px #000;position:relative;transition:transform .15s}
+.mk.blue{background:linear-gradient(180deg,#6db4ff,#2a5a9e)}
+.mk.green{background:linear-gradient(180deg,#8fe07c,#3a8a2a)}
+.mk.white{background:linear-gradient(180deg,#f5f5f5,#b0b0b0);color:#333;text-shadow:none}
+.mk.black{background:linear-gradient(180deg,#3a3a3a,#0d0d0d);color:#888}
+.mk.purple{background:linear-gradient(180deg,#c9a0ff,#6a3a9e);box-shadow:0 0 6px #b88aff66}
+.mk.gold{background:linear-gradient(180deg,#ffe08a,#c9822a);box-shadow:0 0 6px #ffd54f66}
+.mk.red{background:linear-gradient(180deg,#ff8a99,#c02a3e);box-shadow:0 0 8px #ff5d6c66}
+.mk.evole{animation:mkflash .65s ease-out}
+@keyframes mkflash{0%{transform:scale(1)}35%{transform:scale(1.55);box-shadow:0 0 16px #ffd54fdd}100%{transform:scale(1)}}
+.mk.sel-ok{cursor:pointer;outline:2px solid #ffd54f;outline-offset:1px;animation:mksel .9s infinite}
+@keyframes mksel{50%{transform:translateY(-2px);filter:brightness(1.35)}}
+#mark-sum{flex:none;margin-left:auto;font-size:11px;color:#ffd54f;font-weight:bold;white-space:nowrap}
+#potion-slot{flex:none;display:flex;gap:4px}
+.pk{flex:none;font-size:11px;padding:2px 8px;border-radius:8px;border:1.5px solid #5a9a6e;background:linear-gradient(180deg,#25402e,#16291d);color:#c8e8d0;cursor:pointer;font-family:inherit}
+.pk:hover{border-color:#ffd54f;color:#ffe9b8}
+.pk.on{border-color:#ffd54f;background:linear-gradient(180deg,#4a3218,#2a1c0f);color:#ffe89a;box-shadow:0 0 8px #ffb84d66}
+.pk:disabled{opacity:.35;cursor:default}
 /* ===== 遮罩层 ===== */
 #overlay{position:absolute;inset:0;background:#0a0705e8;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:350;padding:36px;text-align:center;cursor:auto}
 #overlay.on{display:flex}
@@ -460,7 +483,7 @@ body{overflow:hidden}
   <button id="qm-btn" class="btn gold" style="display:none">🔨 继续锻造</button>
  </div></div>
 <div id="quiz">
-    <div id="quiz-title">听音 · 按顺序敲出题目 · 敲完淬火</div>
+    <div id="quiz-title">听音 · 按顺序敲出题目 · 标记上砧板</div>
     <div id="slots"></div>
  <div id="my-slots"></div>
     <div id="quiz-hint">点「🔨 开始铸造」把剑坯上砧开锻</div>
@@ -505,6 +528,7 @@ body{overflow:hidden}
    </div>
    <div id="anvil-rack"></div>
 <div id="q-strip"></div>
+   <div id="mark-row"><span class="mr-lab">🏷️ 砧板标记</span><span id="mark-marks"></span><span id="mark-sum">Σ💰0</span><div id="potion-slot"></div></div>
    <div id="anvil">
     <div id="anvil-empty">💤 待铸</div>
     <div id="lanes"></div>
@@ -669,8 +693,110 @@ const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0
  hits:0,strikes:0,            // 本题:敲对数/已敲数
  totHits:0,totStrikes:0,      // 全局统计
  phase:'idle', // idle|playing|input|quench|busy|over
- q:[],pos:0,revealed:false};
+ q:[],pos:0,revealed:false,
+ row:[],potions:{safe:0,up:0},potSel:null,dayErrN:0,dayFull:0}; // v29:砧板标记行/药水/当日错音·全对(统一淬火台账)
 const $=id=>document.getElementById(id);
+
+/* ================= v29 砧板标记(大爷10-25令):成绩史+逐级连击进化 =================
+   色=该题成绩: 全对0错=蓝3 · 错1=绿2 · 错2=白1 · 三错作废/没答对=黑0
+   连击串=连续「蓝及以上」(绿/白/黑断串),串长≥7全红6/≥5全金5/≥3全紫4/不足3保持蓝3
+   每次标记行变化后重算;进化只升不降(药水买的档位不被重算吞掉) */
+const MARK_ORDER=['black','white','green','blue','purple','gold','red'];
+const MARK_VAL={black:0,white:1,green:2,blue:3,purple:4,gold:5,red:6};
+const MARK_TXT={black:'黑·作废',white:'白·错2',green:'绿·错1',blue:'蓝·全对',purple:'紫·连击',gold:'金·连击',red:'红·连击'};
+const isBlueP=g=>MARK_VAL[g]>=3; // 蓝及以上才算连击串
+const markVal=m=>MARK_VAL[m.g]+(m.cb||0); // cb=护符/轮廓等附加价值(v27 VALUE口径,随标记入账)
+function gradeOf(qMiss){return qMiss>=CFG.Q_MISS_MAX?'black':qMiss===2?'white':qMiss===1?'green':'blue'}
+function recalcEvolution(anim){ // 对每个连续蓝+串按串长重算整串档位,返回本次新进化标记的下标
+ const fresh=[];let best=null,i=0;
+ while(i<S.row.length){
+  if(!isBlueP(S.row[i].g)){i++;continue}
+  let j=i;while(j<S.row.length&&isBlueP(S.row[j].g))j++;
+  const len=j-i,target=len>=7?'red':len>=5?'gold':len>=3?'purple':'blue';
+  for(let k=i;k<j;k++){const m=S.row[k];
+   if(MARK_VAL[target]>MARK_VAL[m.g]){m.g=target;fresh.push(k)}}
+  if(fresh.length&&(!best||MARK_VAL[target]>MARK_VAL[best]))best=target;
+  i=j;
+ }
+ if(anim&&fresh.length){fresh.forEach(k=>S.row[k]._fl=true);
+  toast(`🔥 连击进化!整串升级为${MARK_TXT[best]} · 每个价值${MARK_VAL[best]}`,2400)}
+ return fresh;
+}
+function syncPotential(){S.potential=S.row.reduce((s,m)=>s+markVal(m),0)} // 价值池=当日标记台账(v29)
+function renderMarkRow(){
+ const box=$('mark-marks');if(!box)return;
+ box.innerHTML='';
+ S.row.forEach((m,i)=>{
+  const d=document.createElement('div');
+  d.className='mk '+m.g+(m._fl?' evole':'');
+  d.dataset.i=i;d.dataset.g=m.g;d.dataset.val=markVal(m);
+  d.title=`第${i+1}题 ${MARK_TXT[m.g]} · 价值${markVal(m)}`;
+  d.textContent=markVal(m);
+  if(S.potSel&&potEligible(m,S.potSel))d.classList.add('sel-ok');
+  d.onclick=()=>markClick(i);
+  box.appendChild(d);
+  delete m._fl;
+ });
+ $('mark-sum').textContent='Σ💰'+S.row.reduce((s,m)=>s+markVal(m),0);
+ renderPotionSlot();
+}
+function appendMark(grade,cb){ // 答完一题:标记追加→进化重算→台账同步
+ S.row.push({g:grade,cb:cb||0});
+ recalcEvolution(true).forEach(k=>S.row[k]._fl=true);
+ syncPotential();
+ renderMarkRow();
+ return S.row[S.row.length-1];
+}
+
+/* ================= v29 药水(大爷10-25令:一次性道具,商人固定货架有售) =================
+   🧪保底 60💰:绿/白标记→蓝(重算连击,可能接上前后蓝串触发进化)
+   ⚗️升级 120💰:任一标记单独升一级(black 不可用;红封顶);用后同样重算连击
+   交互:点药水进选择模式(高亮可作用标记)→点标记生效消耗;再点药水/ESC 取消,防误触 */
+const POTIONS={
+ safe:{e:'🧪',n:'保底药水',price:60,d:'消耗:一个绿/白标记→蓝色,重算连击'},
+ up:{e:'⚗️',n:'升级药水',price:120,d:'消耗:一个标记单独升一级,红封顶'}};
+function potEligible(m,kind){
+ if(!m)return false;
+ if(kind==='safe')return m.g==='green'||m.g==='white';
+ if(kind==='up')return m.g!=='black'&&MARK_VAL[m.g]<MARK_VAL.red;
+ return false;
+}
+function enterPotSel(kind){
+ if(S.mode!=='forge'){toast('打铁时才能用药水',1600);return}
+ if((S.potions[kind]||0)<1){toast('药水用完了——商人处补货',1600);return}
+ if(!S.row.length){toast('砧板上还没有标记',1600);return}
+ S.potSel=S.potSel===kind?null:kind; // 再点同款药水=取消
+ renderMarkRow();
+ if(S.potSel)toast(kind==='safe'?'🧪 点一个绿/白标记使用保底药水(再点药水或 ESC 取消)':'⚗️ 点一个标记升级一级(再点药水或 ESC 取消)',2600);
+}
+function cancelPotSel(){if(!S.potSel)return;S.potSel=null;renderMarkRow()}
+function applyPotion(kind,i){
+ const m=S.row[i];
+ if(!potEligible(m,kind)){toast(kind==='safe'?'🧪 保底药水只能对绿/白标记用':'⚗️ 这个标记已封顶或不可用',1600);return}
+ if((S.potions[kind]||0)<1){toast('药水不够',1600);cancelPotSel();return}
+ S.potions[kind]--;
+ const to=kind==='safe'?'blue':MARK_ORDER[MARK_ORDER.indexOf(m.g)+1];
+ m.g=to;m._fl=true;
+ S.potSel=null;
+ recalcEvolution(true); // 药水也是标记行变化:重算连击(只升不降,药水档位不被吞)
+ syncPotential();renderMarkRow();
+ toast(`${POTIONS[kind].e} 药水生效:第${i+1}题标记 → ${MARK_TXT[to]}`,2200);
+}
+function markClick(i){if(S.potSel)applyPotion(S.potSel,i)}
+function renderPotionSlot(){
+ const box=$('potion-slot');if(!box)return;
+ box.innerHTML='';
+ Object.keys(POTIONS).forEach(k=>{
+  const p=POTIONS[k],n=S.potions[k]||0;
+  const b=document.createElement('button');
+  b.className='pk'+(S.potSel===k?' on':'');b.id='pk-'+k;
+  b.textContent=`${p.e}×${n}`;
+  b.title=`${p.n} · 商人价 💰${p.price} · ${p.d}`;
+  b.disabled=!n;
+  b.onclick=()=>enterPotSel(k);
+  box.appendChild(b);
+ });
+}
 
 /* ================= 淬火概率(大爷21:51令:三档·错音/全对驱动) ================= */
 function swordCap(){return CFG.SWORD_CAP_LV+(S.roleLv-1)} // 技能书:铁匠Lv↑→剑成长上限↑(23:11商人令)
@@ -1256,6 +1382,7 @@ function hitLane(i){
   S.typed[S.pos]=i;S.marks[S.pos]='miss'; // 错位标记:三个格子下面那行(我的输入)对应格标红
   renderSlots();
   S.anvils.forEach(sw=>{sw.errN+=1}); // 错音惩罚保留:剑损坏率(大爷拍板双向)
+  S.dayErrN=(S.dayErrN||0)+1; // v29:当日累计错音(统一淬火损坏率挂点)
   clank(false);
   if(S.qMiss>=CFG.Q_MISS_MAX){ // 三错作废:本题白答,直接下一题
    S.charge=0;
@@ -1265,6 +1392,7 @@ function hitLane(i){
    $('quiz-hint').classList.add('warn');setTimeout(()=>$('quiz-hint').classList.remove('warn'),1200);
    setTimeout(()=>{
     if(S.phase!=='grading')return;
+    appendMark('black',0); // v29:三错作废=黑色标记入行(价值0,断串)
     if(S.art.includes('dice'))diceFail(); // 🎲命运骰:作废=题答错,当场爆剑(大爷00:48令新制等价)
     else{snark('wrong');afterBatch()}
    },900);
@@ -1313,7 +1441,7 @@ function gradeQuestion(){
  if(S.art.includes('dice')&&missN===0){const b0=Math.floor((S.gStreak||0)/3);S.gStreak+=okCnt;const b1=Math.floor(S.gStreak/3);if(b1>b0){S.gBonus=b1*10;toast('🎲 命运骰·连击 '+S.gStreak+' 音!大成功 +'+S.gBonus+'%',2200);hud();snark('streak',true)}} // 🎲命运骰(大爷00:48令):每3音大成功+10%当日累计
  const charmBonus=S.q.reduce((s,exp,pos)=>s+(S.typed[pos]===exp?charmOf(exp):0),0); // 音阶护符(大爷01:35令):敲中护符音每音额外+1价值
  const netQ=Math.max(0,okCnt*CFG.POT_PER_HIT+charmBonus-(S.qMiss||0)); // 错次扣减(大爷21:55令):每错一次本题价值-1
- S.potential+=netQ;
+ // v29:potential 不再逐题累加,改由 appendMark 后的标记台账同步(syncPotential)
  {let xg=okCnt*5;if(okCnt===S.q.length&&okCnt>0)xg=Math.round(xg*1.1);if(xg>0)gainXP(xg)} // 主角经验:敲对+5/音·全对+10%(大爷00:34令)
  S.q.forEach((exp,pos)=>{S.marks[pos]=S.typed[pos]===exp?'hit':'miss'});
  // 超神旧给金机制已删(大爷20:55令):超神不出题,点音阶赚钱见 hitLane;charge 只在正常判卷累积
@@ -1331,82 +1459,82 @@ function gradeQuestion(){
  if(okCnt===S.q.length){$('quiz-hint').textContent=`✔ ${S.q.length}/${S.q.length} 全对!价值+${netQ}💰`+(charmBonus?`(🎵护符+${charmBonus})`:'')+(S.qMiss?`(错${S.qMiss}次 -${S.qMiss})`:'');snark('perfect');}
  const dShift=S.typed[0]-S.q[0];
  const contour=dShift!==0&&S.q.every((exp,i)=>S.typed[i]-exp===dShift);
- if(contour){S.potential+=CFG.CONTOUR_BONUS;hud()}
  setTimeout(()=>{
-  if(S.art.includes('dice')&&missN>0){diceFail();return} // 🎲命运骰(大爷00:48令):答错一音当场终止
+  if(S.art.includes('dice')&&missN>0){appendMark('black',0);diceFail();return} // 🎲命运骰(大爷00:48令):答错一音当场终止(黑标记入行)
   if(missN>0||okCnt<S.q.length)snark('wrong');
-  if(!S.frenzyActive&&S.charge>=CFG.FRENZY_NEED)startFrenzy();
-  endQuestion();
-  if(contour)$('quiz-hint').textContent=`🎵 轮廓全对(整体${dShift>0?'+':''}${dShift}音)!保底+${CFG.CONTOUR_BONUS}💰 · 点兑换`;
+  endQuestion(contour?CFG.CONTOUR_BONUS:0); // v29:标记入行+剑进度直接推进,超神触发挪进 endQuestion
+  if(contour)$('quiz-hint').textContent=`🎵 轮廓全对(整体${dShift>0?'+':''}${dShift}音)!保底+${CFG.CONTOUR_BONUS}💰 已记入标记`;
  },S.q.length*step+450);
 }
-/* ================= 一题结束 → 淬火 ================= */
-function endQuestion(){
+/* ================= 一题结束 → 砧板标记+剑进度,直接下一题(v29:统一淬火替代逐题淬火) ================= */
+function endQuestion(contourB){
+ const grade=gradeOf(S.qMiss||0);
+ const charm=S.q.reduce((s,exp,i)=>s+(S.typed[i]===exp?charmOf(exp):0),0);
+ const m=appendMark(grade,(charm||0)+(contourB||0)); // 标记追加+进化重算+台账同步
+ if(grade==='blue')S.dayFull++;
+ progSwords(markVal(m),grade); // 剑进度随题结算(v29 从逐题淬火里挪出)
  if(S.frenzyActive){ // 超神摇钱:不出题(大爷20:55令);窗口结束直接回正常循环(大爷21:34令)
   S.phase='frenzy';
   return;
  }
- S.phase='ready';
- const qb=$('quench-btn');
- qb.innerHTML=`🔥 兑 换 · 💰${S.potential}`;
- qb.style.display='block';
- $('quiz-hint').textContent='敲完了!点水桶上方按钮淬火';
+ if(!S.frenzyActive&&S.charge>=CFG.FRENZY_NEED){startFrenzy();return}
+ afterBatch(); // 不再弹逐题淬火,直接进下一题;全天打完后 afterBatch→checkDayEnd→统一淬火
 }
-function quenchPhase(){
- S.phase='quench';hud();
- const rolling=[...S.anvils];
- const res=rolling.map(sw=>{ // 每剑各 roll(大爷拍板:同题共锻,概率分别结算)
-  const probs=computeProbs(sw.errN,sw.fullN,sw.iron);
-  let r=rollTier(probs);
-  const saved=r==='dmg'&&S.dragon>0; // 🐉龙鳞:爆剑免疫(每剑消耗一张)
-  if(saved){S.dragon--;r='good'}
-  return {sw,r,saved,payout:saved?0:Math.round(S.potential*CFG.TIERS[r].mult)};
+/* v29:剑进度随题结算(原在逐题淬火里:qDone/升级/铸成入库/协会进度;品质改由标记色驱动) */
+function progSwords(mv,grade){
+ const done=[];
+ S.anvils.forEach(sw=>{
+  sw.value+=mv;sw.qDone++;S.qCount++;
+  sw.q+=grade==='blue'?1:grade==='black'?0:.5; // 品质映射:蓝=+1,绿/白=+.5,黑=0(红紫金只在标记行)
+  if(sw.qDone>=swordCap()*2){done.push(sw);gainXP(10*sw.lv)} // 铸成+经验(大爷00:34令)
+  else{const nl=Math.min(swordCap(),Math.floor(sw.qDone/2)+1);
+   if(nl>sw.lv){sw.lv=nl;applyWindow();updateSword();toast(`⬆️ 剑升级!Lv.${nl} · 共锻音域 ${curSpan()} 音`)}}
  });
- if(res.some(x=>x.r==='great'))snark('great',true);else if(res.some(x=>x.r==='dmg'))snark('break',true);else snark('good');
+ S.anvils=S.anvils.filter(sw=>!done.includes(sw));
+ done.forEach(sw=>{const it=makeItem(sw);S.pack.push(it);S.forged++;markDay('done');questProg(it,sw);
+  toast(`🎉 ${it.name} 铸成!品质 ${'★'.repeat(it.star)}${'☆'.repeat(4-it.star)} · 价值 ${it.value} · 收进箱子`)});
+ syncFocus();hud();updateSword();renderRack();renderChest();
+}
+/* ================= v29 统一淬火(大爷10-25令:全天题打完,标记台账一次兑现) =================
+   概率挂当日台账:错音越多损坏越高(dayErrN,可被盔甲/玄铁压),全对题升大成功(dayFull,封顶单剑4题口径);
+   损坏=今日价值×0全毁(剑已入库不再爆),🐉龙鳞护炉一次照旧;倍率沿用 TIERS,不推翻 VALUE 体系 */
+function unifiedQuench(cb){
+ if(!S.row.length){cb&&cb();return}
+ S.phase='quench';hud();
+ const total=S.row.reduce((s,m)=>s+markVal(m),0);
+ const probs=computeProbs(S.dayErrN||0,Math.min(S.dayFull||0,swordCap()*2),0);
+ let r=rollTier(probs);
+ const saved=r==='dmg'&&S.dragon>0; // 🐉龙鳞:爆炉免疫(每张消耗一张,照旧)
+ if(saved){S.dragon--;r='good'}
+ if(r==='great')snark('great',true);else if(r==='dmg')snark('break',true);else snark('good');
  const qm=$('quench-modal');qm.classList.add('on');
- $('qm-sub').textContent=`共锻 ${rolling.length} 剑 · 本题价值 💰${S.potential} × 倍率 · 每剑各 roll`+(S.dragon?` · 🐉×${S.dragon}`:'');
+ $('qm-sub').textContent=`今日 ${S.row.length} 题标记 · 台账 💰${total} · 当日错音 ${S.dayErrN||0} · 全对 ${S.dayFull||0} 题`+(S.dragon?` · 🐉×${S.dragon}`:'');
  $('qm-result').textContent='';
  const btn=$('qm-btn');btn.style.display='none';btn.onclick=null;
  const strip=$('qm-strip');strip.innerHTML='';
- const fprobs=computeProbs(S.cur?S.cur.errN:0,S.cur?S.cur.fullN:0,S.cur&&S.cur.iron);
  ['great','good','dmg'].forEach(k=>{const d=document.createElement('div');d.className='rslot '+k+' rolling';
-  const m=(k==='dmg'?'💥剑爆':'×'+CFG.TIERS[k].mult)+' · '+Math.round(fprobs[k])+'%';
+  const m=(k==='dmg'?'💥全毁':'×'+CFG.TIERS[k].mult)+' · '+Math.round(probs[k])+'%';
   d.innerHTML=`<div class="rn">${CFG.TIERS[k].name}</div><div class="rm">${m}</div>`;strip.appendChild(d)});
  sizzle();
  setTimeout(()=>{
   strip.querySelectorAll('.rslot').forEach(d=>d.classList.remove('rolling'));
-  let html='';
-  res.forEach(o=>{
-   strip.querySelector('.rslot.'+o.r).classList.add('winner');
-   const nm=`${o.sw.name} Lv.${o.sw.lv}`;
-   if(o.saved)html+=`<div style="color:#bfe3ff">🐉 ${nm}:龙鳞碎裂,剑保住了!(维持 · 收益 🪙0)</div>`;
-   else if(o.r==='dmg')html+=`<div style="color:#ff9a8a">💥 ${nm}:损坏!这把坯子报废…</div>`;
-   else html+=`<div style="color:${o.r==='great'?'#ffd54f':'#a8f0a0'}">${o.r==='great'?'🌈':'✅'} ${nm}:💰${S.potential} × ${CFG.TIERS[o.r].mult} = 🪙${o.payout}${o.r==='great'?' 大成功!':''}</div>`;
-  });
-  playInst(res.some(o=>o.r==='great')?84:res.some(o=>o.r==='dmg')?55:72,0,1.2);
-  if(res.some(o=>o.r==='great'))setTimeout(()=>[0,4,7,12].forEach((s,i)=>playInst(72+s,i*.09)),200);
-  // 结算:发钱/爆剑/出炉/升级
-  const done=[];
-  res.forEach(o=>{
-   if(o.r==='dmg')return;
-   S.gold+=o.payout;o.sw.value+=o.payout;
-   o.sw.qDone++;S.qCount++;
-   if(o.r==='great')o.sw.q+=1;else if(o.r==='good')o.sw.q+=.5;
-   if(o.sw.qDone>=swordCap()*2){done.push(o.sw);gainXP(10*o.sw.lv)} // 铸成+经验(大爷00:34令)
-   else{const nl=Math.min(swordCap(),Math.floor(o.sw.qDone/2)+1);
-    if(nl>o.sw.lv){o.sw.lv=nl;applyWindow();updateSword();toast(`⬆️ 剑升级!Lv.${nl} · 共锻音域 ${curSpan()} 音`)}}
-  });
-  S.anvils=S.anvils.filter(sw=>!res.find(o=>o.sw===sw&&(o.r==='dmg'||done.includes(sw))));
-  res.filter(o=>o.r==='dmg').forEach(()=>markDay('broke'));
-  if(res.some(o=>o.r==='dmg')){swordBreakFx();toast('💥 剑爆了!这把坯子报废',2400)}
-  done.forEach(sw=>{const it=makeItem(sw);S.pack.push(it);S.forged++;markDay('done');questProg(it,sw);
-   toast(`🎉 ${it.name} 铸成!品质 ${'★'.repeat(it.star)}${'☆'.repeat(4-it.star)} · 价值 ${it.value} · 收进箱子`)});
-  bucketQuenchVisual();
-  S.potential=0;S.hits=0;S.strikes=0;
-  syncFocus();hud();updateSword();renderRack();renderChest();
-  $('qm-result').innerHTML=html+`<div style="font-size:12px;color:#cbb8a0;margin-top:6px">错一音损坏+5%(两边都吃)· 整题全对大成功+5% · 多剑共锻各自结算</div>`;
+  strip.querySelector('.rslot.'+r).classList.add('winner');
+  let html='<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin:4px 0 8px">'+S.row.map((m,i)=>`<span class="mk ${m.g}" title="第${i+1}题 ${MARK_TXT[m.g]}">${markVal(m)}</span>`).join('')+'</div>';
+  html+=`<div style="font-size:12px;color:#cbb8a0;margin-bottom:6px">Σ 标记价值 💰${total}</div>`;
+  if(r==='dmg'){
+   html+=`<div style="color:#ff9a8a;font-weight:bold">💥 淬火失手!今日价值 ×0 全部蒸发…</div>`;
+  }else{
+   const pay=Math.round(total*CFG.TIERS[r].mult);
+   S.gold+=pay;
+   html+=`<div style="color:${r==='great'?'#ffd54f':'#a8f0a0'};font-weight:bold">${r==='great'?'🌈 大成功!':'✅ 成功'}💰${total} × ${CFG.TIERS[r].mult} = 🪙${pay}${saved?'(🐉龙鳞碎裂,护住这一炉!)':''}</div>`;
+  }
+  playInst(r==='great'?84:r==='dmg'?55:72,0,1.2);
+  if(r==='great')setTimeout(()=>[0,4,7,12].forEach((s,i)=>playInst(72+s,i*.09)),200);
+  if(r!=='dmg')bucketQuenchVisual();else swordBreakFx();
+  S.row=[];S.potSel=null;syncPotential();renderMarkRow();
+  $('qm-result').innerHTML=html+`<div style="font-size:12px;color:#cbb8a0;margin-top:6px">v29 统一淬火:全天标记一次兑现 · 错音越少越稳 · 盔甲/玄铁/龙鳞照常护炉</div>`;
   btn.style.display='inline-block';
-  btn.onclick=()=>{qm.classList.remove('on');afterBatch()};
+  btn.onclick=()=>{qm.classList.remove('on');S.phase='idle';hud();cb&&cb()};
  },1600);
 }
 function afterBatch(){
@@ -1450,18 +1578,20 @@ function endFrenzy(){
  if(earned>0)toast(`💰 超神摇钱收工:这一波 +${earned}💰!`,2000);
  S.pendingQuench=false;
  hud();
- // 超神结束不触发大淬火,直接回正常循环:重新出题、以后照常淬火(大爷21:34令)
+ // 超神结束不触发大淬火,直接回正常循环:重新出题(大爷21:34令);砧空箱空则走收工统一淬火(v29)
  if(S.anvils.length){S.phase='busy';setTimeout(()=>{if(S.phase==='busy'){S.q=genQuestion();playQuestion()}},420)}
- else{S.phase='idle';$('quiz-hint').textContent='拖剑坯上砧开锻'}
+ else if(S.chest.length){S.phase='idle';$('quiz-hint').textContent='拖剑坯上砧开锻'}
+ else checkDayEnd()
 }
 
 /* ================= 昼夜循环+商店(大爷17:08令) ================= */
 function curSpan(){const l=S.anvils.length?Math.max(...S.anvils.map(a=>a.lv)):(S.cur?S.cur.lv:1);return SWORDS[Math.max(0,Math.min(SWORDS.length,l))-1].span} // 共锻音域=在场最高剑级(多砧同题,00:23令)
 function markDay(st){if(st==='forging')S.dayLog.push('forging');
  else{const i=S.dayLog.lastIndexOf('forging');if(i>=0)S.dayLog[i]=st;else S.dayLog.push(st)}}
-function checkDayEnd(){ // 大爷21:51令:去魔力,收工=剑胚用光且铁砧空
+function checkDayEnd(){ // 大爷21:51令:收工=剑胚用光且铁砧空;v29:自动进入统一淬火结算
  if(S.mode!=='forge'||S.anvils.length||S.chest.length)return;
  S.forgeEnded=true;S.phase='idle';hud();
+ if(S.row.length){unifiedQuench(()=>$('quiz-hint').textContent='淬火完毕!点「🧙 第二天·商人」买卖装备');return}
  $('quiz-hint').textContent='今天的剑胚用完了!点「🧙 第二天·商人」买卖装备';}
 function newSword(lv=1,cat){
  cat=cat||'sword';
@@ -1558,6 +1688,9 @@ const GOODS_FIXED=[ // kind 分区(大爷23:26令):mat=基础素材 use=一次�
  {id:'blankS',e:'🛡️',cat:'shield',kind:'mat',base:45,step:15,stock:3,lvG:1,d:'盾牌坯(铜管音色)——档位随铁匠等级长'},
  {id:'armor',e:'🛡️',kind:'perm',n:'皮甲·盔甲',price:80,stock:2,d:'永久:每次淬火损坏率 -5%(可叠加)'},
  {id:'wand',e:'🪄',kind:'perm',n:'橡木魔杖',price:120,stock:2,d:'永久:大成功概率 +5%(可叠加)'},
+ // v29 药水(大爷10-25令):固定商品位,一次性道具,走 icon 行
+ {id:'pt-safe',e:'🧪',kind:'use',n:'保底药水',price:60,stock:9,d:'消耗:砧板一个绿/白标记→蓝色,重算连击可触发进化'},
+ {id:'pt-up',e:'⚗️',kind:'use',n:'升级药水',price:120,stock:9,d:'消耗:砧板一个标记单独升一级(红封顶)'},
  // 音阶护符(大爷01:35令):永久品,敲中对应唱名(任何八度)每次敲击+1——答题+1价值·超神+1💰,价格递增
  {id:'charm-do',e:'🎵',kind:'perm',n:'音阶护符·do',price:125,stock:1,d:'永久:敲中 do 音(任意八度)每次+1 · 答题+1价值/超神+1💰'},
  {id:'charm-re',e:'🎵',kind:'perm',n:'音阶护符·re',price:150,stock:1,d:'永久:敲中 re 音(任意八度)每次+1 · 答题+1价值/超神+1💰'},
@@ -1607,9 +1740,12 @@ function applyGood(g){
  else if(g.id==='book'){S.roleLv++;S.sp++;toast('📖 铁匠等级+1,技能点+1',2000)}
  else if(g.id==='dragon')S.dragon++;
  else if(g.id==='iron')S.ironNext+=10;
+ else if(g.id==='pt-safe'){S.potions.safe=(S.potions.safe||0)+1;toast('🧪 保底药水入袋!打铁时点砧板旁药水槽使用',2400)}
+ else if(g.id==='pt-up'){S.potions.up=(S.potions.up||0)+1;toast('⚗️ 升级药水入袋!打铁时点砧板旁药水槽使用',2400)}
  else if(g.id.startsWith('charm-')){S.charms[g.id]=1;toast('🎵 '+g.n.split('·')[1]+' 护符入册!敲中该音每次+1',2400)}
  toast('🛒 买入 '+g.n+' -💰'+g.price);if(!g.art&&Math.random()<.4)snark('buy');
  mSay(M_SAY[Math.floor(Math.random()*M_SAY.length)]);
+ renderMarkRow(); // v29:药水买入同步药水槽计数
 }
 function mSell(i){
  const avail=S.pack.filter(p=>!p.sold);const p=avail[i];if(!p)return;
@@ -1843,6 +1979,7 @@ function loadGame(){
   if(S.qActive&&S.qActive.thief){S.qActive.archer=S.qActive.thief;delete S.qActive.thief}
   if(S.qBoard&&S.qBoard.thief){S.qBoard.archer=S.qBoard.thief;delete S.qBoard.thief}
  if(['playing','input','quench','busy'].includes(S.phase)){S.phase='idle';S.q=[];S.pos=0;S.revealed=false;S.pendingQuench=false}
+ S.row=S.row||[];S.potions=S.potions||{safe:0,up:0};S.potSel=null;renderMarkRow(); // v29:标记台账/药水随存档恢复
  S.mode='forge';$('shop').classList.remove('on');
  S.frenzyActive=false;S.frenzyTimer=null;app.classList.remove('frenzy');
  syncFocus();hud();renderChest();renderRack();renderQStrip();applyWindow();updateSword();
@@ -1885,6 +2022,7 @@ document.getElementById('btn-p-load').onclick=()=>{if(!hasSave()){toast((LANG===
 document.getElementById('btn-p-opt').onclick=openOpts;
 document.getElementById('btn-p-home').onclick=()=>{if(S.phase!=='over')saveGame(true);closePause();openMenu();refreshMenuState()};
 addEventListener('keydown',e=>{if(e.key!=='Escape')return;
+ cancelPotSel(); // v29:药水选择模式 ESC 取消
  const om=document.getElementById('opt-modal'),pm=document.getElementById('pause-modal'),mm=document.getElementById('menu-modal'),ov=document.getElementById('overlay');
  if(om.classList.contains('on')){closeOpts();return}
  if(pm.classList.contains('on')){closePause();return}
@@ -1913,6 +2051,7 @@ function closeShop(){
   toast('🧚 赠礼妖精送来 3 件低级装备!',2600);
  }
  S.dayLog=[];S.gStreak=0;S.gBonus=0;questRollover();S.refreshCnt=0;
+ S.row=[];S.potSel=null;S.dayErrN=0;S.dayFull=0;syncPotential();renderMarkRow(); // v29:日切清台账(标记已在睡前统一淬火兑现)
  hud();updateSword();
  if(rentDay){
   if(S.gold<CFG.RENT){gameOver();return}
@@ -1961,6 +2100,7 @@ function restart(){
  S.roleLv=1;S.dayLog=[];S.day=1;S.mode='forge';S.pack=[];S.counter=[];S.forgeEnded=false;S.soldCnt=0;$('shop').classList.remove('on');
  S.gStreak=0;S.gBonus=0;S.perm={armor:0,wand:0,relic:0};S.dragon=0;S.ironNext=0;S.eventMult=1;S.eventTxt='';S.mkt=[];S.bought={};S.refreshCnt=0;
  S.xp=0;S.sp=0;S.sk={sell:0,buy:0,xp:0,quench:0};S.art=[];
+ S.row=[];S.potions={safe:0,up:0};S.potSel=null;S.dayErrN=0;S.dayFull=0;renderMarkRow(); // v29:新档清标记台账+药水
  S.up={anvil:0,sword:0,armor:0,bow:0,wand:0,artSlot:0};S.anvils=[];syncFocus();renderRack();
  S.qDay=0;S.qBoard={};S.qActive={};renderQStrip();
  S.chest=[{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'},{name:'匕首',emoji:'🗡️'}];renderChest();
@@ -1991,23 +2131,26 @@ function floatText(x,y,txt,cls){const f=document.createElement('div');f.classNam
 
 /* ================= 流程 ================= */
 function startForge(){
- S.value=0;S.potential=0;S.charge=0;S.hits=0;S.strikes=0;S.pendingQuench=false;
+ S.value=0;syncPotential();S.charge=0;S.hits=0;S.strikes=0;S.pendingQuench=false; // v29:potential=当日标记台账(换剑不清)
  S.anvils=[];syncFocus();S.phase='idle';hud();updateSword();renderRack();
  $('quiz-hint').textContent='点「🔨 开始铸造」把剑坯上砧开锻';
 }
 function nextQuestion(){S.q=genQuestion();S.pos=0;S.revealed=false;S.marks=[];playQuestion()}
 $('btn-forge').onclick=()=>{if(S.phase==='over')return;if(!S.chest.length){toast('剑坯用完了!点「🏁 结束铸造」收工');return}placeBlank(0)};
-$('quench-btn').onclick=()=>{if(S.phase!=='ready')return;$('quench-btn').style.display='none';quenchPhase()};
+$('quench-btn').onclick=()=>{}; // v29:逐题淬火退役,按钮永久隐藏(保留元素防旧引用)
 $('btn-replay').onclick=()=>{if(S.phase==='input'){const p=S.pos,m=S.marks,r=S.revealed;playQuestion();S.pos=p;S.marks=m;S.revealed=r;renderSlots()}};
-$('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音 · 淬火定命',
+$('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音 · 砧板标记 · 统一淬火',
  `- 听题目(音序),<b>按顺序</b>在音道上敲出这些音<br>
-  · 敲对 <b>+1💰价值</b>(音阶护符可加价);敲错剑不碎,但<b>每错一音:淬火损坏率 +5%</b><br>
-  · 一题敲完 → <b>淬火=兑换</b>:roll 档位,价值 × 倍率落成金币<br>
-  · 三档:<b>大成功×4 / 成功×2 / 损坏(剑当场爆!)</b> · 基础 20/70/10,整题全对→大成功+5%<br>
+  · 敲错剑不碎,但<b>每错一次本题标记降一色</b>;错 3 次本题作废(黑标记)<br>
+  · 一题敲完 → <b>砧板标记入行</b>(蓝3/绿2/白1/黑0),直接进下一题<br>
+  · <b>连击进化</b>:连续「蓝及以上」≥3 全紫(4💰)/≥5 全金(5💰)/≥7 全红(6💰),绿白黑断串<br>
+  · <b>全天题打完 → 统一淬火一次兑现</b>:Σ标记价值 × 档位倍率落成金币;错音越多越易失手(损坏=当日价值全毁),盔甲/玄铁/龙鳞照常护炉<br>
+  · 三档:<b>大成功×4 / 成功×2 / 损坏(×0)</b> · 基础 20/70/10<br>
+  · <b>药水</b>(商人有售):🧪保底 60💰 绿/白标记→蓝(可接上蓝串触发进化);⚗️升级 120💰 单标记升一级(红封顶)<br>
   · 角色等级封顶剑的成长:<b>Lv.1 铁匠每把剑最多 4 题,最高 4 音域</b>,每天 3 个剑坯<br>
   · 背景是五线谱:每个音的音符位置 = 它在谱上的真实位置,玩着玩着就认识谱了<br>
-  · 连对 ${CFG.FRENZY_NEED} 击 → <b>⚡超神 ${CFG.FRENZY_SECS}s</b>:敲对每击 +${CFG.FRENZY_GOLD}🪙、敲错零惩罚,窗口结束大淬火一把结<br>
-  · 每 2 题剑升 1 级(3音域→4音域),4 题铸成入箱,没爆就能卖<br>
+  · 连对 ${CFG.FRENZY_NEED} 击 → <b>⚡超神 ${CFG.FRENZY_SECS}s</b>:敲对每击 +${CFG.FRENZY_TAP}💰、敲错零惩罚,窗口结束回题循环<br>
+  · 每 2 题剑升 1 级(3音域→4音域),4 题铸成入箱,傍晚商人处卖钱<br>
   · 横幅颜色 = 唱名颜色(do 红 re 橙 mi 黄 fa 绿 sol 青 la 蓝 si 紫)<br>
   · 右侧「🎵 乐器音色」可换 33 种实采乐器音色(逐音 YIN 验证),出题自动避开该乐器缺的音`,
  [{label:'明白,开炉!',cls:'gold',fn:hideOverlay}])};
@@ -2020,7 +2163,7 @@ $('lanes').addEventListener('pointerdown',e=>{
 });
 
 /* 测试钩子 */
-window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,makeItem,syncFocus,stashAll,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,genQuestion,playQuestion,quenchPhase,swordCap,openMerchant,renderMerchant,openUpg,buyUpg,UPG,anvilN,renderRack,renderUpg,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()}};
+window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,makeItem,syncFocus,stashAll,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,gradeQuestion,unifiedQuench,appendMark,recalcEvolution,markVal,progSwords,potEligible,applyPotion,enterPotSel,MARK_VAL,MARK_ORDER,POTIONS,swordCap,openMerchant,renderMerchant,openUpg,buyUpg,UPG,anvilN,renderRack,renderUpg,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()}};
 
 /* ================= 启动 ================= */
 buildLanes();
@@ -2043,7 +2186,10 @@ $('ut-upg').onclick=()=>upgTab('upg');$('ut-skill').onclick=()=>upgTab('skill');
  $('btn-endforge').onclick=endForgeDay;
 const dbgGold=()=>{S.gold+=99999;hud();renderShopGold();toast('🐞 debug +99999💰')};
 $('btn-dbg').onclick=dbgGold;$('btn-dbg2').onclick=dbgGold;
- $('btn-day2').onclick=()=>{if(S.mode!=='forge')return;S.phase='idle';stashAll(true);nightFade(openMerchant,'流浪商人',`🌆 第 ${S.day} 天傍晚 · 「独眼」格罗兹到访`)};
+ $('btn-day2').onclick=()=>{if(S.mode!=='forge')return;S.phase='idle';
+  const go=()=>{stashAll(true);nightFade(openMerchant,'流浪商人',`🌆 第 ${S.day} 天傍晚 · 「独眼」格罗兹到访`)};
+  if(S.row.length)unifiedQuench(go); // v29:有未兑现标记先统一淬火再进店
+  else go()};
  const _hudOrig=hud;
  hud=function(){_hudOrig();
   if(S.cur){$('tier-tag').textContent=`${WLBL[S.cur.cat||'sword']}Lv.${S.cur.lv}/${swordCap()} · 第${S.day}天`;

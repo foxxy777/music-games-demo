@@ -21,8 +21,8 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #gold-row{display:flex;align-items:center;gap:5px;font-size:16px;font-weight:bold;color:#ffd54f}
 #btn-dbg,#btn-dbg2{background:none;border:1px dashed rgba(255,213,79,.45);border-radius:6px;color:#ffd54f;font-size:12px;line-height:1;padding:3px 5px;cursor:pointer;opacity:.65}
 #btn-dbg:hover,#btn-dbg2:hover{opacity:1;background:rgba(255,213,79,.12)}
-#anvil-rack{flex:none;display:flex;gap:6px;overflow-x:auto;padding:4px 2px;margin:0 0 4px;scrollbar-width:thin}
-#anvil-rack .rk{flex:none;min-width:54px;height:42px;border:1px solid #4a3320;border-radius:8px;background:rgba(30,20,10,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;color:#8a6c42;line-height:1.2}
+#anvil-rack{flex:none;display:flex;gap:6px;overflow-x:auto;padding:2px 2px;margin:0 0 2px;scrollbar-width:thin}
+#anvil-rack .rk{flex:none;min-width:54px;height:34px;border:1px solid #4a3320;border-radius:8px;background:rgba(30,20,10,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;color:#8a6c42;line-height:1.2}
 #anvil-rack .rk.on{border-color:#ffd54f;color:#ffd54f;background:rgba(60,42,16,.55)}
 #anvil-rack .rk i{font-style:normal;font-size:10px;color:#c9a06a}
 #upg-modal{position:absolute;inset:0;z-index:150;background:#000000ba;display:none;align-items:center;justify-content:center;cursor:auto}
@@ -127,10 +127,10 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #acc-row{font-size:11px;color:#c9a06a;display:flex;gap:12px;align-items:center}
 
 /* ===== 题目区 ===== */
-#quiz{flex:0 0 126px;order:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-top:2px solid #4a3320;background:#120c0777;position:relative;padding:4px 0}
+#quiz{flex:0 0 112px;order:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-top:2px solid #4a3320;background:#120c0777;position:relative;padding:4px 0}
 #quiz-title{font-size:11px;color:#c9a06a;letter-spacing:1px}
-#slots{display:flex;gap:8px;align-items:center;justify-content:center;min-height:42px;flex:none}
-.qslot{width:46px;height:40px;border:2px dashed #6a4c2a;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a110a;transition:all .18s;position:relative}
+#slots{display:flex;gap:8px;align-items:center;justify-content:center;min-height:34px;flex:none}
+.qslot{width:44px;height:34px;border:2px dashed #6a4c2a;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a110a;transition:all .18s;position:relative}
 .qslot.waiting{border-style:dashed}
 .qslot.playing{border-color:#ffd54f;box-shadow:0 0 14px #ffd54f55;animation:qpulse .5s infinite}
 .qslot.hit{border-style:solid;border-color:#7ddf6a;background:linear-gradient(165deg,#1a3012,#0d1808)}
@@ -141,8 +141,8 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .qslot .qsi{font-size:8px;color:#c9a06a66;margin-top:1px}
 .qslot.hit .qsi,.qslot.miss .qsi{color:#c9a06a}
 /* 我的输入行(2026-10-17 大爷令):与题目槽逐位对齐,显示实际按的音,对绿错红 */
-#my-slots{display:flex;gap:8px;align-items:center;justify-content:center;min-height:34px;flex:none}
-.mslot{width:46px;height:30px;border:1.5px dashed #4a3320;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#150d08;font-size:14px;font-weight:bold;color:#5a4428}
+#my-slots{display:flex;gap:8px;align-items:center;justify-content:center;min-height:26px;flex:none}
+.mslot{width:44px;height:26px;border:1.5px dashed #4a3320;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#150d08;font-size:14px;font-weight:bold;color:#5a4428}
 .mslot.next{border-color:#ffd54f66;animation:mpulse 1s infinite}
 .mslot.ok{border-style:solid;border-color:#7ddf6a77;color:#a8f0a0;background:linear-gradient(165deg,#14240d,#0a1406)}
 .mslot.bad{border-style:solid;border-color:#ff5d6c99;color:#ff9a8a;background:linear-gradient(165deg,#2e0e14,#16070b)}
@@ -163,8 +163,8 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #acc-detail2{font-size:12px;color:#c9a06a}
 #quench-btn{display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:40;padding:11px 20px;font-size:18px;font-weight:bold;border-radius:14px;background:linear-gradient(160deg,#8a5cff,#1a5f9e);border:2px solid #d0b3ff;color:#fff;cursor:pointer;animation:qbpulse 1.1s ease-in-out infinite;box-shadow:0 0 22px #4da3e888}
 @keyframes qbpulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.07)}}
-#left-col{width:240px;flex:none;order:2;display:flex;flex-direction:column;position:relative;border-left:2px solid #4a3320;background:linear-gradient(180deg,#150d07 0%,#0d0805 100%)}
-#girl-col{width:216px;flex:none;order:-1;display:flex;flex-direction:column;position:relative;border-right:2px solid #4a3320;background:linear-gradient(180deg,#150d07,#0d0805)}
+#left-col{width:188px;flex:none;order:2;display:flex;flex-direction:column;position:relative;border-left:2px solid #4a3320;background:linear-gradient(180deg,#150d07 0%,#0d0805 100%)}
+#girl-col{width:186px;flex:none;order:-1;display:flex;flex-direction:column;position:relative;border-right:2px solid #4a3320;background:linear-gradient(180deg,#150d07,#0d0805)}
 #bucket-zone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:12px 10px 6px;position:relative}
 #bucket{width:76%;max-width:235px;flex:none;filter:drop-shadow(0 8px 14px #000a)}
 #bucket-cap{font-size:12px;color:#7fb8e8;letter-spacing:1px;text-shadow:0 1px 2px #000}
@@ -199,8 +199,9 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #anvil::after{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
  clip-path:polygon(2% 17.5%,68.4% 6%,98.6% 50%,68.4% 94%,2% 82.5%,7.6% 50%);
  background:linear-gradient(165deg,rgba(255,255,255,.10),transparent 26%),linear-gradient(0deg,#434a54 0%,#333941 55%,#262a31 100%)}
-#lanes{flex:1;display:flex;flex-direction:column-reverse;padding:12px 26px 12px 34px;gap:4px;position:relative;z-index:1}
-.lane{flex:1;display:flex;flex-direction:row;position:relative;align-items:center;gap:8px;padding:0 12px;border-radius:9px;border:1.5px solid #ffffff10;background:linear-gradient(90deg,#ffffff04,#ffffff08 50%,#ffffff04);transition:background .12s,border-color .12s,filter .2s;position:relative;min-height:0}
+#lanes{flex:1;display:flex;flex-direction:column-reverse;padding:6px 16px 6px 24px;gap:2px;position:relative;z-index:1}
+.lane{flex:1;display:flex;flex-direction:row;position:relative;align-items:center;gap:8px;padding:0 8px;border-radius:9px;border:1.5px solid #ffffff10;background:linear-gradient(90deg,#ffffff04,#ffffff08 50%,#ffffff04);transition:background .12s,border-color .12s,filter .2s;position:relative;min-height:0}
+.lane.cov:hover{border-color:#ffd54faa;background:linear-gradient(90deg,#ffd54f14,#ffd54f2e 50%,#ffd54f14)} /* v33:hover 高亮加强相邻道区分 */
 .lane .ln{flex:none;text-align:center;font-size:15px;font-weight:bold;text-shadow:0 0 8px currentColor}
 .lane .lk{flex:none;text-align:center;font-size:10px;opacity:.55}
 .lane.dim{filter:brightness(.32) saturate(.4)}
@@ -418,6 +419,12 @@ body{overflow:hidden}
 /* ===== v29 砧板标记行(大爷10-25令:横向彩色小条·成绩史·连击进化·药水槽) ===== */
 #mark-row{flex:none;display:flex;align-items:center;gap:6px;min-height:20px;padding:2px 8px;background:linear-gradient(180deg,#191009,#110a06);border-top:1px dashed #4a3320;overflow-x:auto;scrollbar-width:none}
 #mark-row::-webkit-scrollbar{display:none}
+/* ===== v33 手动统一淬火(大爷10-25 16:25令):题打完不自动弹,砧板下方大金字钮手动兑现 ===== */
+#quench-row{flex:none;display:none;justify-content:flex-end;align-items:center;padding:2px 10px}
+#quench-row.on{display:flex}
+#btn-quench-day{font-size:17px;font-weight:bold;letter-spacing:2px;padding:7px 26px;border-radius:12px;background:linear-gradient(160deg,#a37c1c,#6d5210);border:2px solid #ffd54f;color:#fff6d8;cursor:pointer;font-family:inherit;animation:uqpulse 1.15s ease-in-out infinite}
+#btn-quench-day:hover{filter:brightness(1.22)}
+@keyframes uqpulse{50%{box-shadow:0 0 20px #ffd54faa;filter:brightness(1.12)}}
 #mark-row .mr-lab{flex:none;font-size:10px;color:#c9a06a;letter-spacing:1px;white-space:nowrap}
 #mark-marks{display:flex;gap:5px;align-items:center;min-height:16px}
 .mk{flex:none;width:32px;height:15px;border-radius:4px;border:1px solid #00000099;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;color:#fff;text-shadow:0 1px 2px #000;position:relative;transition:transform .15s}
@@ -499,6 +506,10 @@ body{overflow:hidden}
 #forge-flash{position:absolute;inset:0;background:#ffd54f;opacity:0;z-index:40;pointer-events:none}
 #forge-flash.go{animation:fflash .55s ease-out}
 @keyframes fflash{12%{opacity:.55}100%{opacity:0}}
+/* ===== v33 唱名悬停气泡(大爷10-25 16:25令):悬停音道浮出唱名,深色圆角·亮字·跟指针上方·不挡点击 ===== */
+#solfege-tip{position:fixed;left:0;top:0;z-index:400;pointer-events:none;background:#241a10f2;border:1px solid #ffd54f88;border-radius:8px;padding:3px 10px;font-size:13px;font-weight:bold;color:#ffe89a;white-space:nowrap;box-shadow:0 2px 10px #000a;opacity:0;transition:opacity .06s linear;font-family:inherit}
+#solfege-tip.on{opacity:1}
+#solfege-tip .sf-oct{color:#c9a06a;font-weight:normal;font-size:11px;margin-left:4px}
 </style>
 </head>
 <body>
@@ -581,8 +592,9 @@ body{overflow:hidden}
     <div id="sword-glow"></div>
     <div id="sword-zone"><svg id="sword-svg" width="600" height="120" viewBox="0 0 600 120"></svg><div id="sword-value"></div></div>
    </div>
-    <button id="btn-endforge" class="side-btn" title="收工:在场剑全部入箱,全天标记随后统一淬火"><span class="fe">⏹</span><span class="fl" id="btn-endforge-lab">结束铸造</span></button>
+    <button id="btn-endforge" class="side-btn" title="收工:在场剑全部入箱;有未兑现标记须先点「💧 统一淬火」"><span class="fe">⏹</span><span class="fl" id="btn-endforge-lab">结束铸造</span></button>
    </div>
+   <div id="quench-row"><button id="btn-quench-day">💧 统一淬火</button></div>
    <div id="mark-row"><span class="mr-lab">🏷️ 砧板标记</span><span id="mark-marks"></span><span id="mark-sum">Σ💰0</span><div id="potion-slot"></div></div>
    </div>
    <div id="girl-col">
@@ -809,6 +821,7 @@ function renderMarkRow(){
  });
  $('mark-sum').textContent='Σ💰'+S.row.reduce((s,m)=>s+markVal(m),0);
  renderPotionSlot();
+ syncQuenchBtn(); // v33:标记行变化同步手动淬火钮显隐
 }
 function appendMark(grade,cb){ // 答完一题:标记追加→进化重算→台账同步
  S.row.push({g:grade,cb:cb||0});
@@ -867,6 +880,13 @@ function renderPotionSlot(){
   box.appendChild(b);
  });
 }
+/* v33 手动统一淬火钮(大爷10-25 16:25令):只在 锻造模式·phase=idle·砧板有未兑现标记 时出现;淬火中/题中/商店自动隐藏 */
+function syncQuenchBtn(){
+ const b=$('btn-quench-day');if(!b)return;
+ const on=S.mode==='forge'&&S.phase==='idle'&&S.row.length>0;
+ b.style.display=on?'inline-block':'none';
+ const row=$('quench-row');if(row)row.classList.toggle('on',on);
+}
 
 /* ================= 淬火概率(大爷21:51令:三档·错音/全对驱动) ================= */
 function swordCap(){return CFG.SWORD_CAP_LV+(S.roleLv-1)} // 技能书:铁匠Lv↑→剑成长上限↑(23:11商人令)
@@ -906,7 +926,7 @@ function renderRack(){
  let h='';
  for(let i=0;i<anvilN();i++){
   const sw=S.anvils[i];
-  h+=sw?`<div class="rk on" title="${sw.name} Lv.${sw.lv}${sw.iron?' · 🪨玄铁':''}"><span>${sw.emoji} Lv${sw.lv}</span><i>题 ${sw.qDone}/${swordCap()*2}</i></div>`
+  h+=sw?`<div class="rk on" title="${sw.name} Lv.${sw.lv}${sw.iron?' · 🪨玄铁':''}"><span>${sw.emoji} Lv${sw.lv}</span><i>打造次数 ${sw.qDone}/${swordCap()*2}</i></div>`
        :`<div class="rk">💤 空砧</div>`;
  }
  r.innerHTML=h;
@@ -1291,7 +1311,7 @@ function hud(){
  $('sword-title').textContent=sw.name+(S.dmgLv>0?` ⚠-${S.dmgLv*10}%`:'');$('sword-emoji').textContent=sw.emoji;
  $('tier-tag').textContent=`Tier ${S.tier+1}/${SWORDS.length}`;
  $('value-fill').style.width=Math.max(0,Math.min(100,S.qCount/(swordCap()*2)*100))+'%';
- $('value-num').textContent=`成长 ${S.qCount}/${swordCap()*2} 题`;
+ $('value-num').textContent=`打造次数 ${S.qCount}/${swordCap()*2}`;
  $('gold-num').textContent=S.gold;
  $('pot-num').textContent=S.potential;updateBucket();
  // 充能
@@ -1310,6 +1330,7 @@ function hud(){
   el.querySelector('.pct').textContent=Math.round(p[k])+'%';
  });
  updListenBtn(); // v31:听题钮状态机(开始铸造↔听题,busy/淬火/作废间隙 disabled)
+ syncQuenchBtn(); // v33:手动淬火钮显隐同步
 }
 function updListenBtn(){ // v31 砧板左侧大钮:新一天/砧空=「🔨 开始铸造」· 题目出来后=「👂 听题」
  const b=$('btn-listen');if(!b)return;
@@ -1555,7 +1576,7 @@ function endQuestion(contourB){
   return;
  }
  if(!S.frenzyActive&&S.charge>=CFG.FRENZY_NEED){startFrenzy();return}
- afterBatch(); // 不再弹逐题淬火,直接进下一题;全天打完后 afterBatch→checkDayEnd→统一淬火
+ afterBatch(); // 不再弹逐题淬火,直接进下一题;全天打完后 afterBatch→checkDayEnd 亮「💧 统一淬火」手动钮(v33:不再自动弹)
 }
 /* v29:剑进度随题结算(原在逐题淬火里:qDone/升级/铸成入库/协会进度;品质改由标记色驱动) */
 function progSwords(mv,grade){
@@ -1665,11 +1686,10 @@ function endFrenzy(){
 function curSpan(){const l=S.anvils.length?Math.max(...S.anvils.map(a=>a.lv)):(S.cur?S.cur.lv:1);return SWORDS[Math.max(0,Math.min(SWORDS.length,l))-1].span} // 共锻音域=在场最高剑级(多砧同题,00:23令)
 function markDay(st){if(st==='forging')S.dayLog.push('forging');
  else{const i=S.dayLog.lastIndexOf('forging');if(i>=0)S.dayLog[i]=st;else S.dayLog.push(st)}}
-function checkDayEnd(){ // 大爷21:51令:收工=剑胚用光且铁砧空;v29:自动进入统一淬火结算
+function checkDayEnd(){ // 大爷21:51令:收工=剑胚用光且铁砧空;v33:不再自动弹淬火,改亮「💧 统一淬火」手动钮
  if(S.mode!=='forge'||S.anvils.length||S.chest.length)return;
  S.forgeEnded=true;S.phase='idle';hud();
- if(S.row.length){unifiedQuench(()=>$('quiz-hint').textContent='淬火完毕!点「🧙 第二天·商人」买卖装备');return}
- $('quiz-hint').textContent='今天的剑胚用完了!点「🧙 第二天·商人」买卖装备';}
+ $('quiz-hint').textContent=S.row.length?'今天的剑胚用完了!点下方「💧 统一淬火」兑现标记,再去「🧙 第二天·商人」买卖装备':'今天的剑胚用完了!点「🧙 第二天·商人」买卖装备';}
 function newSword(lv=1,cat){
  cat=cat||'sword';
  if(S.anvils.length>=anvilN()){toast('铁砧满了!先锻完,或去「🏗️ 升级铺子」加砧');return false}
@@ -1742,6 +1762,7 @@ function placeBlank(i){
 /* 柜台双向拖拽已随柜台系统废弃(23:11大爷令:单人商人界面) */
 function endForgeDay(){
  if(S.mode!=='forge')return;
+ if(!S.anvils.length&&!S.chest.length&&S.row.length){toast('⚠️ 先点「💧 统一淬火」兑现标记,再收工!',2200);return} // v33:全天题打完仍有未兑现标记→拦截
  const items=stashAll(true);
  S.forgeEnded=true;S.phase='idle';hud();
  toast(items.length?`🌙 收工!${items.length} 把剑没碎——收进箱子,明天照样卖 💰${items.reduce((s,x)=>s+x.value,0)}`:'收工!点「第二天」去卖货');
@@ -2297,7 +2318,7 @@ $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音 · 砧�
   · 敲错剑不碎,但<b>每错一次本题标记降一色</b>;错 3 次本题作废(黑标记)<br>
   · 一题敲完 → <b>砧板标记入行</b>(蓝3/绿2/白1/黑0),直接进下一题<br>
   · <b>连击进化</b>:连续「蓝及以上」≥3 全紫(4💰)/≥5 全金(5💰)/≥7 全红(6💰),绿白黑断串<br>
-  · <b>全天题打完 → 统一淬火一次兑现</b>:Σ标记价值 × 档位倍率落成金币;错音越多越易失手(损坏=当日价值全毁),盔甲/玄铁/龙鳞照常护炉<br>
+  · <b>全天题打完 → 点「💧 统一淬火」手动一次兑现</b>:Σ标记价值 × 档位倍率落成金币;错音越多越易失手(损坏=当日价值全毁),盔甲/玄铁/龙鳞照常护炉;没兑现前去不了商人<br>
   · 三档:<b>大成功×4 / 成功×2 / 损坏(×0)</b> · 基础 20/70/10<br>
   · <b>药水</b>(商人有售):🧪保底 60💰 绿/白标记→蓝(可接上蓝串触发进化);⚗️升级 120💰 单标记升一级(红封顶)<br>
   · 角色等级封顶剑的成长:<b>Lv.1 铁匠每把剑最多 4 题,最高 4 音域</b>,每天 3 个剑坯<br>
@@ -2314,6 +2335,30 @@ $('lanes').addEventListener('pointerdown',e=>{
  placeHammer(e.clientX,e.clientY);
  hitLane(+laneEl.dataset.i);
 });
+
+/* v33 唱名悬停气泡:悬停音道浮出唱名(do/re/…+八度上标区分),出现≤80ms·移开即消·pointer-events:none 不挡点击 */
+(function(){
+ const tip=document.createElement('div');tip.id='solfege-tip';document.body.appendChild(tip);
+ const SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+ const supOf=d=>{const m=d.match(/\d+/);return m?m[0].replace(/\d/g,c=>SUP[c]||c):''}; // 'C4'→'⁴'
+ let curLane=null;
+ const move=e=>{tip.style.left=Math.min(e.clientX+14,innerWidth-tip.offsetWidth-6)+'px';
+  tip.style.top=Math.max(4,e.clientY-36)+'px'};
+ const showFor=(el,e)=>{const nt=NOTES[+el.dataset.i];if(!nt){hide();return}
+  const base=nt.n.replace(/[′″]/g,'');
+  tip.innerHTML=`<span style="color:${colorOf(nt.n)}">${base}<span class="sf-oct">${supOf(nt.d)} · ${nt.d}</span></span>`;
+  tip.classList.add('on');move(e)};
+ function hide(){curLane=null;tip.classList.remove('on')}
+ const lanes=$('lanes');
+ lanes.addEventListener('pointerover',e=>{const el=e.target.closest?e.target.closest('.lane'):null;
+  if(!el||el.classList.contains('off')){hide();return}
+  if(el!==curLane){curLane=el;showFor(el,e)}else move(e)});
+ lanes.addEventListener('pointermove',e=>{if(curLane)move(e)});
+ lanes.addEventListener('pointerout',e=>{if(!curLane)return;
+  const to=e.relatedTarget&&e.relatedTarget.closest?e.relatedTarget.closest('.lane'):null;
+  if(to!==curLane)hide()});
+ lanes.addEventListener('pointerleave',hide);
+})();
 
 /* 测试钩子 */
 window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,makeItem,syncFocus,stashAll,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,gradeQuestion,unifiedQuench,appendMark,recalcEvolution,markVal,progSwords,potEligible,applyPotion,enterPotSel,MARK_VAL,MARK_ORDER,POTIONS,swordCap,openMerchant,renderMerchant,openUpg,buyUpg,UPG,anvilN,renderRack,renderUpg,openBill,closeBill,billData,metaObj,metaSave,settleLegacy,renderSkillTree,updListenBtn,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()}};
@@ -2336,12 +2381,14 @@ mk('btn-quest','📋 任务板');
  $('q-strip').onclick=openQuest;renderQStrip();
 $('ut-upg').onclick=()=>upgTab('upg');$('ut-skill').onclick=()=>upgTab('skill');
  $('btn-endforge').onclick=endForgeDay;
+ $('btn-quench-day').onclick=()=>{ // v33:手动统一淬火——点按钮才兑现,内部流程(概率/标记/结果)原样不动
+  if(S.mode!=='forge'||S.phase!=='idle'||!S.row.length)return;
+  unifiedQuench(()=>$('quiz-hint').textContent='淬火完毕!点「🧙 第二天·商人」买卖装备')};
 const dbgGold=()=>{S.gold+=99999;hud();renderShopGold();toast('🐞 debug +99999💰')};
 $('btn-dbg').onclick=dbgGold;$('btn-dbg2').onclick=dbgGold;
  $('btn-day2').onclick=()=>{if(S.mode!=='forge')return;S.phase='idle';
-  const go=()=>{stashAll(true);nightFade(openMerchant,'流浪商人',`🌆 第 ${S.day} 天傍晚 · 「独眼」格罗兹到访`)};
-  if(S.row.length)unifiedQuench(go); // v29:有未兑现标记先统一淬火再进店
-  else go()};
+  if(S.row.length){toast('⚠️ 先点「💧 统一淬火」兑现标记,才能去商人!',2200);hud();return} // v33:未兑现标记拦截,淬火完才放行;无标记行为不变
+  stashAll(true);nightFade(openMerchant,'流浪商人',`🌆 第 ${S.day} 天傍晚 · 「独眼」格罗兹到访`)};
  const _hudOrig=hud;
  hud=function(){_hudOrig();
   if(S.cur){$('tier-tag').textContent=`${WLBL[S.cur.cat||'sword']}Lv.${S.cur.lv}/${swordCap()} · 第${S.day}天`;

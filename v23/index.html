@@ -183,7 +183,14 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #bucket-water-glow{transition:all .3s}
 .flydrop{position:absolute;z-index:36;pointer-events:none;font-size:19px;opacity:.95;transition:transform .55s cubic-bezier(.3,-.15,.65,1.05);text-shadow:0 2px 4px #0008}
 #center-col{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
-#anvil{flex:1;display:flex;position:relative;overflow:hidden;cursor:none}
+/* v31 按钮重组(大爷10-25 13:08令):砧板左「听题」右「结束铸造」,砧板保持居中主体 */
+#forge-row{flex:1;display:flex;align-items:stretch;gap:8px;min-height:0;min-width:0;padding:0 8px}
+.side-btn{flex:none;width:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:14px;border:2px solid #7a5830;background:linear-gradient(165deg,#3a2a16,#241708);color:#ffe9b8;cursor:pointer;font-family:inherit;padding:6px 4px;transition:border-color .15s,box-shadow .15s,opacity .15s}
+.side-btn:hover{border-color:#ffd54f;box-shadow:0 0 14px #ffb84d44;color:#fff}
+.side-btn:disabled{opacity:.32;cursor:default;box-shadow:none;border-color:#7a5830}
+.side-btn .fe{font-size:24px;line-height:1;filter:drop-shadow(0 2px 4px #0008)}
+.side-btn .fl{font-size:13px;font-weight:bold;letter-spacing:2px}
+#anvil{flex:1;display:flex;position:relative;overflow:hidden;cursor:none;min-width:0}
 /* 铁砧俯视外形(大爷19:49令):右端尖角horn+左端砧尾 */
 #anvil::before{content:'';position:absolute;inset:0;z-index:0;
  clip-path:polygon(1.5% 15%,68% 3%,100% 50%,68% 97%,1.5% 85%,7% 50%);
@@ -431,6 +438,42 @@ body{overflow:hidden}
 .pk:hover{border-color:#ffd54f;color:#ffe9b8}
 .pk.on{border-color:#ffd54f;background:linear-gradient(180deg,#4a3218,#2a1c0f);color:#ffe89a;box-shadow:0 0 8px #ffb84d66}
 .pk:disabled{opacity:.35;cursor:default}
+/* ===== v31 商人结算账单(大爷10-25 13:08令:收银小票·逐行打印·睡觉前过目) ===== */
+#bill-modal{position:absolute;inset:0;z-index:145;background:#000000c9;display:none;align-items:center;justify-content:center;cursor:auto}
+#bill-modal.on{display:flex}
+#bill-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+#bill-paper{position:relative;width:min(340px,80vw);max-height:56vh;overflow-y:auto;background:#f7f1de;color:#2c2318;font-family:"Courier New",Consolas,monospace;font-weight:bold;padding:18px 18px 14px;box-shadow:0 16px 44px #000d;animation:qmpop .25s cubic-bezier(.3,-.2,.6,1.4)}
+/* 上下锯齿撕边 */
+#bill-paper::before{content:'';position:absolute;left:0;right:0;top:-8px;height:8px;background:conic-gradient(from 135deg at 50% 100%,#f7f1de 90deg,transparent 0) 0 0/16px 8px repeat-x}
+#bill-paper::after{content:'';position:absolute;left:0;right:0;bottom:-8px;height:8px;background:conic-gradient(from -45deg at 50% 0%,#f7f1de 90deg,transparent 0) 0 0/16px 8px repeat-x}
+#bill-head{font-size:16px;text-align:center;letter-spacing:2px}
+#bill-sub{font-size:10.5px;text-align:center;color:#6a5c48;margin:4px 0 8px}
+#bill-lines .bl{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:5px 2px;border-bottom:1px dashed #b8a888;animation:bprint .18s ease-out both}
+#bill-lines .bl b{white-space:nowrap}
+@keyframes bprint{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+#bill-dash{border-top:2px dashed #6a5c48;margin:8px 0 4px}
+#bill-total{display:flex;justify-content:space-between;font-size:19px;padding:2px 2px 4px}
+#bill-total b.up{color:#1e6a2e}#bill-total b.dn{color:#a02a2a}
+#bill-foot{font-size:10px;color:#8a7a60;text-align:center;letter-spacing:1px;margin-top:4px}
+#bill-btns{display:flex;gap:10px;opacity:0;pointer-events:none;transition:opacity .25s}
+#bill-btns.on{opacity:1;pointer-events:auto}
+/* ===== v31 技能树局外界面(开始菜单进入·三线占位骨架) ===== */
+#st-modal{position:absolute;inset:0;z-index:310;background:radial-gradient(900px 700px at 50% 35%,#2a1c10 0%,#120b06 60%,#050302 100%);display:none;align-items:center;justify-content:center;cursor:auto}
+#st-modal.on{display:flex}
+#st-card{width:min(680px,90vw);max-height:88vh;overflow-y:auto;background:linear-gradient(165deg,#2b2015,#191210 70%);border:2px solid #c9a06a90;border-radius:18px;padding:16px 20px;box-shadow:0 18px 60px #000c}
+#st-card .qh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#st-card .qh b{color:#ffd54f;font-size:17px}
+#st-close{background:none;border:1px solid #5a4028;border-radius:6px;color:#c9a06a;cursor:pointer;padding:2px 8px}
+#st-pts{font-size:13px;color:#c9a06a;text-align:center;margin-bottom:12px}
+#st-pts b{color:#ffd54f}
+#st-grid{display:flex;gap:12px}
+.st-col{flex:1;border:1px solid #4a3320;border-radius:12px;padding:10px 8px;background:#1c140c;display:flex;flex-direction:column;gap:8px;min-width:0}
+.st-cl{text-align:center;font-size:14px;font-weight:bold;color:#ffe9b8;letter-spacing:2px;border-bottom:1px dashed #4a3320;padding-bottom:6px}
+.st-node{border:1.5px dashed #6a5432;border-radius:10px;padding:8px 6px;text-align:center;opacity:.75;cursor:not-allowed;display:flex;flex-direction:column;gap:2px}
+.st-node .sn-e{font-size:18px;line-height:1.2}
+.st-node .sn-n{font-size:12.5px;color:#e8d9c3;font-weight:bold}
+.st-node .sn-s{font-size:10px;color:#c9a06a}
+.st-note{margin-top:12px;font-size:11px;color:#8a7455;text-align:center;line-height:1.6}
 /* ===== 遮罩层 ===== */
 #overlay{position:absolute;inset:0;background:#0a0705e8;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:350;padding:36px;text-align:center;cursor:auto}
 #overlay.on{display:flex}
@@ -472,8 +515,6 @@ body{overflow:hidden}
       <div id="charge-bar"></div>
       <div id="frenzy-timer"></div>
     </div>
-    <button class="btn gold" id="btn-forge">🔨 开始铸造</button>
-    <button class="btn" id="btn-replay" disabled>🔁 重听</button>
     <button class="btn" id="btn-help">❓</button>
   </div>
   <div id="quench-modal"><div id="qm-card">
@@ -487,7 +528,7 @@ body{overflow:hidden}
     <div id="quiz-title">听音 · 按顺序敲出题目 · 标记上砧板</div>
     <div id="slots"></div>
  <div id="my-slots"></div>
-    <div id="quiz-hint">点「🔨 开始铸造」把剑坯上砧开锻</div>
+    <div id="quiz-hint">点砧板左侧「🔨 开始铸造」把剑坯上砧开锻</div>
   </div>
   <div id="main">
    <div id="acc-strip"><div class="acc-left"><span class="lab">🎯 正确率</span><b id="acc-big">—</b><span id="acc-detail2"></span></div><div id="probs-strip">
@@ -530,13 +571,17 @@ body{overflow:hidden}
    <div id="center-col">
    <div id="anvil-rack"></div>
 <div id="q-strip"></div>
-   <div id="anvil">
+   <div id="forge-row">
+    <button id="btn-listen" class="side-btn" title="新一天/砧空=上坯开锻 · 出题后=重听当前题"><span class="fe">🔨</span><span class="fl" id="listen-lab">开始铸造</span></button>
+    <div id="anvil">
     <div id="anvil-empty">💤 待铸</div>
     <div id="lanes"></div>
     <div id="laser-top" class="laser"></div>
     <div id="laser-bot" class="laser"></div>
     <div id="sword-glow"></div>
     <div id="sword-zone"><svg id="sword-svg" width="600" height="120" viewBox="0 0 600 120"></svg><div id="sword-value"></div></div>
+   </div>
+    <button id="btn-endforge" class="side-btn" title="收工:在场剑全部入箱,全天标记随后统一淬火"><span class="fe">⏹</span><span class="fl" id="btn-endforge-lab">结束铸造</span></button>
    </div>
    <div id="mark-row"><span class="mr-lab">🏷️ 砧板标记</span><span id="mark-marks"></span><span id="mark-sum">Σ💰0</span><div id="potion-slot"></div></div>
    </div>
@@ -597,10 +642,17 @@ body{overflow:hidden}
  <div id="menu-sub"></div>
  <button class="mbtn" id="btn-menu-start"></button>
  <button class="mbtn" id="btn-menu-continue"></button>
+ <button class="mbtn" id="btn-menu-skill"></button>
  <button class="mbtn" id="btn-menu-mod"></button>
  <button class="mbtn" id="btn-menu-opt"></button>
  <button class="mbtn" id="btn-menu-quit"></button>
 </div>
+<div id="st-modal"><div id="st-card">
+ <div class="qh"><b>🌳 技能树 · 遗产传承</b><button id="st-close">✕</button></div>
+ <div id="st-pts"></div>
+ <div id="st-grid"></div>
+ <div class="st-note">局外永久系统:遗产分跨局累积,死亡/通关结算入库 · 三线节点效果下版本接入</div>
+</div></div>
 <div id="snark-bubble"><span class="sb-txt"></span></div>
 <div id="opt-modal"><div id="opt-card">
  <div class="qh"><b id="opt-title"></b><button id="opt-close" style="background:none;border:1px solid #5a4028;border-radius:6px;color:#c9a06a;cursor:pointer;padding:2px 8px">\u2715</button></div>
@@ -619,12 +671,26 @@ body{overflow:hidden}
 <div id="q-sub">四大协会每天发单 · 按时交付得金币 · 超时作废</div>
 <div id="q-list"></div>
 </div></div>
-<div id="upg-modal"><div id="upg-card">
+  <div id="upg-modal"><div id="upg-card">
     <h3>🏗️ 升级铁匠铺 · 🪙<span id="upg-gold">0</span></h3>
     <div id="upg-tabs"><button id="ut-upg" class="utab on">🏗️ 铺面升级</button><button id="ut-skill" class="utab">✨ 技艺·技能点</button></div>
     <div id="upg-list"></div>
     <div id="skill-list" style="display:none"></div>
     <button id="upg-close" class="btn">先不升了</button>
+  </div></div>
+  <div id="bill-modal"><div id="bill-wrap">
+   <div id="bill-paper">
+    <div id="bill-head">🧾 铁匠铺 · 今日流水</div>
+    <div id="bill-sub">—— 第 <span id="bill-day">1</span> 天 · 格罗兹商行 ——</div>
+    <div id="bill-lines"></div>
+    <div id="bill-dash"></div>
+    <div id="bill-total"><span>结余</span><b></b></div>
+    <div id="bill-foot">· 谢谢惠顾 · 明天继续打铁 ·</div>
+   </div>
+   <div id="bill-btns">
+    <button id="bill-upg" class="btn">🔧 升级铺子</button>
+    <button id="bill-sleep" class="btn gold">🌙 睡觉·进新一天</button>
+   </div>
   </div></div>
   <div id="night-fade"><div id="nf-text">第二天</div><div id="nf-sub"></div></div>
   <div id="forge-flash"></div>
@@ -697,7 +763,8 @@ const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0
  totHits:0,totStrikes:0,      // 全局统计
  phase:'idle', // idle|playing|input|quench|busy|over
  q:[],pos:0,revealed:false,
- row:[],potions:{safe:0,up:0},potSel:null,dayErrN:0,dayFull:0}; // v29:砧板标记行/药水/当日错音·全对(统一淬火台账)
+ row:[],potions:{safe:0,up:0},potSel:null,dayErrN:0,dayFull:0, // v29:砧板标记行/药水/当日错音·全对(统一淬火台账)
+ ledger:{forge:0,sell:0,buy:0}}; // v31:当日流水台账(只记账不改经济):forge=淬火兑现 sell=商人卖出 buy=商人买入
 const $=id=>document.getElementById(id);
 
 /* ================= v29 砧板标记(大爷10-25令):成绩史+逐级连击进化 =================
@@ -1242,8 +1309,15 @@ function hud(){
   const el=$('pb-'+k);el.querySelector('.pfill').style.height=p[k]+'%';
   el.querySelector('.pct').textContent=Math.round(p[k])+'%';
  });
- $('btn-forge').disabled=S.phase!=='idle';
- $('btn-replay').disabled=!(S.phase==='input'||S.phase==='playing');
+ updListenBtn(); // v31:听题钮状态机(开始铸造↔听题,busy/淬火/作废间隙 disabled)
+}
+function updListenBtn(){ // v31 砧板左侧大钮:新一天/砧空=「🔨 开始铸造」· 题目出来后=「👂 听题」
+ const b=$('btn-listen');if(!b)return;
+ const fe=b.querySelector('.fe'),fl=$('listen-lab');
+ if(!fe||!fl)return;
+ if(S.phase==='input'||S.phase==='playing'){fe.textContent='👂';fl.textContent='听题';b.disabled=false;return}
+ fe.textContent='🔨';fl.textContent='开始铸造';
+ b.disabled=S.phase!=='idle';
 }
 function fmtT(s){s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
 const SNARKS={
@@ -1528,7 +1602,7 @@ function unifiedQuench(cb){
    html+=`<div style="color:#ff9a8a;font-weight:bold">💥 淬火失手!今日价值 ×0 全部蒸发…</div>`;
   }else{
    const pay=Math.round(total*CFG.TIERS[r].mult);
-   S.gold+=pay;
+   S.gold+=pay;if(S.ledger)S.ledger.forge+=pay; // v31:账单台账·锻造兑现
    html+=`<div style="color:${r==='great'?'#ffd54f':'#a8f0a0'};font-weight:bold">${r==='great'?'🌈 大成功!':'✅ 成功'}💰${total} × ${CFG.TIERS[r].mult} = 🪙${pay}${saved?'(🐉龙鳞碎裂,护住这一炉!)':''}</div>`;
   }
   playInst(r==='great'?84:r==='dmg'?55:72,0,1.2);
@@ -1542,7 +1616,7 @@ function unifiedQuench(cb){
 }
 function afterBatch(){
  if(!S.anvils.length){
-  if(S.chest.length){S.phase='idle';hud();$('quiz-hint').textContent='砧空了!点「🔨 开始铸造」上下一把'}
+  if(S.chest.length){S.phase='idle';hud();$('quiz-hint').textContent='砧空了!点砧板左侧「🔨 开始铸造」上下一把'}
   else checkDayEnd();
   return}
  S.phase='busy';hud();
@@ -1753,7 +1827,8 @@ function applyGood(g){
 function mSell(i){
  const avail=S.pack.filter(p=>!p.sold);const p=avail[i];if(!p)return;
  p.sold=true;const price=Math.round(p.value*(1+S.up[(p.cat||'sword')]*.1)*(1+S.sk.sell*.1)*S.eventMult);
- coinSound();S.gold+=price;S.soldCnt++;
+ coinSound();S.gold+=price;if(S.ledger)S.ledger.sell+=price; // v31:账单台账·卖出收入
+ S.soldCnt++;
  toast(`💰 卖出 ${p.name} ★${p.star} +${price}`+(S.eventMult!==1?` (行情${S.eventMult>1?'+':''}${Math.round((S.eventMult-1)*100)}%)`:''));snark(price>=300?'bigsell':'sell');
  renderMerchant();renderShopGold();
 }
@@ -1787,7 +1862,8 @@ function renderMerchant(){
   const dd=g.lvG?`${g.d}(当前 Lv.${bi.lv} · ${SWORDS[bi.lv-1].span}音)`:g.art?`${g.d}<br>神器槽 ${S.art.length}/${artSlots()}`:g.d;
   const buyFn=()=>{if(full){toast('这件今天买不了');return}
    if(S.gold<cost){toast('钱不够——先卖点装备');return}
-   S.gold-=cost;S.bought[g.id]=bought+1;applyGood(g);renderShopGold();renderMerchant()};
+   S.gold-=cost;if(S.ledger)S.ledger.buy+=cost; // v31:账单台账·买入支出
+   S.bought[g.id]=bought+1;applyGood(g);renderShopGold();renderMerchant()};
   if(isIconGoods(g)){
    const d=document.createElement('div');d.className='mic '+((g.id||'').startsWith('charm-')?'t-charm':'t-use')+(full?' off':'');d.dataset.gid=g.id;
    d.title=nm+' · '+g.d+` · 💰${cost}`;
@@ -1818,7 +1894,7 @@ function renderMerchant(){
  if(S.eventTxt){mb.textContent=S.eventTxt;mb.classList.add('on')}else{mb.textContent='';mb.classList.remove('on')}
  $('m-shelf-cap').textContent=S.mkt.length+' 种';updShelfBtn();
  $('m-sell-cap').textContent=avail.length?avail.length+' 把待售':'空';
- $('shop-hint').textContent='点卡买 · 双击/拖拽卖 · 「🌙 离开·安睡」进明天';
+ $('shop-hint').textContent='点卡买 · 双击/拖拽卖 · 「🌙 离开·安睡」结账进明天';
 }
 /* ===== v28 出售交互(大爷10-25令):单击=只看详情 · 双击=卖 · 拖到货架=卖 =====
    pointer events 手写拖拽(不依赖 HTML5 dragstart),影子跟光标,松手在商品层内=成交 */
@@ -1923,17 +1999,38 @@ function renderQuest(){
  }).join('');
  list.querySelectorAll('.q-btn').forEach(b=>b.onclick=()=>qAccept(b.getAttribute('data-g')));
 }
+/* ================= v31 技能树局外化(大爷10-25 13:08令):ft_meta 与局内存档 ft_save 互不污染 =================
+   遗产分=铁匠Lv×100+当前金币+存活天数×50,死亡/通关结算入库,跨局永久;
+   三线占位节点(匠艺/经营/赌性)纯骨架展示,「开发中」不可点,效果下版本接入 */
+const META_KEY='ft_meta';
+function metaObj(){let m=null;try{m=JSON.parse(localStorage.getItem(META_KEY))}catch(e){}
+ if(!m||typeof m!=='object')m={};m.pts=+m.pts||0;m.spent=+m.spent||0;if(!Array.isArray(m.unlocked))m.unlocked=[];return m}
+function metaSave(m){try{localStorage.setItem(META_KEY,JSON.stringify(m))}catch(e){}}
+function settleLegacy(){ // 结算折算遗产分并入库,返回本次入账分值(铁匠Lv×100+当前金币+存活天数×50)
+ const v=Math.max(0,Math.round((S.roleLv||1)*100+(S.gold||0)+(S.day||1)*50));
+ const m=metaObj();m.pts+=v;metaSave(m);return v}
+const STREES=[
+ {id:'craft',n:'匠艺',icon:'⚒️',nodes:['稳健锤法','连击保护','音域拓展']},
+ {id:'biz',n:'经营',icon:'💰',nodes:['讨价还价','收购人脉','库存扩容']},
+ {id:'gamble',n:'赌性',icon:'🎲',nodes:['命运偏爱','险中求胜','孤注一掷']}];
+function renderSkillTree(){
+ const el=$('st-pts');if(!el)return;
+ const m=metaObj();
+ el.innerHTML=`可用点数 <b>✨${m.pts-m.spent}</b> · 累计遗产 ${m.pts} 分 · 遗产分随结算入账,跨局永久`;
+ $('st-grid').innerHTML=STREES.map(col=>`<div class="st-col" data-line="${col.n}"><div class="st-cl">${col.icon} ${col.n}</div>`+
+  col.nodes.map(nn=>`<div class="st-node" data-lock="1" title="下版本开放"><span class="sn-e">🔒</span><span class="sn-n">${nn}</span><span class="sn-s">开发中</span></div>`).join('')+`</div>`).join('');
+}
 /* ================= 开始菜单+选项(大爷00:43令) ================= */
 const I18N={
- zh:{cal:'\uD83D\uDCC5 \u65E5\u5386',upg:'\uD83C\uDFD7\uFE0F \u5347\u7EA7\u94FA\u5B50',skill:'\uD83C\uDF33 \u6280\u80FD\u6811',endf:'\uD83C\uDF19 \u7ED3\u675F\u94F8\u9020',day2:'\uD83D\uDED2 \u7B2C\u4E8C\u5929\u00B7\u5546\u4EBA',quest:'\uD83D\uDCCB \u4EFB\u52A1\u677F',opt:'\u2699\uFE0F \u9009\u9879',mstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',mmod:'\uD83E\uDE9B Mod \u5DE5\u574A',mopt:'\u2699\uFE0F \u9009\u9879',mtitle:'\u8D1F\u503A\u94C1\u5320 \u00B7 \u6253\u94C1\u542C\u97F3',msub:'\u542C\u97F3\u9AD8 \u00B7 \u953B\u795E\u5251 \u00B7 \u8FD8\u6E05\u623F\u79DF',res:'\u5206\u8FA8\u7387',lang:'\u8BED\u8A00',optt:'\u9009\u9879',gstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',gcont:'\u25B6\uFE0F \u7EE7\u7EED\u6E38\u620F',mquit:'\uD83D\uDEAA \u9000\u51FA',ptitle:'\u6682\u505C',presume:'\u25B6\uFE0F \u6062\u590D\u6E38\u620F',psave:'\uD83D\uDCBE \u4FDD\u5B58',pload:'\uD83D\uDCC2 \u52A0\u8F7D',phome:'\uD83C\uDFE0 \u8FD4\u56DE\u4E3B\u83DC\u5355',nosave:'\u6682\u65E0\u5B58\u6863',rfw:'\u5237\u65B0\u8D27\u67B6',snark:'\u5410\u69FD'},
- en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'\uD83C\uDF19 End Day',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83C\uDFAE New Game',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mtitle:'Debt Smith \u00B7 Forge by Ear',msub:'Hear the pitch \u00B7 Forge the blade \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options',gstart:'\uD83C\uDFAE New Game',gcont:'\u25B6\uFE0F Continue',mquit:'\uD83D\uDEAA Quit',ptitle:'Paused',presume:'\u25B6\uFE0F Resume',psave:'\uD83D\uDCBE Save',pload:'\uD83D\uDCC2 Load',phome:'\uD83C\uDFE0 Main Menu',nosave:'No save yet',rfw:'Refresh',snark:'Snark'}};
+ zh:{cal:'\uD83D\uDCC5 \u65E5\u5386',upg:'\uD83C\uDFD7\uFE0F \u5347\u7EA7\u94FA\u5B50',skill:'\uD83C\uDF33 \u6280\u80FD\u6811',endf:'\u7ED3\u675F\u94F8\u9020',day2:'\uD83D\uDED2 \u7B2C\u4E8C\u5929\u00B7\u5546\u4EBA',quest:'\uD83D\uDCCB \u4EFB\u52A1\u677F',opt:'\u2699\uFE0F \u9009\u9879',mstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',mmod:'\uD83E\uDE9B Mod \u5DE5\u574A',mopt:'\u2699\uFE0F \u9009\u9879',mst:'\uD83C\uDF33 \u6280\u80FD\u6811',mtitle:'\u8D1F\u503A\u94C1\u5320 \u00B7 \u6253\u94C1\u542C\u97F3',msub:'\u542C\u97F3\u9AD8 \u00B7 \u953B\u795E\u5251 \u00B7 \u8FD8\u6E05\u623F\u79DF',res:'\u5206\u8FA8\u7387',lang:'\u8BED\u8A00',optt:'\u9009\u9879',gstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',gcont:'\u25B6\uFE0F \u7EE7\u7EED\u6E38\u620F',mquit:'\uD83D\uDEAA \u9000\u51FA',ptitle:'\u6682\u505C',presume:'\u25B6\uFE0F \u6062\u590D\u6E38\u620F',psave:'\uD83D\uDCBE \u4FDD\u5B58',pload:'\uD83D\uDCC2 \u52A0\u8F7D',phome:'\uD83C\uDFE0 \u8FD4\u56DE\u4E3B\u83DC\u5355',nosave:'\u6682\u65E0\u5B58\u6863',rfw:'\u5237\u65B0\u8D27\u67B6',snark:'\u5410\u69FD'},
+ en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'End Forge',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83C\uDFAE New Game',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mst:'\uD83C\uDF33 Skill Tree',mtitle:'Debt Smith \u00B7 Forge by Ear',msub:'Hear the pitch \u00B7 Forge the blade \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options',gstart:'\uD83C\uDFAE New Game',gcont:'\u25B6\uFE0F Continue',mquit:'\uD83D\uDEAA Quit',ptitle:'Paused',presume:'\u25B6\uFE0F Resume',psave:'\uD83D\uDCBE Save',pload:'\uD83D\uDCC2 Load',phome:'\uD83C\uDFE0 Main Menu',nosave:'No save yet',rfw:'Refresh',snark:'Snark'}};
 let LANG='zh';try{LANG=localStorage.getItem('ft_lang')||'zh'}catch(e){}
 let CUR_RES=[1280,720];
 function t(k){return (I18N[LANG]&&I18N[LANG][k])||I18N.zh[k]||k}
 function setLang(l){LANG=l;try{localStorage.setItem('ft_lang',l)}catch(e){}applyLang()}
 function setRes(w,h2){CUR_RES=[w,h2];app.style.width=w+'px';app.style.height=h2+'px';try{localStorage.setItem('ft_res',w+'x'+h2)}catch(e){}fit();setTimeout(updateSword,80);renderOpts()}
 function applyLang(){
- const M=[['cal','btn-cal'],['upg','btn-upg'],['skill','btn-skill'],['endf','btn-endforge'],['day2','btn-day2'],['quest','btn-quest'],['opt','btn-opt']];
+ const M=[['cal','btn-cal'],['endf','btn-endforge-lab'],['day2','btn-day2'],['quest','btn-quest'],['opt','btn-opt']]; // v31:upg/skill 主界面钮退役;endf=侧栏钮文字位
  M.forEach(p=>{const el=document.getElementById(p[1]);if(el)el.textContent=t(p[0])});
  const mt=document.getElementById('menu-title');if(mt)mt.textContent=t('mtitle');
  const ms=document.getElementById('menu-sub');if(ms)ms.textContent=t('msub');
@@ -1942,6 +2039,7 @@ function applyLang(){
  const b3=document.getElementById('btn-menu-opt');if(b3)b3.textContent=t('mopt');
  const b4=document.getElementById('btn-menu-continue');if(b4)b4.textContent=t('gcont');
  const b5=document.getElementById('btn-menu-quit');if(b5)b5.textContent=t('mquit');
+ const b6=document.getElementById('btn-menu-skill');if(b6)b6.textContent=t('mst');
  const pt2=document.getElementById('pause-title');if(pt2)pt2.textContent=t('ptitle');
  [['presume','btn-p-resume'],['psave','btn-p-save'],['pload','btn-p-load'],['popt','btn-p-opt'],['phome','btn-p-home']].forEach(pp=>{const el=document.getElementById(pp[1]);if(el)el.textContent=t(pp[0])});
  updShelfBtn();
@@ -1979,6 +2077,7 @@ function loadGame(){
  let d=null;try{d=JSON.parse(localStorage.getItem('ft_save'))}catch(e){}
  if(!d||d.v!==1||!d.S){toast('\u26A0\uFE0F \u5B58\u6863\u65E0\u6548',1600);return false}
  Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,d.S);if(!S.char)S.char='smith';if(!S.charms)S.charms={};
+ S.ledger=S.ledger||{forge:0,sell:0,buy:0}; // v31:旧档补流水台账默认值
   if(S.qActive&&S.qActive.thief){S.qActive.archer=S.qActive.thief;delete S.qActive.thief}
   if(S.qBoard&&S.qBoard.thief){S.qBoard.archer=S.qBoard.thief;delete S.qBoard.thief}
  if(['playing','input','quench','busy'].includes(S.phase)){S.phase='idle';S.q=[];S.pos=0;S.revealed=false;S.pendingQuench=false}
@@ -2016,6 +2115,8 @@ document.getElementById('btn-menu-mod').onclick=()=>{showOverlay('blue','\uD83E\
  (LANG==='en'?'Mod Workshop is under development \u2014 custom instruments, songs and scenarios will open in future versions.':'\u521B\u610F\u5DE5\u574A\u5F00\u53D1\u4E2D\u2014\u2014\u73A9\u5BB6\u81EA\u5236\u4E50\u5668 / \u66F2\u76EE / \u5267\u672C\u5C06\u5728\u672A\u6765\u7248\u672C\u5F00\u653E\u3002'),
  [{label:(LANG==='en'?'Back':'\u8FD4\u56DE'),fn:hideOverlay}])};
 document.getElementById('btn-menu-opt').onclick=openOpts;
+document.getElementById('btn-menu-skill').onclick=()=>{renderSkillTree();document.getElementById('st-modal').classList.add('on')}; // v31:技能树从开始菜单进(局外)
+document.getElementById('st-close').onclick=()=>document.getElementById('st-modal').classList.remove('on');
 document.getElementById('opt-close').onclick=closeOpts;
 function openPause(){document.getElementById('pause-modal').classList.add('on')}
 function closePause(){document.getElementById('pause-modal').classList.remove('on')}
@@ -2029,6 +2130,8 @@ addEventListener('keydown',e=>{if(e.key!=='Escape')return;
  const om=document.getElementById('opt-modal'),pm=document.getElementById('pause-modal'),mm=document.getElementById('menu-modal'),ov=document.getElementById('overlay');
  if(om.classList.contains('on')){closeOpts();return}
  if(pm.classList.contains('on')){closePause();return}
+ const sm=document.getElementById('st-modal');
+ if(sm&&sm.classList.contains('on')){sm.classList.remove('on');return} // v31:技能树界面 ESC 关闭
  if(mm.classList.contains('on'))return;
  if(ov.classList.contains('on'))return;
  openPause()});
@@ -2054,6 +2157,7 @@ function closeShop(){
   toast('🧚 赠礼妖精送来 3 件低级装备!',2600);
  }
  S.dayLog=[];S.gStreak=0;S.gBonus=0;questRollover();S.refreshCnt=0;
+ S.ledger={forge:0,sell:0,buy:0};closeBill(); // v31:日切清流水台账(小票已在睡前过目)
  S.row=[];S.potSel=null;S.dayErrN=0;S.dayFull=0;syncPotential();renderMarkRow(); // v29:日切清台账(标记已在睡前统一淬火兑现)
  hud();updateSword();
  if(rentDay){
@@ -2062,9 +2166,47 @@ function closeShop(){
   toast(`🏠 第 ${S.day-1} 天房租 -${CFG.RENT}💰 · 余 ${S.gold}💰`,2600);snark('rent',true);
  }
  saveGame(true);
- $('quiz-hint').textContent=`第 ${S.day} 天 · 新剑坯×${S.chest.length}!点「🔨 开始铸造」开锻`;snark('sleep');
+ $('quiz-hint').textContent=`第 ${S.day} 天 · 新剑坯×${S.chest.length}!点砧板左侧「🔨 开始铸造」开锻`;snark('sleep');
 }
-$('btn-close').onclick=()=>{if(S.mode!=='shop')return;nightFade(closeShop,'安睡',`🌙 第 ${S.day} 天结束 · 明天继续`)};
+/* ================= v31 商人结算账单(大爷10-25 13:08令):离开安睡先过目小票,点睡觉才过夜 =================
+   数字只从台账/常量读(零经济改动);房租行仅交租日(S.day%7===0)出现;结余=锻造兑现+卖出-买入-房租 */
+function printTick(final){const c=au(),t=c.currentTime; // 打印头「哒」声:方波短促一击;final=出坞「咔」
+ const o=c.createOscillator(),g=c.createGain();o.type='square';
+ o.frequency.setValueAtTime(final?620:1950,t);o.frequency.exponentialRampToValueAtTime(final?180:980,t+.03);
+ g.gain.setValueAtTime(final?.12:.07,t);g.gain.exponentialRampToValueAtTime(.0001,t+(final?.14:.05));
+ o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+(final?.16:.06))}
+function billData(){
+ const d=S.ledger||{forge:0,sell:0,buy:0},rent=S.day%7===0?CFG.RENT:0;
+ return {forge:d.forge||0,sell:d.sell||0,buy:d.buy||0,rent,net:(d.forge||0)+(d.sell||0)-(d.buy||0)-rent}}
+function closeBill(){$('bill-modal').classList.remove('on')}
+function openBill(){
+ if(S.mode!=='shop')return;
+ const b=billData();window.__bill=b;
+ $('bill-day').textContent=S.day;
+ const box=$('bill-lines');box.innerHTML='';
+ const tot=$('bill-total');tot.querySelector('b').textContent='';tot.style.visibility='hidden';
+ $('bill-btns').classList.remove('on');
+ closeBill();$('bill-modal').classList.add('on');
+ const rows=[
+  {k:'forge',lab:'🔨 锻造兑现',v:b.forge},
+  {k:'sell',lab:'🛒 卖出收入',v:b.sell},
+  {k:'buy',lab:'📦 买入支出',v:-b.buy}];
+ if(b.rent)rows.push({k:'rent',lab:'🏠 房租',v:-b.rent}); // 仅交租日打印该行
+ let i=0;
+ (function step(){
+  if(i<rows.length){const r=rows[i++],el=document.createElement('div');
+   el.className='bl';el.dataset.k=r.k;el.dataset.v=(r.v>=0?'+':'')+r.v;
+   el.innerHTML=`<span>${r.lab}</span><b>${r.v>=0?'+':''}${r.v}💰</b>`;
+   box.appendChild(el);printTick();setTimeout(step,180);return}
+  const sgn=b.net>=0?'+':'';tot.dataset.v=sgn+b.net;
+  tot.innerHTML=`<span>结余</span><b class="${b.net>=0?'up':'dn'}">${sgn}${b.net}💰</b>`;
+  tot.style.visibility='visible';printTick(true);
+  $('bill-btns').classList.add('on');
+ })();
+}
+$('bill-upg').onclick=()=>openUpg(); // 账单内唯一升级铺子入口;upg-modal z150 盖住账单 z145,关掉即回账单
+$('bill-sleep').onclick=()=>{if(!$('bill-modal').classList.contains('on'))return;closeBill();nightFade(closeShop,'安睡',`🌙 第 ${S.day} 天结束 · 明天继续`)};
+$('btn-close').onclick=()=>{if(S.mode!=='shop')return;openBill()};
 
 /* ================= 成功/结束 ================= */
 function growSword(){
@@ -2083,8 +2225,9 @@ function forgeSuccess(){
  hud();
  $('forge-flash').classList.add('go');setTimeout(()=>$('forge-flash').classList.remove('go'),600);
  const last=S.tier+1>=SWORDS.length;
+ const legacy=last?settleLegacy():0; // v31:通关结算折算遗产分
  showOverlay('gold',sw.emoji,`${sw.name} 铸成!`,
-  `淬火收益攒满 <b>${sw.base}</b>,宝剑出炉!<br>卖出得 <b>🪙${sell}</b> · 累计 <b>🪙${S.gold}</b><br>${last?'你已是铁匠之神!':'下一把剑更长,音域更宽,题目更长——'}`,
+  `淬火收益攒满 <b>${sw.base}</b>,宝剑出炉!<br>卖出得 <b>🪙${sell}</b> · 累计 <b>🪙${S.gold}</b><br>${last?`你已是铁匠之神!<br>🌳 遗产分 <b>+${legacy}</b> 已入账(开始菜单·技能树)`:'下一把剑更长,音域更宽,题目更长——'}`,
   last?[{label:'🔄 再战一局',cls:'gold',fn:()=>{hideOverlay();restart()}}]
       :[{label:'🔨 下一把剑',cls:'gold',fn:()=>{hideOverlay();S.tier++;startForge()}}]);
 }
@@ -2093,8 +2236,9 @@ function gameOver(){
  if(S.phase==='over')return;
  S.phase='over';try{localStorage.removeItem('ft_save')}catch(e){}clearInterval(S.rentTimer);clearInterval(S.frenzyTimer);
  const acc=S.totStrikes>0?Math.round(S.totHits/S.totStrikes*100):0;
+ const legacy=settleLegacy(); // v31:死亡结算折算遗产分入 ft_meta(跨局永久)
  showOverlay('blue','🏚️','房租到期!',
-  `房东把你赶出了铁匠铺…<br>铸成 <b>${S.forged}</b> 把剑 · 身家 <b>🪙${S.gold}</b><br>正确率 <b>${acc}%</b>(${S.totHits}/${S.totStrikes}) · 超神 <b>${S.frenzies}</b> 次<br>最高锻造到 <b>${SWORDS[S.tier].name}</b>`,
+  `房东把你赶出了铁匠铺…<br>铸成 <b>${S.forged}</b> 把剑 · 身家 <b>🪙${S.gold}</b><br>正确率 <b>${acc}%</b>(${S.totHits}/${S.totStrikes}) · 超神 <b>${S.frenzies}</b> 次<br>最高锻造到 <b>${SWORDS[S.tier].name}</b><br>🌳 遗产分 <b>+${legacy}</b> 已入账(开始菜单·技能树)`,
   [{label:'🔥 重开铁匠铺',cls:'gold',fn:()=>{hideOverlay();restart()}}]);
 }
 function restart(){
@@ -2102,6 +2246,7 @@ function restart(){
  S.totHits=0;S.totStrikes=0;S.hits=0;S.strikes=0;S.dmgLv=0;
  S.roleLv=1;S.dayLog=[];S.day=1;S.mode='forge';S.pack=[];S.counter=[];S.forgeEnded=false;S.soldCnt=0;$('shop').classList.remove('on');
  S.gStreak=0;S.gBonus=0;S.perm={armor:0,wand:0,relic:0};S.dragon=0;S.ironNext=0;S.eventMult=1;S.eventTxt='';S.mkt=[];S.bought={};S.refreshCnt=0;
+ S.ledger={forge:0,sell:0,buy:0};closeBill(); // v31:新档清流水台账+关账单
  S.xp=0;S.sp=0;S.sk={sell:0,buy:0,xp:0,quench:0};S.art=[];
  S.row=[];S.potions={safe:0,up:0};S.potSel=null;S.dayErrN=0;S.dayFull=0;renderMarkRow(); // v29:新档清标记台账+药水
  S.up={anvil:0,sword:0,armor:0,bow:0,wand:0,artSlot:0};S.anvils=[];syncFocus();renderRack();
@@ -2136,12 +2281,17 @@ function floatText(x,y,txt,cls){const f=document.createElement('div');f.classNam
 function startForge(){
  S.value=0;syncPotential();S.charge=0;S.hits=0;S.strikes=0;S.pendingQuench=false; // v29:potential=当日标记台账(换剑不清)
  S.anvils=[];syncFocus();S.phase='idle';hud();updateSword();renderRack();
- $('quiz-hint').textContent='点「🔨 开始铸造」把剑坯上砧开锻';
+ $('quiz-hint').textContent='点砧板左侧「🔨 开始铸造」把剑坯上砧开锻';
 }
 function nextQuestion(){S.q=genQuestion();S.pos=0;S.revealed=false;S.marks=[];playQuestion()}
-$('btn-forge').onclick=()=>{if(S.phase==='over')return;if(!S.chest.length){toast('剑坯用完了!点「🏁 结束铸造」收工');return}placeBlank(0)};
+$('btn-listen').onclick=()=>{ // v31:砧板左侧大钮=原顶部「开始铸造」+「重听」合并
+ if(S.phase==='over')return;
+ if(S.phase==='input'){ // 重听当前题:保留输入状态重播(原 btn-replay 逻辑)
+  const p=S.pos,m=S.marks,t2=S.typed,r=S.revealed;playQuestion();S.pos=p;S.marks=m;S.typed=t2;S.revealed=r;renderSlots();return}
+ if(S.phase==='playing')return; // 题目播放中不重播(原重听钮语义)
+ if(!S.chest.length){toast('剑坯用完了!点右侧「⏹ 结束铸造」收工');return}
+ placeBlank(0)};
 $('quench-btn').onclick=()=>{}; // v29:逐题淬火退役,按钮永久隐藏(保留元素防旧引用)
-$('btn-replay').onclick=()=>{if(S.phase==='input'){const p=S.pos,m=S.marks,r=S.revealed;playQuestion();S.pos=p;S.marks=m;S.revealed=r;renderSlots()}};
 $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:打铁听音 · 砧板标记 · 统一淬火',
  `- 听题目(音序),<b>按顺序</b>在音道上敲出这些音<br>
   · 敲错剑不碎,但<b>每错一次本题标记降一色</b>;错 3 次本题作废(黑标记)<br>
@@ -2166,7 +2316,7 @@ $('lanes').addEventListener('pointerdown',e=>{
 });
 
 /* 测试钩子 */
-window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,makeItem,syncFocus,stashAll,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,gradeQuestion,unifiedQuench,appendMark,recalcEvolution,markVal,progSwords,potEligible,applyPotion,enterPotSel,MARK_VAL,MARK_ORDER,POTIONS,swordCap,openMerchant,renderMerchant,openUpg,buyUpg,UPG,anvilN,renderRack,renderUpg,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()}};
+window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,makeItem,syncFocus,stashAll,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,gradeQuestion,unifiedQuench,appendMark,recalcEvolution,markVal,progSwords,potEligible,applyPotion,enterPotSel,MARK_VAL,MARK_ORDER,POTIONS,swordCap,openMerchant,renderMerchant,openUpg,buyUpg,UPG,anvilN,renderRack,renderUpg,openBill,closeBill,billData,metaObj,metaSave,settleLegacy,renderSkillTree,updListenBtn,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()}};
 
 /* ================= 启动 ================= */
 buildLanes();
@@ -2176,16 +2326,15 @@ loadManifest();
  const hudBox=$('hud');
  const mk=(id,txt,cls)=>{const b=document.createElement('button');b.className='btn '+(cls||'');b.id=id;b.textContent=txt;hudBox.appendChild(b);return b};
 mk('btn-quest','📋 任务板');
- mk('btn-cal','📅 日历');mk('btn-upg','🏗️ 升级铺子');mk('btn-skill','🌳 技能树');mk('btn-endforge','🏁 结束铸造');mk('btn-day2','🧙 第二天·商人','gold');
+ mk('btn-cal','📅 日历');mk('btn-day2','🧙 第二天·商人','gold'); // v31:upg→账单内·skill→开始菜单·endforge→砧板右侧(静态HTML)
  $('btn-cal').onclick=openCal;$('cal-close').onclick=()=>$('cal-modal').classList.remove('on');
- $('btn-upg').onclick=openUpg;$('upg-close').onclick=()=>$('upg-modal').classList.remove('on');
+ $('upg-close').onclick=()=>$('upg-modal').classList.remove('on');
  $('btn-quest').onclick=openQuest;$('q-close').onclick=()=>$('q-modal').classList.remove('on');
  mk('btn-opt',t('opt'));
  $('btn-opt').onclick=openOpts;
  applySettings();openMenu();refreshMenuState();
  $('q-strip').onclick=openQuest;renderQStrip();
 $('ut-upg').onclick=()=>upgTab('upg');$('ut-skill').onclick=()=>upgTab('skill');
- $('btn-skill').onclick=()=>showOverlay('blue','🌳','技能树','工匠的成长之路——技能树系统开发中,敬请期待。',[{label:'继续干活',fn:hideOverlay}]);
  $('btn-endforge').onclick=endForgeDay;
 const dbgGold=()=>{S.gold+=99999;hud();renderShopGold();toast('🐞 debug +99999💰')};
 $('btn-dbg').onclick=dbgGold;$('btn-dbg2').onclick=dbgGold;

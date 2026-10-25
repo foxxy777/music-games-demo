@@ -304,43 +304,71 @@ body{overflow:hidden}
 #nf-text{font-size:46px;font-weight:900;color:#ffd54f;letter-spacing:10px;text-shadow:0 0 30px #ffb84d88;animation:nfpop .9s cubic-bezier(.3,-.2,.6,1.4)}
 #nf-sub{font-size:14px;color:#cbb8a0;letter-spacing:3px}
 @keyframes nfpop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
-#shop{position:absolute;inset:0;z-index:90;display:none;flex-direction:column;background:linear-gradient(180deg,#1b1410 0%,#241a12 60%,#16100b 100%);cursor:auto}
+/* ===== 商人商店 v28:STS 式居中场景板(上1/3商人·中1/2商品·下玩家背包) ===== */
+#shop{position:absolute;inset:0;z-index:90;display:none;align-items:center;justify-content:center;background:radial-gradient(1200px 820px at 50% 42%,rgba(14,9,4,.84) 0%,rgba(3,2,1,.96) 80%);cursor:auto}
 #shop.on{display:flex}
-#shop-head{flex:none;display:flex;align-items:center;justify-content:space-between;padding:10px 22px;border-bottom:2px solid #4a3320}
-#shop-title{font-size:20px;font-weight:900;color:#ffe89a;text-shadow:0 0 12px #ffb84d55}
-#shop-gold{font-size:16px;color:#ffd54f;font-weight:bold}
+#shop-panel{position:relative;width:min(1260px,96%);height:min(92%,880px);display:flex;flex-direction:column;gap:8px;padding:12px 16px 10px;border-radius:16px;border:2px solid #b98c4a;box-shadow:0 0 0 6px #17100a,0 0 0 8px #6b4a26,0 30px 90px #000d,inset 0 0 46px #00000073;background:linear-gradient(180deg,#2e2317 0%,#221a10 52%,#181109 100%);overflow:hidden}
+#shop-panel::before{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:repeating-linear-gradient(45deg,#c9a06a07 0 2px,transparent 2px 26px),repeating-linear-gradient(-45deg,#c9a06a07 0 2px,transparent 2px 26px)}
+/* —— 上 1/3:商人形象层 —— */
+#groz-layer{flex:0 0 30%;min-height:150px;display:flex;gap:14px;align-items:stretch;padding:8px 12px;border:1px solid #4a3320;border-radius:12px;background:linear-gradient(165deg,#241a12,#191209)}
+#groz-portrait{flex:0 0 186px;position:relative;display:flex;align-items:flex-end;justify-content:center;border-radius:96px 96px 10px 10px;border:3px solid #8a6a3a;box-shadow:inset 0 0 34px #000b,0 0 16px #0009;background:radial-gradient(140px 190px at 50% 74%,#4a3418 0%,#241708 78%);overflow:hidden}
+#groz-portrait::after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(120px 90px at 50% 30%,#ffb84d1f,transparent 70%)}
+#m-face{font-size:92px;line-height:1;filter:drop-shadow(0 8px 16px #000c);transform:translateY(8px)}
+#groz-info{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0}
+#shop-title{font-size:11px;font-weight:700;letter-spacing:3px;color:#c9a06a}
+#m-name{color:#ffe89a;font-weight:900;font-size:18px;letter-spacing:1px;text-shadow:0 0 12px #ffb84d55}
+#m-talk{position:relative;color:#3a2c14;background:linear-gradient(180deg,#f5ecd4,#e2d0ab);border:1.5px solid #8a6d3b;border-radius:10px;padding:8px 12px;font-size:13px;line-height:1.55;box-shadow:0 4px 14px #0008;max-width:560px}
+#m-talk::before{content:'';position:absolute;left:-9px;top:36%;border:8px solid transparent;border-right-color:#8a6d3b;border-left:0}
+#m-talk::after{content:'';position:absolute;left:-5px;top:calc(36% + 2px);border:6px solid transparent;border-right-color:#f0e4c4;border-left:0}
+#m-belt{font-size:10.5px;color:#c9a06a;line-height:1.5;max-height:34px;overflow:hidden}
+#shop-head{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:7px;padding:4px 6px}
+#shop-gold{font-size:21px;color:#ffd54f;font-weight:bold;text-shadow:0 0 14px #ffb84d66;white-space:nowrap}
 #mkt-banner{font-size:12px;color:#ffd54f;background:#2a1c0e;border:1px solid #c9a06a66;border-radius:8px;padding:2px 10px;display:none}
 #mkt-banner.on{display:inline-block}
-#m-body{flex:1;display:flex;gap:12px;padding:12px 16px;min-height:0}
-#m-left{flex:0 0 168px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:linear-gradient(165deg,#241a12,#16100b);border:1.5px solid #4a3320;border-radius:14px;padding:12px;text-align:center}
-#m-face{font-size:62px;filter:drop-shadow(0 6px 14px #000a)}
-#m-name{color:#ffe89a;font-weight:900;font-size:15px}
-#m-talk{color:#cbb8a0;font-size:12px;line-height:1.6}
-#m-col{flex:1;display:flex;flex-direction:column;gap:10px;min-height:0}
-#m-shelf-wrap,#m-sell-wrap{flex:1;display:flex;flex-direction:column;gap:5px;min-height:0}
-#m-shelf{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:2px;scrollbar-width:thin}
-.mrow{display:flex;flex-direction:column;gap:4px}
-.mh{font-size:11px;font-weight:900;letter-spacing:1.5px;color:#e8c98a;padding:3px 4px 5px;border-bottom:1px dashed #6b4a26;display:flex;align-items:center;gap:5px}
-.mh::before{content:'';width:8px;height:8px;border-radius:2px;flex:none}
-.mh-mat::before{background:#e8963c}
-.mh-use::before{background:#4fc3a1}
-.mh-perm::before{background:#ffd54f}
-.mrow-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:6px}
+/* —— 中 1/2:商品层(卡片+icon 行) —— */
+#goods-layer{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:6px;padding:8px 10px;border:1px solid #4a3320;border-radius:12px;background:linear-gradient(180deg,#1e150d,#160f08);transition:border-color .15s,box-shadow .15s}
+#goods-layer.drop-hot{border-color:#ffd54f;box-shadow:inset 0 0 30px #ffd54f2b,0 0 16px #ffd54f33}
+#m-shelf{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:2px 2px 4px;scrollbar-width:thin;min-height:0}
 #m-shelf::-webkit-scrollbar,#m-sell::-webkit-scrollbar{width:8px}
 #m-shelf::-webkit-scrollbar-thumb,#m-sell::-webkit-scrollbar-thumb{background:#6b4a26;border-radius:4px}
-.mcard{border:1.5px solid #5a4020;border-radius:10px;background:linear-gradient(180deg,#3a2812,#241708);padding:8px 10px;display:flex;flex-direction:column;gap:3px;cursor:pointer;transition:border-color .12s,box-shadow .12s}
-.mcard:hover{border-color:#ffd54f;box-shadow:0 0 12px #ffd54f33}
-.mcard.off{opacity:.38;cursor:not-allowed;filter:grayscale(.6)}
-.mcard .mc-top{display:flex;align-items:center;gap:6px}
-.mcard .mc-e{font-size:22px}
-.mcard .mc-n{color:#ffe9b8;font-weight:bold;font-size:12.5px;flex:1}
-.mcard .mc-p{color:#ffd54f;font-weight:900;font-size:13px}
-.mcard .mc-d{color:#b8a385;font-size:10.5px;line-height:1.45}
-#m-sell{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:46px;grid-auto-flow:row dense;gap:5px;align-content:start;background-image:repeating-linear-gradient(90deg,#1d140c 0 calc(25% - 5px),transparent calc(25% - 5px) 25%),repeating-linear-gradient(0deg,#1d140c 0 46px,transparent 46px 51px);border:1px solid #2e2114;border-radius:8px;padding:5px;min-height:calc(46px*2 + 10px)}
-#m-belt{flex:none;display:flex;gap:8px;align-items:center;padding:6px 16px;border-top:1px dashed #4a3320;font-size:11px;color:#c9a06a;flex-wrap:wrap;overflow-y:auto;max-height:64px}
-.inv-sec{font-size:11px;color:#c9a06a;letter-spacing:2px;margin:2px 0 8px;display:flex;justify-content:space-between;align-items:center}
+#m-shelf-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;align-content:start}
+#m-shelf-icons{flex:none;display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:center;padding:8px 6px 4px;border-top:1px dashed #4a3320;min-height:0}
+.mcard{border:2px solid #8a6aa8;border-radius:10px;background:linear-gradient(180deg,#372b47,#241a30);padding:0 0 7px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:transform .12s,border-color .12s,box-shadow .12s;overflow:hidden}
+.mcard:hover{transform:translateY(-3px);border-color:#c9a8ff;box-shadow:0 6px 18px #0009,0 0 14px #b98cff44}
+.mcard.off{opacity:.4;cursor:not-allowed;filter:grayscale(.7);transform:none}
+.mcard.off:hover{box-shadow:none;border-color:#8a6aa8}
+.mcard.t-mat{border-color:#6a86a8;background:linear-gradient(180deg,#2b3547,#1a2230)}
+.mcard.t-mat:hover{border-color:#9fc0e8;box-shadow:0 6px 18px #0009,0 0 14px #9fc0e844}
+.mcard.t-art{border-color:#c9a34a;background:linear-gradient(180deg,#4a3a18,#2e2208)}
+.mcard.t-art:hover{border-color:#ffd54f;box-shadow:0 6px 18px #0009,0 0 14px #ffd54f44}
+.mc-banner{width:100%;text-align:center;font-weight:900;font-size:12px;color:#ffe9b8;background:linear-gradient(180deg,#5a4028,#3a2812);border-bottom:1px solid #00000066;padding:4px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-art{font-size:38px;line-height:1.15;filter:drop-shadow(0 4px 8px #000a);margin-top:3px}
+.mc-tag{font-size:9px;letter-spacing:2px;color:#120d06;border-radius:4px;padding:1px 8px;font-weight:800}
+.tg-mat{background:#9fc0e8}.tg-perm{background:#c9a0ff}.tg-art{background:#ffd54f}.tg-use{background:#8fd1a8}
+.mcard .mc-d{color:#c3ae90;font-size:10.5px;line-height:1.4;text-align:center;padding:0 7px;min-height:28px}
+.mc-price{color:#ffd54f;font-weight:900;font-size:13px;text-shadow:0 0 8px #ffb84d55}
+.mic{width:76px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px 5px;border:1.5px solid #5a9a6e;border-radius:10px;background:linear-gradient(180deg,#25402e,#16291d);cursor:pointer;transition:border-color .12s,box-shadow .12s}
+.mic.t-charm{border-color:#a86a7a;background:linear-gradient(180deg,#402530,#271219)}
+.mic:hover{border-color:#ffd54f;box-shadow:0 0 10px #ffd54f33}
+.mic.off{opacity:.4;cursor:not-allowed;filter:grayscale(.7)}
+.mic .mi-e{font-size:25px;line-height:1.25;filter:drop-shadow(0 3px 5px #000a)}
+.mic .mi-n{font-size:9px;color:#b8a385;max-width:70px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mic .mi-p{font-size:11px;font-weight:900;color:#ffd54f}
+/* —— 下部:玩家物品层(紧凑) —— */
+#pack-layer{flex:0 0 19%;min-height:112px;display:flex;flex-direction:column;gap:4px;padding:6px 10px 4px;border:1px solid #4a3320;border-radius:12px;background:linear-gradient(180deg,#1c130c,#140d07)}
+#shop-foot{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 2px 0}
+#shop-hint{font-size:11px;color:#c9a06a}
+#m-sell{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:44px;grid-auto-flow:row dense;gap:5px;align-content:start;background-image:repeating-linear-gradient(90deg,#1d140c 0 calc(25% - 5px),transparent calc(25% - 5px) 25%),repeating-linear-gradient(0deg,#1d140c 0 44px,transparent 44px 49px);border:1px solid #2e2114;border-radius:8px;padding:5px;min-height:calc(44px*2 + 10px)}
+/* —— 拖拽影子+金币飘字 —— */
+#drag-ghost{position:absolute;z-index:120;display:none;pointer-events:none;align-items:center;gap:5px;padding:5px 12px;border-radius:9px;border:1.5px solid #ffd54f;background:#2a1c10ee;color:#ffe9b8;font-size:12px;font-weight:bold;box-shadow:0 8px 22px #000b;transform:translate(-50%,-60%);white-space:nowrap}
+#drag-ghost.on{display:flex}
+#drag-ghost .ic-e{font-size:18px}
+.coin-float{position:absolute;z-index:130;pointer-events:none;color:#ffd54f;font-weight:900;font-size:17px;text-shadow:0 0 10px #ffb84dcc,0 2px 4px #000;animation:coinrise 1.05s ease-out forwards}
+@keyframes coinrise{0%{transform:translate(-50%,0);opacity:0}14%{opacity:1}100%{transform:translate(-50%,-66px);opacity:0}}
+.inv-sec{font-size:11px;color:#c9a06a;letter-spacing:2px;margin:2px 0 6px;display:flex;justify-content:space-between;align-items:center;flex:none}
 .inv-sec .sec-cap{letter-spacing:0;color:#8a7455;font-size:10px}
-.inv-cell{grid-row:span 1;display:flex;align-items:center;justify-content:center;gap:5px;border-radius:6px;border:1.5px solid #5a4020;background:linear-gradient(180deg,#3a2812,#241708);color:#ffe9b8;font-size:11px;cursor:pointer;transition:border-color .12s;overflow:hidden;white-space:nowrap;padding:0 4px}
+.inv-cell{grid-row:span 1;display:flex;align-items:center;justify-content:center;gap:5px;border-radius:6px;border:1.5px solid #5a4020;background:linear-gradient(180deg,#3a2812,#241708);color:#ffe9b8;font-size:11px;cursor:pointer;transition:border-color .12s;overflow:hidden;white-space:nowrap;padding:0 4px;touch-action:none}
+.inv-cell:active{cursor:grabbing}
 .inv-cell:hover{border-color:#ffd54f}
 .inv-cell .ic-e{font-size:20px;flex:none}
 .inv-cell .ic-info{display:flex;flex-direction:column;font-size:9px;line-height:1.2;overflow:hidden}
@@ -501,33 +529,35 @@ body{overflow:hidden}
    </div>
   </div>
   <div id="shop">
-    <div id="shop-head">
-      <div id="shop-title">🧙‍♂️ 流浪商人 · 「独眼」格罗兹</div>
-      <div id="mkt-banner"></div>
-      <div id="shop-gold">💰 <span id="shop-gold-num">0</span><button id="btn-dbg2" title="debug +99999">🐞</button></div>
-    </div>
-    <div id="m-body">
-      <div id="m-left">
-        <div id="m-face">🧙‍♂️</div>
+   <div id="shop-panel">
+    <div id="groz-layer">
+      <div id="groz-portrait"><div id="m-face">🧙‍♂️</div></div>
+      <div id="groz-info">
+        <div id="shop-title">🧙‍♂️ 流浪商人 · 「独眼」格罗兹</div>
         <div id="m-name">「独眼」格罗兹</div>
         <div id="m-talk">好铁匠，看看货？你的剑，我按手艺收。</div>
+        <div id="m-belt"></div>
       </div>
-      <div id="m-col">
-        <div id="m-shelf-wrap">
-          <div class="inv-sec"><span>🛒 今日货架 · 点卡买入</span><span class="sec-cap" id="m-shelf-cap"></span><button id="shelf-refresh" class="opt-b"></button></div>
-          <div id="m-shelf"></div>
-        </div>
-        <div id="m-sell-wrap">
-          <div class="inv-sec"><span>⚔️ 收购 · 点剑即卖（锻出多少卖多少）</span><span class="sec-cap" id="m-sell-cap"></span></div>
-          <div id="m-sell"></div>
-        </div>
+      <div id="shop-head">
+        <div id="shop-gold">💰 <span id="shop-gold-num">0</span><button id="btn-dbg2" title="debug +99999">🐞</button></div>
+        <div id="mkt-banner"></div>
       </div>
     </div>
-    <div id="m-belt"></div>
-    <div id="shop-foot">
-      <div id="shop-hint">点货架买 · 点剑卖 · 离开后进入明天</div>
-      <button id="btn-close" class="btn gold">🌙 离开 · 安睡</button>
+    <div id="goods-layer">
+      <div class="inv-sec"><span>🛒 今日货架 · 点卡买入 · 零碎小件看下排</span><span class="sec-cap" id="m-shelf-cap"></span><button id="shelf-refresh" class="opt-b"></button></div>
+      <div id="m-shelf"></div>
+      <div id="m-shelf-icons"></div>
     </div>
+    <div id="pack-layer">
+      <div class="inv-sec"><span>⚔️ 收购区 · 双击出售 / 拖到货架松手 · 单击看详情</span><span class="sec-cap" id="m-sell-cap"></span></div>
+      <div id="m-sell"></div>
+      <div id="shop-foot">
+        <div id="shop-hint">点货架买 · 双击/拖拽卖 · 离开后进入明天</div>
+        <button id="btn-close" class="btn gold">🌙 离开 · 安睡</button>
+      </div>
+    </div>
+   </div>
+   <div id="drag-ghost"></div>
   </div>
   <div id="cal-modal"><div id="cal-card">
     <div id="cal-title">📅 交租日历</div>
@@ -1601,16 +1631,13 @@ if(Object.keys(S.charms||{}).length)t.push(`🎵×${Object.keys(S.charms).length
  if(S.art.length)t.push(`👁️神器×${S.art.length}/${artSlots()}`);
  return t.length?'家底:'+t.join(' · '):'还没置办产业——买点永久品攒家底';
 }
+const isIconGoods=g=>g.kind==='use'||(g.id||'').startsWith('charm-'); // v28:零碎小件(消耗品/音阶护符)走 icon 行,大件上卡
 function renderMerchant(){
  const shelf=$('m-shelf');shelf.innerHTML='';
- // 分区货架(大爷23:26令):基础素材/一次性/永久 三块,各带标签头
- [['mat','⚒️ 基础素材 · 铸造坯料'],['use','🧪 一次性 · 消耗道具'],['perm','👕 永久家当 · 衣物神器']].forEach(([k,label])=>{
-  const items=S.mkt.filter(g=>g.kind===k);if(!items.length)return;
-  const row=document.createElement('div');row.className='mrow mrow-'+k;
-  row.innerHTML=`<div class="mh mh-${k}">${label}</div>`;
-  const box=document.createElement('div');box.className='mrow-cards';
-  row.appendChild(box);shelf.appendChild(row);
-  items.forEach(g=>{
+ const ibox=$('m-shelf-icons');ibox.innerHTML=''; // icon 行固定在商品层底部,不随卡墙滚动(v28)
+ const cbox=document.createElement('div');cbox.id='m-shelf-cards';
+ shelf.appendChild(cbox);
+ S.mkt.forEach(g=>{
   const bought=S.bought[g.id]||0;
   const bi=g.lvG?blankInfo(g):null;
   const cost=Math.max(1,Math.round((g.lvG?bi.base:g.price)*(1-S.sk.buy*.05)));
@@ -1619,27 +1646,79 @@ function renderMerchant(){
   const full=(g.id==='book'&&S.roleLv>=SWORDS.length)||bought>=g.stock||owned||noSlot;
   const nm=g.lvG?`${WLBL[g.cat]}坯·${bi.name} Lv.${bi.lv}`:g.n;
   const dd=g.lvG?`${g.d}(当前 Lv.${bi.lv} · ${SWORDS[bi.lv-1].span}音)`:g.art?`${g.d}<br>神器槽 ${S.art.length}/${artSlots()}`:g.d;
-  const d=document.createElement('div');d.className='mcard'+(full?' off':'');d.dataset.gid=g.id;
-  d.innerHTML=`<div class="mc-top"><span class="mc-e">${g.lvG?bi.emoji:g.e}</span><span class="mc-n">${nm}</span><span class="mc-p">💰${cost}</span></div><div class="mc-d">${dd}</div>`+(full?`<div class="mc-d" style="color:#ff9a8a">${owned?'已供奉':noSlot?'神器槽已满(升级铺子可扩)':(g.id==='book'&&S.roleLv>=SWORDS.length)?'铁匠已满级':g.id.startsWith('charm-')?'已收录':'今日售罄'}</div>`:'');
-  d.onclick=()=>{if(full){toast('这件今天买不了');return}
+  const buyFn=()=>{if(full){toast('这件今天买不了');return}
    if(S.gold<cost){toast('钱不够——先卖点装备');return}
    S.gold-=cost;S.bought[g.id]=bought+1;applyGood(g);renderShopGold();renderMerchant()};
-  box.appendChild(d)});
+  if(isIconGoods(g)){
+   const d=document.createElement('div');d.className='mic '+((g.id||'').startsWith('charm-')?'t-charm':'t-use')+(full?' off':'');d.dataset.gid=g.id;
+   d.title=nm+' · '+g.d+` · 💰${cost}`;
+   d.innerHTML=`<span class="mi-e">${g.e}</span><span class="mi-n">${nm}</span><span class="mi-p">💰${cost}</span>`;
+   d.onclick=buyFn;ibox.appendChild(d);return;
+  }
+  const tag=g.art?'神 器':g.lvG?(WLBL[g.cat]+'坯'):g.kind==='perm'?'永久·升级':'消耗品';
+  const tc=g.art?'art':g.lvG?'mat':(g.kind==='perm'?'perm':'use');
+  const d=document.createElement('div');d.className='mcard t-'+tc+(full?' off':'');d.dataset.gid=g.id;
+  d.innerHTML=`<div class="mc-banner">${nm}</div><div class="mc-art">${g.lvG?bi.emoji:g.e}</div><div class="mc-tag tg-${tc}">${tag}</div><div class="mc-d">${dd}</div><div class="mc-price">💰${cost}</div>`+(full?`<div class="mc-d" style="color:#ff9a8a">${owned?'已供奉':noSlot?'神器槽已满(升级铺子可扩)':(g.id==='book'&&S.roleLv>=SWORDS.length)?'铁匠已满级':'今日售罄'}</div>`:'');
+  d.onclick=buyFn;cbox.appendChild(d);
  });
  const sel=$('m-sell');sel.innerHTML='';
  const avail=S.pack.filter(p=>!p.sold);
  if(!avail.length)sel.innerHTML='<div class="cm-none">今天没铸出剑——明天锻了再来卖</div>';
  else avail.forEach((p,i)=>{
+  const price=sellPrice(p);
   const d=document.createElement('div');d.className='inv-cell';d.style.gridColumn='span '+wOf(p.name);
-  d.innerHTML=`<span class="ic-e">${p.emoji}</span><span class="ic-info"><span>${p.name} ★${p.star}</span><span class="ic-v">💰${Math.round(p.value*(1+S.up[(p.cat||'sword')]*.1)*(1+S.sk.sell*.1)*S.eventMult)}</span></span>`;
-  d.title='点击卖给商人';d.onclick=()=>mSell(i);
+  d.innerHTML=`<span class="ic-e">${p.emoji}</span><span class="ic-info"><span>${p.name} ★${p.star}</span><span class="ic-v">💰${price}</span></span>`;
+  d.title='双击出售 · 或拖到货架松手 · 单击看详情';
+  d.onclick=()=>{if(Date.now()<cellDragTick)return; // 拖拽松手后的静默窗:不再弹提示(v28)
+   toast(`⚔️ ${p.name} ★${p.star} · 售价 💰${price}${S.eventMult!==1?` (行情×${S.eventMult})`:''} · 双击或拖到货架出售`,2200)};
+  d.ondblclick=()=>mSell(i);
+  bindSellDrag(d,p,i);
   sel.appendChild(d)});
  $('m-belt').textContent=ownTags();
  const mb=$('mkt-banner');
  if(S.eventTxt){mb.textContent=S.eventTxt;mb.classList.add('on')}else{mb.textContent='';mb.classList.remove('on')}
  $('m-shelf-cap').textContent=S.mkt.length+' 种';updShelfBtn();
  $('m-sell-cap').textContent=avail.length?avail.length+' 把待售':'空';
- $('shop-hint').textContent='点货架买 · 点剑卖 · 「🌙 离开·安睡」进明天';
+ $('shop-hint').textContent='点卡买 · 双击/拖拽卖 · 「🌙 离开·安睡」进明天';
+}
+/* ===== v28 出售交互(大爷10-25令):单击=只看详情 · 双击=卖 · 拖到货架=卖 =====
+   pointer events 手写拖拽(不依赖 HTML5 dragstart),影子跟光标,松手在商品层内=成交 */
+function sellPrice(p){return Math.round(p.value*(1+S.up[(p.cat||'sword')]*.1)*(1+S.sk.sell*.1)*S.eventMult)}
+let sellDrag=null,cellDragTick=0; // cellDragTick:拖拽结束后静默窗(≥300ms),吞掉紧随的 click
+const inRect=(e,r)=>e.clientX>=r.left-2&&e.clientX<=r.right+2&&e.clientY>=r.top-2&&e.clientY<=r.bottom+2;
+function bindSellDrag(el,p,i){
+ el.addEventListener('pointerdown',e=>{
+  if(e.button!==undefined&&e.button!==0)return;
+  sellDrag={p,i,sx:e.clientX,sy:e.clientY,live:false};
+ });
+}
+addEventListener('pointermove',e=>{
+ if(!sellDrag)return;
+ if(!sellDrag.live){
+  if(Math.hypot(e.clientX-sellDrag.sx,e.clientY-sellDrag.sy)<7)return; // 死区:防抖动误拖
+  sellDrag.live=true;
+  const g=$('drag-ghost');g.innerHTML=`<span class="ic-e">${sellDrag.p.emoji}</span>${sellDrag.p.name} ★${sellDrag.p.star}`;g.classList.add('on');
+ }
+ const g=$('drag-ghost'),sr=$('shop').getBoundingClientRect();
+ g.style.left=(e.clientX-sr.left)+'px';g.style.top=(e.clientY-sr.top)+'px';
+ $('goods-layer').classList.toggle('drop-hot',inRect(e,$('goods-layer').getBoundingClientRect()));
+});
+addEventListener('pointerup',e=>{
+ if(!sellDrag)return;
+ const dr=sellDrag;sellDrag=null;
+ $('drag-ghost').classList.remove('on');$('goods-layer').classList.remove('drop-hot');
+ if(!dr.live)return; // 没拖动=普通单击,交给 onclick
+ cellDragTick=Date.now()+450;
+ if(inRect(e,$('goods-layer').getBoundingClientRect())){
+  const got=sellPrice(dr.p);mSell(dr.i);coinFloat(e.clientX,e.clientY,'+'+got+'💰');
+ }
+});
+function coinFloat(x,y,txt){ // 金币数字飘动反馈(音效走 mSell 内的 coinSound)
+ const panel=$('shop-panel');if(!panel)return;
+ const sr=panel.getBoundingClientRect();
+ const f=document.createElement('div');f.className='coin-float';f.textContent=txt;
+ f.style.left=(x-sr.left)+'px';f.style.top=(y-sr.top-14)+'px';
+ panel.appendChild(f);setTimeout(()=>f.remove(),1100);
 }
 /* ================= 协会任务板(大爷00:35令) ================= */
 const GUILDS=[

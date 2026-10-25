@@ -442,19 +442,19 @@ body{overflow:hidden}
 #bill-modal{position:absolute;inset:0;z-index:145;background:#000000c9;display:none;align-items:center;justify-content:center;cursor:auto}
 #bill-modal.on{display:flex}
 #bill-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
-#bill-paper{position:relative;width:min(340px,80vw);max-height:56vh;overflow-y:auto;background:#f7f1de;color:#2c2318;font-family:"Courier New",Consolas,monospace;font-weight:bold;padding:18px 18px 14px;box-shadow:0 16px 44px #000d;animation:qmpop .25s cubic-bezier(.3,-.2,.6,1.4)}
+#bill-paper{position:relative;width:min(560px,92vw);max-height:78vh;overflow-y:auto;background:#f7f1de;color:#2c2318;font-family:"Courier New",Consolas,monospace;font-weight:bold;padding:26px 30px 20px;box-shadow:0 16px 44px #000d;animation:qmpop .25s cubic-bezier(.3,-.2,.6,1.4)}
 /* 上下锯齿撕边 */
 #bill-paper::before{content:'';position:absolute;left:0;right:0;top:-8px;height:8px;background:conic-gradient(from 135deg at 50% 100%,#f7f1de 90deg,transparent 0) 0 0/16px 8px repeat-x}
 #bill-paper::after{content:'';position:absolute;left:0;right:0;bottom:-8px;height:8px;background:conic-gradient(from -45deg at 50% 0%,#f7f1de 90deg,transparent 0) 0 0/16px 8px repeat-x}
-#bill-head{font-size:16px;text-align:center;letter-spacing:2px}
-#bill-sub{font-size:10.5px;text-align:center;color:#6a5c48;margin:4px 0 8px}
-#bill-lines .bl{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:5px 2px;border-bottom:1px dashed #b8a888;animation:bprint .18s ease-out both}
+#bill-head{font-size:23px;text-align:center;letter-spacing:2px}
+#bill-sub{font-size:13px;text-align:center;color:#6a5c48;margin:6px 0 12px}
+#bill-lines .bl{display:flex;justify-content:space-between;gap:12px;font-size:17px;padding:9px 2px;border-bottom:1px dashed #b8a888;animation:bprint .18s ease-out both}
 #bill-lines .bl b{white-space:nowrap}
 @keyframes bprint{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
-#bill-dash{border-top:2px dashed #6a5c48;margin:8px 0 4px}
-#bill-total{display:flex;justify-content:space-between;font-size:19px;padding:2px 2px 4px}
+#bill-dash{border-top:3px dashed #6a5c48;margin:12px 0 6px}
+#bill-total{display:flex;justify-content:space-between;font-size:25px;padding:4px 2px 6px}
 #bill-total b.up{color:#1e6a2e}#bill-total b.dn{color:#a02a2a}
-#bill-foot{font-size:10px;color:#8a7a60;text-align:center;letter-spacing:1px;margin-top:4px}
+#bill-foot{font-size:12.5px;color:#8a7a60;text-align:center;letter-spacing:1px;margin-top:8px}
 #bill-btns{display:flex;gap:10px;opacity:0;pointer-events:none;transition:opacity .25s}
 #bill-btns.on{opacity:1;pointer-events:auto}
 /* ===== v31 技能树局外界面(开始菜单进入·三线占位骨架) ===== */

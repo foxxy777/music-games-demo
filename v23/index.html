@@ -182,6 +182,7 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #bucket-water{transition:all .3s}
 #bucket-water-glow{transition:all .3s}
 .flydrop{position:absolute;z-index:36;pointer-events:none;font-size:19px;opacity:.95;transition:transform .55s cubic-bezier(.3,-.15,.65,1.05);text-shadow:0 2px 4px #0008}
+#center-col{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
 #anvil{flex:1;display:flex;position:relative;overflow:hidden;cursor:none}
 /* 铁砧俯视外形(大爷19:49令):右端尖角horn+左端砧尾 */
 #anvil::before{content:'';position:absolute;inset:0;z-index:0;
@@ -408,7 +409,7 @@ body{overflow:hidden}
 #anvil-empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:4;pointer-events:none;font-size:15px;color:#c9a06add;letter-spacing:2px;text-shadow:0 2px 8px #000}
 #anvil.drop-ready{outline:3px dashed #ffd54f;outline-offset:-6px}
 /* ===== v29 砧板标记行(大爷10-25令:横向彩色小条·成绩史·连击进化·药水槽) ===== */
-#mark-row{flex:none;display:flex;align-items:center;gap:6px;min-height:24px;padding:3px 10px;background:linear-gradient(180deg,#191009,#110a06);border-top:1px dashed #4a3320;overflow-x:auto;scrollbar-width:none}
+#mark-row{flex:none;display:flex;align-items:center;gap:6px;min-height:20px;padding:2px 8px;background:linear-gradient(180deg,#191009,#110a06);border-top:1px dashed #4a3320;overflow-x:auto;scrollbar-width:none}
 #mark-row::-webkit-scrollbar{display:none}
 #mark-row .mr-lab{flex:none;font-size:10px;color:#c9a06a;letter-spacing:1px;white-space:nowrap}
 #mark-marks{display:flex;gap:5px;align-items:center;min-height:16px}
@@ -526,9 +527,9 @@ body{overflow:hidden}
       <div id="quench-result"></div>
     </div>
    </div>
+   <div id="center-col">
    <div id="anvil-rack"></div>
 <div id="q-strip"></div>
-   <div id="mark-row"><span class="mr-lab">🏷️ 砧板标记</span><span id="mark-marks"></span><span id="mark-sum">Σ💰0</span><div id="potion-slot"></div></div>
    <div id="anvil">
     <div id="anvil-empty">💤 待铸</div>
     <div id="lanes"></div>
@@ -536,6 +537,8 @@ body{overflow:hidden}
     <div id="laser-bot" class="laser"></div>
     <div id="sword-glow"></div>
     <div id="sword-zone"><svg id="sword-svg" width="600" height="120" viewBox="0 0 600 120"></svg><div id="sword-value"></div></div>
+   </div>
+   <div id="mark-row"><span class="mr-lab">🏷️ 砧板标记</span><span id="mark-marks"></span><span id="mark-sum">Σ💰0</span><div id="potion-slot"></div></div>
    </div>
    <div id="girl-col">
     <div id="girl"><div class="gph idle" id="girl-ph"></div></div>

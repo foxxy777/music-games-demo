@@ -195,13 +195,17 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 .flydrop{position:absolute;z-index:36;pointer-events:none;font-size:19px;opacity:.95;transition:transform .55s cubic-bezier(.3,-.15,.65,1.05);text-shadow:0 2px 4px #0008}
 #center-col{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
 /* v31 按钮重组(大爷10-25 13:08令):砧板左「听题」右「结束铸造」,砧板保持居中主体 */
-#forge-row{flex:1;display:flex;align-items:stretch;gap:8px;min-height:0;min-width:0;padding:0 8px}
+/* ===== v36B4 五碟粉末坞(批4,大爷20:18令:丹锅→从上到下五个圆碟):
+   碟列高约 150px,若入 quench-row 文档流会把音道区压穿 T55 红线(12道中心距≥18.16),
+   故 #pot-dock 绝对定位挂 #forge-row(left:90=行内边距8+听题钮82,即砧板左缘;唱名标签自更右起,不遮挡),标签/提示留 quench-row 行内,行高不变 */
+#forge-row{flex:1;display:flex;align-items:stretch;gap:8px;min-height:0;min-width:0;padding:0 8px;position:relative}
+#pot-dock{position:absolute;left:90px;bottom:2px;z-index:6;display:flex;flex-direction:column;align-items:center;pointer-events:none}
 .side-btn{flex:none;width:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:14px;border:2px solid #7a5830;background:linear-gradient(165deg,#3a2a16,#241708);color:#ffe9b8;cursor:pointer;font-family:inherit;padding:6px 4px;transition:border-color .15s,box-shadow .15s,opacity .15s}
 .side-btn:hover{border-color:#ffd54f;box-shadow:0 0 14px #ffb84d44;color:#fff}
 .side-btn:disabled{opacity:.32;cursor:default;box-shadow:none;border-color:#7a5830}
 .side-btn .fe{font-size:24px;line-height:1;filter:drop-shadow(0 2px 4px #0008)}
 .side-btn .fl{font-size:13px;font-weight:bold;letter-spacing:2px}
-#anvil{flex:1;display:flex;position:relative;overflow:hidden;cursor:none;min-width:0}
+#anvil{flex:1;display:flex;position:relative;overflow:hidden;min-width:0}
 /* 铁砧俯视外形(大爷19:49令):右端尖角horn+左端砧尾 */
 #anvil::before{content:'';position:absolute;inset:0;z-index:0;
  clip-path:polygon(1.5% 15%,68% 3%,100% 50%,68% 97%,1.5% 85%,7% 50%);
@@ -238,6 +242,9 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #sword-zone{position:absolute;left:50%;top:0;bottom:0;width:150px;transform:translateX(-50%);pointer-events:none;z-index:5}
 #sword-value{position:absolute;left:50%;transform:translate(-50%,-50%);z-index:7;pointer-events:none;font-size:20px;font-weight:bold;color:#ffe89a;text-shadow:0 0 4px #000,0 0 10px #000c,0 2px 2px #000;white-space:nowrap;transition:top .5s}
 #sword-svg{position:absolute;left:50%;transform:translateX(-50%);transition:height .5s,top .5s;filter:drop-shadow(0 0 12px #ffb84d33);width:140px}
+/* v36B4 符纸铸成满绘:金辉一闪(castFlashFx 挂类,TALISMAN_CAST_MS 后 updateSword 复位) */
+#sword-svg.cast-glow{filter:drop-shadow(0 0 16px #ffd54fdd) drop-shadow(0 0 30px #ffb84d88)}
+#sword-svg .tst{transition:opacity .3s}
 #sword-glow{position:absolute;left:50%;transform:translateX(-50%);width:140px;border-radius:50%;background:radial-gradient(closest-side,#ffb84d2d,transparent);pointer-events:none;transition:height .5s,top .5s}
 /* 激光(上下横线标音域) */
 .laser{position:absolute;left:12px;right:12px;height:2px;background:linear-gradient(90deg,transparent,#ff5d6c66 15%,#ff5d6cdd 50%,#ff5d6c66 85%,transparent);box-shadow:0 0 12px #ff5d6c88;z-index:4;pointer-events:none;transition:top .5s}
@@ -261,13 +268,9 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 @keyframes ghurt{0%{transform:translateX(0)}25%{transform:translateX(-9px) rotate(2deg)}55%{transform:translateX(7px) rotate(-2deg)}80%{transform:translateX(-3px)}100%{transform:translateX(0)}}
 #girl-tag{position:absolute;top:-4px;left:50%;transform:translateX(-50%);font-size:9px;color:#c9a06a99;background:#1a110acc;padding:1px 8px;border-radius:8px;white-space:nowrap}
 
-/* ===== 铁锤本体(跟随鼠标) ===== */
-#app{touch-action:none;cursor:none;-webkit-user-select:none;user-select:none}
+/* ===== v36B4 鼠标常规化(大爷11-01 20:18令):锤子光标退役,系统默认光标回归;.spark 火花=命中特效保留 ===== */
+#app{touch-action:none;-webkit-user-select:none;user-select:none}
 body{overflow:hidden}
-#hammer{position:absolute;z-index:30;pointer-events:none;transform-origin:12% 88%;filter:drop-shadow(0 5px 9px #000c);transition:transform .05s linear,opacity .4s}
-#hammer svg{display:block}
-#hammer.swing{animation:mswing .22s cubic-bezier(.6,0,.9,1)}
-@keyframes mswing{0%{transform:rotate(8deg)}45%{transform:rotate(-52deg) translateY(10px)}100%{transform:rotate(8deg)}}
 .spark{position:absolute;font-size:15px;z-index:31;pointer-events:none;animation:sparkfly .5s ease-out forwards}
 @keyframes sparkfly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.4)}}
 .float{position:absolute;font-size:17px;font-weight:bold;z-index:32;pointer-events:none;animation:floatup 1s ease-out forwards;text-shadow:0 1px 3px #000}
@@ -464,15 +467,22 @@ body{overflow:hidden}
 #mark-row{flex:none;display:flex;align-items:center;gap:6px;min-height:20px;padding:2px 8px;background:linear-gradient(180deg,#191009,#110a06);border-top:1px dashed #4a3320;overflow-x:auto;scrollbar-width:none}
 #mark-row::-webkit-scrollbar{display:none}
 /* ===== v33 手动统一注灵(已随 v36B2 轮盘退役):容器 quench-row 让位丹锅坞(砧板下方,大爷批2令) ===== */
+/* ===== v36B4 五碟粉末坞(批4,大爷20:18令:丹锅→从上到下五个圆碟):
+   碟列高约 150px,若入 quench-row 文档流会把音道区压穿 T55 红线(12道中心距≥18.16),
+   故 #pot-dock 绝对定位挂 #forge-row 左缘(见 #forge-row 处注释),标签/提示留 quench-row 行内,行高不变 */
 #quench-row{flex:none;display:flex;justify-content:flex-start;align-items:center;gap:8px;padding:2px 10px;min-height:32px}
-#pot-dock{display:flex;align-items:center;gap:10px;min-width:0}
 .pot-lab{font-size:12px;color:#c9a06a;letter-spacing:1px;flex:none;text-shadow:0 1px 2px #000}
-#pot-slots{display:flex;gap:6px}
-.pot-slot{width:104px;height:24px;border:1.5px dashed #6a4c2a;border-radius:8px;background:#1a110a;display:flex;align-items:center;justify-content:center;gap:5px;font-size:10px;color:#6b5844;cursor:default;overflow:hidden;white-space:nowrap}
-.pot-slot.full{border-style:solid;border-color:#8a6a3a;background:linear-gradient(180deg,#2a1c10,#1a110a);color:#ffe9b8;cursor:pointer}
-.pot-slot.full:hover{border-color:#ffd54f;box-shadow:0 0 8px #ffd54f33}
-.pz-e{font-size:15px;font-weight:900;text-shadow:0 0 6px currentColor}
-.pz-n{font-size:10px}
+#pot-slots{display:flex;flex-direction:column;gap:3px}
+.pot-slot{width:26px;height:26px;border:1.5px dashed #6a4c2a;border-radius:50%;background:#1a110ad9;position:relative;flex:none;pointer-events:auto}
+.pot-slot:not(.full)::after{content:'＋';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#4a3320}
+.pot-slot.full{border-style:solid;border-color:var(--pc,#8a6a3a);cursor:pointer}
+.pot-slot.full::before{content:'';position:absolute;inset:4px;border-radius:50%;background:radial-gradient(circle at 36% 30%,#ffffffaa 0 10%,transparent 32%),var(--pc,#8a6a3a);box-shadow:0 0 6px var(--pc,#8a6a3a);opacity:.92}
+.pot-slot.full:hover{border-color:#ffd54f;box-shadow:0 0 8px #ffd54f44}
+.pz-g{position:absolute;right:-3px;bottom:-3px;z-index:1;font-size:8px;line-height:1;color:#ffe9b8;background:#241a10cc;border:1px solid #00000088;border-radius:5px;padding:1px 2px;pointer-events:none}
+.pot-slot.pouring{animation:pourtilt .5s ease-in-out}
+.pot-slot.pouring::before{box-shadow:0 0 12px var(--pc,#ffd54f),0 0 4px #fff3b8}
+@keyframes pourtilt{30%{transform:translateY(-3px) rotate(-16deg)}65%{transform:translateY(-1px) rotate(6deg)}}
+.pour-dot{position:absolute;z-index:36;width:6px;height:6px;border-radius:50%;pointer-events:none;opacity:.95;transition:transform .55s cubic-bezier(.3,-.15,.65,1.05),opacity .55s}
 #btn-quench-day{font-size:17px;font-weight:bold;letter-spacing:2px;padding:7px 26px;border-radius:12px;background:linear-gradient(160deg,#a37c1c,#6d5210);border:2px solid #ffd54f;color:#fff6d8;cursor:pointer;font-family:inherit;animation:uqpulse 1.15s ease-in-out infinite}
 #btn-quench-day:hover{filter:brightness(1.22)}
 @keyframes uqpulse{50%{box-shadow:0 0 20px #ffd54faa;filter:brightness(1.12)}}
@@ -636,12 +646,13 @@ body{overflow:hidden}
     <div id="sword-glow"></div>
     <div id="sword-zone"><svg id="sword-svg" width="600" height="120" viewBox="0 0 600 120"></svg><div id="sword-value"></div></div>
    </div>
+   <div id="pot-dock"><div id="pot-slots"></div></div>
     <button id="btn-endforge" class="side-btn" title="收工:在场符全部入箱;标记已逐题经五行轮盘即时兑现"><span class="fe">⏹</span><span class="fl" id="btn-endforge-lab">结束制符</span></button>
    </div>
-   <div id="quench-row"><div id="pot-dock"><span class="pot-lab" id="pot-lab">🍲 丹锅</span><div id="pot-slots"></div><span id="pot-hint">题间点底箱粉末投入 · 答题中锁定 · 空锅=五元素等权</span></div></div>
+   <div id="quench-row"><span class="pot-lab" id="pot-lab">🍲 五碟</span><span id="pot-hint">题间点底箱粉末入碟 · 答题中锁定 · 空碟=五元素等权 · 开局赠五碟一品火粉</span></div>
    <div id="mark-row"><span class="mr-lab">🏷️ 符案标记</span><span id="mark-marks"></span><span id="mark-sum">Σ💰0</span><div id="potion-slot"></div></div>
    </div>
-   <div id="wheel-col" title="每题答完自动转一次:按丹锅配重注入五行 · 标记灵力×档位倍率即时兑现">
+   <div id="wheel-col" title="每题答完自动转一次:按五碟配重注入五行 · 标记灵力×档位倍率即时兑现">
     <div id="wheel-cap">🌀 五行轮</div>
     <div id="wheel-stack">
      <div class="wheel" data-el="metal"><div class="wh-ring" style="--ec:#e8c558"><span>金</span></div><div class="wh-amt"></div></div>
@@ -663,7 +674,7 @@ body{overflow:hidden}
    </div>
    </div>
    <div id="chest-dock">
-    <div class="dock-head"><span>🧰 工具箱 · 符坯直接拖上符案 · 点粉末投丹锅</span><span class="sec-cap" id="dock-cap">格 6/48</span></div>
+    <div class="dock-head"><span>🧰 工具箱 · 符坯直接拖上符案 · 点粉末投五碟</span><span class="sec-cap" id="dock-cap">格 6/48</span></div>
     <div id="dock-grid"></div>
    </div>
   </div>
@@ -799,7 +810,7 @@ const CFG={
  POWDER_PRICE:{1:30,2:70}, // 商人售价:一品30/二品70灵石
  POWDER_MAX_GR:2,     // P0 商人只卖1、2品(定义表支持1~5)
  POWDER_STOCK:99,     // 货架日量(无日限)
- POT_CAP:3,           // 丹锅格数(批2阶段B)
+ POT_CAP:5,           // 五碟格数(批2丹锅3格→批4五碟,大爷20:18令)
  /* ===== v36B2 五行轮盘(批2阶段C) ===== */
  WHEEL:{BASE_INJECT:2,ANIM_MS:1200,EMPTY_W:0.2}, // 基础注入量/转动动画ms/空锅等权配重
  WHEEL_TIERS:{great:{name:'大成功',mult:4,cls:'great'},good:{name:'成功',mult:2,cls:'good'},keep:{name:'普通',mult:1,cls:'keep'},fail:{name:'失败',mult:.5,cls:'fail'}}, // 档位倍率表(大成功×4/成功×2/普通×1/失败×0.5;keep 留作扩展位)
@@ -813,6 +824,12 @@ const CFG={
  AFFIX_CHANCE:{base:.30,great:.08,good:.03,cap:.70}, // 词条出现率=基础+该符轮盘史每次大成功+8%每次成功+3%,封顶70%
  AFFIX_TIER_P:[.6,.3,.1],AFFIX_TIER_ZH:['Ⅰ','Ⅱ','Ⅲ'], // 词条档位概率(出词条后)/中文序数
  AFFIX_POOL:{value:{zh:'价值',en:'Worth',mult:[1.25,1.5,2]},beauty:{zh:'美观',en:'Pretty',mult:[1.4,1.8,2.4],face:1},double:{zh:'次数翻倍',en:'Lasting',dur:6}}, // mult=卖价系数表(Ⅰ/Ⅱ/Ⅲ)·face=协会好感+1(入S.rep.face占位)·dur=耐久直改
+ /* ===== v36B4 五碟+符纸(批4) ===== */
+ POT_PREFILL:'fire:1',                // 开局赠/老档扩容全空预填:一品火粉(五碟全红=火球术开局,大爷批4令)
+ POUR_MIN:6,POUR_MAX:10,POUR_MS:520,  // 倒粉粒子数区间/碟闪光时长ms(纯表现层,不碰结算时序)
+ TALISMAN_PER_Q:3,                    // 每答1题点亮的笔画数(总笔画=铸成所需题数×此值,大爷批4令「总笔画数映射所需题数」)
+ TALISMAN_FALLBACK:'#c23a2a',         // 主元素全0/无elem时笔画色(朱砂红兜底)
+ TALISMAN_CAST_MS:550,                // 铸成满绘金光停留ms(纯视觉,到点 updateSword 按现状复位)
 };
 /* ================= v36B2 五行(批2):金木水火土 ================= */
 const ELEMS=['metal','wood','water','fire','earth'];
@@ -871,7 +888,7 @@ const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0
  q:[],pos:0,revealed:false,
  row:[],potions:{safe:0,up:0},potSel:null,dayErrN:0,dayFull:0, // v29:砧板标记行/药水/当日错音·全对(统一淬火台账)
  powders:{}, // v36B2:五行粉末计数袋 {"fire:1":2,…}
- pot:[null,null,null], // v36B2:丹锅3格 {k:'fire:2'}|null
+ pot:[null,null,null,null,null], // v36B2丹锅3格→v36B4五碟5格 {k:'fire:2'}|null(新档由 restart 预填一品火粉)
  rep:{face:50,dark:0}, // v36B2:声誉占位(本批只入档不显示不使用)
  codex:{}, // v36B3:法术图鉴点亮台账 {"fireball:sup":铸成次数,…}
  ledger:{forge:0,sell:0,buy:0}}; // v31:当日流水台账(只记账不改经济):forge=淬火兑现 sell=商人卖出 buy=商人买入
@@ -977,8 +994,9 @@ function renderPotionSlot(){
   box.appendChild(b);
  });
 }
-/* ================= v36B2 丹锅(批2阶段B):砧板下方 3 格 · 题间投粉/取粉 · 答题中锁定 =================
-   S.pot=[{k:'fire:2'},null,null];空锅照常参与轮盘(五元素等权,见阶段C) */
+/* ================= v36B4 五碟粉末坞(批4,大爷20:18令:丹锅→从上到下五个圆碟) =================
+   容器/交互全套沿用:题间点底箱粉末入碟/点碟取回,答题中锁定,空碟=五元素等权(见阶段C配重);
+   S.pot=[{k:'fire:2'},…5格];碟内粉末不因答题消耗(常驻配置,换目标法术=换碟内粉种) */
 const potLocked=()=>S.mode!=='forge'||S.phase==='busy'||S.phase==='input'||S.phase==='over';
 function renderPot(){
  const box=$('pot-slots');if(!box)return;
@@ -987,24 +1005,25 @@ function renderPot(){
   const p=S.pot[i];
   const d=document.createElement('div');d.className='pot-slot'+(p?' full':'');d.dataset.i=i;
   if(p){const ei=p.k.indexOf(':'),el=p.k.slice(0,ei),gr=+p.k.slice(ei+1);
-   d.innerHTML=`<span class="pz-e" style="color:${ELEM_META[el].color}">${ELEM_META[el].zh}</span><span class="pz-n">${grZH(gr)}品${ELEM_META[el].zh}粉</span>`;
-   d.title='点击取回底箱';d.onclick=()=>potTake(i);
-  }else{d.innerHTML='<span class="pz-e" style="color:#4a3320">＋</span><span class="pz-n">空格</span>';d.title='题间点底箱粉末投入'}
+   d.style.setProperty('--pc',ELEM_META[el].color);
+   d.innerHTML=`<span class="pz-g">${grZH(gr)}</span>`;
+   d.title=grZH(gr)+'品'+ELEM_META[el].zh+'粉 · 点击取回底箱';d.onclick=()=>potTake(i);
+  }else{d.title='题间点底箱粉末投入'}
   box.appendChild(d)}
 }
-function potPut(k){ // 底箱粉末→下一空格
- if(potLocked()){toast('答题中不能动丹锅——等这题答完',1600);return}
+function potPut(k){ // 底箱粉末→下一空碟
+ if(potLocked()){toast('答题中不能动五碟——等这题答完',1600);return}
  if(!(S.powders[k]>0))return;
  const i=S.pot.indexOf(null);
- if(i<0){toast('🍲 丹锅满了(3格)——点锅内粉末可取回',1600);return}
+ if(i<0){toast(`🍲 五碟已满(${CFG.POT_CAP}碟)——点碟内粉末可取回`,1600);return}
  S.powders[k]--;if(!S.powders[k])delete S.powders[k];
  S.pot[i]={k};
  renderPot();renderChest();
  const el=k.slice(0,k.indexOf(':'));
- toast(`🍲 投入丹锅:${ELEM_META[el].zh}粉(锅内 ${S.pot.filter(Boolean).length}/${CFG.POT_CAP})`,1400);
+ toast(`🍲 投入碟中:${ELEM_META[el].zh}粉(碟内 ${S.pot.filter(Boolean).length}/${CFG.POT_CAP})`,1400);
 }
-function potTake(i){ // 锅内粉末→取回底箱
- if(potLocked()){toast('答题中不能动丹锅——等这题答完',1600);return}
+function potTake(i){ // 碟内粉末→取回底箱
+ if(potLocked()){toast('答题中不能动五碟——等这题答完',1600);return}
  const p=S.pot[i];if(!p)return;
  S.powders[p.k]=(S.powders[p.k]||0)+1;S.pot[i]=null;
  renderPot();renderChest();
@@ -1269,7 +1288,7 @@ function applyWindow(){
 function updateSword(){
  if(!S.cur){
   document.querySelectorAll('.lane').forEach(el=>{el.classList.add('dim');el.classList.remove('cov','anchor-on')});
-  $('sword-svg').innerHTML='';$('sword-value').style.display='none';
+  $('sword-svg').innerHTML='';$('sword-svg').classList.remove('cast-glow');$('sword-value').style.display='none';
   $('laser-top').style.display='none';$('laser-bot').style.display='none';
   $('anvil-empty').style.display='flex';return}
  $('anvil-empty').style.display='none';
@@ -1284,30 +1303,64 @@ function updateSword(){
  $('sword-glow').style.top=topPx+'px';$('sword-glow').style.height=h+'px';
  $('laser-top').style.top=(topPx-4)+'px';$('laser-bot').style.top=(botPx+4)+'px';
  $('sword-value').style.top=(topPx+h/2)+'px';
- drawSword(sw,h);
+ drawSword(h);
 }
-function drawSword(sw,hPx){
- const svg=$('sword-svg');const W=120;svg.setAttribute('viewBox',`0 0 120 600`);
- const bl=W*.22,bl2=bl/2;
- const crossW=W*.72,guardY=560,gripH=34,pomY=guardY+gripH+8;
- svg.innerHTML=`
-  <defs>
-    <linearGradient id="blade" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#6a7686"/><stop offset=".32" stop-color="#eef3fa"/>
-      <stop offset=".55" stop-color="#b9c4d4"/><stop offset="1" stop-color="#59636f"/>
-    </linearGradient>
-  </defs>
-  <g>
-    <polygon points="${W/2},4 ${W/2+bl2},${70} ${W/2+bl2},${guardY} ${W/2-bl2},${guardY} ${W/2-bl2},${70}"
-      fill="url(#blade)" stroke="#2c333d" stroke-width="2"/>
-    <line x1="${W/2}" y1="16" x2="${W/2}" y2="${guardY}" stroke="#ffffffaa" stroke-width="2.5"/>
-    <path d="M ${W/2-bl2*.4} ${90} Q ${W/2+bl2*.9} ${300} ${W/2-bl2*.2} ${guardY-40}" stroke="#8fa0b566" stroke-width="3" fill="none"/>
-    <rect x="${W/2-crossW/2}" y="${guardY}" width="${crossW}" height="14" rx="6" fill="#7a5830" stroke="#3a2810" stroke-width="2"/>
-    <rect x="${W/2-9}" y="${guardY+14}" width="18" height="${gripH}" rx="7" fill="#4a3018" stroke="#2c1c0a" stroke-width="2"/>
-    ${Array.from({length:4},(_,k)=>`<line x1="${W/2-9}" y1="${guardY+20+k*8}" x2="${W/2+9}" y2="${guardY+20+k*8}" stroke="#2c1c0a" stroke-width="2"/>`).join('')}
-    <circle cx="${W/2}" cy="${pomY}" r="10" fill="#c9a06a" stroke="#6a4c2a" stroke-width="2"/>
-  </g>`;
- if(sw.span<=3){svg.querySelector('g').style.transform='translateY(120px)'}
+/* ================= v36B4 道教符可视化(批4,大爷20:18令「先简单意会」):在途符=竖长方形黄纸符 =================
+   符纸居中(72px 宽·高贴满音道盒),顶部敕令头(朱点+三横)+中段笔画组+尾部收笔;
+   笔画总数=铸成所需题数(swordCap()*2)×TALISMAN_PER_Q,答一题亮一组(单调不减),铸成满绘;
+   笔画色=当前主导元素(judgeSpell 同口径:五元 max 并列取表序前者)→ELEM_META 主题色,全0/无elem朱砂红兜底;
+   未亮笔画=灰褐虚线底稿常驻。激光/音道/#sword-value 定位数学零改动;老档无字段变更(纯视觉) */
+let _swordH=120; // 最近一次绘制的符纸高(updateSword 算好的音道盒高,castFlashFx 复用)
+function talismanSVG(H,lit,total,ink){ // lit=已点亮笔画数;total=总笔画;ink=点亮笔画色
+ const W=140,px=34,py=3,ph=H-6,pw=72;
+ const headH=Math.round(Math.min(34,H*.15)),tailH=Math.round(Math.min(22,H*.1));
+ const topY=py+headH,botY=py+ph-tailH,bandH=Math.max(10,botY-topY);
+ const cols=[50,70,90];
+ let s=`<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="5" fill="#e8d5a8" stroke="#5a4028" stroke-width="2.5"/>
+  <rect x="${px+4}" y="${py+4}" width="${pw-8}" height="${ph-8}" rx="3" fill="none" stroke="#8a6a3a" stroke-width="1" opacity=".5"/>
+  <circle cx="${W/2}" cy="${py+13}" r="3.2" fill="#b3362a"/>`;
+ [0,1,2].forEach(k=>{const y=py+20+k*5.5;s+=`<line x1="${W/2-13}" y1="${y}" x2="${W/2+13}" y2="${y}" stroke="#6b4a2a" stroke-width="2.2" stroke-linecap="round"/>`});
+ for(let i=0;i<total;i++){
+  const y=topY+bandH*(i+.5)/total,x=cols[i%3],on=i<lit;
+  const c=on?ink:'#8a6a4a',w=on?2.4:1.5,op=on?1:.3,dash=on?'':' stroke-dasharray="3 2.5"',fop=on?'':' opacity=".3"';
+  const sh=i%6;let el='';
+  if(sh===0)el=`<line x1="${x}" y1="${y-8}" x2="${x}" y2="${y+8}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"${dash}/>`;
+  else if(sh===1)el=`<path d="M ${x-7} ${y+6} L ${x-2} ${y-6} L ${x+3} ${y+6} L ${x+8} ${y-6}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"${dash}/>`;
+  else if(sh===2)el=`<circle cx="${x-5}" cy="${y}" r="2.2" fill="${c}"${fop}/><circle cx="${x+5}" cy="${y}" r="2.2" fill="${c}"${fop}/>`;
+  else if(sh===3)el=`<line x1="${x-8}" y1="${y}" x2="${x+8}" y2="${y}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"${dash}/><line x1="${x}" y1="${y-5}" x2="${x}" y2="${y+5}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"${dash}/>`;
+  else if(sh===4)el=`<path d="M ${x-7} ${y+5} Q ${x} ${y-9} ${x+7} ${y+5}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round"${dash}/>`;
+  else el=`<path d="M ${x-6} ${y-6} L ${x+6} ${y+6} M ${x+6} ${y-6} L ${x-6} ${y+6}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round"${dash}/>`;
+  s+=`<g class="tst${on?' on':''}">${el}</g>`;
+ }
+ const ty=py+ph-12;
+ s+=`<g><line x1="${W/2-10}" y1="${ty+4}" x2="${W/2-3}" y2="${ty-3}" stroke="#6b4a2a" stroke-width="2" stroke-linecap="round"/>
+  <line x1="${W/2+3}" y1="${ty-3}" x2="${W/2+10}" y2="${ty+4}" stroke="#6b4a2a" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="${W/2}" cy="${ty+8}" r="2.4" fill="#b3362a"/></g>`;
+ return s;
+}
+function talismanInk(){ // 笔画色:主导元素(与 judgeSpell 同口径),全0/无elem兜底朱砂红
+ const jd=judgeSpell(S.cur&&S.cur.elem);
+ return jd.main?ELEM_META[jd.main].color:CFG.TALISMAN_FALLBACK;
+}
+function drawSword(hPx){ // 进度/染色读 S.cur(焦点符);空手分支由 updateSword 清空
+ const svg=$('sword-svg');if(!svg)return;
+ const H=Math.max(120,Math.round(hPx||120));_swordH=H;
+ svg.classList.remove('cast-glow');
+ svg.setAttribute('viewBox',`0 0 140 ${H}`);
+ const capQ=swordCap()*2;
+ const lit=S.cur?Math.min(S.cur.qDone||0,capQ)*CFG.TALISMAN_PER_Q:0;
+ svg.innerHTML=talismanSVG(H,lit,capQ*CFG.TALISMAN_PER_Q,talismanInk());
+}
+function castFlashFx(sw){ // 铸成表现:满绘+金色辉光一闪后入箱(纯视觉:结算/入箱时序不变,TALISMAN_CAST_MS 后 updateSword 按现状复位)
+ const svg=$('sword-svg');if(!svg)return;
+ const H=_swordH||120;
+ svg.classList.remove('cast-glow');void svg.offsetWidth;
+ svg.setAttribute('viewBox',`0 0 140 ${H}`);
+ const capQ=swordCap()*2,tot=capQ*CFG.TALISMAN_PER_Q;
+ const jd=judgeSpell(sw&&sw.elem);
+ svg.innerHTML=talismanSVG(H,tot,tot,jd.main?ELEM_META[jd.main].color:CFG.TALISMAN_FALLBACK);
+ svg.classList.add('cast-glow');
+ setTimeout(()=>updateSword(),CFG.TALISMAN_CAST_MS);
 }
 
 /* ================= 女铁匠(H3 素材自动接入,失败回退占位 SVG) ================= */
@@ -1390,36 +1443,6 @@ function setGirl(state,ms){
  girlPh.classList.add(state);
  clearTimeout(girlTm);
  if(state!=='idle')girlTm=setTimeout(()=>{girlPh.classList.remove('strike','hurt');void girlPh.offsetWidth;girlPh.classList.add('idle')},ms||500);
-}
-
-/* ================= 铁锤本体(跟随鼠标) ================= */
-const hammerEl=document.createElement('div');
-hammerEl.id='hammer';
-hammerEl.innerHTML=`<svg width="86" height="86" viewBox="0 0 86 86">
- <rect x="14" y="30" width="52" height="12" rx="5" fill="#8a6238" stroke="#4a3018" stroke-width="2.5" transform="rotate(38 40 36)"/>
- <g transform="rotate(38 40 36)">
-  <rect x="8" y="14" width="42" height="34" rx="6" fill="#9aa4b0" stroke="#4a5560" stroke-width="2.5"/>
-  <rect x="14" y="20" width="30" height="9" rx="3" fill="#c9d4e0"/>
-  <rect x="14" y="35" width="30" height="7" rx="3" fill="#7a848f"/>
- </g>
-</svg>`;
-app.appendChild(hammerEl);
-/* 坐标换算:client→app(必须除以缩放系数,手机/窄窗口必备) */
-function toApp(cx,cy){const r=app.getBoundingClientRect(),k=r.width/app.offsetWidth;return{x:(cx-r.left)/k,y:(cy-r.top)/k}}
-let lastPt=null,hideTm=null;
-function placeHammer(cx,cy){
- const p=toApp(cx,cy);lastPt={x:p.x,y:p.y,t:Date.now()};
- hammerEl.style.left=(p.x-24)+'px';hammerEl.style.top=(p.y-39)+'px';
- hammerEl.style.opacity=1;clearTimeout(hideTm);
-}
-app.addEventListener('pointermove',e=>{placeHammer(e.clientX,e.clientY)},{passive:true});
-app.addEventListener('pointerdown',e=>{placeHammer(e.clientX,e.clientY)});
-app.addEventListener('pointerup',e=>{if(e.pointerType!=='mouse')hideTm=setTimeout(()=>hammerEl.style.opacity=0,600)});
-app.addEventListener('pointerleave',()=>{hammerEl.style.opacity=0});
-app.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')hammerEl.style.opacity=1});
-function swingHammer(x,y){ // x,y 相对 app;偏移=锤头砸击面中心(SVG 23.9,38.7)对准指针
- hammerEl.style.left=(x-24)+'px';hammerEl.style.top=(y-39)+'px';
- hammerEl.classList.remove('swing');void hammerEl.offsetWidth;hammerEl.classList.add('swing');
 }
 
 /* ================= 淬火水桶(左上,水滴可视化) ================= */
@@ -1610,11 +1633,8 @@ function hitLane(i){
  catPlay(nt.m,0);
  const laneEl=document.querySelector(`.lane[data-i="${i}"]`);
  const rect=laneEl.getBoundingClientRect(),appR=app.getBoundingClientRect(),sk=appR.width/app.offsetWidth;
- const fresh=lastPt&&Date.now()-lastPt.t<500;
- const hx=fresh?lastPt.x:(rect.left-appR.left+rect.width/2)/sk,
-       hy=fresh?lastPt.y:(rect.top-appR.top+rect.height/2)/sk;
- swingHammer(hx,hy);
- spawnSparks(hx,hy);
+ const hx=(rect.left-appR.left+rect.width/2)/sk,hy=(rect.top-appR.top+rect.height/2)/sk;
+ spawnSparks(hx,hy); // v36B4:火花改锚音道中心(命中特效保留,锤子光标退役)
  clankNeutral();
  setGirl('strike',380);
  laneEl.classList.add('flash-tap');setTimeout(()=>laneEl.classList.remove('flash-tap'),240);
@@ -1752,6 +1772,7 @@ function progSwords(mv,grade){
   const spx=(it.spell?CFG.SPELLS[it.spell].ic:'📜')+' '+spellName(it.spell,it.grade); // v36B3:铸成时报法术+词条
   toast(`🎉 ${it.name} 制成!品质 ${'★'.repeat(it.star)}${'☆'.repeat(4-it.star)} · ${spx} · 灵力 ${it.value}`+(it.affix?` · ✨词条:${affixName(it.affix)}`:'')+` · 收进箱子`)});
  syncFocus();hud();updateSword();renderRack();renderChest();
+ if(done.length)castFlashFx(done[done.length-1]); // v36B4:满绘+金光一闪后入箱(纯视觉,TALISMAN_CAST_MS 后 updateSword 复位)
 }
 /* ================= v36B2 五行轮盘(批2阶段C):每题判卷后自动一转·日末统一注灵退役 =================
    档位完全复用现有 gradeProbs 概率链(computeProbs/rollTier 一字未改,错音/全对驱动),五轮共享同一档;
@@ -1777,6 +1798,7 @@ function spinWheel(m,target){ // m=该题标记(连击进化后);target=当前�
   if(inj[el]>0&&target){if(!target.elem)target.elem=zeroElem();target.elem[el]+=inj[el]}});
  if(target)(target.tierHist=target.tierHist||[]).push(tk); // v36B3:4题档位史随符入库(铸成喂词条概率+收购区展示;作废题也转也记)
  renderPot(); // 锅内容随取粉/锁定期不变,这里仅同步
+ pourFx(inj); // v36B4:倒粉表现层钩子(注入数学上行已完成,纯视觉不碰S/时序)
  wheelAnimate(wt,inj,pay);
  hud();
  return {tier:wt,mult,inj,pay};
@@ -1794,6 +1816,28 @@ function wheelAnimate(wt,inj,pay){ // 纯表现层:小轮旋转→停定亮各�
   const parts=ELEMS.filter(el=>inj[el]>0).map(el=>ELEM_META[el].ic+ELEM_META[el].zh+'+'+inj[el]);
   $('wheel-msg').innerHTML=`<span class="wt-${wt.cls}">${wt.name}×${wt.mult}</span>`+(parts.length?' · '+parts.join(' · '):'')+` · 灵力+${pay}`;
  },CFG.WHEEL.ANIM_MS);
+}
+function pourFx(inj){ // v36B4倒粉动画(纯表现层,大爷20:18令「答题就是把粉末放到符上」):最上方有粉碟闪光微倾+元素色粉末粒子飞向符纸;注入量取本轮max元素配色;不碰S/结算时序,轮盘1.2s动画并行
+ const box=$('pot-slots');if(!box)return;
+ const dish=box.querySelector('.pot-slot.full');if(!dish)return;
+ let el=null,mv=0;ELEMS.forEach(k=>{if((inj[k]||0)>mv){mv=inj[k];el=k}});
+ if(!el)return;
+ const color=ELEM_META[el].color;
+ dish.classList.remove('pouring');void dish.offsetWidth;dish.classList.add('pouring');
+ setTimeout(()=>dish.classList.remove('pouring'),CFG.POUR_MS);
+ const ar=app.getBoundingClientRect(),k=ar.width/app.offsetWidth;
+ const dr=dish.getBoundingClientRect(),sx=(dr.left-ar.left)/k+dr.width/k/2,sy=(dr.top-ar.top)/k+dr.height/k/2;
+ const zr=$('sword-zone').getBoundingClientRect(),tx=(zr.left-ar.left)/k+zr.width/k/2,ty=(zr.top-ar.top)/k+52;
+ const n=CFG.POUR_MIN+Math.floor(Math.random()*(CFG.POUR_MAX-CFG.POUR_MIN+1));
+ for(let i=0;i<n;i++){
+  const p=document.createElement('div');p.className='pour-dot';
+  p.style.background=color;p.style.boxShadow='0 0 5px '+color;
+  p.style.left=(sx+(Math.random()*16-8))+'px';p.style.top=(sy+(Math.random()*10-5))+'px';
+  app.appendChild(p);
+  const dx=tx-sx+(Math.random()*44-22),dy=ty-sy+(Math.random()*28-14);
+  requestAnimationFrame(()=>{p.style.transform=`translate(${dx}px,${dy}px) scale(.4)`;p.style.opacity=.12});
+  setTimeout(()=>p.remove(),CFG.POUR_MS+200);
+ }
 }
 function afterBatch(){
  if(!S.anvils.length){
@@ -1887,7 +1931,7 @@ function renderChest(){
   const ei=k.indexOf(':'),el=k.slice(0,ei),gr=+k.slice(ei+1);used+=1;
   const d=document.createElement('div');d.className='cm-pow';d.style.gridColumn='span 1';d.dataset.pk=k;
   d.innerHTML=`<span class="cb-e" style="color:${ELEM_META[el].color}">${ELEM_META[el].zh}</span><span>${grZH(gr)}品${ELEM_META[el].zh}粉 ×${n}</span>`;
-  d.title='点投丹锅(题间可用)';d.onclick=()=>potPut(k);
+  d.title='点投五碟(题间可用)';d.onclick=()=>potPut(k);
   g.appendChild(d)});
  if(!S.chest.length&&!S.pack.length&&!powTotal())g.innerHTML='<div class="cm-none">箱子空了——先把存货卖掉换新坯</div>';
  for(let k=used;k<48;k++){const e=document.createElement('div');e.className='dock-empty';g.appendChild(e)}
@@ -1981,7 +2025,7 @@ const GOODS_RAND=[
 const POWDER_GOODS=[];
 ELEMS.forEach(el=>{for(let gr=1;gr<=CFG.POWDER_MAX_GR;gr++)POWDER_GOODS.push({id:'pow-'+el+'-'+gr,pow:el+':'+gr,e:ELEM_META[el].zh,kind:'mat',cls:'mat',
  n:grZH(gr)+'品'+ELEM_META[el].zh+'粉',price:CFG.POWDER_PRICE[gr],stock:CFG.POWDER_STOCK,gr:gr,
- d:'五行粉末·'+ELEM_META[el].zh+'行:题间投入丹锅,轮盘按品级配重注入「'+ELEM_META[el].zh+'」'})});
+ d:'五行粉末·'+ELEM_META[el].zh+'行:题间投入五碟,轮盘按品级配重注入「'+ELEM_META[el].zh+'」'})});
 GOODS_RAND.push(...POWDER_GOODS);
 const M_SAY=['手艺不错,下次还来!','独眼识货,童叟无欺。','这价公道——制符师朋友。'];
 /* —— v34 三分类货架(大爷10-25 21:16令):cls=mat素材/relic遗物/use一次性;基础剑坯+神器位常驻,其余每类随机抽 3 —— */
@@ -2028,7 +2072,7 @@ function applyGood(g){
  else if(g.id==='iron')S.ironNext+=10;
  else if(g.id==='pt-safe'){S.potions.safe=(S.potions.safe||0)+1;toast('🧪 保底丹药入袋!制符时点符案旁丹药槽使用',2400)}
  else if(g.id==='pt-up'){S.potions.up=(S.potions.up||0)+1;toast('⚗️ 升级丹药入袋!制符时点符案旁丹药槽使用',2400)}
- else if(g.pow){S.powders[g.pow]=(S.powders[g.pow]||0)+1;renderChest();toast('🧪 '+g.n+' 入袋!题间点底箱粉末投入丹锅',2400)} // v36B2:粉末计数入袋
+ else if(g.pow){S.powders[g.pow]=(S.powders[g.pow]||0)+1;renderChest();toast('🧪 '+g.n+' 入袋!题间点底箱粉末投入五碟',2400)} // v36B2:粉末计数入袋
  else if(g.id.startsWith('charm-')){S.charms[g.id]=1;toast('🎵 '+g.n.split('·')[1]+' 护符入册!敲中该音每次+1',2400)}
  toast('🛒 买入 '+g.n+' -💰'+g.price);if(!g.art&&Math.random()<.4)snark('buy');
  mSay(M_SAY[Math.floor(Math.random()*M_SAY.length)]);
@@ -2290,8 +2334,8 @@ function renderSkillTree(){
 }
 /* ================= 开始菜单+选项(大爷00:43令) ================= */
 const I18N={
- zh:{cal:'\uD83D\uDCC5 \u65E5\u5386',upg:'\uD83C\uDFD7\uFE0F 升级工坊',skill:'\uD83C\uDF33 功法',endf:'结束制符',day2:'\uD83D\uDED2 \u7B2C\u4E8C\u5929\u00B7\u5546\u4EBA',quest:'\uD83D\uDCCB \u4EFB\u52A1\u677F',opt:'\u2699\uFE0F \u9009\u9879',mstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',mmod:'\uD83E\uDE9B Mod \u5DE5\u574A',mopt:'\u2699\uFE0F \u9009\u9879',mst:'\uD83C\uDF33 功法',mtitle:'符箓工坊 · 制符听音',msub:'听音高 · 画灵符 · 交清摊租',res:'\u5206\u8FA8\u7387',lang:'\u8BED\u8A00',optt:'\u9009\u9879',gstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',gcont:'\u25B6\uFE0F \u7EE7\u7EED\u6E38\u620F',mquit:'\uD83D\uDEAA \u9000\u51FA',ptitle:'\u6682\u505C',presume:'\u25B6\uFE0F \u6062\u590D\u6E38\u620F',psave:'\uD83D\uDCBE \u4FDD\u5B58',pload:'\uD83D\uDCC2 \u52A0\u8F7D',phome:'\uD83C\uDFE0 \u8FD4\u56DE\u4E3B\u83DC\u5355',nosave:'\u6682\u65E0\u5B58\u6863',rfw:'刷新摊架',snark:'\u5410\u69FD',pot:'🍲 丹锅',wheel:'🌀 五行轮',spx:'📖 法术图鉴'},
- en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'End Crafting',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83C\uDFAE New Game',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mst:'\uD83C\uDF33 Skill Tree',mtitle:'Talisman Workshop \u00B7 Runes by Ear',msub:'Hear the pitch \u00B7 Draw the talisman \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options',gstart:'\uD83C\uDFAE New Game',gcont:'\u25B6\uFE0F Continue',mquit:'\uD83D\uDEAA Quit',ptitle:'Paused',presume:'\u25B6\uFE0F Resume',psave:'\uD83D\uDCBE Save',pload:'\uD83D\uDCC2 Load',phome:'\uD83C\uDFE0 Main Menu',nosave:'No save yet',rfw:'Refresh',snark:'Snark',pot:'🍲 Cauldron',wheel:'🌀 Wheels',spx:'📖 Spell Codex'}};
+ zh:{cal:'\uD83D\uDCC5 \u65E5\u5386',upg:'\uD83C\uDFD7\uFE0F 升级工坊',skill:'\uD83C\uDF33 功法',endf:'结束制符',day2:'\uD83D\uDED2 \u7B2C\u4E8C\u5929\u00B7\u5546\u4EBA',quest:'\uD83D\uDCCB \u4EFB\u52A1\u677F',opt:'\u2699\uFE0F \u9009\u9879',mstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',mmod:'\uD83E\uDE9B Mod \u5DE5\u574A',mopt:'\u2699\uFE0F \u9009\u9879',mst:'\uD83C\uDF33 功法',mtitle:'符箓工坊 · 制符听音',msub:'听音高 · 画灵符 · 交清摊租',res:'\u5206\u8FA8\u7387',lang:'\u8BED\u8A00',optt:'\u9009\u9879',gstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',gcont:'\u25B6\uFE0F \u7EE7\u7EED\u6E38\u620F',mquit:'\uD83D\uDEAA \u9000\u51FA',ptitle:'\u6682\u505C',presume:'\u25B6\uFE0F \u6062\u590D\u6E38\u620F',psave:'\uD83D\uDCBE \u4FDD\u5B58',pload:'\uD83D\uDCC2 \u52A0\u8F7D',phome:'\uD83C\uDFE0 \u8FD4\u56DE\u4E3B\u83DC\u5355',nosave:'\u6682\u65E0\u5B58\u6863',rfw:'刷新摊架',snark:'\u5410\u69FD',pot:'🍲 五碟',wheel:'🌀 五行轮',spx:'📖 法术图鉴'},
+ en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'End Crafting',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83C\uDFAE New Game',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mst:'\uD83C\uDF33 Skill Tree',mtitle:'Talisman Workshop \u00B7 Runes by Ear',msub:'Hear the pitch \u00B7 Draw the talisman \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options',gstart:'\uD83C\uDFAE New Game',gcont:'\u25B6\uFE0F Continue',mquit:'\uD83D\uDEAA Quit',ptitle:'Paused',presume:'\u25B6\uFE0F Resume',psave:'\uD83D\uDCBE Save',pload:'\uD83D\uDCC2 Load',phome:'\uD83C\uDFE0 Main Menu',nosave:'No save yet',rfw:'Refresh',snark:'Snark',pot:'🍲 Five Dishes',wheel:'🌀 Wheels',spx:'📖 Spell Codex'}};
 let LANG='zh';try{LANG=localStorage.getItem('ft_lang')||'zh'}catch(e){}
 let CUR_RES=[1280,720];
 function t(k){return (I18N[LANG]&&I18N[LANG][k])||I18N.zh[k]||k}
@@ -2351,7 +2395,9 @@ function loadGame(){
  if(['playing','input','quench','busy'].includes(S.phase)){S.phase='idle';S.q=[];S.pos=0;S.revealed=false;S.pendingQuench=false}
  S.row=S.row||[];S.potions=S.potions||{safe:0,up:0};S.potSel=null;renderMarkRow(); // v29:标记台账/药水随存档恢复
  S.powders=S.powders||{}; // v36B2:粉末袋缺省
- S.pot=(Array.isArray(S.pot)&&S.pot.length===CFG.POT_CAP)?S.pot.map(p=>p&&p.k?{k:p.k}:null):Array(CFG.POT_CAP).fill(null); // v36B2:丹锅缺省/脏数据兜底
+ S.pot=(Array.isArray(S.pot)?S.pot:[]).slice(0,CFG.POT_CAP).map(p=>p&&p.k?{k:p.k}:null); // v36B2脏数据兜底
+ while(S.pot.length<CFG.POT_CAP)S.pot.push(null); // v36B4:锅扩5碟——旧3槽内容进前3位,已有粉只扩容不改动
+ if(!S.pot.some(Boolean))S.pot=Array.from({length:CFG.POT_CAP},()=>({k:CFG.POT_PREFILL})); // v36B4:扩容后全空→预填5×一品火粉(大爷旧档进去就见五碟全红)
  if(!S.rep)S.rep={face:50,dark:0}; // v36B2:声誉占位缺省
  S.codex=S.codex||{}; // v36B3:法术图鉴点亮台账缺省(老档=空册)
  (S.pack||[]).forEach(p=>{ // v36B3:老档已入库符补法术字段——spell按elem判定回填/无elem标杂符·dur3·affix null·tierHist空·铸成过即点亮图鉴
@@ -2533,7 +2579,7 @@ function restart(){
  S.ledger={forge:0,sell:0,buy:0};closeBill(); // v31:新档清流水台账+关账单
  S.xp=0;S.sp=0;S.sk={sell:0,buy:0,xp:0,quench:0};S.art=[];
  S.row=[];S.potions={safe:0,up:0};S.potSel=null;S.dayErrN=0;S.dayFull=0;renderMarkRow(); // v29:新档清标记台账+药水
- S.powders={};S.pot=Array(CFG.POT_CAP).fill(null);S.rep={face:50,dark:0};S.codex={};renderPot(); // v36B2:新档清粉末袋+丹锅+声誉占位;v36B3:清法术图鉴
+ S.powders={};S.pot=Array.from({length:CFG.POT_CAP},()=>({k:CFG.POT_PREFILL}));S.rep={face:50,dark:0};S.codex={};renderPot(); // v36B2:新档清粉末袋;v36B4:五碟预填一品火粉(开局赠,不扣灵石=大爷「一开始全是红色」)
  S.up={anvil:0,sword:0,armor:0,bow:0,wand:0,artSlot:0};S.anvils=[];syncFocus();renderRack();
  S.qDay=0;S.qBoard={};S.qActive={};renderQStrip();
  S.chest=[{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'}];renderChest();
@@ -2582,9 +2628,9 @@ $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:制符听音 · 符�
   · 敲错符不碎,但<b>每错一次本题标记降一色</b>;错 3 次本题作废(黑标记)<br>
   · 一题敲完 → <b>符案标记入行</b>(蓝3/绿2/白1/黑0),直接进下一题<br>
   · <b>连击进化</b>:连续「蓝及以上」≥3 全紫(4💰)/≥5 全金(5💰)/≥7 全红(6💰),绿白黑断串<br>
-  · <b>五行轮盘</b>(界面右侧,每题答完自动转一次):该题标记灵力 × 档位倍率<b>即时兑现成灵石</b>,五轮按丹锅配重往当前符注入五行元素,符制成时元素随符入库<br>
+  · <b>五行轮盘</b>(界面右侧,每题答完自动转一次):该题标记灵力 × 档位倍率<b>即时兑现成灵石</b>,五轮按五碟配重往当前符注入五行元素,符制成时元素随符入库<br>
   · 档位复用概率链(错音越多越差):<b>大成功×4 / 成功×2 / 失败×0.5</b> · 基础 20/70/10;失败=兑现减半注入减半,不炸符不没收标记<br>
-  · <b>丹锅</b>(砧板下方 3 格):题间点底箱粉末投入、点锅内粉末取回,答题中锁定;<b>空锅=五元素等权</b>。粉末在商人「素材」区有售:一品30/二品70灵石<br>
+  · <b>五碟</b>(砧板左下缘,从上到下五个圆碟):开局赠<b>五碟一品火粉(全红)</b>——不换粉就一路注入火行,铸成即火球术;题间点底箱粉末入碟、点碟内粉末取回换粉种,答题中锁定;<b>空碟=五元素等权</b>。碟内粉末不因答题消耗。粉末在商人「素材」区有售:一品30/二品70灵石<br>
   · <b>丹药</b>(商人有售):🧪保底 60💰 绿/白标记→蓝(可接上蓝串触发进化);⚗️升级 120💰 单标记升一级(红封顶)<br>
   · <b>法术判定</b>(批3):符制成时按五行构成判法术——火主火球/水主冰锥/金主雷击/木主藤缚/土主石甲;纯度=主元素量÷五元总量,<b>≥60% 上品 / ≥40% 中品 / 其余杂品</b>·全 0 兜底五行杂符;每符带 <b>3 次耐久</b><br>
   · <b>词条</b>:铸成时按该符 4 题轮盘史 roll(基础30%+每次大成功+8%/成功+3%,封顶70%)——价值/美观提卖价,次数翻倍耐久→6;<b>商人收购区卖符</b>:价值×纯度(×2.0/×1.4/×1.0)×词条×耐久(1+dur×10%),法术图鉴铸成过即点亮<br>
@@ -2596,10 +2642,9 @@ $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:制符听音 · 符�
   · 右侧「🎵 乐器音色」可换 33 种实采乐器音色(逐音 YIN 验证),出题自动避开该乐器缺的音`,
  [{label:'明白,开炉!',cls:'gold',fn:hideOverlay}])};
 
-/* 音道点击(用 app 坐标判定,锤子即光标) */
+/* 音道点击(v36B4:系统光标,火花锚音道中心) */
 $('lanes').addEventListener('pointerdown',e=>{
  const laneEl=e.target.closest('.lane');if(!laneEl)return;
- placeHammer(e.clientX,e.clientY);
  hitLane(+laneEl.dataset.i);
 });
 

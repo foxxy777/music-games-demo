@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Armor line study — Female Noble Knight</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { color-scheme: light; --ground: #ffffff; --paper: #fbfaf7; --ink: #232327; --muted: #6f6f78; --line: #e0e0e4; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; --ground: #08090a; --paper: #0e0f11; --ink: #d0d6e0; --muted: #8a8c95; --line: #29292d; }
+  }
+  :root[data-theme="dark"] { color-scheme: dark; --ground: #08090a; --paper: #0e0f11; --ink: #d0d6e0; --muted: #8a8c95; --line: #29292d; }
+  :root[data-theme="light"] { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px;
+    background: var(--ground); color: var(--ink);
+    font: 13px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased;
+  }
+  main { width: 100%; max-width: 720px; }
+  .plate { position: relative; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--paper); }
+  .tag, .label, output, button { font: 11px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.02em; }
+  .tag { position: absolute; top: 12px; z-index: 1; color: var(--muted); pointer-events: none; }
+  #name { left: 14px; }
+  #read { right: 14px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  #stage { height: min(72vh, 640px); }
+  #stage canvas { display: block; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 14px; }
+  .label { color: var(--muted); }
+  input[type="range"] {
+    flex: 1 1 96px; min-width: 0; height: 32px; margin: 0; background: transparent; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+  }
+  input[type="range"]::-webkit-slider-runnable-track { height: 1px; background: var(--muted); }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 13px; height: 13px; margin-top: -6px; border-radius: 50%;
+    border: 1px solid var(--ink); background: var(--ground);
+  }
+  input[type="range"]::-moz-range-track { height: 1px; background: var(--muted); }
+  input[type="range"]::-moz-range-thumb { width: 11px; height: 11px; border-radius: 50%; border: 1px solid var(--ink); background: var(--ground); }
+  input[type="range"]:focus-visible, button:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 2px; }
+  output { min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
+  button {
+    height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px;
+    background: transparent; color: var(--ink); cursor: pointer;
+  }
+  #spin[aria-pressed="true"], #fill[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+  #credit { margin: 14px 0 0; color: var(--muted); text-wrap: pretty; }
+  #credit a { color: inherit; }
+  #error { margin: 12px 0 0; padding-left: 10px; border-left: 1px solid var(--ink); display: none; }
+</style>
+</head>
+<body>
+<main>
+  <div class="plate">
+    <span class="tag" id="name">armor · line study</span>
+    <span class="tag" id="read"></span>
+    <div id="stage"></div>
+  </div>
+  <div class="controls">
+    <label class="label" for="threshold">edge°</label>
+    <input type="range" id="threshold" min="5" max="80" step="1" value="40">
+    <output id="threshold-out" for="threshold">40</output>
+    <button id="spin" aria-pressed="true">spin</button>
+    <button id="fill" aria-pressed="true">fill</button>
+  </div>
+  <p id="credit">“Female Noble Knight Armor” by Meast · <a href="https://sketchfab.com/3d-models/female-noble-knight-armor-5b40c2e4b40d48378d595268d2db69bb" target="_blank" rel="noopener">Sketchfab</a> · CC-BY-4.0 — rendered as edge-line study (EdgesGeometry), textures stripped.</p>
+  <p id="error"></p>
+</main>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const stage = document.getElementById('stage');
+const read = document.getElementById('read');
+const errorBox = document.getElementById('error');
+function fail(msg) { errorBox.textContent = msg; errorBox.style.display = 'block'; }
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
+
+const ink = new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#232327');
+const lineMat = new THREE.LineBasicMaterial({ color: ink, transparent: true, opacity: 0.92 });
+const fillMat = new THREE.MeshLambertMaterial({
+  color: new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--paper').trim() || '#fbfaf7'),
+  polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1,
+});
+
+scene.add(new THREE.AmbientLight(0xffffff, 2.2));
+const key = new THREE.DirectionalLight(0xffffff, 1.1);
+key.position.set(2, 4, 3);
+scene.add(key);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.9;
+controls.target.set(0, 1, 0);
+
+const root = new THREE.Group();
+scene.add(root);
+let parts = []; // { mesh, line }
+
+function buildEdges(thresholdDeg) {
+  for (const { mesh, line } of parts) {
+    line.geometry.dispose();
+    line.geometry = new THREE.EdgesGeometry(mesh.geometry, thresholdDeg);
+  }
+}
+
+new GLTFLoader().load('scene.gltf?v=1', (gltf) => {
+  let boxes = [];
+  gltf.scene.updateMatrixWorld(true);
+  gltf.scene.traverse((node) => {
+    if (!node.isMesh) return;
+    node.updateWorldMatrix(true, false);
+    const world = new THREE.Matrix4().multiplyMatrices(node.matrixWorld, new THREE.Matrix4().makeScale(1, 1, 1));
+    const line = new THREE.LineSegments(new THREE.EdgesGeometry(node.geometry, 40), lineMat);
+    line.applyMatrix4(node.matrixWorld);
+    const fill = new THREE.Mesh(node.geometry, fillMat);
+    fill.applyMatrix4(node.matrixWorld);
+    root.add(fill, line);
+    parts.push({ mesh: node, line, fill });
+    node.geometry.computeBoundingBox();
+    const b = node.geometry.boundingBox.clone().applyMatrix4(node.matrixWorld);
+    boxes.push(b);
+  });
+  if (!boxes.length) return fail('no meshes found');
+
+  const box = boxes.reduce((a, b) => a.union(b));
+  const sphere = box.getBoundingSphere(new THREE.Sphere());
+  controls.target.copy(sphere.center);
+  const dist = sphere.radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.12;
+  camera.position.set(
+    sphere.center.x + dist * 0.34,
+    sphere.center.y + dist * 0.18,
+    sphere.center.z + dist
+  );
+  camera.near = dist / 100; camera.far = dist * 10;
+  camera.updateProjectionMatrix();
+
+  let tris = 0;
+  parts.forEach(({ mesh }) => {
+    const pos = mesh.geometry.attributes.position;
+    tris += (mesh.geometry.index ? mesh.geometry.index.count : pos.count) / 3;
+  });
+  read.textContent = `${parts.length} parts · ${Math.round(tris).toLocaleString('en')} tris`;
+
+  const spinBtn = document.getElementById('spin');
+  spinBtn.addEventListener('click', () => {
+    const on = spinBtn.getAttribute('aria-pressed') !== 'true';
+    spinBtn.setAttribute('aria-pressed', on);
+    controls.autoRotate = on;
+  });
+  const fillBtn = document.getElementById('fill');
+  fillBtn.addEventListener('click', () => {
+    const on = fillBtn.getAttribute('aria-pressed') !== 'true';
+    fillBtn.setAttribute('aria-pressed', on);
+    parts.forEach(({ fill }) => fill.visible = on);
+  });
+  const slider = document.getElementById('threshold');
+  const out = document.getElementById('threshold-out');
+  slider.addEventListener('input', () => {
+    out.textContent = slider.value;
+    buildEdges(+slider.value);
+  });
+}, undefined, (err) => fail('load failed: ' + (err && err.message || err)));
+
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+resize();
+
+renderer.setAnimationLoop(() => {
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

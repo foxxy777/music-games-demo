@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>女贵族骑士 · 白描拆解</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #faf7f0; }
+  #hint {
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+    font: 13px/1.6 "Kaiti SC", "STKaiti", "KaiTi", serif;
+    color: #6b635a; letter-spacing: 2px; pointer-events: none; opacity: .9;
+    transition: opacity .6s;
+  }
+  #title {
+    position: fixed; left: 26px; top: 20px;
+    font: 22px/1.5 "Kaiti SC", "STKaiti", "KaiTi", serif;
+    color: #2a2622; letter-spacing: 6px; pointer-events: none;
+  }
+  #sub {
+    position: fixed; right: 26px; top: 26px;
+    font: 12px/1.6 "Kaiti SC", "STKaiti", "KaiTi", serif;
+    color: #8a8177; letter-spacing: 3px; pointer-events: none;
+  }
+  #credit {
+    position: fixed; right: 14px; bottom: 10px;
+    font: 10px/1.5 sans-serif;
+    color: #b5ada2; pointer-events: none;
+  }
+  #credit a { color: #b5ada2; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="title">白描 · 女贵族骑士</div>
+<div id="sub">PLATE ARMOR OF A NOBLE LADY</div>
+<div id="hint">⟵ 左右移动指针 · 拆甲 ⟶</div>
+<div id="credit">3D: "Female Noble Knight Armor" by <a href="https://sketchfab.com/mert16art">Meast</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0</a></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const PAPER = 0xfaf7f0, INK = 0x1c1917;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.setClearColor(PAPER, 1);
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(PAPER);
+
+const camera = new THREE.PerspectiveCamera(32, innerWidth / innerHeight, 1, 4000);
+camera.position.set(160, 110, 340);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 80, 0);
+controls.maxDistance = 900;
+controls.minDistance = 120;
+controls.enablePan = false;
+
+// soft paper light (only matters if we tint any shading later)
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(2, 4, 3);
+scene.add(light, new THREE.AmbientLight(0xffffff, 1));
+
+// 布料类高密度件放宽阈值，金属板件紧阈值
+const CLOTH = ['neckcloth', 'armcloth', 'skirtcloth', 'shouldercloth', 'cloth', 'jacket', 'belt_'];
+// 手工艺术化爆炸方向（本地坐标会转到世界方向）—— fallback: 径向自动
+const CUSTOM_DIR = {
+  chestplate:   [0, 0.15, 1.4],
+  plate_belt:   [0, -0.2, 1.0],
+  belt_iron:    [0.9, -0.35, 0.3],
+  belt:         [-0.9, -0.35, 0.3],
+  skirt:        [0, -1.0, 0.55],
+  skirtcloth:   [0, -1.15, 0.15],
+  neckcloth:    [0, 1.3, 0.35],
+  arm:          [1.6, 0.35, 0.15],
+  armcloth:     [-1.6, 0.35, 0.15],
+  cloth:        [-1.2, 0.8, 0.3],
+  jacket:       [-0.5, 0.45, 1.0],
+  shouldercloth:[1.3, 1.0, 0.3],
+};
+
+const parts = [];
+let explodeT = 0, explodeTarget = 0;
+
+new GLTFLoader().load('./model/scene.gltf', (gltf) => {
+  const root = gltf.scene;
+  const box = new THREE.Box3().setFromObject(root);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const h = size.y;
+  const scale = 260 / h;               // normalize height to ~260 units
+  root.scale.setScalar(scale);
+  root.position.sub(center.multiplyScalar(scale));
+  scene.add(root);
+
+  root.updateMatrixWorld(true);
+  const wholeBox = new THREE.Box3().setFromObject(root);
+  const wholeCenter = wholeBox.getCenter(new THREE.Vector3());
+
+  const meshes = [];
+  root.traverse((o) => { if (o.isMesh) meshes.push(o); });
+  meshes.forEach((o) => {
+    const name = o.name.replace(/^FemaleNobleKnight:group1/, '').replace(/_FemaleNobleKnight:.*$/, '');
+    const isCloth = CLOTH.some(c => name.includes(c));
+    const threshold = isCloth ? 42 : 28;
+
+    // 实心白本体：挡住背面的线，白描才干净
+    const solid = new THREE.Mesh(o.geometry, new THREE.MeshBasicMaterial({
+      color: PAPER, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 2
+    }));
+    o.add(solid);
+
+    // 墨线：硬边提取
+    const edges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(o.geometry, threshold),
+      new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: isCloth ? 0.85 : 1 })
+    );
+    o.add(edges);
+
+    // 部件世界中心（装好后）
+    const pb = new THREE.Box3().setFromObject(o);
+    const pc = pb.getCenter(new THREE.Vector3());
+    let dir;
+    if (CUSTOM_DIR[name]) dir = new THREE.Vector3(...CUSTOM_DIR[name]);
+    else dir = pc.clone().sub(wholeCenter).setY(0).normalize().add(new THREE.Vector3(0, 0.3, 0));
+    dir.normalize();
+
+    const base = o.position.clone();
+    parts.push({ node: o, base, dir, dist: 30 + size.y * 0.55 * scale, name });
+    o.userData.part = true;
+  });
+  console.log('parts:', parts.map(p => p.name).join(', '));
+}, undefined, (e) => console.error(e));
+
+// 指针横移控制拆解
+addEventListener('pointermove', (e) => {
+  const x = e.clientX / innerWidth;
+  explodeTarget = Math.max(0, Math.min(1, x * 1.35 - 0.175));
+});
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+const clock = new THREE.Clock();
+(function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  explodeT += (explodeTarget - explodeT) * (1 - Math.pow(0.001, dt)); // 弹性趋近
+  for (const p of parts) {
+    const k = explodeT * p.dist;
+    p.node.position.copy(p.base).addScaledVector(p.dir, k);
+  }
+  controls.update();
+  renderer.render(scene, camera);
+})();
+</script>
+</body>
+</html>

@@ -571,6 +571,33 @@ body{overflow:hidden}
 #solfege-tip{position:fixed;left:0;top:0;z-index:400;pointer-events:none;background:#241a10f2;border:1px solid #ffd54f88;border-radius:8px;padding:3px 10px;font-size:13px;font-weight:bold;color:#ffe89a;white-space:nowrap;box-shadow:0 2px 10px #000a;opacity:0;transition:opacity .06s linear;font-family:inherit}
 #solfege-tip.on{opacity:1}
 #solfege-tip .sf-oct{color:#c9a06a;font-weight:normal;font-size:11px;margin-left:4px}
+/* ===== v36B5 维修台/美化 session(批5):左=符纸(黑球可见)·中=竖式小提琴指板(圆圈音位)·右=控制 ===== */
+#fix-modal{position:absolute;inset:0;z-index:255;background:#000000c9;display:none;align-items:center;justify-content:center;cursor:auto}
+#fix-modal.on{display:flex}
+#fix-card{width:min(96vw,740px);max-height:88vh;overflow:auto;background:linear-gradient(165deg,#2b2015,#191210 70%);border:2px solid #c9a06a90;border-radius:18px;padding:12px 16px;box-shadow:0 18px 60px #000c;display:flex;flex-direction:column;gap:8px}
+#fix-head{display:flex;justify-content:space-between;align-items:baseline}
+#fix-title{font-size:16px;font-weight:900;color:#ffd54f;letter-spacing:2px}
+#fix-step{font-size:12px;color:#c9a06a}
+#fix-sub{font-size:11.5px;color:#cbb8a0;line-height:1.5}
+#fix-row{display:flex;gap:10px;align-items:stretch;min-height:0}
+#fix-paper{flex:none;width:128px;display:flex;align-items:center;justify-content:center;background:#1a120a;border:1px solid #4a3320;border-radius:12px;padding:4px}
+#fix-board{flex:1;display:flex;gap:6px;justify-content:center;align-items:flex-start;min-width:0;overflow:hidden}
+.b5-col{position:relative;flex:1;max-width:86px;min-width:72px;background:linear-gradient(180deg,#241a10,#1a1208);border:1px solid #4a3320;border-radius:10px}
+.b5-str{position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);background:linear-gradient(180deg,#c9b48a33,#e8d5a866,#c9b48a33)}
+.b5-row{position:absolute;left:0;right:0;display:flex;align-items:center;gap:3px;height:28px;pointer-events:none}
+.b5-note{flex:none;width:30px;height:30px;margin-left:10px;border-radius:50%;border:2px solid #c9a06a;background:radial-gradient(circle at 35% 30%,#4a3818,#241a0c);color:#ffe9b8;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;font-family:inherit;transition:all .12s;position:relative;z-index:2;pointer-events:auto}
+.b5-note:hover{border-color:#ffd54f;box-shadow:0 0 10px #ffd54f66;transform:scale(1.12)}
+.b5-open.b5-note{border-color:#e94560;background:rgba(233,69,96,.15)}
+.b5-lab{display:flex;flex-direction:column;line-height:1.15;font-size:10.5px;color:#e8d9c3;white-space:nowrap}
+.b5-lab i{font-style:normal;font-size:9px;color:#c9a06a}
+#fix-ctl{flex:none;width:158px;display:flex;flex-direction:column;gap:8px;align-items:stretch;justify-content:center}
+#fix-slots{display:flex;gap:6px;justify-content:center;min-height:30px}
+#fix-slots .fslot{width:38px;height:30px;border:2px dashed #6a4c2a;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#8a6c42;background:#1a110a;font-size:13px}
+#fix-slots .fslot.hit{border-style:solid;border-color:#7ddf6a;color:#a8f0a0}
+#fix-slots .fslot.miss{border-style:solid;border-color:#ff5d6c;color:#ff9a8a}
+#fix-slots .fslot.next{border-color:#ffd54f;animation:mpulse 1s infinite}
+#fix-qinfo{font-size:11px;color:#c9a06a;text-align:center;min-height:14px}
+.b5hl{pointer-events:none}
 </style>
 </head>
 <body>
@@ -726,6 +753,20 @@ body{overflow:hidden}
     <div id="spx-foot">5 法术 × 3 纯度档——符铸成时按五行构成判定,铸成过即点亮</div>
     <button id="spx-close" class="btn">关上</button>
   </div></div>
+  <div id="fix-modal"><div id="fix-card">
+   <div id="fix-head"><span id="fix-title"></span><span id="fix-step"></span></div>
+   <div id="fix-sub"></div>
+   <div id="fix-row">
+    <div id="fix-paper"></div>
+    <div id="fix-board"></div>
+    <div id="fix-ctl">
+     <div id="fix-slots"></div>
+     <div id="fix-qinfo"></div>
+     <button id="btn-fix-replay" class="btn">🔊 重播</button>
+     <button id="btn-polish-skip" class="btn">⏭ 跳过美化</button>
+    </div>
+   </div>
+  </div></div>
   <div id="menu-modal">
  <div id="menu-title"></div>
  <div id="menu-sub"></div>
@@ -827,9 +868,13 @@ const CFG={
  /* ===== v36B4 五碟+符纸(批4) ===== */
  POT_PREFILL:'fire:1',                // 开局赠/老档扩容全空预填:一品火粉(五碟全红=火球术开局,大爷批4令)
  POUR_MIN:6,POUR_MAX:10,POUR_MS:520,  // 倒粉粒子数区间/碟闪光时长ms(纯表现层,不碰结算时序)
- TALISMAN_PER_Q:3,                    // 每答1题点亮的笔画数(总笔画=铸成所需题数×此值,大爷批4令「总笔画数映射所需题数」)
- TALISMAN_FALLBACK:'#c23a2a',         // 主元素全0/无elem时笔画色(朱砂红兜底)
+ TALISMAN_PER_Q:3,                    // [v36B5退役]批4笔画口径:中段笔画组已改元素球行(球数=题数),常量保留防旧引用
+ TALISMAN_FALLBACK:'#c23a2a',         // 主元素全0/无elem时球色(朱砂红兜底)
  TALISMAN_CAST_MS:550,                // 铸成满绘金光停留ms(纯视觉,到点 updateSword 按现状复位)
+ /* ===== v36B5 元素球+三把位维修台+一把位美化(批5) ===== */
+ PAINT_PEN_FIX:.05,                   // 修补球(黑→金)每个卖价-5%(R4,三因子外新增填色质量因子)
+ PAINT_PEN_BAD:.20,                   // 黑球到底每个卖价-20%·多球独立叠加不封底(3球全黑=-60%,R4)
+ B5_L:900,                            // 指板物理弦长px:semiToPos=L*(1-2^(-s/12))(参考看谱识音.html同式,L自选保三把位按钮不挤)
 };
 /* ================= v36B2 五行(批2):金木水火土 ================= */
 const ELEMS=['metal','wood','water','fire','earth'];
@@ -850,6 +895,27 @@ const NOTES=[
 const NOTE_COLORS={do:'#ff6b5d',re:'#ff9d4d',mi:'#ffd54f',fa:'#7ddf6a',sol:'#4dd8c4',la:'#5da8ff',si:'#b88aff'};
 const colorOf=n=>NOTE_COLORS[n.replace(/[′″]/,'')]||'#ddd';
 const ANCHORS={0:'C4',5:'A4'}; // 音感锚点(大爷20:46令):剑覆盖时可点重听
+/* ================= v36B5 小提琴指板音表(批5):三把位(R2维修台)+一把位(R3美化) =================
+   半音数=距该弦空弦;物理间距 semiToPos=L*(1-2^(-s/12)),L=CFG.B5_L(参考文件同式,L自选保按钮不挤);
+   三把位口径=音名 C4~D#6(任务书括号半音 +4/+6/+8/+10 与音名差 1 半音,以音名+「覆盖C4~D#6」口径执行→1~4指=+5/+7/+9/+11,总结已述);
+   延指=低伸指,补齐题库自然音:G弦延4=F4(+10)/D弦延4=C5(+10)/A弦延3=F5(+8)延4=G5(+10)/E弦延3=C6(+8)→出题器15音全覆盖;
+   一把位=参考「看谱识音.html」VIOLIN 常量原样(E弦含延4=C6),15音全覆盖 */
+const b5SemiToPos=s=>CFG.B5_L*(1-Math.pow(2,-s/12));
+const b5OpenMidi={G:55,D:62,A:69,E:76}; // G3/D4/A4/E5
+const B5_SOL_ZH={C:'哆',D:'瑞',E:'咪',F:'发',G:'嗦',A:'啦',B:'西'},B5_SOL_EN={C:'do',D:'re',E:'mi',F:'fa',G:'sol',A:'la',B:'si'};
+const B5_FINGER_EN={'开':'O','延3':'E3','延4':'E4'}; // en 圈内指法缩写(O=open/E3·E4=extended)
+const b5NoteName=n=>LANG==='en'?n:n.replace('#','升'); // 升F4 / F#4
+const b5SolOf=n=>{const s=(LANG==='en'?B5_SOL_EN:B5_SOL_ZH)[n[0]];return n.includes('#')?(LANG==='en'?'#':'升')+s:s};
+const B5_POS3=[
+ {label:'G',open:'G3',notes:[{name:'C4',midi:60,semis:5,finger:'1'},{name:'D4',midi:62,semis:7,finger:'2'},{name:'E4',midi:64,semis:9,finger:'3'},{name:'F4',midi:65,semis:10,finger:'延4'},{name:'F#4',midi:66,semis:11,finger:'4'}]},
+ {label:'D',open:'D4',notes:[{name:'G4',midi:67,semis:5,finger:'1'},{name:'A4',midi:69,semis:7,finger:'2'},{name:'B4',midi:71,semis:9,finger:'3'},{name:'C5',midi:72,semis:10,finger:'延4'},{name:'C#5',midi:73,semis:11,finger:'4'}]},
+ {label:'A',open:'A4',notes:[{name:'D5',midi:74,semis:5,finger:'1'},{name:'E5',midi:76,semis:7,finger:'2'},{name:'F5',midi:77,semis:8,finger:'延3'},{name:'F#5',midi:78,semis:9,finger:'3'},{name:'G5',midi:79,semis:10,finger:'延4'},{name:'G#5',midi:80,semis:11,finger:'4'}]},
+ {label:'E',open:'E5',notes:[{name:'A5',midi:81,semis:5,finger:'1'},{name:'B5',midi:83,semis:7,finger:'2'},{name:'C6',midi:84,semis:8,finger:'延3'},{name:'C#6',midi:85,semis:9,finger:'3'},{name:'D#6',midi:87,semis:11,finger:'4'}]}];
+const B5_POS1=[
+ {label:'G',open:'G3',notes:[{name:'A3',midi:57,semis:2,finger:'1'},{name:'B3',midi:59,semis:4,finger:'2'},{name:'C4',midi:60,semis:5,finger:'3'},{name:'D4',midi:62,semis:7,finger:'4'}]},
+ {label:'D',open:'D4',notes:[{name:'E4',midi:64,semis:2,finger:'1'},{name:'F4',midi:65,semis:3,finger:'2'},{name:'G4',midi:67,semis:5,finger:'3'},{name:'A4',midi:69,semis:7,finger:'4'}]},
+ {label:'A',open:'A4',notes:[{name:'B4',midi:71,semis:2,finger:'1'},{name:'C5',midi:72,semis:3,finger:'2'},{name:'D5',midi:74,semis:5,finger:'3'},{name:'E5',midi:76,semis:7,finger:'4'}]},
+ {label:'E',open:'E5',notes:[{name:'F5',midi:77,semis:1,finger:'1'},{name:'G5',midi:79,semis:3,finger:'2'},{name:'A5',midi:81,semis:5,finger:'3'},{name:'B5',midi:83,semis:7,finger:'4'},{name:'C6',midi:84,semis:8,finger:'延4'}]}];
 const SWORDS=[
  {name:'褪色符纸', emoji:'🗡️', span:3,  vis:5,  qlen:3, base:60,  sell:80},
  {name:'猎风符', emoji:'🔪', span:4,  vis:5,  qlen:3, base:100, sell:150},
@@ -997,7 +1063,7 @@ function renderPotionSlot(){
 /* ================= v36B4 五碟粉末坞(批4,大爷20:18令:丹锅→从上到下五个圆碟) =================
    容器/交互全套沿用:题间点底箱粉末入碟/点碟取回,答题中锁定,空碟=五元素等权(见阶段C配重);
    S.pot=[{k:'fire:2'},…5格];碟内粉末不因答题消耗(常驻配置,换目标法术=换碟内粉种) */
-const potLocked=()=>S.mode!=='forge'||S.phase==='busy'||S.phase==='input'||S.phase==='over';
+const potLocked=()=>S.mode!=='forge'||S.phase==='busy'||S.phase==='input'||S.phase==='over'||S.phase==='session'; // v36B5:维修/美化 session 期同锁
 function renderPot(){
  const box=$('pot-slots');if(!box)return;
  box.innerHTML='';
@@ -1065,6 +1131,8 @@ function makeItem(sw){
  const jd=judgeSpell(it.elem); // v36B3:铸成即判法术(主元素+纯度档,全0兜底杂符)
  it.spell=jd.spell;it.grade=jd.grade;
  it.dur=CFG.DUR_BASE;it.tierHist=(sw.tierHist||[]).slice(); // 耐久默认3·4题轮盘档位史随符入库(词条概率+收购区展示)
+ it.balls=(sw.balls||[]).map(b=>b?{st:b.st}:null); // v36B5:填色质量随符入库(sellPrice 因子源;draft 不罚)
+ it.polished=!!sw.polished; // v36B5:美化完成标记(纯视觉)
  it.affix=rollAffix(it.tierHist); // 词条一次一条,可为null
  if(it.affix){const A=CFG.AFFIX_POOL[it.affix.k];
   if(A.dur)it.dur=A.dur; // 次数翻倍:耐久直改不叠加
@@ -1305,32 +1373,34 @@ function updateSword(){
  $('sword-value').style.top=(topPx+h/2)+'px';
  drawSword(h);
 }
-/* ================= v36B4 道教符可视化(批4,大爷20:18令「先简单意会」):在途符=竖长方形黄纸符 =================
-   符纸居中(72px 宽·高贴满音道盒),顶部敕令头(朱点+三横)+中段笔画组+尾部收笔;
-   笔画总数=铸成所需题数(swordCap()*2)×TALISMAN_PER_Q,答一题亮一组(单调不减),铸成满绘;
-   笔画色=当前主导元素(judgeSpell 同口径:五元 max 并列取表序前者)→ELEM_META 主题色,全0/无elem朱砂红兜底;
-   未亮笔画=灰褐虚线底稿常驻。激光/音道/#sword-value 定位数学零改动;老档无字段变更(纯视觉) */
+/* ================= v36B4→B5 道教符可视化:在途符=竖长方形黄纸符,中段=元素球行(批5 R1) =================
+   符纸居中(72px 宽·高贴满音道盒),顶部敕令头(朱点+三横)+中段元素球行+尾部收笔;
+   球数=铸成所需题数(swordCap()*2),槽位=球槽(qDone 同步推进):全对(蓝及以上)染主元素色/答错染黑/修补镀金/未答灰褐虚线底稿;
+   球色数据源=sw.balls(展示口径=结算口径,红线6):ok=主元素色(judgeSpell 同口径,全0兜底朱砂红)/bad=黑/fixed=金/draft=底稿;
+   敕令头/尾/黄纸底/铸成满绘金辉 castFlashFx 保留;pol=美化完成(金边+四角金点,纯视觉);
+   激光/音道/#sword-value 定位数学零改动 */
 let _swordH=120; // 最近一次绘制的符纸高(updateSword 算好的音道盒高,castFlashFx 复用)
-function talismanSVG(H,lit,total,ink){ // lit=已点亮笔画数;total=总笔画;ink=点亮笔画色
+function talismanSVG(H,balls,ink,opt){ // balls=球槽数组({st:'draft'|'ok'|'bad'|'fixed'}|null);opt={pol:美化完成,hl:高亮球槽}
  const W=140,px=34,py=3,ph=H-6,pw=72;
+ const o=opt||{};
  const headH=Math.round(Math.min(34,H*.15)),tailH=Math.round(Math.min(22,H*.1));
  const topY=py+headH,botY=py+ph-tailH,bandH=Math.max(10,botY-topY);
- const cols=[50,70,90];
- let s=`<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="5" fill="#e8d5a8" stroke="#5a4028" stroke-width="2.5"/>
-  <rect x="${px+4}" y="${py+4}" width="${pw-8}" height="${ph-8}" rx="3" fill="none" stroke="#8a6a3a" stroke-width="1" opacity=".5"/>
-  <circle cx="${W/2}" cy="${py+13}" r="3.2" fill="#b3362a"/>`;
+ const n=Math.max(1,(balls||[]).length);
+ const r=Math.max(3.5,Math.min(10.5,bandH/n*.34));
+ let s=`<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="5" fill="#e8d5a8" stroke="${o.pol?'#ffd54f':'#5a4028'}" stroke-width="${o.pol?3.5:2.5}"/>
+  <rect x="${px+4}" y="${py+4}" width="${pw-8}" height="${ph-8}" rx="3" fill="none" stroke="${o.pol?'#ffec9e':'#8a6a3a'}" stroke-width="1" opacity="${o.pol?'.9':'.5'}"/>`
+ +(o.pol?`<circle cx="${px+11}" cy="${py+11}" r="2" fill="#ffd54f"/><circle cx="${px+pw-11}" cy="${py+11}" r="2" fill="#ffd54f"/><circle cx="${px+11}" cy="${py+ph-11}" r="2" fill="#ffd54f"/><circle cx="${px+pw-11}" cy="${py+ph-11}" r="2" fill="#ffd54f"/>`:'')
+ +`<circle cx="${W/2}" cy="${py+13}" r="3.2" fill="#b3362a"/>`;
  [0,1,2].forEach(k=>{const y=py+20+k*5.5;s+=`<line x1="${W/2-13}" y1="${y}" x2="${W/2+13}" y2="${y}" stroke="#6b4a2a" stroke-width="2.2" stroke-linecap="round"/>`});
- for(let i=0;i<total;i++){
-  const y=topY+bandH*(i+.5)/total,x=cols[i%3],on=i<lit;
-  const c=on?ink:'#8a6a4a',w=on?2.4:1.5,op=on?1:.3,dash=on?'':' stroke-dasharray="3 2.5"',fop=on?'':' opacity=".3"';
-  const sh=i%6;let el='';
-  if(sh===0)el=`<line x1="${x}" y1="${y-8}" x2="${x}" y2="${y+8}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"${dash}/>`;
-  else if(sh===1)el=`<path d="M ${x-7} ${y+6} L ${x-2} ${y-6} L ${x+3} ${y+6} L ${x+8} ${y-6}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"${dash}/>`;
-  else if(sh===2)el=`<circle cx="${x-5}" cy="${y}" r="2.2" fill="${c}"${fop}/><circle cx="${x+5}" cy="${y}" r="2.2" fill="${c}"${fop}/>`;
-  else if(sh===3)el=`<line x1="${x-8}" y1="${y}" x2="${x+8}" y2="${y}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"${dash}/><line x1="${x}" y1="${y-5}" x2="${x}" y2="${y+5}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"${dash}/>`;
-  else if(sh===4)el=`<path d="M ${x-7} ${y+5} Q ${x} ${y-9} ${x+7} ${y+5}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round"${dash}/>`;
-  else el=`<path d="M ${x-6} ${y-6} L ${x+6} ${y+6} M ${x+6} ${y-6} L ${x-6} ${y+6}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round"${dash}/>`;
-  s+=`<g class="tst${on?' on':''}">${el}</g>`;
+ for(let i=0;i<n;i++){
+  const cy=topY+bandH*(i+.5)/n,b=balls[i],st=b?b.st:'draft';
+  const fill=st==='ok'?ink:st==='bad'?'#15100b':st==='fixed'?'#ffd54f':'none';
+  const stroke=st==='ok'?'#00000066':st==='bad'?'#4a3826':st==='fixed'?'#b8860b':'#8a6a4a';
+  const dash=st==='draft'?' stroke-dasharray="3 2.5"':'';
+  const op=st==='draft'?' opacity=".42"':'';
+  s+=`<circle class="b5b" data-st="${st}" data-i="${i}" cx="${W/2}" cy="${cy}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${st==='draft'?1.5:2}"${dash}${op}/>`;
+  if(st==='fixed')s+=`<circle cx="${W/2}" cy="${cy}" r="${Math.max(1.6,r*.42)}" fill="#fff3b8" opacity=".85"/>`;
+  if(o.hl===i)s+=`<circle class="b5hl" cx="${W/2}" cy="${cy}" r="${r+3.5}" fill="none" stroke="#ff5d6c" stroke-width="2"><animate attributeName="r" values="${r+2.5};${r+5.5};${r+2.5}" dur="0.9s" repeatCount="indefinite"/></circle>`;
  }
  const ty=py+ph-12;
  s+=`<g><line x1="${W/2-10}" y1="${ty+4}" x2="${W/2-3}" y2="${ty-3}" stroke="#6b4a2a" stroke-width="2" stroke-linecap="round"/>
@@ -1338,8 +1408,8 @@ function talismanSVG(H,lit,total,ink){ // lit=已点亮笔画数;total=总笔画
   <circle cx="${W/2}" cy="${ty+8}" r="2.4" fill="#b3362a"/></g>`;
  return s;
 }
-function talismanInk(){ // 笔画色:主导元素(与 judgeSpell 同口径),全0/无elem兜底朱砂红
- const jd=judgeSpell(S.cur&&S.cur.elem);
+function talismanInk(sw){ // 球色:主导元素(与 judgeSpell 同口径),全0/无elem兜底朱砂红;缺省读焦点符
+ const jd=judgeSpell(sw===undefined?(S.cur&&S.cur.elem):sw&&sw.elem);
  return jd.main?ELEM_META[jd.main].color:CFG.TALISMAN_FALLBACK;
 }
 function drawSword(hPx){ // 进度/染色读 S.cur(焦点符);空手分支由 updateSword 清空
@@ -1347,20 +1417,184 @@ function drawSword(hPx){ // 进度/染色读 S.cur(焦点符);空手分支由 up
  const H=Math.max(120,Math.round(hPx||120));_swordH=H;
  svg.classList.remove('cast-glow');
  svg.setAttribute('viewBox',`0 0 140 ${H}`);
- const capQ=swordCap()*2;
- const lit=S.cur?Math.min(S.cur.qDone||0,capQ)*CFG.TALISMAN_PER_Q:0;
- svg.innerHTML=talismanSVG(H,lit,capQ*CFG.TALISMAN_PER_Q,talismanInk());
+ const capQ=swordCap()*2,arr=[];
+ for(let i=0;i<capQ;i++)arr.push(S.cur&&Array.isArray(S.cur.balls)&&S.cur.balls[i]||null);
+ svg.innerHTML=talismanSVG(H,arr,talismanInk(),{pol:S.cur&&S.cur.polished});
 }
 function castFlashFx(sw){ // 铸成表现:满绘+金色辉光一闪后入箱(纯视觉:结算/入箱时序不变,TALISMAN_CAST_MS 后 updateSword 按现状复位)
  const svg=$('sword-svg');if(!svg)return;
  const H=_swordH||120;
  svg.classList.remove('cast-glow');void svg.offsetWidth;
  svg.setAttribute('viewBox',`0 0 140 ${H}`);
- const capQ=swordCap()*2,tot=capQ*CFG.TALISMAN_PER_Q;
+ const capQ=swordCap()*2,arr=[];
+ for(let i=0;i<capQ;i++)arr.push(sw&&Array.isArray(sw.balls)&&sw.balls[i]||{st:'ok'});
  const jd=judgeSpell(sw&&sw.elem);
- svg.innerHTML=talismanSVG(H,tot,tot,jd.main?ELEM_META[jd.main].color:CFG.TALISMAN_FALLBACK);
+ svg.innerHTML=talismanSVG(H,arr,jd.main?ELEM_META[jd.main].color:CFG.TALISMAN_FALLBACK,{pol:sw&&sw.polished});
  svg.classList.add('cast-glow');
  setTimeout(()=>updateSword(),CFG.TALISMAN_CAST_MS);
+}
+/* ================= v36B5 元素球+维修/美化 session(批5,R2/R3 拍板口径) =================
+   球记录:槽位=qDone 槽(答完一题记一球)——全对(蓝及以上)染主元素色;答错(绿/白)染黑,靶音=第一错位的正确音;
+   三错作废也记黑球占当前槽(作废不推 qDone,该槽由下一题覆写——标记行已罚价值,球槽口径=占槽题的结果,总结已述);
+   结算时序(拍板):最后一题判卷→全对直通美化/有黑球先进维修台(不打断答题节奏,统一修)→美化→makeItem 入箱;
+   维修一击制:逐黑球——重播该题音频→点三把位音位,一次机会:点对=黑→金(fixed,-5%),点错=保持黑(-20%),完进下一球;
+   美化:一把位新题(复用出题器,按本符音域),顺序敲对→金边纹样(纯视觉不改卖价);答错重出无限次;可跳过(拍板外补:防流程锁死);
+   S.fixQueue=待结算符队列(随档持久);S.fix={mode:'fix'|'polish',list,li,pol}——sw 恒取 fixQueue[0],不入 S.fix(防存档复制分叉);
+   跨拍点 setTimeout 一律捕获 sw0=fixQueue[0] 做身份守卫(防旧拍点误伤下一张符的 session) */
+function b5RecordBall(sw,grade){
+ if(!sw)return;
+ sw.balls=Array.isArray(sw.balls)?sw.balls:[];
+ const i=Math.min(sw.qDone||0,sw.balls.length);
+ const ok=isBlueP(grade);
+ let tgt=null;
+ if(!ok){for(let p=0;p<S.q.length;p++){if(S.typed&&S.typed[p]!==undefined&&S.typed[p]!==S.q[p]){tgt=NOTES[S.q[p]].m;break}}
+  if(tgt===null)tgt=NOTES[S.q[0]].m} // 兜底:非全对必有错位,防御性取首音(全对球靶音恒null,维修只读黑球)
+ sw.balls[i]={st:ok?'ok':'bad',tgt,m:S.q.map(ni=>NOTES[ni].m)};
+}
+function b5OpenSession(){
+ if(!S.fixQueue.length)return;
+ S.phase='session';hud();
+ const sw=S.fixQueue[0];
+ const list=(sw.balls||[]).map((b,i)=>b&&b.st==='bad'?i:-1).filter(i=>i>=0);
+ S.fix={mode:list.length?'fix':'polish',list,li:0,pol:null};
+ sw.stage=list.length?'repair':'polish';
+ if(list.length){b5RenderFix();$('fix-modal').classList.add('on');setTimeout(()=>{if(S.fix&&S.fix.mode==='fix'&&S.fixQueue[0]===sw)b5ReplayCur()},200)}
+ else b5EnterPolish();
+}
+function b5EnterPolish(){ // 维修完/全对直通:切美化阶段(一把位新题)
+ const sw=S.fixQueue[0];if(!sw||!S.fix)return;
+ sw.stage='polish';S.fix.mode='polish';S.fix.pol=null;
+ b5PolishNewQ();
+ $('fix-modal').classList.add('on');
+}
+function b5PolishNewQ(){ // 美化新题:复用出题器,按本符音域(铸成符的 lv)
+ const sw=S.fixQueue[0];if(!sw||!S.fix)return;
+ const span=SWORDS[Math.max(0,Math.min(SWORDS.length,sw.lv))-1].span;
+ S.fix.pol={q:genQuestion(span).map(ni=>NOTES[ni].m),pos:0,marks:[]};
+ b5RenderPolish();
+ setTimeout(()=>{if(S.fix&&S.fix.pol&&S.fixQueue[0]===sw)S.fix.pol.q.forEach((m,i)=>catPlay(m,.12+i*.4))},150);
+}
+function b5ReplayCur(){ // 维修台:重播当前黑球那题音频(一击前可反复听)
+ if(!S.fix||S.fix.mode!=='fix')return;
+ const sw=S.fixQueue[0],idx=S.fix.list[S.fix.li],b=sw&&sw.balls&&sw.balls[idx];
+ if(!b)return;(b.m||[]).forEach((m,i)=>catPlay(m,.12+i*.42));
+}
+function b5FixClick(midi){ // 维修一击制:点对=黑→金(-5%),点错=保持黑(-20%);均只此一次,进下一球
+ if(!S.fix||S.fix.mode!=='fix')return;
+ const sw=S.fixQueue[0],idx=S.fix.list[S.fix.li],b=sw&&sw.balls&&sw.balls[idx];
+ if(!b||b.st!=='bad')return;
+ if(midi===b.tgt){b.st='fixed';toast('🔧 '+t('b5fixok')+' (-5%)',1800);clank(true)}
+ else{toast('🔧 '+t('b5fixno')+' (-20%)',1800);clank(false)}
+ playInst(midi,0,1);
+ S.fix.li++;b5RenderFix();
+ if(S.fix.li>=S.fix.list.length){const sw0=sw;setTimeout(()=>{if(S.fix&&S.fix.mode==='fix'&&S.fixQueue[0]===sw0)b5EnterPolish()},650)}
+ else{const sw0=sw;setTimeout(()=>{if(S.fix&&S.fix.mode==='fix'&&S.fixQueue[0]===sw0)b5ReplayCur()},400)}
+}
+function b5PolishClick(midi){ // 美化作答:顺序敲对→全对=美化完成;错=重出新题(无限重试)
+ if(!S.fix||S.fix.mode!=='polish'||!S.fix.pol)return;
+ const pol=S.fix.pol,sw=S.fixQueue[0];
+ if(pol.pos>=pol.q.length)return;
+ playInst(midi,0,1);
+ if(midi===pol.q[pol.pos]){pol.marks[pol.pos]='hit';pol.pos++;
+  if(pol.pos>=pol.q.length){sw.polished=true;b5RenderPolish();toast('✨ '+t('b5polished')+' (0%, '+t('b5free')+')',2200);
+   const sw0=sw;setTimeout(()=>{if(S.fix&&S.fixQueue[0]===sw0&&S.fix.mode==='polish')b5FinishSw()},750);return}
+  b5RenderPolish()}
+ else{pol.marks[pol.pos]='miss';b5RenderPolish();clank(false);
+  const sw0=sw;setTimeout(()=>{if(S.fix&&S.fixQueue[0]===sw0&&S.fix.mode==='polish'){toast('✨ '+t('b5retry'),1600);b5PolishNewQ()}},700)}
+}
+function b5PolishSkip(){ // 跳过美化(拍板外补:美化纯视觉,给不想玩的玩家一条出路,不锁流程)
+ if(!S.fix||S.fix.mode!=='polish')return;
+ toast('⏭ '+t('b5skipdone'),1600);b5FinishSw();
+}
+function b5FinishSw(){ // session 完成→铸成入箱(原 progSwords 的 makeItem/toast/questProg 段,时序后移到维修/美化后)
+ const sw=S.fixQueue.shift();if(!sw)return;
+ $('fix-modal').classList.remove('on');S.fix=null;
+ const it=makeItem(sw);S.pack.push(it);S.forged++;markDay('done');questProg(it,sw);
+ const spx=(it.spell?CFG.SPELLS[it.spell].ic:'📜')+' '+spellName(it.spell,it.grade);
+ toast(`🎉 ${it.name} 制成!品质 ${'★'.repeat(it.star)}${'☆'.repeat(4-it.star)} · ${spx} · 灵力 ${it.value}`+(it.affix?` · ✨词条:${affixName(it.affix)}`:'')+` · 收进箱子`);
+ syncFocus();hud();updateSword();renderRack();renderChest();
+ castFlashFx(sw); // v36B4口径:满绘金辉压轴(updateSword 先按现状复位,550ms 后自清,不被立刻抹掉)
+ if(S.fixQueue.length){b5OpenSession();return} // 多符同铸:逐张结算
+ if(!S.anvils.length){afterBatch();return}
+ if(S.charge>=CFG.FRENZY_NEED){startFrenzy();return}
+ afterBatch();
+}
+function b5AutoFinish(){ // TB 专用:自动通过当前 session(维修=点靶音,美化=按序点对),队列清空为止
+ let n=0;
+ while(S.fix&&S.fixQueue.length&&n++<60){
+  const sw=S.fixQueue[0];
+  if(S.fix.mode==='fix'){
+   const idx=S.fix.list[S.fix.li];
+   if(idx===undefined){b5EnterPolish();continue}
+   const b=sw.balls&&sw.balls[idx];
+   if(!b||b.st!=='bad'){b5EnterPolish();continue}
+   b5FixClick(b.tgt);
+  }else{
+   const pol=S.fix.pol;
+   if(!pol){b5PolishNewQ();continue}
+   if(pol.pos>=pol.q.length){b5FinishSw();continue} // 页面自身有 750ms 延迟拍,此处直调幂等(身份守卫兜底)
+   pol.q.slice().forEach(m=>b5PolishClick(m));
+  }
+ }
+ return {left:S.fixQueue.length,open:!!S.fix};
+}
+function b5PaperSVG(sw,hl){ // 维修/美化左栏符纸:黑球可见,hl=当前球槽高亮
+ const H=320,capQ=swordCap()*2,arr=[];
+ for(let i=0;i<capQ;i++)arr.push(sw&&Array.isArray(sw.balls)&&sw.balls[i]||null);
+ return talismanSVG(H,arr,talismanInk(sw),{pol:sw&&sw.polished,hl});
+}
+function b5BuildBoard(host,table,onClick){ // 竖式小提琴指板:4弦列G/D/A/E·圆圈音位按钮(音名+唱名+指法)·semiToPos 物理间距
+ if(!host)return;host.innerHTML='';
+ const pad=18;
+ table.forEach(str=>{
+  const col=document.createElement('div');col.className='b5-col';
+  const maxS=Math.max(0,...str.notes.map(n=>n.semis));
+  col.style.height=(b5SemiToPos(maxS)+pad+22)+'px';
+  col.innerHTML=`<div class="b5-str"></div>`;
+  const row=(y,midi,fing,name)=>{
+   const d=document.createElement('div');d.className='b5-row';
+   d.style.top=(y+pad-14)+'px';
+   const fTxt=LANG==='en'?(B5_FINGER_EN[fing]||fing):fing;
+   d.innerHTML=`<button class="b5-note${fing==='开'?' b5-open':''}" data-midi="${midi}" data-finger="${fTxt}" data-name="${name}" title="${b5NoteName(name)} ${b5SolOf(name)} · ${fTxt}"><span>${fTxt}</span></button><div class="b5-lab"><b>${b5NoteName(name)}</b><i>${b5SolOf(name)}</i></div>`;
+   d.querySelector('button').onclick=()=>onClick(midi);
+   col.appendChild(d)};
+  row(0,b5OpenMidi[str.label],'开',str.open);
+  str.notes.forEach(nt=>row(b5SemiToPos(nt.semis),nt.midi,nt.finger,nt.name));
+  host.appendChild(col);
+ });
+}
+function b5RenderFix(){
+ const sw=S.fixQueue[0];if(!sw||!S.fix||S.fix.mode!=='fix')return;
+ const idx=S.fix.list[S.fix.li];
+ $('fix-title').textContent=t('b5fix');
+ $('fix-step').textContent=`${t('b5fixStep')} ${S.fix.li+1}/${S.fix.list.length}`;
+ $('fix-sub').textContent=t('b5fixHint');
+ $('fix-paper').innerHTML=`<svg viewBox="0 0 140 320" width="120">${b5PaperSVG(sw,idx)}</svg>`;
+ b5BuildBoard($('fix-board'),B5_POS3,midi=>b5FixClick(midi));
+ $('fix-slots').innerHTML='';
+ $('fix-qinfo').textContent='';
+ $('btn-fix-replay').style.display='';$('btn-fix-replay').textContent=t('b5replay');
+ $('btn-polish-skip').style.display='none';
+}
+function b5RenderPolish(){
+ const sw=S.fixQueue[0];if(!sw||!S.fix||S.fix.mode!=='polish')return;
+ const pol=S.fix.pol||{q:[],pos:0,marks:[]};
+ $('fix-title').textContent=t('b5polish');
+ $('fix-step').textContent=sw.polished?t('b5polished'):`${pol.pos}/${pol.q.length}`;
+ $('fix-sub').textContent=t('b5polHint');
+ $('fix-paper').innerHTML=`<svg viewBox="0 0 140 320" width="120">${b5PaperSVG(sw)}</svg>`;
+ b5BuildBoard($('fix-board'),B5_POS1,midi=>b5PolishClick(midi));
+ const box=$('fix-slots');box.innerHTML='';
+ pol.q.forEach((m,i)=>{
+  const d=document.createElement('div');
+  let cls='fslot',tx='?';
+  if(pol.marks&&pol.marks[i]==='hit'){cls+=' hit';tx='♪'}
+  else if(pol.marks&&pol.marks[i]==='miss'){cls+=' miss';tx='✗'}
+  else if(i===pol.pos){cls+=' next'}
+  d.className=cls;d.textContent=tx;box.appendChild(d)});
+ $('fix-qinfo').textContent=sw.polished?'✨ +金边纹样':'';
+ $('btn-fix-replay').style.display='';$('btn-fix-replay').textContent=t('b5replay');
+ const sk=$('btn-polish-skip');sk.style.display=sw.polished?'none':'';sk.textContent=t('b5skip');
 }
 
 /* ================= 女铁匠(H3 素材自动接入,失败回退占位 SVG) ================= */
@@ -1667,6 +1901,7 @@ function hitLane(i){
    $('quiz-hint').classList.add('warn');setTimeout(()=>$('quiz-hint').classList.remove('warn'),1200);
    setTimeout(()=>{
     if(S.phase!=='grading')return;
+    S.anvils.forEach(sw=>b5RecordBall(sw,'black')); // v36B5:作废题黑球占当前槽(不推qDone,由下一题覆写)
     const bm=appendMark('black',0); // v29:三错作废=黑色标记入行(价值0,断串)
     spinWheel(bm,S.cur); // v36B2:作废题也转一次(兑现0,注入照常)
     if(S.art.includes('dice'))diceFail(); // 🎲命运骰:作废=题答错,当场爆剑(大爷00:48令新制等价)
@@ -1749,7 +1984,9 @@ function endQuestion(contourB){
  const m=appendMark(grade,(charm||0)+(contourB||0)); // 标记追加+进化重算+台账同步
  if(grade==='blue')S.dayFull++;
  spinWheel(m,S.cur); // v36B2:每题轮盘一转(即时兑现+注 elem;置于 progSwords 前使铸成符带上 elem)
+ S.anvils.forEach(sw=>b5RecordBall(sw,grade)); // v36B5:本题球色入档(槽位=qDone,全对ok/答错bad+靶音)
  progSwords(markVal(m),grade); // 剑进度随题结算(v29 从逐题淬火里挪出)
+ if(S.fixQueue.length){b5OpenSession();return} // v36B5(拍板):最后一题判卷→有黑球先进维修台,否则直通美化;session 完再入箱续题
  if(S.frenzyActive){ // 超神摇钱:不出题(大爷20:55令);窗口结束直接回正常循环(大爷21:34令)
   S.phase='frenzy';
   return;
@@ -1768,11 +2005,9 @@ function progSwords(mv,grade){
    if(nl>sw.lv){sw.lv=nl;applyWindow();updateSword();toast(`⬆️ 符升级!Lv.${nl} · 共画音域 ${curSpan()} 音`)}}
  });
  S.anvils=S.anvils.filter(sw=>!done.includes(sw));
- done.forEach(sw=>{const it=makeItem(sw);S.pack.push(it);S.forged++;markDay('done');questProg(it,sw);
-  const spx=(it.spell?CFG.SPELLS[it.spell].ic:'📜')+' '+spellName(it.spell,it.grade); // v36B3:铸成时报法术+词条
-  toast(`🎉 ${it.name} 制成!品质 ${'★'.repeat(it.star)}${'☆'.repeat(4-it.star)} · ${spx} · 灵力 ${it.value}`+(it.affix?` · ✨词条:${affixName(it.affix)}`:'')+` · 收进箱子`)});
+ // v36B5:铸成符改入待结算队列(维修→美化→makeItem 入箱,时序后移见 b5FinishSw),progress/经验照旧
+ done.forEach(sw=>{sw.stage='repair';S.fixQueue.push(sw)});
  syncFocus();hud();updateSword();renderRack();renderChest();
- if(done.length)castFlashFx(done[done.length-1]); // v36B4:满绘+金光一闪后入箱(纯视觉,TALISMAN_CAST_MS 后 updateSword 复位)
 }
 /* ================= v36B2 五行轮盘(批2阶段C):每题判卷后自动一转·日末统一注灵退役 =================
    档位完全复用现有 gradeProbs 概率链(computeProbs/rollTier 一字未改,错音/全对驱动),五轮共享同一档;
@@ -1891,7 +2126,7 @@ function curSpan(){const l=S.anvils.length?Math.max(...S.anvils.map(a=>a.lv)):(S
 function markDay(st){if(st==='forging')S.dayLog.push('forging');
  else{const i=S.dayLog.lastIndexOf('forging');if(i>=0)S.dayLog[i]=st;else S.dayLog.push(st)}}
 function checkDayEnd(){ // 大爷21:51令:收工=符坯用光且符案空;v36B2:轮盘每题即兑,日末直接指路商人
- if(S.mode!=='forge'||S.anvils.length||S.chest.length)return;
+ if(S.mode!=='forge'||S.anvils.length||S.chest.length||(S.fixQueue&&S.fixQueue.length))return; // v36B5:待结算符未清完不算收工
  S.forgeEnded=true;S.phase='idle';hud();
  $('quiz-hint').textContent='今天的符坯用完了!点「🧙 第二天·商人」买卖装备';}
 function newSword(lv=1,cat){
@@ -1899,7 +2134,7 @@ function newSword(lv=1,cat){
  if(S.anvils.length>=anvilN()){toast('符案满了!先制完,或去「🏗️ 升级工坊」加案');return false}
  lv=Math.max(1,Math.min(SWORDS.length,lv||1));
  const W=WEAPONS[cat];
- const sw={name:W.names[lv-1],emoji:(W.icons?W.icons[lv-1]:W.icon),cat,lv,qDone:0,q:0,errN:0,fullN:0,iron:S.ironNext||0,value:0,dmgLv:0,elem:zeroElem(),tierHist:[]}; // v36B2:符带五行计数(轮盘注入)·v36B3:轮盘档位史
+ const sw={name:W.names[lv-1],emoji:(W.icons?W.icons[lv-1]:W.icon),cat,lv,qDone:0,q:0,errN:0,fullN:0,iron:S.ironNext||0,value:0,dmgLv:0,elem:zeroElem(),tierHist:[],balls:[]}; // v36B2:符带五行计数(轮盘注入)·v36B3:轮盘档位史·v36B5:元素球色槽
  S.ironNext=0;S.anvils.push(sw);syncFocus();markDay('forging');applyWindow();hud();updateSword();renderRack();
  const snd=W.snd;if(snd&&!INST.bank[snd])loadInst(snd); // 武器音色懒加载
  toast(S.anvils.length>1?`⚒️ 第 ${S.anvils.length} 件上案!同题共画,注灵各 roll`:`🔨 新${WLBL[cat]}开画:`+W.names[lv-1]+' · 封顶 Lv.'+swordCap()+' · 每级 2 题');
@@ -2141,10 +2376,11 @@ function renderMerchant(){
  else avail.forEach((p,i)=>{
   const price=sellPrice(p);
   const hist=p.tierHist||[],hN=k=>hist.filter(x=>x===k).length; // v36B3:符卡带法术/词条/耐久/轮盘史
+  const pB=Array.isArray(p.balls)?p.balls:[],pFx=pB.filter(b=>b&&b.st==='fixed').length,pBa=pB.filter(b=>b&&b.st==='bad').length; // v36B5:填色质量(金/黑球数,因子见 sellPrice)
   const spx=p.spell?CFG.SPELLS[p.spell].ic+' '+spellName(p.spell,p.grade):'📜 '+CFG.SPELL_MIX.zh;
   const d=document.createElement('div');d.className='inv-cell';d.style.gridColumn='span '+wOf(p.name);
   d.innerHTML=`<span class="ic-e">${p.emoji}</span><span class="ic-info"><span>${p.spell?CFG.SPELLS[p.spell].ic:''}${p.name} ★${p.star}</span><span class="ic-v">💰${price}</span></span>`;
-  d.title=`${p.name} ★${p.star} · ${spx} · 耐久${p.dur!=null?p.dur:3}`+(p.affix?` · ✨${affixName(p.affix)}`:'')+(hist.length?` · 轮盘:大成功×${hN('great')}/成功×${hN('good')}/失败×${hN('fail')}`:'')+' · 双击出售 · 或拖到摊架松手 · 单击看详情';
+  d.title=`${p.name} ★${p.star} · ${spx} · 耐久${p.dur!=null?p.dur:3}`+(p.affix?` · ✨${affixName(p.affix)}`:'')+(hist.length?` · 轮盘:大成功×${hN('great')}/成功×${hN('good')}/失败×${hN('fail')}`:'')+(pFx+pBa?` · 填色:金×${pFx}/黑×${pBa}(-${Math.round((pFx*CFG.PAINT_PEN_FIX+pBa*CFG.PAINT_PEN_BAD)*100)}%)`:'')+(p.polished?' · ✨美化':'')+' · 双击出售 · 或拖到摊架松手 · 单击看详情';
   d.onclick=()=>{if(Date.now()<cellDragTick)return; // 拖拽松手后的静默窗:不再弹提示(v28)
    toast(`⚔️ ${p.name} ★${p.star}${p.spell?' · '+spellName(p.spell,p.grade):''} · 售价 💰${price}${S.eventMult!==1?` (行情×${S.eventMult})`:''} · 双击或拖到摊架出售`,2200)};
   d.ondblclick=()=>mSell(i);
@@ -2210,7 +2446,9 @@ function sellPrice(p){ // v36B3:round(价值×纯度系数×词条系数×耐久
  const G=p.grade&&CFG.SPELL_GRADE[p.grade],gM=G?G.sellM:1;
  const A=p.affix&&CFG.AFFIX_POOL[p.affix.k],aM=(A&&A.mult)?(A.mult[p.affix.t]||1):1;
  const dM=1+(p.dur||0)*CFG.SELL_DUR_STEP;
- return Math.round(p.value*gM*aM*dM*(1+S.up[(p.cat||'sword')]*.1)*(1+S.sk.sell*.1)*S.eventMult)}
+ const B=Array.isArray(p.balls)?p.balls:[];let pen=0; // v36B5填色质量因子(R4,三因子外乘法项):修补球每个-5%·黑球到底每个-20%·独立叠加不封底
+ B.forEach(b=>{if(b&&b.st==='fixed')pen+=CFG.PAINT_PEN_FIX;else if(b&&b.st==='bad')pen+=CFG.PAINT_PEN_BAD});
+ return Math.round(p.value*gM*aM*dM*(1-pen)*(1+S.up[(p.cat||'sword')]*.1)*(1+S.sk.sell*.1)*S.eventMult)}
 let sellDrag=null,cellDragTick=0; // cellDragTick:拖拽结束后静默窗(≥300ms),吞掉紧随的 click
 const inRect=(e,r)=>e.clientX>=r.left-2&&e.clientX<=r.right+2&&e.clientY>=r.top-2&&e.clientY<=r.bottom+2;
 function bindSellDrag(el,p,i){
@@ -2334,8 +2572,8 @@ function renderSkillTree(){
 }
 /* ================= 开始菜单+选项(大爷00:43令) ================= */
 const I18N={
- zh:{cal:'\uD83D\uDCC5 \u65E5\u5386',upg:'\uD83C\uDFD7\uFE0F 升级工坊',skill:'\uD83C\uDF33 功法',endf:'结束制符',day2:'\uD83D\uDED2 \u7B2C\u4E8C\u5929\u00B7\u5546\u4EBA',quest:'\uD83D\uDCCB \u4EFB\u52A1\u677F',opt:'\u2699\uFE0F \u9009\u9879',mstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',mmod:'\uD83E\uDE9B Mod \u5DE5\u574A',mopt:'\u2699\uFE0F \u9009\u9879',mst:'\uD83C\uDF33 功法',mtitle:'符箓工坊 · 制符听音',msub:'听音高 · 画灵符 · 交清摊租',res:'\u5206\u8FA8\u7387',lang:'\u8BED\u8A00',optt:'\u9009\u9879',gstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',gcont:'\u25B6\uFE0F \u7EE7\u7EED\u6E38\u620F',mquit:'\uD83D\uDEAA \u9000\u51FA',ptitle:'\u6682\u505C',presume:'\u25B6\uFE0F \u6062\u590D\u6E38\u620F',psave:'\uD83D\uDCBE \u4FDD\u5B58',pload:'\uD83D\uDCC2 \u52A0\u8F7D',phome:'\uD83C\uDFE0 \u8FD4\u56DE\u4E3B\u83DC\u5355',nosave:'\u6682\u65E0\u5B58\u6863',rfw:'刷新摊架',snark:'\u5410\u69FD',pot:'🍲 五碟',wheel:'🌀 五行轮',spx:'📖 法术图鉴'},
- en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'End Crafting',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83C\uDFAE New Game',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mst:'\uD83C\uDF33 Skill Tree',mtitle:'Talisman Workshop \u00B7 Runes by Ear',msub:'Hear the pitch \u00B7 Draw the talisman \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options',gstart:'\uD83C\uDFAE New Game',gcont:'\u25B6\uFE0F Continue',mquit:'\uD83D\uDEAA Quit',ptitle:'Paused',presume:'\u25B6\uFE0F Resume',psave:'\uD83D\uDCBE Save',pload:'\uD83D\uDCC2 Load',phome:'\uD83C\uDFE0 Main Menu',nosave:'No save yet',rfw:'Refresh',snark:'Snark',pot:'🍲 Five Dishes',wheel:'🌀 Wheels',spx:'📖 Spell Codex'}};
+ zh:{cal:'\uD83D\uDCC5 \u65E5\u5386',upg:'\uD83C\uDFD7\uFE0F 升级工坊',skill:'\uD83C\uDF33 功法',endf:'结束制符',day2:'\uD83D\uDED2 \u7B2C\u4E8C\u5929\u00B7\u5546\u4EBA',quest:'\uD83D\uDCCB \u4EFB\u52A1\u677F',opt:'\u2699\uFE0F \u9009\u9879',mstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',mmod:'\uD83E\uDE9B Mod \u5DE5\u574A',mopt:'\u2699\uFE0F \u9009\u9879',mst:'\uD83C\uDF33 功法',mtitle:'符箓工坊 · 制符听音',msub:'听音高 · 画灵符 · 交清摊租',res:'\u5206\u8FA8\u7387',lang:'\u8BED\u8A00',optt:'\u9009\u9879',gstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',gcont:'\u25B6\uFE0F \u7EE7\u7EED\u6E38\u620F',mquit:'\uD83D\uDEAA \u9000\u51FA',ptitle:'\u6682\u505C',presume:'\u25B6\uFE0F \u6062\u590D\u6E38\u620F',psave:'\uD83D\uDCBE \u4FDD\u5B58',pload:'\uD83D\uDCC2 \u52A0\u8F7D',phome:'\uD83C\uDFE0 \u8FD4\u56DE\u4E3B\u83DC\u5355',nosave:'\u6682\u65E0\u5B58\u6863',rfw:'刷新摊架',snark:'\u5410\u69FD',pot:'🍲 五碟',wheel:'🌀 五行轮',spx:'📖 法术图鉴',b5fix:'🔧 维修台 · 三把位',b5polish:'✨ 美化 · 一把位',b5fixHint:'先「重播」该题音频,再点右侧三把位音位修补黑球——每球只有一次机会:点对镀金(卖价-5%),点错保持黑(卖价-20%)',b5polHint:'在一把位按顺序敲出美化新题:全对=符面加金边纹样(纯视觉不改卖价);答错重出新题(无限重试),也可跳过',b5replay:'🔊 重播',b5skip:'⏭ 跳过美化',b5fixStep:'黑球',b5polished:'美化完成!',b5fixok:'修补成功·镀金',b5fixno:'一击未中·保持黑',b5free:'纯视觉·不改卖价',b5retry:'美化失手——重出一题(无限重试)',b5skipdone:'已跳过美化(纯视觉,不影响卖价)'},
+ en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'End Crafting',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83C\uDFAE New Game',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mst:'\uD83C\uDF33 Skill Tree',mtitle:'Talisman Workshop \u00B7 Runes by Ear',msub:'Hear the pitch \u00B7 Draw the talisman \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options',gstart:'\uD83C\uDFAE New Game',gcont:'\u25B6\uFE0F Continue',mquit:'\uD83D\uDEAA Quit',ptitle:'Paused',presume:'\u25B6\uFE0F Resume',psave:'\uD83D\uDCBE Save',pload:'\uD83D\uDCC2 Load',phome:'\uD83C\uDFE0 Main Menu',nosave:'No save yet',rfw:'Refresh',snark:'Snark',pot:'🍲 Five Dishes',wheel:'🌀 Wheels',spx:'📖 Spell Codex',b5fix:'🔧 Repair Bench · 3rd Position',b5polish:'✨ Polish · 1st Position',b5fixHint:'Replay the question, then click one note on the 3rd-position board — one chance per black ball: hit = gilded (sell -5%), miss = stays black (sell -20%).',b5polHint:'Play the polish question in order on the 1st-position board — all hits = gold-frame flourish (visual only, no price change). Mistake = new question; skippable.',b5replay:'🔊 Replay',b5skip:'⏭ Skip Polish',b5fixStep:'Black ball',b5polished:'Polished!',b5fixok:'Repaired · gilded',b5fixno:'Missed · stays black',b5free:'visual only · no price change',b5retry:'Missed — new question (unlimited retries)',b5skipdone:'Polish skipped (visual only, no price impact)'}};
 let LANG='zh';try{LANG=localStorage.getItem('ft_lang')||'zh'}catch(e){}
 let CUR_RES=[1280,720];
 function t(k){return (I18N[LANG]&&I18N[LANG][k])||I18N.zh[k]||k}
@@ -2356,6 +2594,7 @@ function applyLang(){
  [['presume','btn-p-resume'],['psave','btn-p-save'],['pload','btn-p-load'],['popt','btn-p-opt'],['phome','btn-p-home']].forEach(pp=>{const el=document.getElementById(pp[1]);if(el)el.textContent=t(pp[0])});
  updShelfBtn();
  const ot=document.getElementById('opt-title');if(ot)ot.textContent=t('optt');
+ if(S.fix){S.fix.mode==='fix'?b5RenderFix():b5RenderPolish()} // v36B5:维修/美化文案随语言重渲染
  renderOpts()}
 function renderOpts(){
  const box=document.getElementById('opt-rows');if(!box)return;
@@ -2392,7 +2631,7 @@ function loadGame(){
  S.ledger=S.ledger||{forge:0,sell:0,buy:0}; // v31:旧档补流水台账默认值
   if(S.qActive&&S.qActive.thief){S.qActive.archer=S.qActive.thief;delete S.qActive.thief}
   if(S.qBoard&&S.qBoard.thief){S.qBoard.archer=S.qBoard.thief;delete S.qBoard.thief}
- if(['playing','input','quench','busy'].includes(S.phase)){S.phase='idle';S.q=[];S.pos=0;S.revealed=false;S.pendingQuench=false}
+ if(['playing','input','quench','busy','session'].includes(S.phase)){S.phase='idle';S.q=[];S.pos=0;S.revealed=false;S.pendingQuench=false}
  S.row=S.row||[];S.potions=S.potions||{safe:0,up:0};S.potSel=null;renderMarkRow(); // v29:标记台账/药水随存档恢复
  S.powders=S.powders||{}; // v36B2:粉末袋缺省
  S.pot=(Array.isArray(S.pot)?S.pot:[]).slice(0,CFG.POT_CAP).map(p=>p&&p.k?{k:p.k}:null); // v36B2脏数据兜底
@@ -2400,12 +2639,18 @@ function loadGame(){
  if(!S.pot.some(Boolean))S.pot=Array.from({length:CFG.POT_CAP},()=>({k:CFG.POT_PREFILL})); // v36B4:扩容后全空→预填5×一品火粉(大爷旧档进去就见五碟全红)
  if(!S.rep)S.rep={face:50,dark:0}; // v36B2:声誉占位缺省
  S.codex=S.codex||{}; // v36B3:法术图鉴点亮台账缺省(老档=空册)
+ S.fixQueue=Array.isArray(S.fixQueue)?S.fixQueue:[];S.fix=null;$('fix-modal').classList.remove('on'); // v36B5:待结算队列缺省
+ (S.anvils||[]).forEach(sw=>{ // v36B5老档回填(拍板二选一之「底稿态重画」):在画符未记录的题槽=底稿draft(qDone进度保留,draft不罚卖价)
+  if(!Array.isArray(sw.balls))sw.balls=Array.from({length:sw.qDone||0},()=>({st:'draft'}));
+ });
  (S.pack||[]).forEach(p=>{ // v36B3:老档已入库符补法术字段——spell按elem判定回填/无elem标杂符·dur3·affix null·tierHist空·铸成过即点亮图鉴
   if(p.spell===undefined){const jd=judgeSpell(p.elem);p.spell=jd.spell;p.grade=jd.grade;
    if(p.spell){const ck=p.spell+':'+p.grade;S.codex[ck]=(S.codex[ck]||0)+1}}
   if(p.dur==null)p.dur=CFG.DUR_BASE;
   if(p.affix===undefined)p.affix=null;
   if(!Array.isArray(p.tierHist))p.tierHist=[];
+  if(p.balls===undefined)p.balls=[]; // v36B5老档回填:已完成符按全红口径(无罚项=全对等效)
+  if(p.polished===undefined)p.polished=false;
  });
  renderPot(); // v36B2:丹锅随存档恢复
  S.mkt=S.mkt||[];S.bought=S.bought||{}; // v34:货架/日限购缺省
@@ -2413,6 +2658,7 @@ function loadGame(){
  S.mode='forge';$('shop').classList.remove('on');
  S.frenzyActive=false;S.frenzyTimer=null;app.classList.remove('frenzy');
  syncFocus();hud();renderChest();renderRack();renderQStrip();applyWindow();updateSword();
+ if(S.fixQueue.length)b5OpenSession(); // v36B5:存档时在维修/美化 session 中→读档即恢复继续(session 数据随档持久)
  toast('\uD83D\uDCC2 \u5DF2\u8BFB\u53D6\u5B58\u6863',1800);refreshMenuState();return true;
 }
 function refreshMenuState(){const b=document.getElementById('btn-menu-continue');if(b)b.disabled=!hasSave()}
@@ -2580,6 +2826,8 @@ function restart(){
  S.xp=0;S.sp=0;S.sk={sell:0,buy:0,xp:0,quench:0};S.art=[];
  S.row=[];S.potions={safe:0,up:0};S.potSel=null;S.dayErrN=0;S.dayFull=0;renderMarkRow(); // v29:新档清标记台账+药水
  S.powders={};S.pot=Array.from({length:CFG.POT_CAP},()=>({k:CFG.POT_PREFILL}));S.rep={face:50,dark:0};S.codex={};renderPot(); // v36B2:新档清粉末袋;v36B4:五碟预填一品火粉(开局赠,不扣灵石=大爷「一开始全是红色」)
+ S.fixQueue=[];S.fix=null; // v36B5:清待结算队列/session
+ $('fix-modal').classList.remove('on');
  S.up={anvil:0,sword:0,armor:0,bow:0,wand:0,artSlot:0};S.anvils=[];syncFocus();renderRack();
  S.qDay=0;S.qBoard={};S.qActive={};renderQStrip();
  S.chest=[{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'}];renderChest();
@@ -2633,7 +2881,9 @@ $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:制符听音 · 符�
   · <b>五碟</b>(砧板左下缘,从上到下五个圆碟):开局赠<b>五碟一品火粉(全红)</b>——不换粉就一路注入火行,铸成即火球术;题间点底箱粉末入碟、点碟内粉末取回换粉种,答题中锁定;<b>空碟=五元素等权</b>。碟内粉末不因答题消耗。粉末在商人「素材」区有售:一品30/二品70灵石<br>
   · <b>丹药</b>(商人有售):🧪保底 60💰 绿/白标记→蓝(可接上蓝串触发进化);⚗️升级 120💰 单标记升一级(红封顶)<br>
   · <b>法术判定</b>(批3):符制成时按五行构成判法术——火主火球/水主冰锥/金主雷击/木主藤缚/土主石甲;纯度=主元素量÷五元总量,<b>≥60% 上品 / ≥40% 中品 / 其余杂品</b>·全 0 兜底五行杂符;每符带 <b>3 次耐久</b><br>
-  · <b>词条</b>:铸成时按该符 4 题轮盘史 roll(基础30%+每次大成功+8%/成功+3%,封顶70%)——价值/美观提卖价,次数翻倍耐久→6;<b>商人收购区卖符</b>:价值×纯度(×2.0/×1.4/×1.0)×词条×耐久(1+dur×10%),法术图鉴铸成过即点亮<br>
+  · <b>词条</b>:铸成时按该符 4 题轮盘史 roll(基础30%+每次大成功+8%/成功+3%,封顶70%)——价值/美观提卖价,次数翻倍耐久→6;<b>商人收购区卖符</b>:价值×纯度(×2.0/×1.4/×1.0)×词条×耐久(1+dur×10%)×<b>填色质量</b>(批5:修补球每个-5%/黑球每个-20%),法术图鉴铸成过即点亮<br>
+  · <b>元素球</b>(批5):符纸中段=元素球行,每题一球——全对染主元素色,答错染黑,修补镀金,未答灰褐虚线底稿<br>
+  · <b>维修台+美化</b>(批5):符画完统一结算——有黑球先开维修台(三把位小提琴指板,逐黑球重播题目后一击修补:点对镀金/点错保持黑),再进美化阶段(一把位指板敲轻量新题,全对=符面加金边纹样,纯视觉不改卖价;答错重出无限次,可跳过)<br>
   · 角色等级封顶符的成长:<b>Lv.1 制符师每张符最多 4 题,最高 4 音域</b>,每天 3 张符坯<br>
   · 背景是五线谱:每个音的音符位置 = 它在谱上的真实位置,玩着玩着就认识谱了<br>
   · 连对 ${CFG.FRENZY_NEED} 击 → <b>⚡超神 ${CFG.FRENZY_SECS}s</b>:敲对每击 +${CFG.FRENZY_TAP}💰、敲错零惩罚,窗口结束回题循环<br>
@@ -2673,7 +2923,8 @@ $('lanes').addEventListener('pointerdown',e=>{
 })();
 
 /* 测试钩子 */
-window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,makeItem,judgeSpell,rollAffix,spellName,affixName,syncFocus,stashAll,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,gradeQuestion,appendMark,recalcEvolution,markVal,progSwords,potEligible,applyPotion,enterPotSel,MARK_VAL,MARK_ORDER,POTIONS,swordCap,openMerchant,renderMerchant,openUpg,buyUpg,UPG,anvilN,renderRack,renderUpg,openBill,closeBill,billData,metaObj,metaSave,settleLegacy,renderSkillTree,updListenBtn,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()},ALL_GOODS,HI_TABLE,HI_CHANCE,gCls,rollShelf,ELEMS,ELEM_META,zeroElem,powTotal,POWDER_GOODS,renderPot,potPut,potTake,potLocked,spinWheel,potWeights,renderSpellCodex,openSpellCodex};
+window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,makeItem,judgeSpell,rollAffix,spellName,affixName,syncFocus,stashAll,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,gradeQuestion,appendMark,recalcEvolution,markVal,progSwords,potEligible,applyPotion,enterPotSel,MARK_VAL,MARK_ORDER,POTIONS,swordCap,openMerchant,renderMerchant,openUpg,buyUpg,UPG,anvilN,renderRack,renderUpg,openBill,closeBill,billData,metaObj,metaSave,settleLegacy,renderSkillTree,updListenBtn,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()},ALL_GOODS,HI_TABLE,HI_CHANCE,gCls,rollShelf,ELEMS,ELEM_META,zeroElem,powTotal,POWDER_GOODS,renderPot,potPut,potTake,potLocked,spinWheel,potWeights,renderSpellCodex,openSpellCodex,sellPrice, // v36B5(V21教训:新函数必须暴露才能 TB 测)
+ b5:{pos3:B5_POS3,pos1:B5_POS1,openMidi:b5OpenMidi,semiToPos:b5SemiToPos,sol:b5SolOf,nm:b5NoteName,open:b5OpenSession,fixClick:b5FixClick,polClick:b5PolishClick,polNew:b5PolishNewQ,skip:b5PolishSkip,auto:b5AutoFinish,record:b5RecordBall,finish:b5FinishSw,paper:b5PaperSVG}};
 
 /* ================= 启动 ================= */
 buildLanes();
@@ -2689,6 +2940,8 @@ mk('btn-quest','📋 任务板');
  $('goods-spx').onclick=openSpellCodex;$('spx-close').onclick=()=>$('spx-modal').classList.remove('on'); // v36B3:法术图鉴
  $('upg-close').onclick=()=>$('upg-modal').classList.remove('on');
  $('btn-quest').onclick=openQuest;$('q-close').onclick=()=>$('q-modal').classList.remove('on');
+ $('btn-fix-replay').onclick=()=>{if(!S.fix)return;if(S.fix.mode==='fix')b5ReplayCur();else if(S.fix.pol)S.fix.pol.q.forEach((m,i)=>catPlay(m,.12+i*.4))}; // v36B5:维修=重播当前黑球题/美化=重播当前题
+ $('btn-polish-skip').onclick=b5PolishSkip; // v36B5:跳过美化(纯视觉,不锁流程)
  mk('btn-opt',t('opt'));
  $('btn-opt').onclick=openOpts;
  applySettings();openMenu();refreshMenuState();

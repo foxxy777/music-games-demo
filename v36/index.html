@@ -600,6 +600,32 @@ body{overflow:hidden}
 #fix-slots .fslot.next{border-color:#ffd54f;animation:mpulse 1s infinite}
 #fix-qinfo{font-size:11px;color:#c9a06a;text-align:center;min-height:14px}
 .b5hl{pointer-events:none}
+/* ===== v36B7 符纹修复器:键位疲劳灰键/形态标签/唱名题面/pending徽章/debug面板 ===== */
+.b5-note.b7-out{border-color:#57503f;background:radial-gradient(circle at 35% 30%,#38332a,#1e1a14);color:#7d766a;cursor:not-allowed;opacity:.72}
+.b5-note.b7-out:hover{border-color:#57503f;box-shadow:none;transform:none}
+#fix-tabs{display:flex;gap:6px;align-items:center;justify-content:center;min-height:20px}
+.b7-tabcap{font-size:10.5px;color:#c9a06a;letter-spacing:1px}
+.b7-itab{background:#241a10;border:1px solid #5a4028;border-radius:7px;color:#c9a06a;font-size:11px;padding:2px 10px;cursor:pointer;font-family:inherit}
+.b7-itab.on{border-color:#ffd54f;color:#ffe9b8;background:#3a2a12}
+#fix-slots .fslot.solf{width:46px;height:34px;font-size:17px;border-style:solid;border-color:#6a4c2a;text-shadow:0 0 8px #0009}
+#fix-slots .fslot.solf.hit{color:#a8f0a0;text-shadow:none}
+#fix-slots .fslot.solf.miss{color:#ff9a8a;text-shadow:none}
+.cm-done.b7-pending{position:relative;border-color:#ffd54f;box-shadow:0 0 9px #ffd54f3d;cursor:pointer}
+.b7-pbadge{position:absolute;top:-7px;right:3px;background:#3a2a12;border:1px solid #ffd54f;color:#ffe9b8;font-size:9px;line-height:1;padding:2px 5px;border-radius:7px;font-style:normal;pointer-events:none}
+.b7-pbadge.pol{border-color:#e8c558;color:#ffd9a0}
+#dbg-fab{position:fixed;right:12px;bottom:12px;z-index:520;width:38px;height:38px;border-radius:50%;background:#241a10;border:2px solid #c9a06a;color:#ffd54f;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px #000a;font-family:inherit}
+#dbg-panel{position:fixed;right:12px;bottom:58px;z-index:521;width:252px;background:linear-gradient(165deg,#2b2015,#191210 70%);border:2px solid #c9a06a90;border-radius:12px;padding:10px;display:none;flex-direction:column;gap:8px;box-shadow:0 14px 40px #000c}
+#dbg-panel.on{display:flex}
+#dbg-head{display:flex;justify-content:space-between;align-items:center}
+#dbg-head b{color:#ffe9b8;font-size:13px}
+#dbg-close{background:none;border:1px solid #5a4028;border-radius:6px;color:#c9a06a;cursor:pointer;padding:1px 7px;font-family:inherit}
+#dbg-warn{font-size:10.5px;color:#e8906a;line-height:1.45}
+.dbg-lab{font-size:11px;color:#c9a06a}
+.dbg-b{background:#241a10;border:1px solid #5a4028;border-radius:7px;color:#e8d9c3;font-size:11px;padding:4px 8px;cursor:pointer;font-family:inherit;text-align:left}
+.dbg-b.on{border-color:#ffd54f;color:#ffe9b8;background:#3a2a12}
+#dbg-forms{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;align-items:end}
+#dbg-forms .dbg-b{text-align:center;padding:4px 2px}
+#dbg-acts{display:flex;flex-direction:column;gap:5px}
 </style>
 </head>
 <body>
@@ -747,13 +773,22 @@ body{overflow:hidden}
     <div id="fix-paper"></div>
     <div id="fix-board"></div>
     <div id="fix-ctl">
+     <div id="fix-tabs"></div>
      <div id="fix-slots"></div>
      <div id="fix-qinfo"></div>
      <button id="btn-fix-replay" class="btn">🔊 重播</button>
      <button id="btn-polish-skip" class="btn">⏭ 跳过美化</button>
+     <button id="btn-fix-stash" class="btn">📥 先收着</button>
     </div>
    </div>
   </div></div>
+  <div id="dbg-fab">🐞</div>
+  <div id="dbg-panel">
+   <div id="dbg-head"><b id="dbg-title">🐞 Debug</b><button id="dbg-close">✕</button></div>
+   <div id="dbg-warn"></div>
+   <div id="dbg-forms"></div>
+   <div id="dbg-acts"></div>
+  </div>
   <div id="menu-modal">
  <div id="menu-title"></div>
  <div id="menu-sub"></div>
@@ -866,6 +901,13 @@ const CFG={
  PAINT_PEN_FIX:.05,                   // 修补球(黑→金)每个卖价-5%(R4,三因子外新增填色质量因子)
  PAINT_PEN_BAD:.20,                   // 黑球到底每个卖价-20%·多球独立叠加不封底(3球全黑=-60%,R4)
  B5_L:900,                            // 指板物理弦长px:semiToPos=L*(1-2^(-s/12))(参考看谱识音.html同式,L自选保三把位按钮不挤)
+ /* ===== v36B7 符纹修复器+键位疲劳+乐器进化线(批7) ===== */
+ B7_KEY_CAP:1,                        // 每键每日可点次数基线(R2;keyT每级+1/融合福利+1,大爷数值表)
+ B7_FIX_QN:4,                         // 修复题=4音唱名序列(R3)
+ B7_POL_QN:3,                         // 美化题=3音唱名序列(R4,沿用B5一把位域口径)
+ INS1_PRICE:240,                      // 进阶弦音器(R6:id ins1,max1)
+ INSF_PRICE:400,                      // 天工融合核(R6:id insF,max1,前置ins1)
+ KEYT_PRICES:[180,320],               // 键位淬炼每级价(R6:id keyT,max2,每级每键+1次)
 };
 /* ================= v36B2 五行(批2):金木水火土 ================= */
 const ELEMS=['metal','wood','water','fire','earth'];
@@ -907,6 +949,23 @@ const B5_POS1=[
  {label:'D',open:'D4',notes:[{name:'E4',midi:64,semis:2,finger:'1'},{name:'F4',midi:65,semis:3,finger:'2'},{name:'G4',midi:67,semis:5,finger:'3'},{name:'A4',midi:69,semis:7,finger:'4'}]},
  {label:'A',open:'A4',notes:[{name:'B4',midi:71,semis:2,finger:'1'},{name:'C5',midi:72,semis:3,finger:'2'},{name:'D5',midi:74,semis:5,finger:'3'},{name:'E5',midi:76,semis:7,finger:'4'}]},
  {label:'E',open:'E5',notes:[{name:'F5',midi:77,semis:1,finger:'1'},{name:'G5',midi:79,semis:3,finger:'2'},{name:'A5',midi:81,semis:5,finger:'3'},{name:'B5',midi:83,semis:7,finger:'4'},{name:'C6',midi:84,semis:8,finger:'延4'}]}];
+/* v36B7 终阶融合板(R6):三把位+一把位并板——同弦两表按 midi 去重合并(重复音位=单键,键位次数取两板之和 keyCapOf 口径),
+   位置以半音数物理排布(同弦两表半音互不冲突,已核),指法标优先三把位口径(修复域),仅一把位有的音用其原指法;
+   ✦ dual=全局两板共有音位(跨弦同音亦算,与 B7_DUAL_SET/keyCapOf 同口径——两板相加容量按 midi 不按弦) */
+const B5_FUSED=(function(){
+ const on3={},on1={};
+ B5_POS3.forEach(c=>c.notes.forEach(n=>on3[n.midi]=1));
+ B5_POS1.forEach(c=>c.notes.forEach(n=>on1[n.midi]=1));
+ const dualSet=new Set();Object.keys(on3).forEach(m=>{if(on1[m])dualSet.add(+m)});
+ return ['G','D','A','E'].map(lbl=>{
+  const s3=B5_POS3.find(s=>s.label===lbl),s1=B5_POS1.find(s=>s.label===lbl);
+  const seen={},notes=[];
+  const put=nt=>{if(seen[nt.midi])return;seen[nt.midi]=1;notes.push({name:nt.name,midi:nt.midi,semis:nt.semis,finger:nt.finger,dual:!!dualSet.has(nt.midi)})};
+  s3.notes.forEach(put);s1.notes.forEach(put);
+  notes.sort((a,b)=>a.semis-b.semis);
+  return {label:lbl,open:s3.open,notes};
+ });
+})();
 const SWORDS=[
  {name:'褪色符纸', emoji:'🗡️', span:3,  vis:5,  qlen:3, base:60,  sell:80},
  {name:'猎风符', emoji:'🔪', span:4,  vis:5,  qlen:3, base:100, sell:150},
@@ -949,7 +1008,9 @@ const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0
  rev:{n:3,angle:0}, // v36B6:左轮转盘 n=碟数档位(3默认/5升级解锁/7预留不可达)·angle=步进旋转角(负向拨格,度)
  rep:{face:50,dark:0}, // v36B2:声誉占位(本批只入档不显示不使用)
  codex:{}, // v36B3:法术图鉴点亮台账 {"fireball:sup":铸成次数,…}
- ledger:{forge:0,sell:0,buy:0}}; // v31:当日流水台账(只记账不改经济):forge=淬火兑现 sell=商人卖出 buy=商人买入
+ ledger:{forge:0,sell:0,buy:0}, // v31:当日流水台账(只记账不改经济):forge=淬火兑现 sell=商人卖出 buy=商人买入
+ ins:{form:0,view:0}, // v36B7:乐器形态(0初阶三把位/1进阶双板/2终阶融合)·view=双板当前显示(0三把位/1一把位;修复默认0/美化默认1)
+ kfat:{day:1,keys:{},notes:{}}} // v36B7:键位疲劳 {day:dateKey(=S.day,翻天自愈),keys:{midi:当日已点次数},notes:{midi:1=今日已入题音(修复+美化避重集合)}};
 const $=id=>document.getElementById(id);
 
 /* ================= v29 砧板标记(大爷10-25令):成绩史+逐级连击进化 =================
@@ -1140,6 +1201,9 @@ function makeItem(sw){
  it.dur=CFG.DUR_BASE;it.tierHist=(sw.tierHist||[]).slice(); // 耐久默认3·4题轮盘档位史随符入库(词条概率+收购区展示)
  it.balls=(sw.balls||[]).map(b=>b?{st:b.st}:null); // v36B5:填色质量随符入库(sellPrice 因子源;draft 不罚)
  it.polished=!!sw.polished; // v36B5:美化完成标记(纯视觉)
+ it.skipped=!!sw.skipped; // v36B7:跳过美化标记(修饰终态口径)
+ it.lv=sw.lv||1; // v36B7:等级随符入库(箱内回修/修饰展示用,不进卖价)
+ it.pending=b7PendingOf(it); // v36B7:延后修补标记(R5):有黑球待修/全定未美化可修饰;铸成全流程走完=终态 false
  it.affix=rollAffix(it.tierHist); // 词条一次一条,可为null
  if(it.affix){const A=CFG.AFFIX_POOL[it.affix.k];
   if(A.dur)it.dur=A.dur; // 次数翻倍:耐久直改不叠加
@@ -1191,7 +1255,10 @@ const UPG=[
  {id:'wand',e:'🪄',n:'魔杖类灵力',d:'魔杖类售价 +10%/级,满级 +100%',max:10,price:100},
  {id:'shield',e:'🛡️',n:'盾牌类灵力',d:'盾牌类售价 +10%/级,满级 +100%(铜管音色)',max:10,price:100},
  {id:'artSlot',e:'🧿',n:'神器槽位',d:'神器槽 +1(初始 3 格,商人处的神器需占槽供奉)',max:5,price:150},
- {id:'rev5',e:'🔫',n:'转盘扩容·5碟',d:'左轮转盘3碟→5碟:出题改5音题,5碟同转注入(7碟档数据预留)',max:1,price:CFG.REV5_PRICE}]; // v36B6:R3五碟档解锁入口=升级工坊(「简单为主」拍板)
+ {id:'rev5',e:'🔫',n:'转盘扩容·5碟',d:'左轮转盘3碟→5碟:出题改5音题,5碟同转注入(7碟档数据预留)',max:1,price:CFG.REV5_PRICE}, // v36B6:R3五碟档解锁入口=升级工坊(「简单为主」拍板)
+ {id:'ins1',e:'🎻',n:'进阶弦音器',d:'符纹修复器加装一把位板:修复/美化双板并列(弦音键15→30),形态标签切换显示(修复默认三把位/美化默认一把位)',max:1,price:CFG.INS1_PRICE}, // v36B7:R6二形态
+ {id:'insF',e:'🌌',n:'天工融合核',d:'双板融合为一张完整弦纹板:重复音位并板为单键(✦,每日次数取两板之和),全板每键每日+1次(前置:进阶弦音器)',max:1,price:CFG.INSF_PRICE,req:'ins1'}, // v36B7:R6三形态
+ {id:'keyT',e:'🔑',n:'键位淬炼',d:'每键每日可点次数+1/级·全形态生效(键位疲劳扩容)',max:2,prices:CFG.KEYT_PRICES}]; // v36B7:R6键池扩容线
 const SKILLS=[
  {id:'sell',e:'📈',n:'精明商贩',d:'你卖出的所有东西 +10%/级',max:5},
  {id:'buy',e:'🤝',n:'讨价还价',d:'商人处购买价格 -5%/级',max:5},
@@ -1222,11 +1289,16 @@ function buySkill(id){
 }
 function renderUpg(){
  const box=$('upg-list');let h='';
+ const NM={rev5:t('upgRev5'),ins1:t('upgIns1'),insF:t('upgInsF'),keyT:t('upgKeyT')}; // v36B6/B7:新文案进i18n
+ const DS={rev5:t('upgRev5D'),ins1:t('upgIns1D'),insF:t('upgInsFD'),keyT:t('upgKeyTD')};
  UPG.forEach(u=>{
-  const lv=S.up[u.id],maxed=lv>=u.max,can=!maxed&&S.gold>=u.price;
-  const nm=u.id==='rev5'?t('upgRev5'):u.n,ds=u.id==='rev5'?t('upgRev5D'):u.d; // v36B6:R5新文案进i18n
-  const eff=u.id==='anvil'?`现有 ${anvilN()} 案`:u.id==='artSlot'?`现有 ${artSlots()} 格`:u.id==='rev5'?`现转盘 ${revN()} 碟`:`现效果 +${lv*10}%`;
-  h+=`<div class="upg-row"><span class="u-e">${u.e}</span><div class="u-mid"><div class="u-n">${nm}<span class="u-lv">Lv.${lv}/${u.max} · ${eff}</span></div><div class="u-d">${ds}</div></div><button class="u-btn btn ${can?'gold':''}" data-upg="${u.id}" ${can?'':'disabled'}>${maxed?'已满级':'💰'+u.price}</button></div>`;
+  const lv=S.up[u.id],maxed=lv>=u.max;
+  const price=Array.isArray(u.prices)?u.prices[lv]:u.price; // v36B7:keyT 每级价
+  const reqOk=!u.req||S.up[u.req]>0; // v36B7:融合核前置 ins1
+  const can=!maxed&&reqOk&&S.gold>=price;
+  const nm=NM[u.id]||u.n,ds=DS[u.id]||u.d;
+  const eff=u.id==='anvil'?`现有 ${anvilN()} 案`:u.id==='artSlot'?`现有 ${artSlots()} 格`:u.id==='rev5'?`现转盘 ${revN()} 碟`:u.id==='ins1'?`现 ${(S.ins.form||0)>=1?t('b7formOn'):t('b7formOff')}`:u.id==='insF'?`现 ${(S.ins.form||0)>=2?t('b7formFOn'):t('b7formOff')}`:u.id==='keyT'?`现每键每日 ${CFG.B7_KEY_CAP+(S.up.keyT||0)} 次`:`现效果 +${lv*10}%`;
+  h+=`<div class="upg-row"><span class="u-e">${u.e}</span><div class="u-mid"><div class="u-n">${nm}<span class="u-lv">Lv.${lv}/${u.max} · ${eff}</span></div><div class="u-d">${ds}${u.req&&!reqOk?' · 🔒'+t('b7needPre'):''}</div></div><button class="u-btn btn ${can?'gold':''}" data-upg="${u.id}" ${can?'':'disabled'}>${maxed?'已满级':'💰'+price}</button></div>`;
  });
  box.innerHTML=h;
  box.querySelectorAll('button[data-upg]').forEach(b=>b.onclick=()=>buyUpg(b.dataset.upg));
@@ -1236,10 +1308,17 @@ function buyUpg(id){
  const u=UPG.find(x=>x.id===id);if(!u)return;
  const lv=S.up[id];
  if(lv>=u.max){toast('已经满级了');return}
- if(S.gold<u.price){toast('灵石不够——先卖符攒灵石');return}
- S.gold-=u.price;S.up[id]=lv+1;
+ if(u.req&&!(S.up[u.req]>0)){toast('🔒 '+t('b7needPre'),1800);return} // v36B7:融合核前置
+ const price=Array.isArray(u.prices)?u.prices[lv]:u.price;
+ if(S.gold<price){toast('灵石不够——先卖符攒灵石');return}
+ S.gold-=price;S.up[id]=lv+1;
  if(id==='rev5'){S.rev.n=5;renderPot()} // v36B6:5碟档解锁(碟数档位→出题音数随 revN 生效)
- toast(`🏗️ ${u.id==='rev5'?t('upgRev5'):u.n} Lv.${lv+1}`+(id==='anvil'?` · 符案 ×${anvilN()}`:id==='artSlot'?` · 槽位 ${artSlots()} 格`:id==='rev5'?` · ${t('upgRev5Done')}`:` · 该类售价 +${(lv+1)*10}%`),2000);
+ if(id==='ins1'){S.ins.form=Math.max(S.ins.form||0,1)} // v36B7:进二形态(双板并列)
+ if(id==='insF'){S.ins.form=2} // v36B7:进三形态(融合并板+福利)
+ if(id==='ins1'||id==='insF'||id==='keyT')b7RerenderFix(); // 键态/形态即时反映(session 开着时)
+ const tN={rev5:t('upgRev5'),ins1:t('upgIns1'),insF:t('upgInsF'),keyT:t('upgKeyT')}[id]||u.n;
+ const tTail=id==='anvil'?` · 符案 ×${anvilN()}`:id==='artSlot'?` · 槽位 ${artSlots()} 格`:id==='rev5'?` · ${t('upgRev5Done')}`:id==='ins1'?` · ${t('upgIns1Done')}`:id==='insF'?` · ${t('upgInsFDone')}`:id==='keyT'?` · ${t('upgKeyTDone')} =${CFG.B7_KEY_CAP+(lv+1)}次/键`:` · 该类售价 +${(lv+1)*10}%`;
+ toast(`🏗️ ${tN} Lv.${lv+1}${tTail}`,2000);
  if(id==='anvil'){renderRack();applyWindow()}
  hud();renderUpg();renderShopGold();
 }
@@ -1443,14 +1522,15 @@ function castFlashFx(sw){ // 铸成表现:满绘+金色辉光一闪后入箱(纯
  svg.classList.add('cast-glow');
  setTimeout(()=>updateSword(),CFG.TALISMAN_CAST_MS);
 }
-/* ================= v36B5 元素球+维修/美化 session(批5,R2/R3 拍板口径) =================
-   球记录:槽位=qDone 槽(答完一题记一球)——全对(蓝及以上)染主元素色;答错(绿/白)染黑,靶音=第一错位的正确音;
+/* ================= v36B5→B7 元素球+符纹修复器 session(批7大改:唱名题+键位疲劳+延后修补) =================
+   球记录:槽位=qDone 槽(答完一题记一球)——全对(蓝及以上)染主元素色;答错(绿/白)染黑,靶音=第一错位的正确音(B7唱名题下仅存档参考);
    三错作废也记黑球占当前槽(作废不推 qDone,该槽由下一题覆写——标记行已罚价值,球槽口径=占槽题的结果,总结已述);
-   结算时序(拍板):最后一题判卷→全对直通美化/有黑球先进维修台(不打断答题节奏,统一修)→美化→makeItem 入箱;
-   维修一击制:逐黑球——重播该题音频→点三把位音位,一次机会:点对=黑→金(fixed,-5%),点错=保持黑(-20%),完进下一球;
-   美化:一把位新题(复用出题器,按本符音域),顺序敲对→金边纹样(纯视觉不改卖价);答错重出无限次;可跳过(拍板外补:防流程锁死);
-   S.fixQueue=待结算符队列(随档持久);S.fix={mode:'fix'|'polish',list,li,pol}——sw 恒取 fixQueue[0],不入 S.fix(防存档复制分叉);
-   跨拍点 setTimeout 一律捕获 sw0=fixQueue[0] 做身份守卫(防旧拍点误伤下一张符的 session) */
+   结算时序(B5拍板保留):最后一题判卷→全对直通修饰/有黑球先进符纹修复器→修饰→makeItem 入箱;B7 加「先收着」可中断(R5);
+   B7 修复题(R3)=4音唱名序列直接显示(不再重播错题找靶音):顺序点对4键→镀金(-5%);点错任意键=一击判负保持黑(-20%);
+   B7 修饰题(R4)=3音唱名序列:答错换新题重试(耗新音新键);修复+修饰共享键池与当日已用音集合(R2/R3/R4);
+   S.fixQueue=待结算符队列(随档持久);S.fix={mode,src:'forge'|'pack',pi,list,li,q,pos,pol,tired}——
+   forge 源 sw 恒取 fixQueue[0] 不入 S.fix(防存档复制分叉);pack 源直接改箱内 it(带 pending 标的回修/修饰);
+   跨拍点 setTimeout 一律捕获 sw0=b5SW() 做身份守卫(防旧拍点误伤下一张符的 session) */
 function b5RecordBall(sw,grade){
  if(!sw)return;
  sw.balls=Array.isArray(sw.balls)?sw.balls:[];
@@ -1461,64 +1541,185 @@ function b5RecordBall(sw,grade){
   if(tgt===null)tgt=NOTES[S.q[0]].m} // 兜底:非全对必有错位,防御性取首音(全对球靶音恒null,维修只读黑球)
  sw.balls[i]={st:ok?'ok':'bad',tgt,m:S.q.map(ni=>NOTES[ni].m)};
 }
-function b5OpenSession(){
+/* ================= v36B7 符纹修复器核心(R2键位疲劳+R3避重唱名题+R6形态键池) ================= */
+function b7Roll(){ // dateKey 翻天自愈(R2):S.day 变了→键池/已用音集合清空(过一晚全部恢复)
+ if(!S.kfat||typeof S.kfat!=='object'||S.kfat.day!==S.day){S.kfat={day:S.day,keys:{},notes:{}};return S.kfat}
+ if(!S.kfat.keys||typeof S.kfat.keys!=='object')S.kfat.keys={};
+ if(!S.kfat.notes||typeof S.kfat.notes!=='object')S.kfat.notes={};
+ return S.kfat;
+}
+const B7_DUAL_SET=(function(){const f={},out=[];B5_POS3.forEach(c=>c.notes.forEach(n=>f[n.midi]=1));B5_POS1.forEach(c=>c.notes.forEach(n=>{if(f[n.midi])out.push(n.midi)}));return new Set(out)})(); // 两板重复音位(融合并板✦键)
+function keyCapOf(midi){ // 每键每日次数(R2/R6):基线1+keyT每级;进阶=双板相加(两板共有音位取两板之和×2→键池30键口径);融合=并板键两板之和(×2)+全板福利+1;按 midi 单计数器(同一物理音位一账)
+ b7Roll();
+ const base=CFG.B7_KEY_CAP+(S.up.keyT||0);
+ const form=(S.ins&&S.ins.form)||0,dual=B7_DUAL_SET.has(midi);
+ if(form===0)return base;
+ return base*(dual?2:1)+(form===2?1:0);
+}
+function b7Left(midi){return Math.max(0,keyCapOf(midi)-((S.kfat.keys||{})[midi]||0))} // 今日剩余次数(R2 hover口径)
+function b7Tap(midi){ // 点键耗疲劳(R2):修复器任何点键都计入(含唱名题错击,防刷);调用方先查 b7Left 禁点灰键
+ b7Roll();S.kfat.keys[midi]=(S.kfat.keys[midi]||0)+1;return S.kfat.keys[midi]}
+function b7Pool(){ // 未用音集合(R3):15自然音 - 今日已入题音(修复+美化跨域共享) - 今日点尽的键(防唱名题锁死灰键)
+ b7Roll();return NOTES.filter(n=>!S.kfat.notes[n.m]&&b7Left(n.m)>0).map(n=>n.m)}
+function b7GenQ(n){ // 唱名题出题(R3/R4):未用音随机取n个乱序;不足n=今日无法再出(null);出题即入已用音集合
+ const pool=b7Pool();if(pool.length<n)return null;
+ for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t2=pool[i];pool[i]=pool[j];pool[j]=t2}
+ const q=pool.slice(0,n);q.forEach(m=>{S.kfat.notes[m]=1});return q}
+function b7BoardTable(mode){ // 会话显示板(R6):初阶=B5口径(修三把位/美一把位);进阶=双板按view切换;终阶=融合板
+ const form=(S.ins&&S.ins.form)||0;
+ if(form===2)return B5_FUSED;
+ if(form===1)return S.ins.view===1?B5_POS1:B5_POS3;
+ return mode==='polish'?B5_POS1:B5_POS3;
+}
+function b7PendingOf(it){ // 延后修补资格(R5):有黑球=待修;全定(ok/fixed)未美化未跳过=可修饰;draft/空=终态不入口
+ const B=Array.isArray(it.balls)?it.balls:[];
+ if(B.some(b=>b&&b.st==='bad'))return true;
+ return B.length>0&&B.every(b=>b&&(b.st==='ok'||b.st==='fixed'))&&!it.polished&&!it.skipped;
+}
+function b7RerenderFix(){if(S.fix)(S.fix.mode==='fix'?b5RenderFix:b5RenderPolish)()}
+function b7RetryTired(){ // debug 重置后:session 正卡 exhaustion 界面→重试出题(R7 不硬锁)
+ if(!S.fix||!S.fix.tired)return;
+ S.fix.tired=false;
+ if(S.fix.mode==='fix')b5EnsureFixQ();else b5PolishNewQ();
+}
+function b7DbgRender(){ // R7 debug 面板:形态三选(直接切 S 状态无视购买)/键池重置/已用音清零/+100灵石;拍板=写档(顶部提示「测试污染」)
+ const f=$('dbg-forms');if(!f)return;
+ $('dbg-title').textContent=t('dbgTitle');
+ $('dbg-warn').textContent=t('dbgWarn');
+ f.innerHTML=`<div class="dbg-lab">${t('dbgForm')}</div>`+[[0,'b7f0'],[1,'b7f1'],[2,'b7f2']].map(x=>`<button class="dbg-b${(S.ins.form||0)===x[0]?' on':''}" data-f="${x[0]}">${t(x[1])}</button>`).join('');
+ f.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{S.ins.form=+b.dataset.f;b7RerenderFix();b7DbgRender()});
+ const a=$('dbg-acts');
+ a.innerHTML=`<button class="dbg-b" id="dbg-rk">🔑 ${t('dbgResetKeys')}</button><button class="dbg-b" id="dbg-rn">🎼 ${t('dbgResetNotes')}</button><button class="dbg-b" id="dbg-au">💰 +100</button>`;
+ $('dbg-rk').onclick=()=>{b7Roll();S.kfat.keys={};b7RetryTired();b7RerenderFix();toast('🐞 '+t('dbgResetKeys')+' ✓',1200)};
+ $('dbg-rn').onclick=()=>{b7Roll();S.kfat.notes={};b7RetryTired();toast('🐞 '+t('dbgResetNotes')+' ✓',1200)};
+ $('dbg-au').onclick=()=>{S.gold+=100;hud();renderShopGold();toast('🐞 +100💰',1200)};
+}
+function b5OpenSession(){ // 铸成结算入口(forge 源):有黑球→修复,全对→美化(B5 拍板时序保留)
  if(!S.fixQueue.length)return;
  S.phase='session';hud();
  const sw=S.fixQueue[0];
  const list=(sw.balls||[]).map((b,i)=>b&&b.st==='bad'?i:-1).filter(i=>i>=0);
- S.fix={mode:list.length?'fix':'polish',list,li:0,pol:null};
- sw.stage=list.length?'repair':'polish';
- if(list.length){b5RenderFix();$('fix-modal').classList.add('on');setTimeout(()=>{if(S.fix&&S.fix.mode==='fix'&&S.fixQueue[0]===sw)b5ReplayCur()},200)}
+ S.fix={mode:list.length?'fix':'polish',src:'forge',pi:-1,list,li:0,q:null,pos:0,pol:null,tired:false};
+ if((S.ins&&S.ins.form)===1)S.ins.view=list.length?0:1; // 双板默认:修复=三把位/美化=一把位(R6)
+ sw.stage=S.fix.mode;
+ if(list.length){$('fix-modal').classList.add('on');b5EnsureFixQ()}
  else b5EnterPolish();
 }
-function b5EnterPolish(){ // 维修完/全对直通:切美化阶段(一把位新题)
- const sw=S.fixQueue[0];if(!sw||!S.fix)return;
- sw.stage='polish';S.fix.mode='polish';S.fix.pol=null;
- b5PolishNewQ();
+function b7OpenPack(pi){ // 库存回修/修饰入口(R5):箱内 pending 符直接进 session;终态落账在箱内就地完成(不重跑 makeItem)
+ if(S.mode!=='forge'||S.phase!=='idle'){toast('⛔ '+t('b7busy'),1600);return}
+ const it=S.pack[pi];if(!it||!it.pending)return;
+ const bad=(it.balls||[]).map((b,i)=>b&&b.st==='bad'?i:-1).filter(i=>i>=0);
+ const mode=bad.length?'fix':'polish';
+ if(mode==='polish'&&b7Pool().length<CFG.B7_POL_QN){toast('🎼 '+t('b7tired'),2400);return}
+ S.phase='session';hud();
+ S.fix={mode,src:'pack',pi,list:bad,li:0,q:null,pos:0,pol:null,tired:false};
+ if((S.ins&&S.ins.form)===1)S.ins.view=mode==='fix'?0:1;
+ if(mode==='fix'){$('fix-modal').classList.add('on');b5EnsureFixQ()}
+ else b5EnterPolish();
+}
+function b5SW(){return S.fix&&S.fix.src==='pack'?S.pack[S.fix.pi]:S.fixQueue[0]} // session 当前符(forge=队列头/pack=箱内件)
+function b5Alive(sw0){return !!S.fix&&b5SW()===sw0} // 跨拍点身份守卫(forge/pack 同口径)
+function b5EnterPolish(){ // 修完/全对直通:切美化阶段(3音唱名题;键池耗尽→exhaustion 界面)
+ const sw=b5SW();if(!sw||!S.fix)return;
+ if(S.fix.src==='forge')sw.stage='polish';
+ S.fix.mode='polish';S.fix.pol=null;S.fix.q=null;S.fix.pos=0;S.fix.tired=false;
+ if((S.ins&&S.ins.form)===1)S.ins.view=1;
  $('fix-modal').classList.add('on');
+ b5PolishNewQ();
 }
-function b5PolishNewQ(){ // 美化新题:复用出题器,按本符音域(铸成符的 lv)
- const sw=S.fixQueue[0];if(!sw||!S.fix)return;
- const span=SWORDS[Math.max(0,Math.min(SWORDS.length,sw.lv))-1].span;
- S.fix.pol={q:genQuestion(span).map(ni=>NOTES[ni].m),pos:0,marks:[]};
+function b5PolishNewQ(){ // 美化新题(B7 R4):3音唱名序列(避重出题;答错换题=耗新音新键,无限重试口径保留)
+ const sw=b5SW();if(!sw||!S.fix)return false;
+ const q=b7GenQ(CFG.B7_POL_QN);
+ if(!q){S.fix.tired=true;b5RenderPolish();return false} // 未用音<3→键位疲劳界面(R5:指路先收着,不硬锁)
+ S.fix.pol={q,pos:0,marks:[]};S.fix.tired=false;
  b5RenderPolish();
- setTimeout(()=>{if(S.fix&&S.fix.pol&&S.fixQueue[0]===sw)S.fix.pol.q.forEach((m,i)=>catPlay(m,.12+i*.4))},150);
+ const sw0=sw;setTimeout(()=>{if(S.fix&&S.fix.pol&&b5Alive(sw0))S.fix.pol.q.forEach((m,i)=>catPlay(m,.12+i*.4))},150);
+ return true;
 }
-function b5ReplayCur(){ // 维修台:重播当前黑球那题音频(一击前可反复听)
- if(!S.fix||S.fix.mode!=='fix')return;
- const sw=S.fixQueue[0],idx=S.fix.list[S.fix.li],b=sw&&sw.balls&&sw.balls[idx];
- if(!b)return;(b.m||[]).forEach((m,i)=>catPlay(m,.12+i*.42));
+function b5EnsureFixQ(){ // 当前黑球的 4 音唱名题(B7 R3:懒生成;未用音<4→exhaustion 界面)
+ const sw=b5SW();if(!sw||!S.fix||S.fix.mode!=='fix')return false;
+ if(Array.isArray(S.fix.q)&&S.fix.q.length)return true;
+ const idx=S.fix.list[S.fix.li],b=sw&&sw.balls&&sw.balls[idx];
+ if(idx===undefined||!b||b.st!=='bad')return false;
+ const q=b7GenQ(CFG.B7_FIX_QN);
+ if(!q){S.fix.tired=true;b5RenderFix();return false} // 键位疲劳:今日无法再修(R3)
+ S.fix.q=q;S.fix.pos=0;S.fix.tired=false;
+ b5RenderFix();
+ const sw0=sw;setTimeout(()=>{if(S.fix&&S.fix.mode==='fix'&&b5Alive(sw0))b5ReplayCur()},200);
+ return true;
 }
-function b5FixClick(midi){ // 维修一击制:点对=黑→金(-5%),点错=保持黑(-20%);均只此一次,进下一球
+function b5ReplayCur(){ // 重播当前唱名题音频(辅助听辨;题面=唱名序列直接显示)
+ if(!S.fix)return;
+ const q=S.fix.mode==='fix'?S.fix.q:(S.fix.pol&&S.fix.pol.q);
+ if(!q)return;q.forEach((m,i)=>catPlay(m,.12+i*.42));
+}
+function b5FixClick(midi){ // B7 修复一击制(口径沿 B5):唱名序列中点错任意键=该黑球判错保持黑(-20%);顺序点对4音=镀金(-5%);点键照常耗疲劳(含错击,R3 防刷)
  if(!S.fix||S.fix.mode!=='fix')return;
- const sw=S.fixQueue[0],idx=S.fix.list[S.fix.li],b=sw&&sw.balls&&sw.balls[idx];
+ const sw=b5SW(),idx=S.fix.list[S.fix.li],b=sw&&sw.balls&&sw.balls[idx];
  if(!b||b.st!=='bad')return;
- const ok=midi===b.tgt;
- b5FixLaser(midi,ok); // v36B6:R4修补激光(金=点对/灰=点错,纯视觉,B5一击制逻辑零改动)
- if(ok){b.st='fixed';toast('🔧 '+t('b5fixok')+' (-5%)',1800);clank(true)}
- else{toast('🔧 '+t('b5fixno')+' (-20%)',1800);clank(false)}
- playInst(midi,0,1);
- S.fix.li++;b5RenderFix();
- if(S.fix.li>=S.fix.list.length){const sw0=sw;setTimeout(()=>{if(S.fix&&S.fix.mode==='fix'&&S.fixQueue[0]===sw0)b5EnterPolish()},650)}
- else{const sw0=sw;setTimeout(()=>{if(S.fix&&S.fix.mode==='fix'&&S.fixQueue[0]===sw0)b5ReplayCur()},400)}
+ if(!Array.isArray(S.fix.q)||S.fix.pos>=S.fix.q.length)return;
+ if(b7Left(midi)<=0){toast('🎼 '+t('b7keyOut'),1500);return} // 灰键禁点(R2)
+ const ok=midi===S.fix.q[S.fix.pos];
+ b7Tap(midi); // 键位疲劳记账(金圈→变灰的数据源)
+ b5FixLaser(midi,ok); // v36B6:R4修补激光(金=点对/灰=点错,纯视觉)——B7唱名题下每次点击保留该表现
+ playInst(midi,0,1); // 每点一键播该键音高作反馈(R3,现有音色)
+ if(!ok){ // 一击判负:黑球保持黑(-20%),进下一球;本题已耗键不退(R3)
+  toast('🔧 '+t('b5fixno')+' (-20%)',1800);clank(false);
+  S.fix.li++;S.fix.q=null;S.fix.pos=0;b5RenderFix();
+  b5FixAdvance(sw);return}
+ S.fix.pos++;b5RenderFix();
+ if(S.fix.pos>=S.fix.q.length){ // 4音全对:黑→金(-5%)
+  b.st='fixed';toast('🔧 '+t('b5fixok')+' (-5%)',1800);clank(true);
+  S.fix.li++;S.fix.q=null;S.fix.pos=0;b5RenderFix();
+  b5FixAdvance(sw)}
 }
-function b5PolishClick(midi){ // 美化作答:顺序敲对→全对=美化完成;错=重出新题(无限重试)
+function b5FixAdvance(sw){ // 球间推进:下一球出题/清单走完转美化(跨拍点身份守卫)
+ if(!S.fix||S.fix.mode!=='fix')return;
+ if(S.fix.li>=S.fix.list.length){const sw0=sw;setTimeout(()=>{if(b5Alive(sw0)&&S.fix.mode==='fix')b5EnterPolish()},650);return}
+ const sw0=sw;setTimeout(()=>{if(b5Alive(sw0)&&S.fix.mode==='fix')b5EnsureFixQ()},400);
+}
+function b5PolishClick(midi){ // B7 美化作答:顺序点对3音→美化完成(金边纹样,纯视觉);点错=本题失败换新题(耗新音新键,键照常计入)
  if(!S.fix||S.fix.mode!=='polish'||!S.fix.pol)return;
- const pol=S.fix.pol,sw=S.fixQueue[0];
+ const pol=S.fix.pol,sw=b5SW();
  if(pol.pos>=pol.q.length)return;
+ if(b7Left(midi)<=0){toast('🎼 '+t('b7keyOut'),1500);return}
  playInst(midi,0,1);
- if(midi===pol.q[pol.pos]){pol.marks[pol.pos]='hit';pol.pos++;
+ if(midi===pol.q[pol.pos]){b7Tap(midi);pol.marks[pol.pos]='hit';pol.pos++;
   if(pol.pos>=pol.q.length){sw.polished=true;b5RenderPolish();toast('✨ '+t('b5polished')+' (0%, '+t('b5free')+')',2200);
-   const sw0=sw;setTimeout(()=>{if(S.fix&&S.fixQueue[0]===sw0&&S.fix.mode==='polish')b5FinishSw()},750);return}
+   const sw0=sw;setTimeout(()=>{if(b5Alive(sw0)&&S.fix.mode==='polish')b5FinishSw()},750);return}
   b5RenderPolish()}
- else{pol.marks[pol.pos]='miss';b5RenderPolish();clank(false);
-  const sw0=sw;setTimeout(()=>{if(S.fix&&S.fixQueue[0]===sw0&&S.fix.mode==='polish'){toast('✨ '+t('b5retry'),1600);b5PolishNewQ()}},700)}
+ else{b7Tap(midi);pol.marks[pol.pos]='miss';b5RenderPolish();clank(false);
+  const sw0=sw;setTimeout(()=>{if(b5Alive(sw0)&&S.fix.mode==='polish'){toast('✨ '+t('b5retry'),1600);b5PolishNewQ()}},700)}
 }
-function b5PolishSkip(){ // 跳过美化(拍板外补:美化纯视觉,给不想玩的玩家一条出路,不锁流程)
+function b5PolishSkip(){ // 跳过美化(纯视觉出路):skipped=终态标记(箱内不再出修饰入口);已耗键照常
  if(!S.fix||S.fix.mode!=='polish')return;
+ const sw=b5SW();if(sw)sw.skipped=true;
  toast('⏭ '+t('b5skipdone'),1600);b5FinishSw();
 }
-function b5FinishSw(){ // session 完成→铸成入箱(原 progSwords 的 makeItem/toast/questProg 段,时序后移到维修/美化后)
+function b7StashCur(){ // 先收着(R5):当前符带现状入箱(黑球保留+pending),箱内点它回修;键池耗尽时修复器自动指路此钮
+ if(!S.fix)return;
+ if(S.fix.src==='pack'){ // 箱内 session 中途退出=挂起回箱(pending 仍在)
+  $('fix-modal').classList.remove('on');S.fix=null;S.phase='idle';hud();renderChest();
+  toast('📥 '+t('b7stashed'),2200);return}
+ const sw=S.fixQueue.shift();if(!sw)return;
+ $('fix-modal').classList.remove('on');S.fix=null;
+ const it=makeItem(sw);S.pack.push(it);S.forged++;markDay('done');questProg(it,sw);
+ toast('📥 '+t('b7stashed'),2200);
+ syncFocus();hud();updateSword();renderRack();renderChest();
+ if(S.fixQueue.length){b5OpenSession();return} // 多符同铸:下一张自动续(逐张结算口径)
+ if(!S.anvils.length){afterBatch();return}
+ if(S.charge>=CFG.FRENZY_NEED){startFrenzy();return}
+ afterBatch();
+}
+function b5FinishSw(){ // session 完成:forge源=铸成入箱(B5 口径);pack源=箱内就地终态(pending→false,不重跑 makeItem/questProg)
+ if(!S.fix)return;
+ if(S.fix.src==='pack'){
+  const it=S.pack[S.fix.pi],wasPol=S.fix.mode==='polish';
+  $('fix-modal').classList.remove('on');S.fix=null;S.phase='idle';
+  if(it){if(wasPol)it.polished=true;it.pending=false;toast('✨ '+it.name+' · '+t('b7packdone'),2200)}
+  renderChest();hud();
+  afterBatch(); // 箱内修完回 forging 循环(案空→指路收工/商人,口径同 B5)
+  return}
  const sw=S.fixQueue.shift();if(!sw)return;
  $('fix-modal').classList.remove('on');S.fix=null;
  const it=makeItem(sw);S.pack.push(it);S.forged++;markDay('done');questProg(it,sw);
@@ -1531,21 +1732,22 @@ function b5FinishSw(){ // session 完成→铸成入箱(原 progSwords 的 makeI
  if(S.charge>=CFG.FRENZY_NEED){startFrenzy();return}
  afterBatch();
 }
-function b5AutoFinish(){ // TB 专用:自动通过当前 session(维修=点靶音,美化=按序点对),队列清空为止
+function b5AutoFinish(){ // TB 专用:自动通过当前 session(修复=按序点唱名题,美化=按序点对),队列清空为止;键池耗尽走「先收着」不硬锁
  let n=0;
- while(S.fix&&S.fixQueue.length&&n++<60){
-  const sw=S.fixQueue[0];
+ while(S.fix&&n++<120){
+  const sw=b5SW();if(!sw)break;
   if(S.fix.mode==='fix'){
-   const idx=S.fix.list[S.fix.li];
-   if(idx===undefined){b5EnterPolish();continue}
-   const b=sw.balls&&sw.balls[idx];
-   if(!b||b.st!=='bad'){b5EnterPolish();continue}
-   b5FixClick(b.tgt);
+   if(!Array.isArray(S.fix.q)||!S.fix.q.length){
+    const idx=S.fix.list[S.fix.li],b=sw.balls&&sw.balls[idx];
+    if(idx===undefined||!b||b.st!=='bad'){b5EnterPolish();continue}
+    if(!b5EnsureFixQ()){b7StashCur();continue} // 未用音<4:exhaustion→先收着(auto 收尾口径,R5 不硬锁)
+   }
+   b5FixClick(S.fix.q[S.fix.pos]);
   }else{
    const pol=S.fix.pol;
-   if(!pol){b5PolishNewQ();continue}
-   if(pol.pos>=pol.q.length){b5FinishSw();continue} // 页面自身有 750ms 延迟拍,此处直调幂等(身份守卫兜底)
-   pol.q.slice().forEach(m=>b5PolishClick(m));
+   if(!pol){if(!b5PolishNewQ()){b7StashCur();continue}}
+   if(pol.pos>=pol.q.length){b5FinishSw();continue} // 页面自身有 750ms 延迟拍,此处直调幂等(身份守卫兜底);注意位置在 pol.pos(fix 模式的 S.fix.pos 与此无关)
+   b5PolishClick(pol.q[pol.pos]);
   }
  }
  return {left:S.fixQueue.length,open:!!S.fix};
@@ -1555,7 +1757,11 @@ function b5PaperSVG(sw,hl){ // 维修/美化左栏符纸:黑球可见,hl=当前�
  for(let i=0;i<capQ;i++)arr.push(sw&&Array.isArray(sw.balls)&&sw.balls[i]||null);
  return talismanSVG(H,arr,talismanInk(sw),{pol:sw&&sw.polished,hl});
 }
-function b5BuildBoard(host,table,onClick){ // 竖式小提琴指板:4弦列G/D/A/E·圆圈音位按钮(音名+唱名+指法)·semiToPos 物理间距
+function b7KeyTitle(midi,name){ // 键 hover title(R2):今日剩余 N 次 / 今日已用尽
+ const left=b7Left(midi),base=b5NoteName(name)+' '+b5SolOf(name);
+ return left>0?`${base} · ${t('b7keyLeft').replace('{n}',''+left)}`:`${base} · ${t('b7keyOut')}`;
+}
+function b5BuildBoard(host,table,onClick){ // 竖式弦纹板:4弦列·圆圈弦音键(音名+唱名+指法)·semiToPos物理间距·键位疲劳态(R2:金圈→灰圈=今日用尽,禁点光标);✦=融合并板键(次数取两板之和)
  if(!host)return;host.innerHTML='';
  const pad=18;
  table.forEach(str=>{
@@ -1563,50 +1769,69 @@ function b5BuildBoard(host,table,onClick){ // 竖式小提琴指板:4弦列G/D/A
   const maxS=Math.max(0,...str.notes.map(n=>n.semis));
   col.style.height=(b5SemiToPos(maxS)+pad+22)+'px';
   col.innerHTML=`<div class="b5-str"></div>`;
-  const row=(y,midi,fing,name)=>{
+  const row=(y,midi,fing,name,dual)=>{
    const d=document.createElement('div');d.className='b5-row';
    d.style.top=(y+pad-14)+'px';
    const fTxt=LANG==='en'?(B5_FINGER_EN[fing]||fing):fing;
-   d.innerHTML=`<button class="b5-note${fing==='开'?' b5-open':''}" data-midi="${midi}" data-finger="${fTxt}" data-name="${name}" title="${b5NoteName(name)} ${b5SolOf(name)} · ${fTxt}"><span>${fTxt}</span></button><div class="b5-lab"><b>${b5NoteName(name)}</b><i>${b5SolOf(name)}</i></div>`;
+   const out=b7Left(midi)<=0; // R2:今日次数用尽→灰圈禁点
+   d.innerHTML=`<button class="b5-note${fing==='开'?' b5-open':''}${out?' b7-out':''}" data-midi="${midi}" data-finger="${fTxt}" data-name="${name}" data-left="${b7Left(midi)}" title="${b7KeyTitle(midi,name)}"><span>${fTxt}</span></button><div class="b5-lab"><b>${b5NoteName(name)}</b><i>${b5SolOf(name)}${dual?' ✦':''}</i></div>`;
    d.querySelector('button').onclick=()=>onClick(midi);
    col.appendChild(d)};
   row(0,b5OpenMidi[str.label],'开',str.open);
-  str.notes.forEach(nt=>row(b5SemiToPos(nt.semis),nt.midi,nt.finger,nt.name));
+  str.notes.forEach(nt=>row(b5SemiToPos(nt.semis),nt.midi,nt.finger,nt.name,nt.dual));
   host.appendChild(col);
  });
 }
+function b7RenderTabs(){ // 形态标签区(R6):初阶=板名标注;进阶=双板切换标签(修复默认三把位/美化默认一把位);终阶=融合板标注(✦=并板键)
+ const box=$('fix-tabs');if(!box)return;
+ const form=(S.ins&&S.ins.form)||0;
+ if(form!==1){box.innerHTML=`<span class="b7-tabcap">${form===2?t('b7tabF'):t('b7tab3')}</span>`;return}
+ box.innerHTML=`<button class="b7-itab${S.ins.view===0?' on':''}" data-v="0">${t('b7tab3')}</button><button class="b7-itab${S.ins.view===1?' on':''}" data-v="1">${t('b7tab1')}</button>`;
+ box.querySelectorAll('.b7-itab').forEach(b=>b.onclick=()=>{S.ins.view=+b.dataset.v;b7RerenderFix()});
+}
+function b7SolSlots(){ // 唱名题面(R3/R4):大字唱名序列直接显示(修复4音/美化3音);已点=hit绿/答错=miss红/当前待点=金框脉冲
+ const box=$('fix-slots');if(!box)return;box.innerHTML='';
+ if(!S.fix)return;
+ const q=S.fix.mode==='fix'?S.fix.q:(S.fix.pol&&S.fix.pol.q);
+ const pos=S.fix.mode==='fix'?S.fix.pos:(S.fix.pol?S.fix.pol.pos:0);
+ const marks=S.fix.mode==='polish'&&S.fix.pol?S.fix.pol.marks:null;
+ (q||[]).forEach((m,i)=>{
+  const nt=NOTES.find(x=>x.m===m)||{n:''};
+  const d=document.createElement('div');
+  let cls='fslot solf';
+  if(marks){if(marks[i]==='hit')cls+=' hit';else if(marks[i]==='miss')cls+=' miss'}
+  else if(S.fix.mode==='fix'&&i<pos)cls+=' hit';
+  if(cls.indexOf('hit')<0&&cls.indexOf('miss')<0&&i===pos)cls+=' next';
+  d.className=cls;d.style.color=colorOf(nt.n);
+  d.textContent=b5SolOf(nt.d||'');box.appendChild(d)});
+}
 function b5RenderFix(){
- const sw=S.fixQueue[0];if(!sw||!S.fix||S.fix.mode!=='fix')return;
+ const sw=b5SW();if(!sw||!S.fix||S.fix.mode!=='fix')return;
  const idx=S.fix.list[S.fix.li];
  $('fix-title').textContent=t('b5fix');
- $('fix-step').textContent=`${t('b5fixStep')} ${S.fix.li+1}/${S.fix.list.length}`;
- $('fix-sub').textContent=t('b5fixHint');
+ $('fix-step').textContent=S.fix.tired?t('b7tiredS'):`${t('b5fixStep')} ${S.fix.li+1}/${S.fix.list.length}`;
+ $('fix-sub').textContent=S.fix.tired?t('b7tired'):t('b5fixHint');
  $('fix-paper').innerHTML=`<svg viewBox="0 0 140 320" width="120">${b5PaperSVG(sw,idx)}</svg>`;
- b5BuildBoard($('fix-board'),B5_POS3,midi=>b5FixClick(midi));
- $('fix-slots').innerHTML='';
+ b5BuildBoard($('fix-board'),b7BoardTable('fix'),midi=>b5FixClick(midi));
+ b7RenderTabs();b7SolSlots();
  $('fix-qinfo').textContent='';
- $('btn-fix-replay').style.display='';$('btn-fix-replay').textContent=t('b5replay');
+ $('btn-fix-replay').style.display=S.fix.tired?'none':'';$('btn-fix-replay').textContent=t('b5replay');
  $('btn-polish-skip').style.display='none';
+ $('btn-fix-stash').style.display='';$('btn-fix-stash').textContent=t('b7stash');
 }
 function b5RenderPolish(){
- const sw=S.fixQueue[0];if(!sw||!S.fix||S.fix.mode!=='polish')return;
+ const sw=b5SW();if(!sw||!S.fix||S.fix.mode!=='polish')return;
  const pol=S.fix.pol||{q:[],pos:0,marks:[]};
  $('fix-title').textContent=t('b5polish');
- $('fix-step').textContent=sw.polished?t('b5polished'):`${pol.pos}/${pol.q.length}`;
- $('fix-sub').textContent=t('b5polHint');
+ $('fix-step').textContent=sw.polished?t('b5polished'):S.fix.tired?t('b7tiredS'):`${pol.pos}/${pol.q.length}`;
+ $('fix-sub').textContent=S.fix.tired?t('b7tired'):t('b5polHint');
  $('fix-paper').innerHTML=`<svg viewBox="0 0 140 320" width="120">${b5PaperSVG(sw)}</svg>`;
- b5BuildBoard($('fix-board'),B5_POS1,midi=>b5PolishClick(midi));
- const box=$('fix-slots');box.innerHTML='';
- pol.q.forEach((m,i)=>{
-  const d=document.createElement('div');
-  let cls='fslot',tx='?';
-  if(pol.marks&&pol.marks[i]==='hit'){cls+=' hit';tx='♪'}
-  else if(pol.marks&&pol.marks[i]==='miss'){cls+=' miss';tx='✗'}
-  else if(i===pol.pos){cls+=' next'}
-  d.className=cls;d.textContent=tx;box.appendChild(d)});
+ b5BuildBoard($('fix-board'),b7BoardTable('polish'),midi=>b5PolishClick(midi));
+ b7RenderTabs();b7SolSlots();
  $('fix-qinfo').textContent=sw.polished?'✨ +金边纹样':'';
- $('btn-fix-replay').style.display='';$('btn-fix-replay').textContent=t('b5replay');
- const sk=$('btn-polish-skip');sk.style.display=sw.polished?'none':'';sk.textContent=t('b5skip');
+ $('btn-fix-replay').style.display=(S.fix.tired||sw.polished)?'none':'';$('btn-fix-replay').textContent=t('b5replay');
+ const sk=$('btn-polish-skip');sk.style.display=(sw.polished||S.fix.tired)?'none':'';sk.textContent=t('b5skip');
+ $('btn-fix-stash').style.display=sw.polished?'none':'';$('btn-fix-stash').textContent=t('b7stash');
 }
 
 /* ================= 女铁匠(H3 素材自动接入,失败回退占位 SVG) ================= */
@@ -2188,9 +2413,11 @@ function renderChest(){
   d.onclick=()=>placeBlank(i);
   g.appendChild(d)});
  S.pack.forEach(p=>{used+=wOf(p.name);
-  const d=document.createElement('div');d.className='cm-done';d.style.gridColumn='span '+wOf(p.name);
-  d.innerHTML='<span>'+p.emoji+' '+p.name+' '+'★'.repeat(p.star)+'</span><span class="cd-v">💰'+p.value+'</span>';
-  d.onclick=()=>toast('傍晚见商人,点一下就卖');
+  const d=document.createElement('div');d.className='cm-done'+(p.pending?' b7-pending':'');d.style.gridColumn='span '+wOf(p.name);
+  const pend=p.pending?`<i class="b7-pbadge${(p.balls||[]).some(b=>b&&b.st==='bad')?'':' pol'}">${(p.balls||[]).some(b=>b&&b.st==='bad')?t('b7mend'):t('b7adorn')}</i>`:'';
+  d.innerHTML=pend+'<span>'+p.emoji+' '+p.name+' '+'★'.repeat(p.star)+'</span><span class="cd-v">💰'+p.value+'</span>';
+  d.title=p.pending?t('b7pendTitle'):'';
+  d.onclick=()=>{if(p.pending){const pi=S.pack.indexOf(p);if(pi>=0)b7OpenPack(pi)}else toast('傍晚见商人,点一下就卖')}; // v36B7:R5库存回修/修饰入口
   g.appendChild(d)});
  Object.keys(S.powders||{}).forEach(k=>{const n=S.powders[k];if(!n)return; // v36B2:粉末 icon 行(元素色点+数量),占1格
   const ei=k.indexOf(':'),el=k.slice(0,ei),gr=+k.slice(ei+1);used+=1;
@@ -2612,8 +2839,8 @@ function renderSkillTree(){
 }
 /* ================= 开始菜单+选项(大爷00:43令) ================= */
 const I18N={
- zh:{cal:'\uD83D\uDCC5 \u65E5\u5386',upg:'\uD83C\uDFD7\uFE0F 升级工坊',skill:'\uD83C\uDF33 功法',endf:'结束制符',day2:'\uD83D\uDED2 \u7B2C\u4E8C\u5929\u00B7\u5546\u4EBA',quest:'\uD83D\uDCCB \u4EFB\u52A1\u677F',opt:'\u2699\uFE0F \u9009\u9879',mstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',mmod:'\uD83E\uDE9B Mod \u5DE5\u574A',mopt:'\u2699\uFE0F \u9009\u9879',mst:'\uD83C\uDF33 功法',mtitle:'符箓工坊 · 制符听音',msub:'听音高 · 画灵符 · 交清摊租',res:'\u5206\u8FA8\u7387',lang:'\u8BED\u8A00',optt:'\u9009\u9879',gstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',gcont:'\u25B6\uFE0F \u7EE7\u7EED\u6E38\u620F',mquit:'\uD83D\uDEAA \u9000\u51FA',ptitle:'\u6682\u505C',presume:'\u25B6\uFE0F \u6062\u590D\u6E38\u620F',psave:'\uD83D\uDCBE \u4FDD\u5B58',pload:'\uD83D\uDCC2 \u52A0\u8F7D',phome:'\uD83C\uDFE0 \u8FD4\u56DE\u4E3B\u83DC\u5355',nosave:'\u6682\u65E0\u5B58\u6863',rfw:'刷新摊架',snark:'\u5410\u69FD',pot:'🍲 五碟',rev:'🔫 五行转盘',revHint:'点/拖底箱粉末装转盘 · 每答完一题转一格 · 答题中锁定 · 空碟=五元素等权 · 开局赠三碟一品火粉',revLock:'答题中不能动转盘——等这题答完',revIsFull:'转盘已装满',revDishUnit:'碟',revLoaded:'已装入转盘',revTakeBack:'点击取回底箱',revDishWork:'工作位:点/拖底箱粉末装入',revDishEmpty:'空碟(五元素等权)',revPrep:'转盘还有空碟——备料装满再开画更稳(空碟=五元素等权)',upgRev5:'转盘扩容·5碟',upgRev5D:'左轮转盘3碟→5碟:出题改5音题,5碟同转注入(7碟档数据预留)',upgRev5Done:'转盘扩容到5碟!出题改5音题',dockHead:'🧰 工具箱 · 符坯直接拖上符案 · 点/拖粉末装转盘',wheel:'🌀 五行轮',spx:'📖 法术图鉴',b5fix:'🔧 维修台 · 三把位',b5polish:'✨ 美化 · 一把位',b5fixHint:'先「重播」该题音频,再点右侧三把位音位修补黑球——每球只有一次机会:点对镀金(卖价-5%),点错保持黑(卖价-20%)',b5polHint:'在一把位按顺序敲出美化新题:全对=符面加金边纹样(纯视觉不改卖价);答错重出新题(无限重试),也可跳过',b5replay:'🔊 重播',b5skip:'⏭ 跳过美化',b5fixStep:'黑球',b5polished:'美化完成!',b5fixok:'修补成功·镀金',b5fixno:'一击未中·保持黑',b5free:'纯视觉·不改卖价',b5retry:'美化失手——重出一题(无限重试)',b5skipdone:'已跳过美化(纯视觉,不影响卖价)'},
- en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'End Crafting',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83C\uDFAE New Game',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mst:'\uD83C\uDF33 Skill Tree',mtitle:'Talisman Workshop \u00B7 Runes by Ear',msub:'Hear the pitch \u00B7 Draw the talisman \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options',gstart:'\uD83C\uDFAE New Game',gcont:'\u25B6\uFE0F Continue',mquit:'\uD83D\uDEAA Quit',ptitle:'Paused',presume:'\u25B6\uFE0F Resume',psave:'\uD83D\uDCBE Save',pload:'\uD83D\uDCC2 Load',phome:'\uD83C\uDFE0 Main Menu',nosave:'No save yet',rfw:'Refresh',snark:'Snark',pot:'🍲 Five Dishes',rev:'🔫 Elemental Revolver',revHint:'Click/drag powders from the chest to load · one slot-step per answered question · locked while answering · empty dish = five elements equal weight · starts with 3 dishes of grade-1 fire powder',revLock:'Revolver is locked mid-question — wait for it to end',revIsFull:'Revolver is full',revDishUnit:' dishes',revLoaded:'Loaded into revolver',revTakeBack:'click to return to chest',revDishWork:'Working slot: click/drag powder from the chest',revDishEmpty:'Empty dish (five elements equal weight)',revPrep:'The revolver still has empty dishes — load up before forging for a steadier mix (empty = equal weight)',upgRev5:'Revolver · 5 Dishes',upgRev5D:'Revolver 3 → 5 dishes: questions become 5 notes; the 7-dish tier is reserved for later.',upgRev5Done:'Revolver expanded to 5 dishes — questions now 5 notes!',dockHead:'🧰 Chest · drag blanks onto the anvil · click/drag powder into the revolver',wheel:'🌀 Wheels',spx:'📖 Spell Codex',b5fix:'🔧 Repair Bench · 3rd Position',b5polish:'✨ Polish · 1st Position',b5fixHint:'Replay the question, then click one note on the 3rd-position board — one chance per black ball: hit = gilded (sell -5%), miss = stays black (sell -20%).',b5polHint:'Play the polish question in order on the 1st-position board — all hits = gold-frame flourish (visual only, no price change). Mistake = new question; skippable.',b5replay:'🔊 Replay',b5skip:'⏭ Skip Polish',b5fixStep:'Black ball',b5polished:'Polished!',b5fixok:'Repaired · gilded',b5fixno:'Missed · stays black',b5free:'visual only · no price change',b5retry:'Missed — new question (unlimited retries)',b5skipdone:'Polish skipped (visual only, no price impact)'}};
+ zh:{cal:'\uD83D\uDCC5 \u65E5\u5386',upg:'\uD83C\uDFD7\uFE0F 升级工坊',skill:'\uD83C\uDF33 功法',endf:'结束制符',day2:'\uD83D\uDED2 \u7B2C\u4E8C\u5929\u00B7\u5546\u4EBA',quest:'\uD83D\uDCCB \u4EFB\u52A1\u677F',opt:'\u2699\uFE0F \u9009\u9879',mstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',mmod:'\uD83E\uDE9B Mod \u5DE5\u574A',mopt:'\u2699\uFE0F \u9009\u9879',mst:'\uD83C\uDF33 功法',mtitle:'符箓工坊 · 制符听音',msub:'听音高 · 画灵符 · 交清摊租',res:'\u5206\u8FA8\u7387',lang:'\u8BED\u8A00',optt:'\u9009\u9879',gstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',gcont:'\u25B6\uFE0F \u7EE7\u7EED\u6E38\u620F',mquit:'\uD83D\uDEAA \u9000\u51FA',ptitle:'\u6682\u505C',presume:'\u25B6\uFE0F \u6062\u590D\u6E38\u620F',psave:'\uD83D\uDCBE \u4FDD\u5B58',pload:'\uD83D\uDCC2 \u52A0\u8F7D',phome:'\uD83C\uDFE0 \u8FD4\u56DE\u4E3B\u83DC\u5355',nosave:'\u6682\u65E0\u5B58\u6863',rfw:'刷新摊架',snark:'\u5410\u69FD',pot:'🍲 五碟',rev:'🔫 五行转盘',revHint:'点/拖底箱粉末装转盘 · 每答完一题转一格 · 答题中锁定 · 空碟=五元素等权 · 开局赠三碟一品火粉',revLock:'答题中不能动转盘——等这题答完',revIsFull:'转盘已装满',revDishUnit:'碟',revLoaded:'已装入转盘',revTakeBack:'点击取回底箱',revDishWork:'工作位:点/拖底箱粉末装入',revDishEmpty:'空碟(五元素等权)',revPrep:'转盘还有空碟——备料装满再开画更稳(空碟=五元素等权)',upgRev5:'转盘扩容·5碟',upgRev5D:'左轮转盘3碟→5碟:出题改5音题,5碟同转注入(7碟档数据预留)',upgRev5Done:'转盘扩容到5碟!出题改5音题',dockHead:'🧰 工具箱 · 符坯直接拖上符案 · 点/拖粉末装转盘',wheel:'🌀 五行轮',spx:'📖 法术图鉴',b5fix:'🩹 符纹修复器 · 修补黑球',b5polish:'✨ 符纹修饰 · 弦音纹样',b5fixHint:'按大字唱名序列顺序点弦音键修补黑球——每球一击制:点错任意键=判错保持黑(卖价-20%),4音全点对=镀金(卖价-5%);弦音键每日次数有限,点灰过一夜恢复',b5polHint:'按唱名序列顺序点对 3 音,为符面添金边纹样(纯视觉不改卖价);答错换新题重试(耗新键),与修补共享键池,也可跳过',b5replay:'🔊 重播',b5skip:'⏭ 跳过美化',b5fixStep:'黑球',b5polished:'美化完成!',b5fixok:'修补成功·镀金',b5fixno:'一击未中·保持黑',b5free:'纯视觉·不改卖价',b5retry:'美化失手——重出一题(无限重试)',b5skipdone:'已跳过美化(纯视觉,不影响卖价)',b7keyLeft:'今日剩余 {n} 次',b7keyOut:'今日已用尽·明晨恢复',b7stash:'📥 先收着',b7stashed:'已先收着——黑球保留,箱子里点它继续修',b7tired:'弦音键疲劳:今日可用弦音不足——点「先收着」入箱,明日键池恢复再来',b7tiredS:'键位疲劳',b7busy:'答题/结算中——等这题完了再修',b7packdone:'箱内修补完成!',b7mend:'🔧修',b7adorn:'✨饰',b7pendTitle:'待修补/待修饰:点一下进符纹修复器继续',b7tab3:'三把位弦音区',b7tab1:'一把位弦音区',b7tabF:'天工融合板(✦=并板键·每日次数取两板之和)',upgIns1:'进阶弦音器',upgIns1D:'符纹修复器加装一把位板:修复/美化双板并列(弦音键15→30),形态标签切换显示(修复默认三把位/美化默认一把位)',upgIns1Done:'双板并列装联!键池30弦音键',upgInsF:'天工融合核',upgInsFD:'双板融合为一张完整弦纹板:重复音位并板为单键(✦,每日次数取两板之和),全板每键每日+1次(前置:进阶弦音器)',upgInsFDone:'天工融合!并板键✦双倍次数+全板每日+1',upgKeyT:'键位淬炼',upgKeyTD:'每键每日可点次数+1/级·全形态生效(键位疲劳扩容)',upgKeyTDone:'每键每日+1次',b7needPre:'前置:进阶弦音器',b7formOn:'双板并列',b7formFOn:'融合板',b7formOff:'未装',dbgTitle:'🐞 Debug 面板',dbgWarn:'⚠️ debug 操作会写入存档(测试污染)',dbgForm:'乐器形态',b7f0:'初阶·三把位',b7f1:'进阶·双板',b7f2:'终阶·融合',dbgResetKeys:'键池重置(当日疲劳清零)',dbgResetNotes:'已用音清零'},
+ en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'End Crafting',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83C\uDFAE New Game',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mst:'\uD83C\uDF33 Skill Tree',mtitle:'Talisman Workshop \u00B7 Runes by Ear',msub:'Hear the pitch \u00B7 Draw the talisman \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options',gstart:'\uD83C\uDFAE New Game',gcont:'\u25B6\uFE0F Continue',mquit:'\uD83D\uDEAA Quit',ptitle:'Paused',presume:'\u25B6\uFE0F Resume',psave:'\uD83D\uDCBE Save',pload:'\uD83D\uDCC2 Load',phome:'\uD83C\uDFE0 Main Menu',nosave:'No save yet',rfw:'Refresh',snark:'Snark',pot:'🍲 Five Dishes',rev:'🔫 Elemental Revolver',revHint:'Click/drag powders from the chest to load · one slot-step per answered question · locked while answering · empty dish = five elements equal weight · starts with 3 dishes of grade-1 fire powder',revLock:'Revolver is locked mid-question — wait for it to end',revIsFull:'Revolver is full',revDishUnit:' dishes',revLoaded:'Loaded into revolver',revTakeBack:'click to return to chest',revDishWork:'Working slot: click/drag powder from the chest',revDishEmpty:'Empty dish (five elements equal weight)',revPrep:'The revolver still has empty dishes — load up before forging for a steadier mix (empty = equal weight)',upgRev5:'Revolver · 5 Dishes',upgRev5D:'Revolver 3 → 5 dishes: questions become 5 notes; the 7-dish tier is reserved for later.',upgRev5Done:'Revolver expanded to 5 dishes — questions now 5 notes!',dockHead:'🧰 Chest · drag blanks onto the anvil · click/drag powder into the revolver',wheel:'🌀 Wheels',spx:'📖 Spell Codex',b5fix:'🩹 Rune Mender · Mend Black Balls',b5polish:'✨ Rune Polish · String Flourish',b5fixHint:'Play the solfège sequence in order on the string keys to mend a black ball — one strike: any wrong key fails it (stays black, sell -20%); all 4 right = gilded (sell -5%). Keys tire daily; they recover overnight.',b5polHint:'Play the 3-note solfège in order for the gold-frame flourish (visual only, no price change). Wrong key = new question (fresh keys); shares the daily key pool with mending. Skippable.',b5replay:'🔊 Replay',b5skip:'⏭ Skip Polish',b5fixStep:'Black ball',b5polished:'Polished!',b5fixok:'Mended · gilded',b5fixno:'Missed · stays black',b5free:'visual only · no price change',b5retry:'Missed — new question (unlimited retries)',b5skipdone:'Polish skipped (visual only, no price impact)',b7keyLeft:'{n} left today',b7keyOut:'Exhausted today · recovers at dawn',b7stash:'📥 Stash It',b7stashed:'Stashed — black balls kept; click it in the chest to resume mending',b7tired:'Key fatigue: not enough fresh notes today — stash it and come back tomorrow when the pool recovers.',b7tiredS:'Keys tired',b7busy:'Mid-question / settling — mend it afterwards',b7packdone:'mended in chest!',b7mend:'🔧Fix',b7adorn:'✨Polish',b7pendTitle:'Pending: click to resume in the Rune Mender',b7tab3:'3rd-Position Zone',b7tab1:'1st-Position Zone',b7tabF:'Heavenly Fused Board (✦ = merged key · daily allowance sums both boards)',upgIns1:'Advanced Stringbox',upgIns1D:'Adds a 1st-position board to the Rune Mender: dual boards for mending/polish (15→30 string keys), switch via form tabs (mending defaults 3rd, polish 1st).',upgIns1Done:'Dual boards online! 30-key pool',upgInsF:'Heavenly Fusion Core',upgInsFD:'Fuses both boards into one full board: shared positions become merged keys (✦, daily allowance sums both boards) and every key gains +1 daily tap (requires Advanced Stringbox).',upgInsFDone:'Heavenly fusion! ✦ merged keys doubled + all keys +1',upgKeyT:'Key Quenching',upgKeyTD:'+1 tap per key per day per level · all forms (key-fatigue expansion)',upgKeyTDone:'+1 tap/key/day',b7needPre:'Requires Advanced Stringbox',b7formOn:'dual boards',b7formFOn:'fused board',b7formOff:'not installed',dbgTitle:'🐞 Debug Panel',dbgWarn:'⚠️ debug actions write to the save (test pollution)',dbgForm:'Instrument form',b7f0:'Basic · 3rd Pos',b7f1:'Advanced · Dual',b7f2:'Final · Fused',dbgResetKeys:'Reset key pool (daily fatigue cleared)',dbgResetNotes:'Clear used notes'}};
 let LANG='zh';try{LANG=localStorage.getItem('ft_lang')||'zh'}catch(e){}
 let CUR_RES=[1280,720];
 function t(k){return (I18N[LANG]&&I18N[LANG][k])||I18N.zh[k]||k}
@@ -2635,6 +2862,7 @@ function applyLang(){
  updShelfBtn();
  const ot=document.getElementById('opt-title');if(ot)ot.textContent=t('optt');
  if(S.fix){S.fix.mode==='fix'?b5RenderFix():b5RenderPolish()} // v36B5:维修/美化文案随语言重渲染
+ if($('dbg-panel').classList.contains('on'))b7DbgRender(); // v36B7:debug 面板文案随语言重渲染
  renderOpts()}
 function renderOpts(){
  const box=document.getElementById('opt-rows');if(!box)return;
@@ -2676,6 +2904,7 @@ function loadGame(){
  S.powders=S.powders||{}; // v36B2:粉末袋缺省
  S.rev=(S.rev&&CFG.REVOLVER_POTS.indexOf(S.rev.n)>=0)?{n:S.rev.n,angle:+S.rev.angle||0}:{n:3,angle:0}; // v36B6:转盘档位(老档无rev字段→3碟·angle归零)
  if(S.up&&S.up.rev5===undefined)S.up.rev5=0; // v36B6:扩容档缺省(老档=未购)
+ if(S.up){if(S.up.ins1===undefined)S.up.ins1=0;if(S.up.insF===undefined)S.up.insF=0;if(S.up.keyT===undefined)S.up.keyT=0} // v36B7:乐器线升级缺省(老档=未购)
  (function(){ // v36B6老档迁移(R5):B4五碟竖坞载荷→转盘碟数档位+碟内容映射,回填不炸
   const loaded=(Array.isArray(S.pot)?S.pot:[]).map(p=>p&&p.k?{k:p.k}:null).filter(Boolean);
   const keep=loaded.slice(0,S.rev.n); // 原序保留前 rev.n 碟
@@ -2685,7 +2914,11 @@ function loadGame(){
  if(!S.pot.some(Boolean))S.pot=Array.from({length:S.rev.n},()=>({k:CFG.POT_PREFILL})); // 全空(含无pot字段老档)→预填一品火粉(开局赠口径)
  if(!S.rep)S.rep={face:50,dark:0}; // v36B2:声誉占位缺省
  S.codex=S.codex||{}; // v36B3:法术图鉴点亮台账缺省(老档=空册)
+ const packFix=(S.fix&&S.fix.src==='pack')?{pi:S.fix.pi}:null; // v36B7:箱内回修 session 标记要在 S.fix 置空前捕获(球态本身在 it 上,恢复=重开 session)
  S.fixQueue=Array.isArray(S.fixQueue)?S.fixQueue:[];S.fix=null;$('fix-modal').classList.remove('on'); // v36B5:待结算队列缺省
+ S.ins=(S.ins&&S.ins.form>=0&&S.ins.form<=2)?{form:S.ins.form|0,view:S.ins.view===1?1:0}:{form:0,view:0}; // v36B7:乐器形态缺省初阶三把位(脏值兜底)
+ S.kfat=(S.kfat&&S.kfat.day===S.day&&S.kfat.keys&&typeof S.kfat.keys==='object')?S.kfat:{day:S.day,keys:{},notes:{}}; // v36B7:键位疲劳(缺省/dateKey翻天→清空,R2过夜恢复)
+ if(!S.kfat.notes||typeof S.kfat.notes!=='object')S.kfat.notes={};
  (S.anvils||[]).forEach(sw=>{ // v36B5老档回填(拍板二选一之「底稿态重画」):在画符未记录的题槽=底稿draft(qDone进度保留,draft不罚卖价)
   if(!Array.isArray(sw.balls))sw.balls=Array.from({length:sw.qDone||0},()=>({st:'draft'}));
  });
@@ -2697,6 +2930,7 @@ function loadGame(){
   if(!Array.isArray(p.tierHist))p.tierHist=[];
   if(p.balls===undefined)p.balls=[]; // v36B5老档回填:已完成符按全红口径(无罚项=全对等效)
   if(p.polished===undefined)p.polished=false;
+  if(p.pending===undefined)p.pending=b7PendingOf(p); // v36B7:延后修补标记回填(B5/B6老档按球态现算,空balls=终态)
  });
  renderPot(); // v36B2:丹锅随存档恢复
  S.mkt=S.mkt||[];S.bought=S.bought||{}; // v34:货架/日限购缺省
@@ -2704,7 +2938,8 @@ function loadGame(){
  S.mode='forge';$('shop').classList.remove('on');
  S.frenzyActive=false;S.frenzyTimer=null;app.classList.remove('frenzy');
  syncFocus();hud();renderChest();renderRack();renderQStrip();applyWindow();updateSword();
- if(S.fixQueue.length)b5OpenSession(); // v36B5:存档时在维修/美化 session 中→读档即恢复继续(session 数据随档持久)
+ if(packFix&&S.pack[packFix.pi]&&S.pack[packFix.pi].pending)b7OpenPack(packFix.pi); // v36B7:箱内回修/修饰 session 存档恢复(重开,球态在 it 上)
+ else if(S.fixQueue.length)b5OpenSession(); // v36B5:存档时在维修/美化 session 中→读档即恢复继续(session 数据随档持久)
  toast('\uD83D\uDCC2 \u5DF2\u8BFB\u53D6\u5B58\u6863',1800);refreshMenuState();return true;
 }
 function refreshMenuState(){const b=document.getElementById('btn-menu-continue');if(b)b.disabled=!hasSave()}
@@ -2874,7 +3109,8 @@ function restart(){
  S.powders={};S.rev={n:3,angle:0};S.pot=Array.from({length:3},()=>({k:CFG.POT_PREFILL}));S.rep={face:50,dark:0};S.codex={};renderPot(); // v36B6:新档清粉末袋→3碟转盘预填一品火粉(开局赠,不扣灵石;新档恒3碟档,扩容靠升级工坊重买)
  S.fixQueue=[];S.fix=null; // v36B5:清待结算队列/session
  $('fix-modal').classList.remove('on');
- S.up={anvil:0,sword:0,armor:0,bow:0,wand:0,artSlot:0,rev5:0};S.anvils=[];syncFocus();renderRack();
+ S.ins={form:0,view:0};S.kfat={day:1,keys:{},notes:{}}; // v36B7:新档=初阶三把位+键池满/已用音空
+ S.up={anvil:0,sword:0,armor:0,bow:0,wand:0,shield:0,artSlot:0,rev5:0,ins1:0,insF:0,keyT:0};S.anvils=[];syncFocus();renderRack();
  S.qDay=0;S.qBoard={};S.qActive={};renderQStrip();
  S.chest=[{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'}];renderChest();
  S.frenzyActive=false;S.pendingQuench=false;app.classList.remove('frenzy');
@@ -2971,7 +3207,8 @@ $('lanes').addEventListener('pointerdown',e=>{
 /* 测试钩子 */
 window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,makeItem,judgeSpell,rollAffix,spellName,affixName,syncFocus,stashAll,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,gradeQuestion,appendMark,recalcEvolution,markVal,progSwords,potEligible,applyPotion,enterPotSel,MARK_VAL,MARK_ORDER,POTIONS,swordCap,openMerchant,renderMerchant,openUpg,buyUpg,UPG,anvilN,renderRack,renderUpg,openBill,closeBill,billData,metaObj,metaSave,settleLegacy,renderSkillTree,updListenBtn,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()},ALL_GOODS,HI_TABLE,HI_CHANCE,gCls,rollShelf,ELEMS,ELEM_META,zeroElem,powTotal,POWDER_GOODS,renderPot,potPut,potTake,potLocked,spinWheel,potWeights,renderSpellCodex,openSpellCodex,sellPrice, // v36B5(V21教训:新函数必须暴露才能 TB 测)
  b5:{pos3:B5_POS3,pos1:B5_POS1,openMidi:b5OpenMidi,semiToPos:b5SemiToPos,sol:b5SolOf,nm:b5NoteName,open:b5OpenSession,fixClick:b5FixClick,polClick:b5PolishClick,polNew:b5PolishNewQ,skip:b5PolishSkip,auto:b5AutoFinish,record:b5RecordBall,finish:b5FinishSw,paper:b5PaperSVG},
- b6:{step:revStep,work:revWorkIndex,n:revN,stepDeg:revStepDeg,laser:revLaserClick,beam:beamFx}}; // v36B6(V21教训:新函数必须暴露才能 TB 测)
+ b6:{step:revStep,work:revWorkIndex,n:revN,stepDeg:revStepDeg,laser:revLaserClick,beam:beamFx}, // v36B6(V21教训:新函数必须暴露才能 TB 测)
+ b7:{roll:b7Roll,cap:keyCapOf,left:b7Left,tap:b7Tap,pool:b7Pool,genQ:b7GenQ,board:b7BoardTable,fused:B5_FUSED,dual:B7_DUAL_SET,pend:b7PendingOf,stash:b7StashCur,openPack:b7OpenPack,dbg:b7DbgRender,retry:b7RetryTired,sw:b5SW,rr:b7RerenderFix}}; // v36B7(V21教训:新函数必须暴露才能 TB 测)
 
 /* ================= 启动 ================= */
 buildLanes();
@@ -2989,6 +3226,10 @@ mk('btn-quest','📋 任务板');
  $('btn-quest').onclick=openQuest;$('q-close').onclick=()=>$('q-modal').classList.remove('on');
  $('btn-fix-replay').onclick=()=>{if(!S.fix)return;if(S.fix.mode==='fix')b5ReplayCur();else if(S.fix.pol)S.fix.pol.q.forEach((m,i)=>catPlay(m,.12+i*.4))}; // v36B5:维修=重播当前黑球题/美化=重播当前题
  $('btn-polish-skip').onclick=b5PolishSkip; // v36B5:跳过美化(纯视觉,不锁流程)
+ $('btn-fix-stash').onclick=b7StashCur; // v36B7:R5先收着(带现状入箱+pending,箱内回修)
+ $('dbg-fab').onclick=()=>{const p=$('dbg-panel'),on=p.classList.toggle('on');if(on)b7DbgRender()}; // v36B7:R7 debug 面板(常显🐞钮)
+ $('dbg-close').onclick=()=>$('dbg-panel').classList.remove('on');
+ b7DbgRender(); // 启动预渲染:面板内容常驻,任何开关状态/前段残态都不会出现「面板on但按钮未渲染」
  mk('btn-opt',t('opt'));
  $('btn-opt').onclick=openOpts;
  applySettings();openMenu();refreshMenuState();

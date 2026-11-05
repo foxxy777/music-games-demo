@@ -1345,11 +1345,11 @@ function instAvail(){if(INST.cur==='synth'||!INST.def)return null;const f=INST.d
 async function loadManifest(){
  try{const r=await fetch('../assets/v21/samples/manifest.json');if(!r.ok)return;INST.def=await r.json();buildInstGrid()}catch(e){}
 }
-async function loadVoice(){ // 人声音色库(大爷00:27令):27音母本(xstudio_split_new)转mp3;白键do~si′全,do″缺→电子音兕底
+async function loadVoice(){ // v36C:人声唱名库自包含化——工作区assets/voice/15白键mp3(AI歌手do~si′,音高已双方法验证,字节级复制);fetch失败/缺文件→.catch静默→电子音兜底(语义不变)
  if(INST.bank.voice)return INST.bank.voice;
  if(INST.loading)return null;
  INST.loading='voice';const set={};
- await Promise.all([60,62,64,65,67,69,71,72,74,76,77,79,81,83,84].map(m=>fetch('../assets/v23/voice/voice_m'+m+'.mp3').then(r=>r.arrayBuffer()).then(b=>au().decodeAudioData(b)).then(buf=>{set[m]=buf}).catch(()=>{})));
+ await Promise.all([60,62,64,65,67,69,71,72,74,76,77,79,81,83,84].map(m=>fetch('assets/voice/voice_m'+m+'.mp3').then(r=>r.arrayBuffer()).then(b=>au().decodeAudioData(b)).then(buf=>{set[m]=buf}).catch(()=>{})));
  INST.loading=null;
  if(Object.keys(set).length)INST.bank.voice=set;
  return INST.bank.voice||null;
@@ -2015,17 +2015,27 @@ function swordBreakFx(){
 }
 
 /* ================= 题目 ================= */
-function genQuestion(){ // v36B6:题目音数=转盘碟数档(3碟=3音题默认/5碟=5音题升级档;美化台复用出题器同口径)
- const span=curSpan();let pool=NOTES.slice(0,span);
+function genQuestion(nb){ // v36B6:题目音数=转盘碟数档(3碟=3音题默认/5碟=5音题升级档);v36C:nb={len,span}=新档究极简单门控覆盖,仅主链路genQuizQ传入——裸调/缺省=现行曲线(TB直调断言口径不变)
+ const span=(nb&&nb.span)||curSpan();let pool=NOTES.slice(0,span);
  const av=instAvail();if(av){const f=pool.filter(n=>av.has(n.m));if(f.length>=4)pool=f} // 乐器缺音时只在可用音内出题
  const q=[];let prev=-1;
- for(let i=0;i<revN();i++){
+ for(let i=0;i<((nb&&nb.len)||revN());i++){
   let idx;
   if(prev<0)idx=Math.floor(Math.random()*pool.length);
   else{const step=[-2,-1,-1,0,0,1,1,2,3][Math.floor(Math.random()*9)];idx=Math.min(pool.length-1,Math.max(0,prev+step));if(idx===prev&&Math.random()<.7)idx=Math.min(pool.length-1,Math.max(0,idx+(Math.random()<.5?1:-1)));}
   q.push(idx);prev=idx;
  }
  return q;
+}
+function genQuizQ(){ // v36C初始难度究极简单:S.nq=新档已出题数,只在角色选择开新档清0(game-over重开符坊/读档不重置=熟手不再降难);老档loadGame回填9999→梯度关闭·难度行为与改动前完全一致;梯度:题1~5单音符C4~G4→6~8双音符C4~G4→9~10双音符七声C4~B4→11~12现行题长·七声→题13+全现行曲线(红线:新档第1题必单音符且∈C4~G4)
+ const live=typeof S.nq==='number'&&S.nq<9000;
+ const nq=live?S.nq++:9999; // 出题即计数(取旧值;老兵计数不消耗不写档)
+ const nb=nq>=12?null
+  :nq<5?{len:1,span:5}
+  :nq<8?{len:2,span:5}
+  :nq<10?{len:2,span:7}
+  :{len:revN(),span:7};
+ return genQuestion(nb);
 }
 function renderSlots(state){
  const box=$('slots');box.innerHTML='';
@@ -2060,10 +2070,15 @@ function revealEye(){ // 👁️先知之眼(大爷00:34令):听题时第一个�
  if(!lane)return;
  const t=document.createElement('div');t.className='eye-hint';t.textContent='👁️① '+NOTES[S.q[0]].n;
  lane.appendChild(t);}
+function playQVoice(m,when,vol){ // v36C:出题音人声优先(听题/重播同链路)——已加载唱名buffer直放;缺buffer→catPlay原链兜底(武器乐器音色/电子音,乐器逻辑零动)
+ const v=INST.bank.voice;
+ if(v&&v[m]){const c=au(),t=c.currentTime+when,s=c.createBufferSource(),g=c.createGain();
+  g.gain.setValueAtTime(.85*(vol||1),t);s.buffer=v[m];s.connect(g);g.connect(c.destination);s.start(t);return}
+ catPlay(m,when,vol)}
 function playQuestion(){
  S.phase='playing';S.pos=0;S.revealed=false;S.marks=[];S.typed=[];S.qMiss=0;hud();renderSlots(); // qMiss 每题重置(大爷21:55令)
  document.querySelectorAll('.eye-hint').forEach(e=>e.remove());
- S.q.forEach((ni,i)=>catPlay(NOTES[ni].m,.16+i*.46));
+ S.q.forEach((ni,i)=>playQVoice(NOTES[ni].m,.16+i*.46));
  const total=.16+S.q.length*.46+.3;
  setTimeout(()=>{if(S.phase!=='playing')return;S.phase='input';renderSlots();revealEye();
   S.inputGraceUntil=Date.now()-S.frenzyEnd<3500?Date.now()+1200:0; // 超神余波宽限(大爷22:29令):狂点惯性期错判不罚
@@ -2335,7 +2350,7 @@ function afterBatch(){
   else checkDayEnd();
   return}
  S.phase='busy';hud();
- setTimeout(()=>{if(S.phase==='busy'){S.q=genQuestion();playQuestion()}},420);
+ setTimeout(()=>{if(S.phase==='busy'){S.q=genQuizQ();playQuestion()}},420);
 }
 
 /* ================= 超神(Frenzy) ================= */
@@ -2371,7 +2386,7 @@ function endFrenzy(){
  S.pendingQuench=false;
  hud();
  // 超神结束不触发大结算,直接回正常循环:重新出题(大爷21:34令);砧空箱空则收工指路商人(v36B2:每题轮盘已即兑)
- if(S.anvils.length){S.phase='busy';setTimeout(()=>{if(S.phase==='busy'){S.q=genQuestion();playQuestion()}},420)}
+ if(S.anvils.length){S.phase='busy';setTimeout(()=>{if(S.phase==='busy'){S.q=genQuizQ();playQuestion()}},420)}
  else if(S.chest.length){S.phase='idle';$('quiz-hint').textContent='拖符坯上案开画'}
  else checkDayEnd()
 }
@@ -2919,6 +2934,7 @@ function loadGame(){
  S.ins=(S.ins&&S.ins.form>=0&&S.ins.form<=2)?{form:S.ins.form|0,view:S.ins.view===1?1:0}:{form:0,view:0}; // v36B7:乐器形态缺省初阶三把位(脏值兜底)
  S.kfat=(S.kfat&&S.kfat.day===S.day&&S.kfat.keys&&typeof S.kfat.keys==='object')?S.kfat:{day:S.day,keys:{},notes:{}}; // v36B7:键位疲劳(缺省/dateKey翻天→清空,R2过夜恢复)
  if(!S.kfat.notes||typeof S.kfat.notes!=='object')S.kfat.notes={};
+ if(typeof S.nq!=='number')S.nq=9999; // v36C:老档(无nq字段)回填老兵计数→新档难度梯度整体关闭,出题难度与改动前完全一致(经济/技能树零触碰)
  (S.anvils||[]).forEach(sw=>{ // v36B5老档回填(拍板二选一之「底稿态重画」):在画符未记录的题槽=底稿draft(qDone进度保留,draft不罚卖价)
   if(!Array.isArray(sw.balls))sw.balls=Array.from({length:sw.qDone||0},()=>({st:'draft'}));
  });
@@ -2952,7 +2968,7 @@ function showCharSelect(){
  $('ov-body').innerHTML='<div class="char-row">'+CHARS.map((c,i)=>'<div class="char-card'+(c.lock?' locked':'')+'" data-i="'+i+'">'+(c.lock?'<div class="char-lock">🔒</div>':'')+'<div class="char-emoji">'+c.emoji+'</div><div class="char-name">'+c.name+'</div><div class="char-desc">'+(c.lock?'？？？':c.desc)+'</div></div>').join('')+'</div>';
  [...$('ov-body').querySelectorAll('.char-card')].forEach(el=>{el.onclick=()=>{const c=CHARS[+el.dataset.i];
   if(c.lock){toast('🔒 '+c.name+' 尚未解锁',1600);return}
-  S.char=c.id;hideOverlay();restart();closeMenu();refreshMenuState();toast('⚔️ 已选择:'+c.name+' '+c.emoji,1800)}});
+  S.char=c.id;hideOverlay();restart(true);closeMenu();refreshMenuState();toast('⚔️ 已选择:'+c.name+' '+c.emoji,1800)}}); // v36C:restart(true)=全新开局清nq(究极简单梯度起点;game-over重开符坊/restart复位不传→熟手难度不回退)
 }
 document.getElementById('btn-menu-start').onclick=()=>{
  if(hasSave()){showOverlay('red','\uD83C\uDFAE',(LANG==='en'?'Start a new run? Your current save will be overwritten.':'\u5F00\u65B0\u6863\u4F1A\u8986\u76D6\u73B0\u6709\u5B58\u6863,\u786E\u5B9A?'),'',[
@@ -3098,7 +3114,7 @@ function gameOver(){
   `坊市管事收回了摊位…<br>制成 <b>${S.forged}</b> 张符 · 身家 <b>🪙${S.gold}</b><br>正确率 <b>${acc}%</b>(${S.totHits}/${S.totStrikes}) · 超神 <b>${S.frenzies}</b> 次<br>最高制到 <b>${SWORDS[S.tier].name}</b><br>🌳 遗产分 <b>+${legacy}</b> 已入账(开始菜单·功法)`,
   [{label:'🔥 重开符坊',cls:'gold',fn:()=>{hideOverlay();restart()}}]);
 }
-function restart(){
+function restart(newRun){ // v36C:newRun=true=角色选择全新开局→已出题计数nq=0(究极简单梯度起点);game-over「重开符坊」/TB裸restart复位→nq=9999老兵口径(难度不回退,与改动前行为等价)
  S.tier=0;S.value=0;S.potential=0;S.charge=0;S.gold=0;S.forged=0;S.frenzies=0;S.qCount=0;S.charms={};
  S.totHits=0;S.totStrikes=0;S.hits=0;S.strikes=0;S.dmgLv=0;
  S.roleLv=1;S.dayLog=[];S.day=1;S.mode='forge';S.pack=[];S.counter=[];S.forgeEnded=false;S.soldCnt=0;$('shop').classList.remove('on');
@@ -3111,7 +3127,7 @@ function restart(){
  $('fix-modal').classList.remove('on');
  S.ins={form:0,view:0};S.kfat={day:1,keys:{},notes:{}}; // v36B7:新档=初阶三把位+键池满/已用音空
  S.up={anvil:0,sword:0,armor:0,bow:0,wand:0,shield:0,artSlot:0,rev5:0,ins1:0,insF:0,keyT:0};S.anvils=[];syncFocus();renderRack();
- S.qDay=0;S.qBoard={};S.qActive={};renderQStrip();
+ S.qDay=0;S.qBoard={};S.qActive={};S.nq=newRun?0:9999;renderQStrip(); // v36C:全新开局nq清0走新档梯度;裸restart=9999老兵(难度零回退)
  S.chest=[{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'}];renderChest();
  S.frenzyActive=false;S.pendingQuench=false;app.classList.remove('frenzy');
  clearInterval(S.frenzyTimer);
@@ -3144,7 +3160,7 @@ function startForge(){
  S.anvils=[];syncFocus();S.phase='idle';hud();updateSword();renderRack();
  $('quiz-hint').textContent='点符案左侧「🔨 开始制符」把符坯上案开画';
 }
-function nextQuestion(){S.q=genQuestion();S.pos=0;S.revealed=false;S.marks=[];playQuestion()}
+function nextQuestion(){S.q=genQuizQ();S.pos=0;S.revealed=false;S.marks=[];playQuestion()}
 $('btn-listen').onclick=()=>{ // v31:砧板左侧大钮=原顶部「开始铸造」+「重听」合并
  if(S.phase==='over')return;
  if(S.phase==='input'){ // 重听当前题:保留输入状态重播(原 btn-replay 逻辑)
@@ -3213,6 +3229,7 @@ window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,m
 /* ================= 启动 ================= */
 buildLanes();
 loadManifest();
+loadVoice(); // v36C:人声唱名库开机即预载(挂后台不挡菜单;单文件失败静默→该音电子音兜底,出题链playQVoice优先消费)
 /* 昼夜循环按钮注入+HUD覆盖(大爷17:08令) */
 (function(){
  const hudBox=$('hud');

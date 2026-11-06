@@ -626,6 +626,64 @@ body{overflow:hidden}
 #dbg-forms{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;align-items:end}
 #dbg-forms .dbg-b{text-align:center;padding:4px 2px}
 #dbg-acts{display:flex;flex-direction:column;gap:5px}
+/* ===== NIGHT D1 夜间出行(搜打撤MVP):全屏overlay冻结白天界面·z=310(压菜单300/维修255,低于选项340) ===== */
+#night-ov{position:absolute;inset:0;z-index:310;display:none;flex-direction:column;background:radial-gradient(1100px 800px at 50% 18%,#121c40 0%,#0a1128 55%,#05070f 100%);color:#dfe6ff;cursor:auto}
+#night-ov.on{display:flex}
+#night-top{display:flex;align-items:center;gap:14px;padding:10px 18px;background:#0a1128d9;border-bottom:1px solid #26305c;flex-wrap:wrap}
+#night-title{font-size:18px;font-weight:bold;color:#ffd88a;text-shadow:0 0 8px #000;white-space:nowrap}
+.ntag{font-size:13px;padding:3px 12px;border-radius:14px;border:1px solid #33406f;background:#131c3d;white-space:nowrap}
+.ntag b{font-size:16px;color:#fff}
+#night-stat-ap b{color:#8fd0ff}#night-stat-cd b{color:#ffd88a}
+#night-legend{margin-left:auto;font-size:12px;color:#8b96c4;display:flex;gap:12px;align-items:center;white-space:nowrap}
+.leg-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.leg-b{background:#5aa7e8;box-shadow:0 0 6px #5aa7e8}.leg-p{background:#b07fe8;box-shadow:0 0 6px #b07fe8}.leg-o{background:#e8a24a;box-shadow:0 0 6px #e8a24a}
+#night-toast{position:absolute;top:58px;left:50%;transform:translateX(-50%);z-index:20;max-width:520px;padding:8px 16px;background:#1a2445;color:#dfe6ff;border:1px solid #4d8bd6;border-radius:12px;font-size:14px;font-weight:bold;box-shadow:0 4px 16px #000a;opacity:0;pointer-events:none;transition:.22s}
+#night-toast.on{opacity:1}
+#night-main{flex:1;display:flex;min-height:0;padding:12px 14px 14px;gap:12px}
+#night-map{position:relative;flex:1;border:1px solid #26305c;border-radius:14px;background:linear-gradient(180deg,#0c1430,#070c1d);overflow:hidden}
+#night-map::after{content:'✦ ☄ ✦  ✦   ✦ ☄✦  ✦';position:absolute;left:4%;top:6%;color:#3d4a8633;font-size:14px;letter-spacing:26px;pointer-events:none}
+#night-svg{position:absolute;inset:0;width:100%;height:100%}
+#night-svg line{stroke:#3d4a86;stroke-width:2;stroke-dasharray:7 6;opacity:.6}
+#night-svg line.n-edge-lit{stroke:#ffd88a;opacity:.95;stroke-dasharray:none;filter:drop-shadow(0 0 3px #ffd88a88)}
+.n-node{position:absolute;transform:translate(-50%,-50%);width:94px;text-align:center;cursor:pointer;user-select:none;z-index:2}
+.n-dot{width:30px;height:30px;border-radius:50%;margin:0 auto;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:14px;background:#111a38;transition:.18s;position:relative}
+.n-tier-blue .n-dot{border-color:#5aa7e8;box-shadow:0 0 9px #5aa7e866}
+.n-tier-purple .n-dot{border-color:#b07fe8;box-shadow:0 0 9px #b07fe866}
+.n-tier-orange .n-dot{border-color:#ffb454;box-shadow:0 0 11px #e8a24aaa}
+.n-home .n-dot{width:40px;height:40px;font-size:20px;border-color:#7fe8a4;box-shadow:0 0 13px #7fe8a488;background:#0f2418}
+.n-cur .n-dot{transform:scale(1.24);border-width:3px}
+.n-adj .n-dot{animation:nightPulse 1.5s ease-in-out infinite}
+@keyframes nightPulse{0%,100%{box-shadow:0 0 6px #ffffff22}50%{box-shadow:0 0 16px #ffffff77}}
+.n-nm{font-size:12px;line-height:1.2;margin-top:4px;color:#aab4df;text-shadow:0 1px 3px #000}
+.n-sub{font-size:10px;color:#66719e}
+.n-cur .n-nm{color:#ffe9b0;font-weight:bold}
+.n-node.n-done .n-dot{opacity:.45;filter:grayscale(.75)}
+#night-side{width:292px;display:flex;flex-direction:column;gap:10px;min-height:0}
+.ns-card{border:1px solid #26305c;background:#0d1531e0;border-radius:12px;padding:10px 12px}
+#night-cur-name{font-size:16px;font-weight:bold;color:#ffe9b0}
+#night-cur-info{font-size:12px;color:#8b96c4;margin-top:4px;line-height:1.55}
+#night-open-btn{width:100%;margin-top:8px}
+#night-open-btn:disabled,#night-home-btn:disabled{opacity:.4;cursor:not-allowed}
+#night-haul-cap{font-size:13px;font-weight:bold;color:#c9d4f5}
+#night-haul-list{flex:1;overflow:auto;min-height:56px;margin-top:6px;font-size:13px;line-height:1.8}
+.nh-row{display:flex;gap:6px;align-items:center}
+.nh-cat-money{color:#ffd88a}.nh-cat-sup{color:#9fe8b8}.nh-cat-mat{color:#9fbfff}
+.nh-el{font-size:11px;color:#66719e;margin-left:4px}
+.nh-empty{color:#5a6590;font-size:12px}
+#night-rule{font-size:11px;color:#7c88b8;line-height:1.55;margin-top:8px;border-top:1px dashed #26305c;padding-top:8px}
+#night-settle{position:absolute;inset:0;z-index:12;display:none;align-items:center;justify-content:center;background:#05070fd9}
+#night-settle.on{display:flex}
+#night-settle-card{width:540px;max-height:80%;overflow:auto;border:2px solid #33406f;border-radius:16px;background:#0d1531;padding:20px 26px}
+#ns-title{font-size:20px;font-weight:bold;text-align:center;color:#ffe9b0}
+#ns-banner{margin:12px 0;padding:10px 14px;border-radius:10px;font-weight:bold;text-align:center;font-size:15px;line-height:1.5}
+#ns-banner.safe{background:#0f2a1a;border:1px solid #2f7f4f;color:#8fe8ae}
+#ns-banner.lost{background:#3a0f14;border:1px solid #a04050;color:#ff9fae}
+#ns-list{font-size:14px;line-height:1.9}
+.ns-line{display:flex;justify-content:space-between}
+.ns-line.ns-lost span{text-decoration:line-through;opacity:.55}
+#ns-total{border-top:1px dashed #33406f;margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;font-weight:bold;color:#ffd88a}
+#ns-notes{margin-top:10px;font-size:12px;color:#8b96c4;line-height:1.7}
+#ns-back{margin-top:14px;width:100%}
 </style>
 </head>
 <body>
@@ -852,6 +910,41 @@ body{overflow:hidden}
     <div id="ov-title"></div>
     <div id="ov-body"></div>
     <div id="ov-btns"></div>
+  </div>
+  <!-- NIGHT D1 夜间出行overlay(搜打撤MVP):全屏覆盖=白天界面冻结·静态文案由nightApplyLang按语言落位 -->
+  <div id="night-ov">
+   <div id="night-top">
+    <span id="night-title"></span>
+    <span class="ntag" id="night-stat-ap"></span>
+    <span class="ntag" id="night-stat-cd"></span>
+    <span class="ntag" id="night-stat-at"></span>
+    <span id="night-legend"></span>
+    <button class="btn gold" id="night-home-btn"></button>
+   </div>
+   <div id="night-main">
+    <div id="night-map"><svg id="night-svg"></svg></div>
+    <div id="night-side">
+     <div class="ns-card">
+      <div id="night-cur-name"></div>
+      <div id="night-cur-info"></div>
+      <button class="btn" id="night-open-btn" style="display:none"></button>
+     </div>
+     <div class="ns-card" style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div id="night-haul-cap"></div>
+      <div id="night-haul-list"></div>
+      <div id="night-rule"></div>
+     </div>
+    </div>
+   </div>
+   <div id="night-toast"></div>
+   <div id="night-settle"><div id="night-settle-card">
+    <div id="ns-title"></div>
+    <div id="ns-banner"></div>
+    <div id="ns-list"></div>
+    <div id="ns-total"></div>
+    <div id="ns-notes"></div>
+    <button class="btn gold" id="ns-back"></button>
+   </div></div>
   </div>
 </div></div>
 <script>
@@ -2854,8 +2947,19 @@ function renderSkillTree(){
 }
 /* ================= 开始菜单+选项(大爷00:43令) ================= */
 const I18N={
- zh:{cal:'\uD83D\uDCC5 \u65E5\u5386',upg:'\uD83C\uDFD7\uFE0F 升级工坊',skill:'\uD83C\uDF33 功法',endf:'结束制符',day2:'\uD83D\uDED2 \u7B2C\u4E8C\u5929\u00B7\u5546\u4EBA',quest:'\uD83D\uDCCB \u4EFB\u52A1\u677F',opt:'\u2699\uFE0F \u9009\u9879',mstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',mmod:'\uD83E\uDE9B Mod \u5DE5\u574A',mopt:'\u2699\uFE0F \u9009\u9879',mst:'\uD83C\uDF33 功法',mtitle:'符箓工坊 · 制符听音',msub:'听音高 · 画灵符 · 交清摊租',res:'\u5206\u8FA8\u7387',lang:'\u8BED\u8A00',optt:'\u9009\u9879',gstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',gcont:'\u25B6\uFE0F \u7EE7\u7EED\u6E38\u620F',mquit:'\uD83D\uDEAA \u9000\u51FA',ptitle:'\u6682\u505C',presume:'\u25B6\uFE0F \u6062\u590D\u6E38\u620F',psave:'\uD83D\uDCBE \u4FDD\u5B58',pload:'\uD83D\uDCC2 \u52A0\u8F7D',phome:'\uD83C\uDFE0 \u8FD4\u56DE\u4E3B\u83DC\u5355',nosave:'\u6682\u65E0\u5B58\u6863',rfw:'刷新摊架',snark:'\u5410\u69FD',pot:'🍲 五碟',rev:'🔫 五行转盘',revHint:'点/拖底箱粉末装转盘 · 每答完一题转一格 · 答题中锁定 · 空碟=五元素等权 · 开局赠三碟一品火粉',revLock:'答题中不能动转盘——等这题答完',revIsFull:'转盘已装满',revDishUnit:'碟',revLoaded:'已装入转盘',revTakeBack:'点击取回底箱',revDishWork:'工作位:点/拖底箱粉末装入',revDishEmpty:'空碟(五元素等权)',revPrep:'转盘还有空碟——备料装满再开画更稳(空碟=五元素等权)',upgRev5:'转盘扩容·5碟',upgRev5D:'左轮转盘3碟→5碟:出题改5音题,5碟同转注入(7碟档数据预留)',upgRev5Done:'转盘扩容到5碟!出题改5音题',dockHead:'🧰 工具箱 · 符坯直接拖上符案 · 点/拖粉末装转盘',wheel:'🌀 五行轮',spx:'📖 法术图鉴',b5fix:'🩹 符纹修复器 · 修补黑球',b5polish:'✨ 符纹修饰 · 弦音纹样',b5fixHint:'按大字唱名序列顺序点弦音键修补黑球——每球一击制:点错任意键=判错保持黑(卖价-20%),4音全点对=镀金(卖价-5%);弦音键每日次数有限,点灰过一夜恢复',b5polHint:'按唱名序列顺序点对 3 音,为符面添金边纹样(纯视觉不改卖价);答错换新题重试(耗新键),与修补共享键池,也可跳过',b5replay:'🔊 重播',b5skip:'⏭ 跳过美化',b5fixStep:'黑球',b5polished:'美化完成!',b5fixok:'修补成功·镀金',b5fixno:'一击未中·保持黑',b5free:'纯视觉·不改卖价',b5retry:'美化失手——重出一题(无限重试)',b5skipdone:'已跳过美化(纯视觉,不影响卖价)',b7keyLeft:'今日剩余 {n} 次',b7keyOut:'今日已用尽·明晨恢复',b7stash:'📥 先收着',b7stashed:'已先收着——黑球保留,箱子里点它继续修',b7tired:'弦音键疲劳:今日可用弦音不足——点「先收着」入箱,明日键池恢复再来',b7tiredS:'键位疲劳',b7busy:'答题/结算中——等这题完了再修',b7packdone:'箱内修补完成!',b7mend:'🔧修',b7adorn:'✨饰',b7pendTitle:'待修补/待修饰:点一下进符纹修复器继续',b7tab3:'三把位弦音区',b7tab1:'一把位弦音区',b7tabF:'天工融合板(✦=并板键·每日次数取两板之和)',upgIns1:'进阶弦音器',upgIns1D:'符纹修复器加装一把位板:修复/美化双板并列(弦音键15→30),形态标签切换显示(修复默认三把位/美化默认一把位)',upgIns1Done:'双板并列装联!键池30弦音键',upgInsF:'天工融合核',upgInsFD:'双板融合为一张完整弦纹板:重复音位并板为单键(✦,每日次数取两板之和),全板每键每日+1次(前置:进阶弦音器)',upgInsFDone:'天工融合!并板键✦双倍次数+全板每日+1',upgKeyT:'键位淬炼',upgKeyTD:'每键每日可点次数+1/级·全形态生效(键位疲劳扩容)',upgKeyTDone:'每键每日+1次',b7needPre:'前置:进阶弦音器',b7formOn:'双板并列',b7formFOn:'融合板',b7formOff:'未装',dbgTitle:'🐞 Debug 面板',dbgWarn:'⚠️ debug 操作会写入存档(测试污染)',dbgForm:'乐器形态',b7f0:'初阶·三把位',b7f1:'进阶·双板',b7f2:'终阶·融合',dbgResetKeys:'键池重置(当日疲劳清零)',dbgResetNotes:'已用音清零'},
- en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'End Crafting',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83C\uDFAE New Game',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mst:'\uD83C\uDF33 Skill Tree',mtitle:'Talisman Workshop \u00B7 Runes by Ear',msub:'Hear the pitch \u00B7 Draw the talisman \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options',gstart:'\uD83C\uDFAE New Game',gcont:'\u25B6\uFE0F Continue',mquit:'\uD83D\uDEAA Quit',ptitle:'Paused',presume:'\u25B6\uFE0F Resume',psave:'\uD83D\uDCBE Save',pload:'\uD83D\uDCC2 Load',phome:'\uD83C\uDFE0 Main Menu',nosave:'No save yet',rfw:'Refresh',snark:'Snark',pot:'🍲 Five Dishes',rev:'🔫 Elemental Revolver',revHint:'Click/drag powders from the chest to load · one slot-step per answered question · locked while answering · empty dish = five elements equal weight · starts with 3 dishes of grade-1 fire powder',revLock:'Revolver is locked mid-question — wait for it to end',revIsFull:'Revolver is full',revDishUnit:' dishes',revLoaded:'Loaded into revolver',revTakeBack:'click to return to chest',revDishWork:'Working slot: click/drag powder from the chest',revDishEmpty:'Empty dish (five elements equal weight)',revPrep:'The revolver still has empty dishes — load up before forging for a steadier mix (empty = equal weight)',upgRev5:'Revolver · 5 Dishes',upgRev5D:'Revolver 3 → 5 dishes: questions become 5 notes; the 7-dish tier is reserved for later.',upgRev5Done:'Revolver expanded to 5 dishes — questions now 5 notes!',dockHead:'🧰 Chest · drag blanks onto the anvil · click/drag powder into the revolver',wheel:'🌀 Wheels',spx:'📖 Spell Codex',b5fix:'🩹 Rune Mender · Mend Black Balls',b5polish:'✨ Rune Polish · String Flourish',b5fixHint:'Play the solfège sequence in order on the string keys to mend a black ball — one strike: any wrong key fails it (stays black, sell -20%); all 4 right = gilded (sell -5%). Keys tire daily; they recover overnight.',b5polHint:'Play the 3-note solfège in order for the gold-frame flourish (visual only, no price change). Wrong key = new question (fresh keys); shares the daily key pool with mending. Skippable.',b5replay:'🔊 Replay',b5skip:'⏭ Skip Polish',b5fixStep:'Black ball',b5polished:'Polished!',b5fixok:'Mended · gilded',b5fixno:'Missed · stays black',b5free:'visual only · no price change',b5retry:'Missed — new question (unlimited retries)',b5skipdone:'Polish skipped (visual only, no price impact)',b7keyLeft:'{n} left today',b7keyOut:'Exhausted today · recovers at dawn',b7stash:'📥 Stash It',b7stashed:'Stashed — black balls kept; click it in the chest to resume mending',b7tired:'Key fatigue: not enough fresh notes today — stash it and come back tomorrow when the pool recovers.',b7tiredS:'Keys tired',b7busy:'Mid-question / settling — mend it afterwards',b7packdone:'mended in chest!',b7mend:'🔧Fix',b7adorn:'✨Polish',b7pendTitle:'Pending: click to resume in the Rune Mender',b7tab3:'3rd-Position Zone',b7tab1:'1st-Position Zone',b7tabF:'Heavenly Fused Board (✦ = merged key · daily allowance sums both boards)',upgIns1:'Advanced Stringbox',upgIns1D:'Adds a 1st-position board to the Rune Mender: dual boards for mending/polish (15→30 string keys), switch via form tabs (mending defaults 3rd, polish 1st).',upgIns1Done:'Dual boards online! 30-key pool',upgInsF:'Heavenly Fusion Core',upgInsFD:'Fuses both boards into one full board: shared positions become merged keys (✦, daily allowance sums both boards) and every key gains +1 daily tap (requires Advanced Stringbox).',upgInsFDone:'Heavenly fusion! ✦ merged keys doubled + all keys +1',upgKeyT:'Key Quenching',upgKeyTD:'+1 tap per key per day per level · all forms (key-fatigue expansion)',upgKeyTDone:'+1 tap/key/day',b7needPre:'Requires Advanced Stringbox',b7formOn:'dual boards',b7formFOn:'fused board',b7formOff:'not installed',dbgTitle:'🐞 Debug Panel',dbgWarn:'⚠️ debug actions write to the save (test pollution)',dbgForm:'Instrument form',b7f0:'Basic · 3rd Pos',b7f1:'Advanced · Dual',b7f2:'Final · Fused',dbgResetKeys:'Reset key pool (daily fatigue cleared)',dbgResetNotes:'Clear used notes'}};
+ zh:{cal:'\uD83D\uDCC5 \u65E5\u5386',upg:'\uD83C\uDFD7\uFE0F 升级工坊',skill:'\uD83C\uDF33 功法',endf:'结束制符',day2:'\uD83D\uDED2 \u7B2C\u4E8C\u5929\u00B7\u5546\u4EBA',quest:'\uD83D\uDCCB \u4EFB\u52A1\u677F',opt:'\u2699\uFE0F \u9009\u9879',mstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',mmod:'\uD83E\uDE9B Mod \u5DE5\u574A',mopt:'\u2699\uFE0F \u9009\u9879',mst:'\uD83C\uDF33 功法',mtitle:'符箓工坊 · 制符听音',msub:'听音高 · 画灵符 · 交清摊租',res:'\u5206\u8FA8\u7387',lang:'\u8BED\u8A00',optt:'\u9009\u9879',gstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',gcont:'\u25B6\uFE0F \u7EE7\u7EED\u6E38\u620F',mquit:'\uD83D\uDEAA \u9000\u51FA',ptitle:'\u6682\u505C',presume:'\u25B6\uFE0F \u6062\u590D\u6E38\u620F',psave:'\uD83D\uDCBE \u4FDD\u5B58',pload:'\uD83D\uDCC2 \u52A0\u8F7D',phome:'\uD83C\uDFE0 \u8FD4\u56DE\u4E3B\u83DC\u5355',nosave:'\u6682\u65E0\u5B58\u6863',rfw:'刷新摊架',snark:'\u5410\u69FD',pot:'🍲 五碟',rev:'🔫 五行转盘',revHint:'点/拖底箱粉末装转盘 · 每答完一题转一格 · 答题中锁定 · 空碟=五元素等权 · 开局赠三碟一品火粉',revLock:'答题中不能动转盘——等这题答完',revIsFull:'转盘已装满',revDishUnit:'碟',revLoaded:'已装入转盘',revTakeBack:'点击取回底箱',revDishWork:'工作位:点/拖底箱粉末装入',revDishEmpty:'空碟(五元素等权)',revPrep:'转盘还有空碟——备料装满再开画更稳(空碟=五元素等权)',upgRev5:'转盘扩容·5碟',upgRev5D:'左轮转盘3碟→5碟:出题改5音题,5碟同转注入(7碟档数据预留)',upgRev5Done:'转盘扩容到5碟!出题改5音题',dockHead:'🧰 工具箱 · 符坯直接拖上符案 · 点/拖粉末装转盘',wheel:'🌀 五行轮',spx:'📖 法术图鉴',b5fix:'🩹 符纹修复器 · 修补黑球',b5polish:'✨ 符纹修饰 · 弦音纹样',b5fixHint:'按大字唱名序列顺序点弦音键修补黑球——每球一击制:点错任意键=判错保持黑(卖价-20%),4音全点对=镀金(卖价-5%);弦音键每日次数有限,点灰过一夜恢复',b5polHint:'按唱名序列顺序点对 3 音,为符面添金边纹样(纯视觉不改卖价);答错换新题重试(耗新键),与修补共享键池,也可跳过',b5replay:'🔊 重播',b5skip:'⏭ 跳过美化',b5fixStep:'黑球',b5polished:'美化完成!',b5fixok:'修补成功·镀金',b5fixno:'一击未中·保持黑',b5free:'纯视觉·不改卖价',b5retry:'美化失手——重出一题(无限重试)',b5skipdone:'已跳过美化(纯视觉,不影响卖价)',b7keyLeft:'今日剩余 {n} 次',b7keyOut:'今日已用尽·明晨恢复',b7stash:'📥 先收着',b7stashed:'已先收着——黑球保留,箱子里点它继续修',b7tired:'弦音键疲劳:今日可用弦音不足——点「先收着」入箱,明日键池恢复再来',b7tiredS:'键位疲劳',b7busy:'答题/结算中——等这题完了再修',b7packdone:'箱内修补完成!',b7mend:'🔧修',b7adorn:'✨饰',b7pendTitle:'待修补/待修饰:点一下进符纹修复器继续',b7tab3:'三把位弦音区',b7tab1:'一把位弦音区',b7tabF:'天工融合板(✦=并板键·每日次数取两板之和)',upgIns1:'进阶弦音器',upgIns1D:'符纹修复器加装一把位板:修复/美化双板并列(弦音键15→30),形态标签切换显示(修复默认三把位/美化默认一把位)',upgIns1Done:'双板并列装联!键池30弦音键',upgInsF:'天工融合核',upgInsFD:'双板融合为一张完整弦纹板:重复音位并板为单键(✦,每日次数取两板之和),全板每键每日+1次(前置:进阶弦音器)',upgInsFDone:'天工融合!并板键✦双倍次数+全板每日+1',upgKeyT:'键位淬炼',upgKeyTD:'每键每日可点次数+1/级·全形态生效(键位疲劳扩容)',upgKeyTDone:'每键每日+1次',b7needPre:'前置:进阶弦音器',b7formOn:'双板并列',b7formFOn:'融合板',b7formOff:'未装',dbgTitle:'🐞 Debug 面板',dbgWarn:'⚠️ debug 操作会写入存档(测试污染)',dbgForm:'乐器形态',b7f0:'初阶·三把位',b7f1:'进阶·双板',b7f2:'终阶·融合',dbgResetKeys:'键池重置(当日疲劳清零)',dbgResetNotes:'已用音清零',
+/* NIGHT D1 夜间出行 */
+nightBtn:'🌙 夜行',nightTitle:'🌙 夜间出行 · 荒野搜打撤',nightCd:'天亮倒计时',nightGoHome:'🏠 回家结算',nightHaul:'🎒 今晚收获',nightHaulEmpty:'还没捡到东西',nightRule:'规则:⚡AP=12·沿路移动/开箱/采集各耗1AP·每做一个动作天亮近1刻(16起)·AP或倒计时任一耗尽=强制天亮——不在家,今晚收获全部丢失!',nightFar:'太远了——只能沿连线移动到相邻节点',nightNoAP:'AP 不够——这个动作做不了',nightBusy:'制符/答题进行中,收工后再夜行',nightTblue:'常见',nightTpurple:'少见',nightTorange:'稀有',nightOpenBox:'📦 开箱',nightOpenPick:'🌿 采集',nightBoxOpen:'开箱!',nightPickOpen:'采集完成!',nightBoxInfo:'有容器:开箱耗1AP,产出按节点稀有档',nightPickInfo:'可采集:采集耗1AP,产出按节点稀有档',nightPlainInfo:'荒野节点,只是路过',nightHomeInfo:'家·起点=撤离点:在这里点「回家结算」才算落袋',nightEmptied:'已经搜空了',nightCatMoney:'灵石',nightSettleT:'今晚结算',nightDayN:'第{d}天夜行',nightSafe:'🏠 平安到家——收获落袋!',nightLost:'🌅 天亮了,你没能赶回来——今晚收获全部丢失!',nightTotal:'收益合计',nightZero:'全部丢失',nightStashNote:'📦 生活必需品/制卡素材已存入夜行仓库(素材接入能量环是后续批次)',nightFatigueNote:'🌙 熬夜代价:明天客人 -1',nightBackDay:'回到白天',
+nightN0:'符坊后院',nightN1:'枯河床',nightN2:'加油站废墟',nightN3:'夜市残摊',nightN4:'旧桥',nightN5:'废弃诊所',nightN6:'荒废温室',nightN7:'地铁通风口',nightN8:'哨塔',nightN9:'玻璃教堂',nightN10:'铁皮集市',nightN11:'信号塔基座',nightN12:'沉沙渡口',nightN13:'高架断头路',nightN14:'老水塔',
+nightS0:'罐头',nightS1:'电池',nightS2:'绷带',nightS3:'净水',
+nightM0:'铄金屑',nightM1:'青木藤',nightM2:'寒水髓',nightM3:'火纹石',nightM4:'厚壤芯',
+nightElM:'金',nightElW:'木',nightElA:'水',nightElF:'火',nightElE:'土'},
+ en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'End Crafting',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83C\uDFAE New Game',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mst:'\uD83C\uDF33 Skill Tree',mtitle:'Talisman Workshop \u00B7 Runes by Ear',msub:'Hear the pitch \u00B7 Draw the talisman \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options',gstart:'\uD83C\uDFAE New Game',gcont:'\u25B6\uFE0F Continue',mquit:'\uD83D\uDEAA Quit',ptitle:'Paused',presume:'\u25B6\uFE0F Resume',psave:'\uD83D\uDCBE Save',pload:'\uD83D\uDCC2 Load',phome:'\uD83C\uDFE0 Main Menu',nosave:'No save yet',rfw:'Refresh',snark:'Snark',pot:'🍲 Five Dishes',rev:'🔫 Elemental Revolver',revHint:'Click/drag powders from the chest to load · one slot-step per answered question · locked while answering · empty dish = five elements equal weight · starts with 3 dishes of grade-1 fire powder',revLock:'Revolver is locked mid-question — wait for it to end',revIsFull:'Revolver is full',revDishUnit:' dishes',revLoaded:'Loaded into revolver',revTakeBack:'click to return to chest',revDishWork:'Working slot: click/drag powder from the chest',revDishEmpty:'Empty dish (five elements equal weight)',revPrep:'The revolver still has empty dishes — load up before forging for a steadier mix (empty = equal weight)',upgRev5:'Revolver · 5 Dishes',upgRev5D:'Revolver 3 → 5 dishes: questions become 5 notes; the 7-dish tier is reserved for later.',upgRev5Done:'Revolver expanded to 5 dishes — questions now 5 notes!',dockHead:'🧰 Chest · drag blanks onto the anvil · click/drag powder into the revolver',wheel:'🌀 Wheels',spx:'📖 Spell Codex',b5fix:'🩹 Rune Mender · Mend Black Balls',b5polish:'✨ Rune Polish · String Flourish',b5fixHint:'Play the solfège sequence in order on the string keys to mend a black ball — one strike: any wrong key fails it (stays black, sell -20%); all 4 right = gilded (sell -5%). Keys tire daily; they recover overnight.',b5polHint:'Play the 3-note solfège in order for the gold-frame flourish (visual only, no price change). Wrong key = new question (fresh keys); shares the daily key pool with mending. Skippable.',b5replay:'🔊 Replay',b5skip:'⏭ Skip Polish',b5fixStep:'Black ball',b5polished:'Polished!',b5fixok:'Mended · gilded',b5fixno:'Missed · stays black',b5free:'visual only · no price change',b5retry:'Missed — new question (unlimited retries)',b5skipdone:'Polish skipped (visual only, no price impact)',b7keyLeft:'{n} left today',b7keyOut:'Exhausted today · recovers at dawn',b7stash:'📥 Stash It',b7stashed:'Stashed — black balls kept; click it in the chest to resume mending',b7tired:'Key fatigue: not enough fresh notes today — stash it and come back tomorrow when the pool recovers.',b7tiredS:'Keys tired',b7busy:'Mid-question / settling — mend it afterwards',b7packdone:'mended in chest!',b7mend:'🔧Fix',b7adorn:'✨Polish',b7pendTitle:'Pending: click to resume in the Rune Mender',b7tab3:'3rd-Position Zone',b7tab1:'1st-Position Zone',b7tabF:'Heavenly Fused Board (✦ = merged key · daily allowance sums both boards)',upgIns1:'Advanced Stringbox',upgIns1D:'Adds a 1st-position board to the Rune Mender: dual boards for mending/polish (15→30 string keys), switch via form tabs (mending defaults 3rd, polish 1st).',upgIns1Done:'Dual boards online! 30-key pool',upgInsF:'Heavenly Fusion Core',upgInsFD:'Fuses both boards into one full board: shared positions become merged keys (✦, daily allowance sums both boards) and every key gains +1 daily tap (requires Advanced Stringbox).',upgInsFDone:'Heavenly fusion! ✦ merged keys doubled + all keys +1',upgKeyT:'Key Quenching',upgKeyTD:'+1 tap per key per day per level · all forms (key-fatigue expansion)',upgKeyTDone:'+1 tap/key/day',b7needPre:'Requires Advanced Stringbox',b7formOn:'dual boards',b7formFOn:'fused board',b7formOff:'not installed',dbgTitle:'🐞 Debug Panel',dbgWarn:'⚠️ debug actions write to the save (test pollution)',dbgForm:'Instrument form',b7f0:'Basic · 3rd Pos',b7f1:'Advanced · Dual',b7f2:'Final · Fused',dbgResetKeys:'Reset key pool (daily fatigue cleared)',dbgResetNotes:'Clear used notes',
+nightBtn:'🌙 Night Run',nightTitle:'🌙 Night Run · Wilderness Loot',nightCd:'Dawn in',nightGoHome:'🏠 Go Home & Settle',nightHaul:"🎒 Tonight's Haul",nightHaulEmpty:'Nothing yet',nightRule:"Rules: ⚡AP=12 · each move/open/gather costs 1 AP · every action brings dawn 1 step closer (starts 16) · AP or dawn hitting 0 forces sunrise — be home, or lose tonight's haul!",nightFar:'Too far — you can only move along a connection',nightNoAP:'Not enough AP',nightBusy:'Finish crafting first — no night runs mid-question',nightTblue:'common',nightTpurple:'uncommon',nightTorange:'rare',nightOpenBox:'📦 Open Box',nightOpenPick:'🌿 Gather',nightBoxOpen:'Box opened!',nightPickOpen:'Gathered!',nightBoxInfo:'A container: opening costs 1 AP, loot scales with node rarity',nightPickInfo:'Gatherable: costs 1 AP, loot scales with node rarity',nightPlainInfo:'Wilderness node — just a waypoint',nightHomeInfo:'Home · start & extraction: press "Go Home & Settle" here to bank the haul',nightEmptied:'Already emptied',nightCatMoney:'Gold',nightSettleT:"Tonight's Settlement",nightDayN:'Night of day {d}',nightSafe:'🏠 Home safe — haul banked!',nightLost:"🌅 Dawn broke before you got back — tonight's haul is all lost!",nightTotal:'Total',nightZero:'All lost',nightStashNote:'📦 Supplies/materials stored in the night stash (materials feed the energy ring in a later batch)',nightFatigueNote:"🌙 Staying up late: tomorrow's customers -1",nightBackDay:'Back to Day',
+nightN0:'Workshop Yard',nightN1:'Dry Riverbed',nightN2:'Ruined Gas Station',nightN3:'Night Market Stall',nightN4:'Old Bridge',nightN5:'Abandoned Clinic',nightN6:'Ruined Greenhouse',nightN7:'Metro Air Vent',nightN8:'Watchtower',nightN9:'Glass Chapel',nightN10:'Tin-Plate Bazaar',nightN11:'Signal Tower Base',nightN12:'Silted Ferry',nightN13:'Overpass Dead End',nightN14:'Old Water Tower',
+nightS0:'Canned Food',nightS1:'Battery',nightS2:'Bandage',nightS3:'Clean Water',
+nightM0:'Goldmetal Shavings',nightM1:'Verdant Vine',nightM2:'Coldwater Marrow',nightM3:'Ember-Rune Stone',nightM4:'Loam Core',
+nightElM:'Metal',nightElW:'Wood',nightElA:'Water',nightElF:'Fire',nightElE:'Earth'}};
 let LANG='zh';try{LANG=localStorage.getItem('ft_lang')||'zh'}catch(e){}
 let CUR_RES=[1280,720];
 function t(k){return (I18N[LANG]&&I18N[LANG][k])||I18N.zh[k]||k}
@@ -2878,6 +2982,7 @@ function applyLang(){
  const ot=document.getElementById('opt-title');if(ot)ot.textContent=t('optt');
  if(S.fix){S.fix.mode==='fix'?b5RenderFix():b5RenderPolish()} // v36B5:维修/美化文案随语言重渲染
  if($('dbg-panel').classList.contains('on'))b7DbgRender(); // v36B7:debug 面板文案随语言重渲染
+ nightApplyLang(); // NIGHT D1:夜行面板文案随语言重渲染(面板关着=只落静态文案)
  renderOpts()}
 function renderOpts(){
  const box=document.getElementById('opt-rows');if(!box)return;
@@ -2935,6 +3040,8 @@ function loadGame(){
  S.kfat=(S.kfat&&S.kfat.day===S.day&&S.kfat.keys&&typeof S.kfat.keys==='object')?S.kfat:{day:S.day,keys:{},notes:{}}; // v36B7:键位疲劳(缺省/dateKey翻天→清空,R2过夜恢复)
  if(!S.kfat.notes||typeof S.kfat.notes!=='object')S.kfat.notes={};
  if(typeof S.nq!=='number')S.nq=9999; // v36C:老档(无nq字段)回填老兵计数→新档难度梯度整体关闭,出题难度与改动前完全一致(经济/技能树零触碰)
+ S.nightLog=Array.isArray(S.nightLog)?S.nightLog:[];S.nightStash=Array.isArray(S.nightStash)?S.nightStash:[]; // NIGHT D1:夜行台账/仓库缺省(老档=全新空账,纯新增字段白天经济零触碰)
+ S.nightFatigue=(S.nightFatigue&&typeof S.nightFatigue.forDay==='number')?S.nightFatigue:null; // NIGHT D1:熬夜标志缺省(脏值兜底)
  (S.anvils||[]).forEach(sw=>{ // v36B5老档回填(拍板二选一之「底稿态重画」):在画符未记录的题槽=底稿draft(qDone进度保留,draft不罚卖价)
   if(!Array.isArray(sw.balls))sw.balls=Array.from({length:sw.qDone||0},()=>({st:'draft'}));
  });
@@ -3126,6 +3233,7 @@ function restart(newRun){ // v36C:newRun=true=角色选择全新开局→已出�
  S.fixQueue=[];S.fix=null; // v36B5:清待结算队列/session
  $('fix-modal').classList.remove('on');
  S.ins={form:0,view:0};S.kfat={day:1,keys:{},notes:{}}; // v36B7:新档=初阶三把位+键池满/已用音空
+ S.nightLog=[];S.nightStash=[];S.nightFatigue=null;NIGHT.mode='day';NIGHT.trip=null; // NIGHT D1:新档夜行账本/仓库/熬夜标志清零+昼夜状态机回白天(夜间overlay在开时restart不可达,防御性复位)
  S.up={anvil:0,sword:0,armor:0,bow:0,wand:0,shield:0,artSlot:0,rev5:0,ins1:0,insF:0,keyT:0};S.anvils=[];syncFocus();renderRack();
  S.qDay=0;S.qBoard={};S.qActive={};S.nq=newRun?0:9999;renderQStrip(); // v36C:全新开局nq清0走新档梯度;裸restart=9999老兵(难度零回退)
  S.chest=[{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'}];renderChest();
@@ -3220,11 +3328,155 @@ $('lanes').addEventListener('pointerdown',e=>{
  lanes.addEventListener('pointerleave',hide);
 })();
 
+/* ================= NIGHT D1 夜间出行(搜打撤MVP) =================
+   红线:与音游判定引擎完全解耦(不碰出题/判定/音阶比对/音源播放任何代码路径,听音辨锁/辨药/辨位明确不做)·kfat零改动·白天玩法零改动
+   结构:昼夜状态机(NIGHT.mode day→night→settle→day)+15节点荒野图(1家起点=撤离点)+AP12+天亮倒计时16+蓝紫橙三档稀有度+箱子/采集点8个+到家结算+未归全丢+熬夜疲劳
+   trip为运行态不入档(关页=放弃今晚);入档的只有台账nightLog/仓库nightStash/熬夜标志nightFatigue(结算时落盘) */
+const NIGHT_AP0=12,NIGHT_CD0=16; // 入场行动点/天亮倒计时(任务书定值)
+const NIGHT_NODES=[ // 15节点:tier=稀有档(蓝多紫少橙稀,开局全可见)·kind=home|box|pick|null(纯路过)·x/y=百分比坐标
+ {id:0, k:'nightN0', tier:null,   kind:'home',  x:13,y:52},
+ {id:1, k:'nightN1', tier:'blue',  kind:'box',   x:28,y:12},
+ {id:2, k:'nightN2', tier:'blue',  kind:null,    x:26,y:72},
+ {id:3, k:'nightN3', tier:'blue',  kind:'box',   x:28,y:46},
+ {id:4, k:'nightN4', tier:'blue',  kind:null,    x:48,y:9},
+ {id:5, k:'nightN5', tier:'purple',kind:'box',   x:42,y:32},
+ {id:6, k:'nightN6', tier:'blue',  kind:'pick',  x:52,y:64},
+ {id:7, k:'nightN7', tier:'purple',kind:'pick',  x:64,y:42},
+ {id:8, k:'nightN8', tier:'orange',kind:'box',   x:71,y:13},
+ {id:9, k:'nightN9', tier:'orange',kind:'pick',  x:90,y:28},
+ {id:10,k:'nightN10',tier:'blue',  kind:null,    x:85,y:62},
+ {id:11,k:'nightN11',tier:'purple',kind:null,    x:9, y:16},
+ {id:12,k:'nightN12',tier:'blue',  kind:'box',   x:10,y:86},
+ {id:13,k:'nightN13',tier:'purple',kind:null,    x:46,y:84},
+ {id:14,k:'nightN14',tier:'blue',  kind:null,    x:71,y:80}];
+const NIGHT_EDGES=[[0,11],[0,3],[0,2],[11,1],[1,4],[1,5],[4,8],[5,8],[3,5],[3,6],[5,7],[8,9],[7,9],[6,7],[7,10],[6,13],[2,13],[2,12],[13,14],[10,14]]; // 连通图:家出度3·环路多条(撤离路线可规划)·20边
+const NIGHT_LOOT={ // 开箱/采集产出表:money=[灵石区间]·sup/mat=件数(≥1必给)或概率(<1)·金额随稀有档放大
+ box:{blue:{money:[30,60],sup:.7,mat:0},purple:{money:[80,140],sup:.25,mat:1},orange:{money:[200,320],sup:.4,mat:1}},
+ pick:{blue:{money:0,sup:1,mat:0},purple:{money:0,sup:.2,mat:1},orange:{money:0,sup:0,mat:2}}};
+const NIGHT_SUPPLIES=[{k:'nightS0',e:'🥫'},{k:'nightS1',e:'🔋'},{k:'nightS2',e:'🩹'},{k:'nightS3',e:'💧'}]; // 生活必需品(本批只入临时收获清单/夜行仓库,消耗接入是后续批次)
+const NIGHT_MATS=[{k:'nightM0',e:'⚙️',el:'metal'},{k:'nightM1',e:'🌿',el:'wood'},{k:'nightM2',e:'🧊',el:'water'},{k:'nightM3',e:'🔥',el:'fire'},{k:'nightM4',e:'🪨',el:'earth'}]; // 制卡素材·带五行(能量环接入是后续批次)
+const NIGHT_EL_KEY={metal:'nightElM',wood:'nightElW',water:'nightElA',fire:'nightElF',earth:'nightElE'};
+const NIGHT={mode:'day',trip:null}; // 昼夜状态机:day=白天 night=出行中 settle=结算面板
+function nightAdjOf(id){const s=new Set();NIGHT_EDGES.forEach(e=>{if(e[0]===id)s.add(e[1]);if(e[1]===id)s.add(e[0])});return[...s]}
+function nightNode(id){return NIGHT_NODES[id]}
+function nightToast(msg,ms=1700){const el=$('night-toast');if(!el)return;el.textContent=msg;el.classList.add('on');clearTimeout(el._tm);el._tm=setTimeout(()=>el.classList.remove('on'),ms)}
+function nightEnter(){ // 白天→夜间:开新trip(容器每晚重置,图固定);trip不入档
+ if(NIGHT.mode!=='day'){$('night-ov').classList.add('on');return} // 结算中→只重开面板
+ if(['playing','input','quench','busy','session','over'].includes(S.phase)||S.fix){toast(t('nightBusy'),2000);return}
+ NIGHT.trip={ap:NIGHT_AP0,cd:NIGHT_CD0,at:0,haul:[],opened:{},day:S.day,home:false};
+ NIGHT.mode='night';nightRender();$('night-settle').classList.remove('on');$('night-ov').classList.add('on');
+}
+function nightMove(id){ // 沿边移动:耗1AP+天亮近1刻;不相邻/AP不足拒绝
+ const T=NIGHT.trip;if(!T||NIGHT.mode!=='night'||id===T.at)return;
+ if(!nightAdjOf(T.at).includes(id)){nightToast(t('nightFar'));return}
+ if(T.ap<1){nightToast(t('nightNoAP'));return}
+ T.ap--;T.cd--;T.at=id;nightRender();nightDawnCheck();
+}
+function nightOpen(){ // 开箱/采集:耗1AP+天亮近1刻·按节点稀有档产出三品类入临时收获清单
+ const T=NIGHT.trip;if(!T||NIGHT.mode!=='night')return;
+ const nd=nightNode(T.at);
+ if((nd.kind!=='box'&&nd.kind!=='pick')||T.opened[T.at])return;
+ if(T.ap<1){nightToast(t('nightNoAP'));return}
+ T.ap--;T.cd--;T.opened[T.at]=true;
+ nightRollLoot(nd).forEach(it=>T.haul.push(it));
+ nightToast(t(nd.kind==='box'?'nightBoxOpen':'nightPickOpen'));
+ nightRender();nightDawnCheck();
+}
+function nightRollLoot(nd){ // 三品类:money=灵石(到家才入账)·sup=生活必需品·mat=制卡素材(带五行)
+ const cfg=NIGHT_LOOT[nd.kind][nd.tier],out=[];
+ if(cfg.money)out.push({cat:'money',amt:cfg.money[0]+Math.floor(Math.random()*(cfg.money[1]-cfg.money[0]+1))});
+ const nSup=cfg.sup>=1?cfg.sup:(Math.random()<cfg.sup?1:0),nMat=cfg.mat>=1?cfg.mat:(Math.random()<cfg.mat?1:0);
+ for(let i=0;i<nSup;i++){const s=NIGHT_SUPPLIES[Math.floor(Math.random()*NIGHT_SUPPLIES.length)];out.push({cat:'sup',k:s.k,e:s.e})}
+ for(let i=0;i<nMat;i++){const m=NIGHT_MATS[Math.floor(Math.random()*NIGHT_MATS.length)];out.push({cat:'mat',k:m.k,e:m.e,el:m.el})}
+ return out;
+}
+function nightDawnCheck(){ // AP与倒计时任一耗尽=强制天亮:在家=平安撤离(自动结算),不在家=收获全部丢失
+ const T=NIGHT.trip;if(!T||NIGHT.mode!=='night')return;
+ if(T.ap<=0||T.cd<=0){T.home=T.at===0;nightSettle()}
+}
+function nightGoHome(){const T=NIGHT.trip;if(!T||NIGHT.mode!=='night'||T.at!==0)return;T.home=true;nightSettle()}
+function nightSettle(){ // 结算:到家=钱入账+物资入夜行仓库;未归=全部丢失;无论结果熬夜(次日客人-1标志落盘)
+ const T=NIGHT.trip;NIGHT.mode='settle';
+ const gain=T.home?T.haul:[];
+ const money=gain.filter(i=>i.cat==='money').reduce((s,i)=>s+i.amt,0);
+ if(T.home){if(money)S.gold+=money;
+  gain.filter(i=>i.cat==='sup').forEach(i=>S.nightStash.push({k:i.k,e:i.e,cat:'sup',day:T.day}));
+  gain.filter(i=>i.cat==='mat').forEach(i=>S.nightStash.push({k:i.k,e:i.e,cat:'mat',el:i.el,day:T.day}))}
+ S.nightLog.push({day:T.day,home:T.home,money,sup:gain.filter(i=>i.cat==='sup').map(i=>i.k),mat:gain.filter(i=>i.cat==='mat').map(i=>i.k),lost:T.home?0:T.haul.length});
+ S.nightFatigue={forDay:S.day+1,lost:1}; // 次日客人-1(熬夜纯经济端·本批无客人系统→持久标志;后续客人批次经nightFatigueFor(day)消费)
+ saveGame(true);
+ nightRenderSettle(T);
+ $('night-settle').classList.add('on');
+}
+function nightBackDay(){ // 回白天:trip退役=临时收获清单清空(已入账/入仓的在结算时已落S)
+ NIGHT.trip=null;NIGHT.mode='day';$('night-ov').classList.remove('on');$('night-settle').classList.remove('on');hud();
+}
+function nightFatigueFor(day){return(S.nightFatigue&&S.nightFatigue.forDay===day)?(S.nightFatigue.lost||0):0} // 全局查询:某日客人配额扣减数(后续客人批次接入消费)
+window.nightFatigueFor=nightFatigueFor;
+function nightRender(){ // 全量重渲(15节点+20边+顶栏+侧栏;量小不做增量)
+ const T=NIGHT.trip;if(!T)return;
+ const svg=$('night-svg');
+ svg.innerHTML=NIGHT_EDGES.map(e=>{const a=nightNode(e[0]),b=nightNode(e[1]);
+  return `<line${(e[0]===T.at||e[1]===T.at)?' class="n-edge-lit"':''} x1="${a.x}%" y1="${a.y}%" x2="${b.x}%" y2="${b.y}%"/>`}).join('');
+ const map=$('night-map');
+ [...map.querySelectorAll('.n-node')].forEach(n=>n.remove());
+ NIGHT_NODES.forEach(nd=>{
+  const cur=nd.id===T.at,adj=nightAdjOf(T.at).includes(nd.id),opened=!!(nd.kind&&nd.kind!=='home'&&T.opened[nd.id]);
+  const el=document.createElement('div');
+  el.className='n-node '+((nd.kind==='home')?'n-home':'n-tier-'+nd.tier)+(cur?' n-cur':'')+(adj?' n-adj':'')+((nd.kind&&nd.kind!=='home')?' n-loot':'')+(opened?' n-done':'');
+  el.dataset.id=nd.id;
+  el.style.left=nd.x+'%';el.style.top=nd.y+'%'; // 百分比定位(漏设则15节点全叠地图左上角,judge揪出过)
+  const ico=nd.kind==='home'?'🏠':nd.kind==='box'?'📦':nd.kind==='pick'?'🌿':'';
+  el.innerHTML=`<div class="n-dot">${opened?'✅':ico}</div><div class="n-nm">${t(nd.k)}${(nd.kind&&nd.kind!=='home')?`<div class="n-sub">${t('nightT'+nd.tier)}</div>`:''}</div>`;
+  el.onclick=()=>nightClick(nd.id);
+  map.appendChild(el);
+ });
+ $('night-stat-ap').innerHTML=`⚡ AP <b>${T.ap}</b>`;
+ $('night-stat-cd').innerHTML=`🌅 ${t('nightCd')} <b>${T.cd}</b>`;
+ $('night-stat-at').innerHTML=`📍 ${t(nightNode(T.at).k)}`;
+ $('night-home-btn').disabled=T.at!==0;
+ const nd=nightNode(T.at),ob=$('night-open-btn');
+ $('night-cur-name').textContent=t(nd.k);
+ if((nd.kind==='box'||nd.kind==='pick')&&!T.opened[nd.id]){ob.style.display='block';ob.textContent=(nd.kind==='box'?t('nightOpenBox'):t('nightOpenPick'))+' · ⚡1';ob.disabled=T.ap<1}
+ else ob.style.display='none';
+ $('night-cur-info').textContent=nd.kind==='home'?t('nightHomeInfo'):(nd.kind==='box'||nd.kind==='pick')?(T.opened[nd.id]?t('nightEmptied'):(nd.kind==='box'?t('nightBoxInfo'):t('nightPickInfo'))):t('nightPlainInfo');
+ const hl=$('night-haul-list');
+ hl.innerHTML=T.haul.length?T.haul.map(i=>i.cat==='money'?`<div class="nh-row nh-cat-money">🪙 ${t('nightCatMoney')} +${i.amt}</div>`:i.cat==='sup'?`<div class="nh-row nh-cat-sup">${i.e} ${t(i.k)}</div>`:`<div class="nh-row nh-cat-mat">${i.e} ${t(i.k)}<span class="nh-el">· ${t(NIGHT_EL_KEY[i.el]||'')}</span></div>`).join(''):`<div class="nh-empty">${t('nightHaulEmpty')}</div>`;
+ $('night-haul-cap').textContent=t('nightHaul')+(T.haul.length?` (${T.haul.length})`:'');
+}
+function nightRenderSettle(T){ // 结算面板:到家=清单逐项+收益合计;未归=划线明示全丢(T.haul即为丢失清单)
+ $('ns-title').textContent=t('nightSettleT')+' · '+t('nightDayN').replace('{d}',T.day);
+ const b=$('ns-banner');
+ if(T.home){b.className='safe';b.textContent=t('nightSafe')}
+ else{b.className='lost';b.textContent=t('nightLost')}
+ const money=T.home?T.haul.filter(i=>i.cat==='money').reduce((s,i)=>s+i.amt,0):0;
+ $('ns-list').innerHTML=T.haul.length?T.haul.map(i=>`<div class="ns-line${T.home?'':' ns-lost'}"><span>${i.cat==='money'?'🪙 '+t('nightCatMoney'):(i.e+' '+t(i.k))}</span><b>${i.cat==='money'?'+'+i.amt:''}</b></div>`).join(''):`<div class="nh-empty">${t('nightHaulEmpty')}</div>`;
+ $('ns-total').innerHTML=`<span>${t('nightTotal')}</span><b>${T.home?'🪙 +'+money:(T.haul.length?t('nightZero'):'🪙 +0')}</b>`;
+ $('ns-notes').innerHTML=`<div>${t('nightStashNote')}</div><div>${t('nightFatigueNote')}</div><div>${t('nightRule')}</div>`;
+}
+function nightApplyLang(){ // 静态文案按语言落位;夜间/结算面板开着→随语言整体重渲
+ const nt=$('night-title');if(nt)nt.textContent=t('nightTitle');
+ const hb=$('night-home-btn');if(hb)hb.textContent=t('nightGoHome');
+ const lg=$('night-legend');if(lg)lg.innerHTML=`<span><i class="leg-dot leg-b"></i>${t('nightTblue')}</span><span><i class="leg-dot leg-p"></i>${t('nightTpurple')}</span><span><i class="leg-dot leg-o"></i>${t('nightTorange')}</span><span>🏠=${t('nightGoHome').replace('🏠 ','').replace('🏠 ','')}</span>`;
+ const rl=$('night-rule');if(rl)rl.textContent=t('nightRule');
+ const bk=$('ns-back');if(bk)bk.textContent=t('nightBackDay');
+ if(NIGHT.mode==='night')nightRender();
+ else if(NIGHT.mode==='settle'&&NIGHT.trip)nightRenderSettle(NIGHT.trip);
+}
+function nightClick(id){const T=NIGHT.trip;if(!T||NIGHT.mode!=='night')return;if(id===T.at){nightOpen();return}nightMove(id)}
+(function nightBoot(){ // 启动注入:HUD夜行按钮(白天入口)+夜行面板连线
+ const b=document.createElement('button');b.className='btn gold';b.id='btn-night';b.textContent=t('nightBtn');
+ b.onclick=nightEnter;$('hud').appendChild(b);
+ $('night-home-btn').onclick=nightGoHome;$('night-open-btn').onclick=nightOpen;$('ns-back').onclick=nightBackDay;
+ nightApplyLang();
+})();
+
 /* 测试钩子 */
 window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,makeItem,judgeSpell,rollAffix,spellName,affixName,syncFocus,stashAll,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,gradeQuestion,appendMark,recalcEvolution,markVal,progSwords,potEligible,applyPotion,enterPotSel,MARK_VAL,MARK_ORDER,POTIONS,swordCap,openMerchant,renderMerchant,openUpg,buyUpg,UPG,anvilN,renderRack,renderUpg,openBill,closeBill,billData,metaObj,metaSave,settleLegacy,renderSkillTree,updListenBtn,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()},ALL_GOODS,HI_TABLE,HI_CHANCE,gCls,rollShelf,ELEMS,ELEM_META,zeroElem,powTotal,POWDER_GOODS,renderPot,potPut,potTake,potLocked,spinWheel,potWeights,renderSpellCodex,openSpellCodex,sellPrice, // v36B5(V21教训:新函数必须暴露才能 TB 测)
  b5:{pos3:B5_POS3,pos1:B5_POS1,openMidi:b5OpenMidi,semiToPos:b5SemiToPos,sol:b5SolOf,nm:b5NoteName,open:b5OpenSession,fixClick:b5FixClick,polClick:b5PolishClick,polNew:b5PolishNewQ,skip:b5PolishSkip,auto:b5AutoFinish,record:b5RecordBall,finish:b5FinishSw,paper:b5PaperSVG},
  b6:{step:revStep,work:revWorkIndex,n:revN,stepDeg:revStepDeg,laser:revLaserClick,beam:beamFx}, // v36B6(V21教训:新函数必须暴露才能 TB 测)
- b7:{roll:b7Roll,cap:keyCapOf,left:b7Left,tap:b7Tap,pool:b7Pool,genQ:b7GenQ,board:b7BoardTable,fused:B5_FUSED,dual:B7_DUAL_SET,pend:b7PendingOf,stash:b7StashCur,openPack:b7OpenPack,dbg:b7DbgRender,retry:b7RetryTired,sw:b5SW,rr:b7RerenderFix}}; // v36B7(V21教训:新函数必须暴露才能 TB 测)
+ b7:{roll:b7Roll,cap:keyCapOf,left:b7Left,tap:b7Tap,pool:b7Pool,genQ:b7GenQ,board:b7BoardTable,fused:B5_FUSED,dual:B7_DUAL_SET,pend:b7PendingOf,stash:b7StashCur,openPack:b7OpenPack,dbg:b7DbgRender,retry:b7RetryTired,sw:b5SW,rr:b7RerenderFix}, // v36B7(V21教训:新函数必须暴露才能 TB 测)
+ night:{enter:nightEnter,state:()=>NIGHT.trip,mode:()=>NIGHT.mode,move:nightMove,open:nightOpen,home:nightGoHome,adj:nightAdjOf,nodes:NIGHT_NODES,edges:NIGHT_EDGES,for:nightFatigueFor,back:nightBackDay,roll:nightRollLoot}}; // NIGHT D1(V21教训:新函数必须暴露才能 TB 测;state()=活引用,TB可注入ap/cd)
 
 /* ================= 启动 ================= */
 buildLanes();

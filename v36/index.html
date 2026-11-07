@@ -25,6 +25,14 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #anvil-rack .rk{flex:none;min-width:54px;height:34px;border:1px solid #4a3320;border-radius:8px;background:rgba(30,20,10,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;color:#8a6c42;line-height:1.2}
 #anvil-rack .rk.on{border-color:#ffd54f;color:#ffd54f;background:rgba(60,42,16,.55)}
 #anvil-rack .rk i{font-style:normal;font-size:10px;color:#c9a06a}
+#cc-modal{position:absolute;inset:0;z-index:150;background:#000000ba;display:none;align-items:center;justify-content:center;cursor:auto}
+#cc-modal.on{display:flex}
+#cc-card{width:min(620px,88vw);max-height:88vh;overflow-y:auto;background:linear-gradient(165deg,#2b2015,#191210 70%);border:2px solid #c9a06a90;border-radius:18px;padding:14px 18px;box-shadow:0 18px 60px #000c}
+#cc-card h3{color:#ffe9b0;font-size:15px;margin:0 0 6px;letter-spacing:1px}
+#cc-hint{font-size:11px;color:#c9a06a;line-height:1.65;margin:8px 0;padding:6px 9px;border:1px dashed #5a4028;border-radius:8px}
+#cc-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+#cc-list .cc-note{font-size:10px;color:#8a7455;text-align:center;padding:4px 2px;letter-spacing:.5px}
+#cc-close{width:100%}
 #upg-modal{position:absolute;inset:0;z-index:150;background:#000000ba;display:none;align-items:center;justify-content:center;cursor:auto}
 #upg-modal.on{display:flex}#q-modal{position:absolute;inset:0;z-index:150;background:#000000ba;display:none;align-items:center;justify-content:center;cursor:auto}
 #q-modal.on{display:flex}
@@ -438,6 +446,9 @@ body{overflow:hidden}
 .cm-done{grid-row:span 1;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:6px;border:1.5px solid #5a4020;background:linear-gradient(180deg,#3a2812,#241708);color:#ffe9b8;font-size:11px;cursor:pointer;overflow:hidden;white-space:nowrap;padding:0 4px}
 .cm-done .cd-v{color:#ffd54f;font-size:9px}
 .q-badge{color:#ffe08a;font-weight:bold;text-shadow:0 0 6px #ffd54f66;font-size:10px} /* 批2b品质徽章(品质环Lv→成品◆Ⅰ/Ⅱ/Ⅲ) */
+.cc-badge{color:#8fd4ff;font-weight:bold;text-shadow:0 0 6px #5db8ff66;font-size:10px} /* 批4充能徽章(可充能卡⚡n/N,一次性卡无徽章) */
+.cc-badge.cc0{color:#ff6b5d;text-shadow:0 0 6px #ff5d6c99} /* 批4耗尽红显:⚡0/N */
+.cm-done.cc-empty,.inv-cell.cc-empty{filter:grayscale(.8) brightness(.72)} /* 批4耗尽置灰(使用入口拦截由ccSpend承担,卖价零关联) */
 .cm-done:hover{border-color:#ffd54f}
 /* v36B2 五行粉末底箱行:元素色字点+数量,占1格,题间点击投锅(阶段B接线) */
 .cm-pow{grid-row:span 1;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:6px;border:1.5px solid #5a4020;background:linear-gradient(180deg,#3a2812,#241708);color:#ffe9b8;font-size:11px;overflow:hidden;white-space:nowrap;padding:0 4px}
@@ -875,6 +886,12 @@ body{overflow:hidden}
     <div id="skill-list" style="display:none"></div>
     <button id="upg-close" class="btn">先不升了</button>
   </div></div>
+  <div id="cc-modal"><div id="cc-card">
+    <h3><span id="cc-title">⚡ 充能台</span> · 🪙<span id="cc-gold">0</span></h3>
+    <div id="cc-hint"></div>
+    <div id="cc-list"></div>
+    <button id="cc-close" class="btn">先不充了</button>
+  </div></div>
   <div id="bill-modal"><div id="bill-wrap">
    <div id="bill-paper">
     <div id="bill-head">🧾 制符坊 · 今日流水</div>
@@ -886,6 +903,7 @@ body{overflow:hidden}
    </div>
    <div id="bill-btns">
     <button id="bill-upg" class="btn">🔧 升级工坊</button>
+    <button id="bill-cc" class="btn">⚡ 充能台</button>
     <button id="bill-sleep" class="btn gold">🌙 睡觉·进新一天</button>
    </div>
   </div></div>
@@ -973,9 +991,10 @@ const CFG={
  SPELL_ELEM:{metal:'thunder',wood:'vine',water:'icepike',fire:'fireball',earth:'stoneskin'}, // 主元素→法术key(已拍板映射)
  SPELL_GRADE:{sup:{zh:'上品',en:'Fine',min:.6,sellM:2},mid:{zh:'中品',en:'Medium',min:.4,sellM:1.4},junk:{zh:'杂品',en:'Crude',min:0,sellM:1}}, // min=纯度门槛(主/总量) sellM=卖价纯度系数
  SPELL_MIX:{zh:'五行杂符',en:'Mixed Talisman'}, // 五元素全0兜底(理论不达:空锅也有等权注入)
- DUR_BASE:3,DUR_DOUBLE:6,SELL_DUR_STEP:.1, // 铸成耐久/「次数翻倍」词条耐久/耐久卖价步长(1+dur×step)
+ DUR_BASE:3,SELL_DUR_STEP:.1, // 铸成耐久(=CC初始次数口径)/耐久卖价步长(1+dur×step);v36批4:DUR_DOUBLE随「次数翻倍→ccMax×2」改口径退役
+ CC_SUP:3,CC_ZHEN:5,CC_SELL_PCT:.15, // 批4 CC充能结构:可充能卡出厂上限(上品3/真髓5·✦继承基础品级不重定档)·充能台单价=当前卖价×15%向上取整
  AFFIX_TIER_ZH:['Ⅰ','Ⅱ','Ⅲ'], // 词条等级/品质徽章中文序数(共用;批2b概率词条退役,词条纯由词条栏环Lv决定)
- AFFIX_POOL:{value:{zh:'价值',en:'Worth',mult:[1.25,1.5,2]},beauty:{zh:'美观',en:'Pretty',mult:[1.4,1.8,2.4],face:1},double:{zh:'次数翻倍',en:'Lasting',dur:6}}, // mult=卖价系数表(Ⅰ/Ⅱ/Ⅲ)·face=协会好感+1(入S.rep.face占位)·dur=耐久直改
+ AFFIX_POOL:{value:{zh:'价值',en:'Worth',mult:[1.25,1.5,2]},beauty:{zh:'美观',en:'Pretty',mult:[1.4,1.8,2.4],face:1},double:{zh:'次数翻倍',en:'Lasting',ccM:2}}, // mult=卖价系数表(Ⅰ/Ⅱ/Ⅲ)·face=协会好感+1(入S.rep.face占位)·ccM=ccMax乘数(批4改口径:次数翻倍作用充能上限×2,一次性/可充能同效;原dur直改退役)
  /* ===== v36B4 五碟+符纸(批4) ===== */
  TALISMAN_PER_Q:3,                    // [v36B5退役]批4笔画口径:中段笔画组已改元素球行(球数=题数),常量保留防旧引用
  TALISMAN_FALLBACK:'#c23a2a',         // 主元素全0/无elem时球色(朱砂红兜底)
@@ -1371,6 +1390,13 @@ function rollTier(probs){
 /* ================= 多铁砧+升级铁匠铺(大爷00:23令:v24第一弹) ================= */
 const anvilN=()=>1+S.up.anvil; // 100💰/级·最多10级(1砧→11砧)
 function syncFocus(){S.cur=S.anvils[0]||null;S.value=S.cur?S.cur.value:0;S.dmgLv=S.cur?S.cur.dmgLv:0}
+const ccTierOf=(grade,zhen)=>grade==='sup'?(zhen?CFG.CC_ZHEN:CFG.CC_SUP):CFG.DUR_BASE; // 批4 CC定档表(按铸成品级):上品=可充能3格·上·真髓=5格(仅非✦真髓通路预留,现行真髓皆✦)·杂/中=一次性(ccMax=初始次数3)——✦隐藏配方继承基础品级,升格不重定档
+function ccSpend(it){ // 批4 CC统一消耗口径:每次-1(现行次数线消耗点全走此函数——只换计数口径,消耗触发时机与判定由使用入口接,本函数零判定);耗尽分流=一次性报废出册/可充能留册耗尽态
+ if(!it||typeof it.cc!=='number'||!(it.ccMax>0))return 'none'; // 无CC字段=中性拒(理论不达:成品必有CC)
+ if(it.cc<=0)return it.ccx?'empty':'gone'; // 耗尽再消耗=使用入口拦截:不倒扣;可充能=已处耗尽态留册禁用
+ it.cc--;
+ if(it.cc<=0&&!it.ccx){const ix=S.pack.indexOf(it);if(ix>=0)S.pack.splice(ix,1);if(typeof renderChest==='function')renderChest();return 'gone'} // 一次性报废:按现行报废口径出册消失(卖价线零关联)
+ return it.ccx&&it.cc<=0?'empty':'ok'} // 可充能耗尽→耗尽态:留册·⚡0/N红显·置灰·禁用(充能台可回充)
 function makeItem(sw){
  const cat=sw.cat||'sword';
  const star=Math.min(4,1+Math.floor(sw.q));
@@ -1387,10 +1413,13 @@ function makeItem(sw){
  const rc=sw.ringCraft||{}; // v36R批2b:调合收口随案冻结(ringCraftSnap在铸成/收工/爆符三收口点抓取)——老档在途符无此字段=全中性
  it.affixes=(rc.affixes||[]).map(a=>({k:a.k,t:a.t})); // 词条环口径(批2b):词条位数/等级=词条栏环Lv,纯由环决定(概率词条退役)
  it.qual=rc.qual||0; // 品质环口径(批2b):品质徽章档0~3(品质环累计品质点4/9/15→Ⅰ/Ⅱ/Ⅲ,Lv0/缺省=中性)
+ it.ccx=(it.grade==='sup'); // 批4 CC可充能资格:纯由基础品级定档(上=可充能/杂中=一次性)·字段通用不绑符语义,后续装备卡注能复用
+ it.ccMax=ccTierOf(it.grade,false); // 批4 CC上限:定档在✦升格之前(继承基础品级)·次数翻倍词条在下行循环再×2
  it.affixes.forEach(a=>{const A=CFG.AFFIX_POOL[a.k];
-  if(A.dur)it.dur=A.dur; // 次数翻倍:耐久直改不叠加
+  if(A.ccM)it.ccMax*=A.ccM; // 次数翻倍(批4改口径):作用ccMax×2(一次性/可充能同效;原耐久直改退役,dur保持初始3)
   if(A.face)S.rep.face=(S.rep&&S.rep.face||0)+A.face}); // 美观:协会好感+1(落S.rep.face占位,只入档不显示)
- if(rc.recipe)applyRecipeVary(it); // 配方变化环(批2b):铸成升格✦——升格先于codex行,图鉴按升格后档点亮
+ it.cc=it.ccMax; // 出厂满充
+ if(rc.recipe)applyRecipeVary(it); // 配方变化环(批2b):铸成升格✦——升格先于codex行,图鉴按升格后档点亮;CC定档已先行=✦继承基础品级资格与上限
  if(it.spell){const ck=it.spell+':'+it.grade;S.codex[ck]=(S.codex[ck]||0)+1} // 法术图鉴点亮:铸成过即亮(杂符不占15条目)
  return it;
 }
@@ -1457,6 +1486,32 @@ const SKILLS=[
  {id:'quench',e:'✨',n:'注灵直觉',d:'大成功概率 +2%/级',max:5}];
 const artSlots=()=>3+S.up.artSlot;
 function openUpg(){renderUpg();renderSkills();$('upg-modal').classList.add('on')}
+/* ===== v36批4 充能台(白天侧新钱出口,sink):账单层挂位(bill-cc)·只列可充能卡·单价=当前卖价×15%ceil·一次充1格可连充 ===== */
+const ccPriceOf=p=>Math.ceil(sellPrice(p)*CFG.CC_SELL_PCT); // 充能单价自锚定经济(百分比跟卖价走,不另立定价表)·sellPrice四因子零触碰
+const ccCards=()=>(S.pack||[]).filter(p=>p.ccx&&!p.sold); // 只列可充能卡(一次性无资格天然排除·已售不在册)
+function openCc(){renderCc();$('cc-modal').classList.add('on')}
+function renderCc(){
+ $('cc-title').textContent=t('ccBtn');$('cc-close').textContent=t('ccClose');
+ $('cc-gold').textContent=S.gold;$('cc-hint').textContent=t('ccHint');
+ const list=ccCards();const box=$('cc-list');
+ let h='';
+ if(!list.length)h='<div class="cm-none">'+t('ccNone')+'</div>';
+ else list.forEach((p,i)=>{
+  const full=p.cc>=p.ccMax;
+  h+=`<div class="upg-row"><span class="u-e">${p.emoji}</span><div class="u-mid"><div class="u-n">${p.name} ★${p.star} <b class="cc-badge${p.cc<=0?' cc0':''}">⚡${p.cc}/${p.ccMax}</b></div><div class="u-d">${t('ccCharge')}:💰${ccPriceOf(p)}${p.cc<=0?t('ccEmptyTip'):''}</div></div><button class="u-btn btn ${full?'':'gold'}" data-cc="${i}">${t('ccCharge')}</button></div>`;
+ });
+ h+='<div class="cc-note">'+t('ccOneNote')+'</div>'; // 一次性卡不可充:列表排除+说明常驻
+ box.innerHTML=h;
+ box.querySelectorAll('button[data-cc]').forEach(b=>b.onclick=()=>ccCharge(+b.dataset.cc));
+}
+function ccCharge(i){ // 三拒路径真实反馈:满充拒/钱不够拒(一次性卡=列表即排除,到不了这)
+ const p=ccCards()[i];if(!p)return;
+ if(p.cc>=p.ccMax){toast('⚡ '+t('ccFull'),1800);return}
+ const pr=ccPriceOf(p);
+ if(S.gold<pr){toast('💰 '+t('ccPoor').replace('{n}',''+pr),1800);return}
+ S.gold-=pr;p.cc++;hud();renderCc();
+ toast(t('ccDone').replace('{cc}',''+p.cc).replace('{mx}',''+p.ccMax),1600);
+}
 function upgTab(k){
  $('ut-upg').classList.toggle('on',k==='upg');$('ut-skill').classList.toggle('on',k==='skill');
  $('upg-list').style.display=k==='upg'?'':'none';$('skill-list').style.display=k==='skill'?'':'none';
@@ -2577,9 +2632,10 @@ function renderChest(){
   d.onclick=()=>placeBlank(i);
   g.appendChild(d)});
  S.pack.forEach(p=>{used+=wOf(p.name);
-  const d=document.createElement('div');d.className='cm-done'+(p.pending?' b7-pending':'');d.style.gridColumn='span '+wOf(p.name);
+  const d=document.createElement('div');d.className='cm-done'+(p.pending?' b7-pending':'')+((p.ccx&&p.cc<=0)?' cc-empty':'');d.style.gridColumn='span '+wOf(p.name);
   const pend=p.pending?`<i class="b7-pbadge${(p.balls||[]).some(b=>b&&b.st==='bad')?'':' pol'}">${(p.balls||[]).some(b=>b&&b.st==='bad')?t('b7mend'):t('b7adorn')}</i>`:'';
-  d.innerHTML=pend+'<span>'+p.emoji+' '+p.name+' '+'★'.repeat(p.star)+(p.qual?' <b class="q-badge">◆'+CFG.AFFIX_TIER_ZH[p.qual-1]+'</b>':'')+'</span><span class="cd-v">💰'+p.value+'</span>';
+  const ccb=p.ccx?` <b class="cc-badge${p.cc<=0?' cc0':''}">⚡${p.cc}/${p.ccMax}</b>`:''; // 批4:可充能卡⚡角标(耗尽0/N红显+置灰)
+  d.innerHTML=pend+'<span>'+p.emoji+' '+p.name+' '+'★'.repeat(p.star)+(p.qual?' <b class="q-badge">◆'+CFG.AFFIX_TIER_ZH[p.qual-1]+'</b>':'')+ccb+'</span><span class="cd-v">💰'+p.value+'</span>';
   d.title=p.pending?t('b7pendTitle'):'';
   d.onclick=()=>{if(p.pending){const pi=S.pack.indexOf(p);if(pi>=0)b7OpenPack(pi)}else toast('傍晚见商人,点一下就卖')}; // v36B7:R5库存回修/修饰入口
   g.appendChild(d)});
@@ -2805,9 +2861,10 @@ function renderMerchant(){
   const hist=p.tierHist||[],hN=k=>hist.filter(x=>x===k).length; // v36B3:符卡带法术/词条/耐久/轮盘史
   const pB=Array.isArray(p.balls)?p.balls:[],pFx=pB.filter(b=>b&&b.st==='fixed').length,pBa=pB.filter(b=>b&&b.st==='bad').length; // v36B5:填色质量(金/黑球数,因子见 sellPrice)
   const spx=p.spell?CFG.SPELLS[p.spell].ic+' '+spellName(p.spell,p.grade):'📜 '+CFG.SPELL_MIX.zh;
-  const d=document.createElement('div');d.className='inv-cell';d.style.gridColumn='span '+wOf(p.name);
-  d.innerHTML=`<span class="ic-e">${p.emoji}</span><span class="ic-info"><span>${p.spell?CFG.SPELLS[p.spell].ic:''}${p.name} ★${p.star}${p.qual?' <b class="q-badge">◆'+CFG.AFFIX_TIER_ZH[p.qual-1]+'</b>':''}</span><span class="ic-v">💰${price}</span></span>`;
-  d.title=`${p.name} ★${p.star} · ${spx} · 耐久${p.dur!=null?p.dur:3}`+(p.qual?` · ◆${t('qualBadge')}${CFG.AFFIX_TIER_ZH[p.qual-1]}(+${Math.round((CFG.RING_QUAL_MULT[p.qual-1]-1)*100)}%)`:'')+(affixNames(p)?` · ✨${affixNames(p)}`:'')+(hist.length?` · 轮盘:大成功×${hN('great')}/成功×${hN('good')}/失败×${hN('fail')}`:'')+(pFx+pBa?` · 填色:金×${pFx}/黑×${pBa}(-${Math.round((pFx*CFG.PAINT_PEN_FIX+pBa*CFG.PAINT_PEN_BAD)*100)}%)`:'')+(p.polished?' · ✨美化':'')+' · 双击出售 · 或拖到摊架松手 · 单击看详情';
+  const ccb=p.ccx?` <b class="cc-badge${p.cc<=0?' cc0':''}">⚡${p.cc}/${p.ccMax}</b>`:''; // 批4:收购区⚡角标(耗尽与否不影响卖价——纯展示)
+  const d=document.createElement('div');d.className='inv-cell'+((p.ccx&&p.cc<=0)?' cc-empty':'');d.style.gridColumn='span '+wOf(p.name);
+  d.innerHTML=`<span class="ic-e">${p.emoji}</span><span class="ic-info"><span>${p.spell?CFG.SPELLS[p.spell].ic:''}${p.name} ★${p.star}${p.qual?' <b class="q-badge">◆'+CFG.AFFIX_TIER_ZH[p.qual-1]+'</b>':''}${ccb}</span><span class="ic-v">💰${price}</span></span>`;
+  d.title=`${p.name} ★${p.star} · ${spx} · 耐久${p.dur!=null?p.dur:3}`+(p.qual?` · ◆${t('qualBadge')}${CFG.AFFIX_TIER_ZH[p.qual-1]}(+${Math.round((CFG.RING_QUAL_MULT[p.qual-1]-1)*100)}%)`:'')+(affixNames(p)?` · ✨${affixNames(p)}`:'')+(p.ccx?` · ⚡${p.cc}/${p.ccMax}`+(p.cc<=0?t('ccEmptyTip'):''):'')+(hist.length?` · 轮盘:大成功×${hN('great')}/成功×${hN('good')}/失败×${hN('fail')}`:'')+(pFx+pBa?` · 填色:金×${pFx}/黑×${pBa}(-${Math.round((pFx*CFG.PAINT_PEN_FIX+pBa*CFG.PAINT_PEN_BAD)*100)}%)`:'')+(p.polished?' · ✨美化':'')+' · 双击出售 · 或拖到摊架松手 · 单击看详情';
   d.onclick=()=>{if(Date.now()<cellDragTick)return; // 拖拽松手后的静默窗:不再弹提示(v28)
    toast(`⚔️ ${p.name} ★${p.star}${p.spell?' · '+spellName(p.spell,p.grade):''} · 售价 💰${price}${S.eventMult!==1?` (行情×${S.eventMult})`:''} · 双击或拖到摊架出售`,2200)};
   d.ondblclick=()=>mSell(i);
@@ -2860,8 +2917,9 @@ function renderSpellCodex(){
    const D=CFG.SPELLS[sp],n=S.codex[sp+':'+gr]||0;
    const r=document.createElement('div');r.className='cx-row'+(n?'':' unlit');
    const nm=en?D.en+' · '+G.en:D.zh+'·'+G.zh;
-   const desc=n?(en?D.de+' · Main: '+ELEM_META[ELEMS.find(el=>CFG.SPELL_ELEM[el]===sp)].zh:D.d+' · 主元素:'+ELEM_META[ELEMS.find(el=>CFG.SPELL_ELEM[el]===sp)].zh)
-              :(en?'Not cast yet — judged from the five elements when a talisman is finished':'尚未铸成——符成时按五行构成判定');
+   const desc=(n?(en?D.de+' · Main: '+ELEM_META[ELEMS.find(el=>CFG.SPELL_ELEM[el]===sp)].zh:D.d+' · 主元素:'+ELEM_META[ELEMS.find(el=>CFG.SPELL_ELEM[el]===sp)].zh)
+              :(en?'Not cast yet — judged from the five elements when a talisman is finished':'尚未铸成——符成时按五行构成判定'))
+              +((n&&gr==='sup')?' · ⚡'+t('ccDexLine'):''); // 批4:上品=可充能档,点亮行带⚡充能说明(杂/中一次性档不标)——外层括号防 + 短路进未点亮分支
    const st=n?(en?'Cast ×'+n:'铸成×'+n):(en?'Uncast':'未铸成');
    r.innerHTML=`<span class="cx-e">${D.ic}</span><span class="cx-n">${n?nm:'？？？'}</span><span class="cx-p">×${G.sellM}</span><span class="cx-d">${desc}</span><span class="cx-st ${n?'on':'no'}">${st}</span>`;
    sec.appendChild(r)});
@@ -2871,9 +2929,9 @@ function renderSpellCodex(){
 function openSpellCodex(){renderSpellCodex();$('spx-modal').classList.add('on')}
 /* ===== v36R批2b 隐藏配方图鉴:配方变化环✦示例连锁(3条,纯只读说明——顺序=火行素材首投·随后任意·至少2件+配方环Lv≥1) ===== */
 const RECIPE_DEX=[
- {ic:'🔥',zh:'✦火球·真髓',en:'✦ True Fireball',dz:'上品火球铸成时升格真髓:卖价×2.0×1.5=×3.0',de:'Fine Fireball ascends on cast: sell ×2.0×1.5=×3.0'},
+ {ic:'🔥',zh:'✦火球·真髓',en:'✦ True Fireball',dz:'上品火球铸成时升格真髓:卖价×2.0×1.5=×3.0 · ⚡可充能(基础品级上品·出厂3格)',de:'Fine Fireball ascends on cast: sell ×2.0×1.5=×3.0 · ⚡ rechargeable (Fine base · 3 cells)',cc:1},
  {ic:'💧',zh:'✦冰锥·上品',en:'✦ Fine Ice Spike',dz:'中品冰锥随铸成升上品:卖价×1.4×1.5=×2.1',de:'Medium Ice Spike rises to Fine: sell ×1.4×1.5=×2.1'},
- {ic:'⛰️',zh:'✦石甲·中品',en:'✦ Medium Stoneskin',dz:'杂品石甲随铸成升中品:卖价×1.0×1.5=×1.5',de:'Crude Stoneskin rises to Medium: sell ×1.0×1.5=×1.5'}];
+ {ic:'⛰️',zh:'✦石甲·中品',en:'✦ Medium Stoneskin',dz:'杂品石甲随铸成升中品:卖价×1.0×1.5=×1.5',de:'Crude Stoneskin rises to Medium: sell ×1.0×1.5=×1.5'}]; // cc=1=可充能条目(批4:✦继承基础品级——真髓行基础品级=上品故可充能,升格行基础=杂/中为一次性)
 function recipeDexSection(host){ // 商品/法术图鉴共用「✦ 隐藏配方」分区(3示例连锁·纯只读)
  const en=LANG==='en';
  const sec=document.createElement('div');sec.className='cx-sec';sec.dataset.grade='recipe';
@@ -3025,21 +3083,25 @@ nightS0:'罐头',nightS1:'电池',nightS2:'绷带',nightS3:'净水',
 nightM0:'铄金屑',nightM1:'青木藤',nightM2:'寒水髓',nightM3:'火纹石',nightM4:'厚壤芯',
 nightElM:'金',nightElW:'木',nightElA:'水',nightElF:'火',nightElE:'土',
 /* v36R批2a 五行能量环 */
-ringCap:'🌀 五行能量环',ringHint:'点选素材 → 点环放置 · 相邻蔓延解锁新环 · 每答对一题+1放入次数 · 答题中锁定',ringFuel:'放入次数',ringPowTip:'点选上能量环(再点取消)',ringNstTip:'夜行制卡素材·点选上能量环(放置即扣仓)',ringSelT:'已选 {n} —— 点亮的目标环点击放置(再点素材取消)',ringNoMat:'先点选素材:底箱粉末或夜行仓库制卡素材',ringNoFuel:'放入次数不足——答对一题+1次',ringBusy:'答题/结算中不能放素材——等这题结束',ringLockAdj:'太远了——能量从基底向外蔓延,只能放与已放环直接相邻的环',ringLockAttr:'属性锁:需相邻已放源环「{el}」行累计≥6(异属性素材不累计)',ringLockQ:'品质锁:全场累计品质≥{t}才解锁(当前{q})',ringUp:'升到 Lv.{lv}!',ringPlaced:'已放入 {n}',ringTipIdle:'点选素材后点此放置',ringTipPts:'{el}行 {p}/{n} · Lv{lv} · ',ringTypeBase:'基底环',ringTypeEffect:'效果环',ringTypeAffix:'词条栏环',ringTypeQuality:'品质环',ringTypeRecipe:'配方变化环',ringTypeExpand:'扩充环',affDirEco:'经济向',affDirDur:'耐久向',affDirCbt:'战斗向',ringAffixLv:'词条位{lv}(方向:{dir})',qualBadge:'品质',ringQualTip:'品质徽章{b}·卖价×{m}',ringRecOk:'配方变化就绪(铸成升格✦)',ringRecNo:'顺序未达:火行素材首投+≥2件',cxRecipeH:'✦ 隐藏配方',cxRecipeSt:'示例',ringUpgNote:'转盘扩容已随能量环退役——已购档保留5音题口径,灵石不退'},
+ringCap:'🌀 五行能量环',ringHint:'点选素材 → 点环放置 · 相邻蔓延解锁新环 · 每答对一题+1放入次数 · 答题中锁定',ringFuel:'放入次数',ringPowTip:'点选上能量环(再点取消)',ringNstTip:'夜行制卡素材·点选上能量环(放置即扣仓)',ringSelT:'已选 {n} —— 点亮的目标环点击放置(再点素材取消)',ringNoMat:'先点选素材:底箱粉末或夜行仓库制卡素材',ringNoFuel:'放入次数不足——答对一题+1次',ringBusy:'答题/结算中不能放素材——等这题结束',ringLockAdj:'太远了——能量从基底向外蔓延,只能放与已放环直接相邻的环',ringLockAttr:'属性锁:需相邻已放源环「{el}」行累计≥6(异属性素材不累计)',ringLockQ:'品质锁:全场累计品质≥{t}才解锁(当前{q})',ringUp:'升到 Lv.{lv}!',ringPlaced:'已放入 {n}',ringTipIdle:'点选素材后点此放置',ringTipPts:'{el}行 {p}/{n} · Lv{lv} · ',ringTypeBase:'基底环',ringTypeEffect:'效果环',ringTypeAffix:'词条栏环',ringTypeQuality:'品质环',ringTypeRecipe:'配方变化环',ringTypeExpand:'扩充环',affDirEco:'经济向',affDirDur:'耐久向',affDirCbt:'战斗向',ringAffixLv:'词条位{lv}(方向:{dir})',qualBadge:'品质',ringQualTip:'品质徽章{b}·卖价×{m}',ringRecOk:'配方变化就绪(铸成升格✦)',ringRecNo:'顺序未达:火行素材首投+≥2件',cxRecipeH:'✦ 隐藏配方',cxRecipeSt:'示例',ringUpgNote:'转盘扩容已随能量环退役——已购档保留5音题口径,灵石不退',
+/* 批4 CC充能结构+充能台 */
+ccBtn:'⚡ 充能台',ccHint:'只列可充能卡(铸成品级上品/真髓)——充 1 格价=该卡当前卖价×15% 向上取整,可连充至满;一次性卡(杂/中品)无充能资格,列表不收',ccCharge:'充 1 格',ccFull:'已满充——不用再充',ccPoor:'灵石不够——充 1 格要 {n}💰',ccDone:'⚡ 充能 +1({cc}/{mx})',ccNone:'册上没有可充能卡——上品/真髓铸成才可充能',ccOneNote:'一次性卡(杂/中品)无充能资格——耗尽即报废,不可充',ccEmptyTip:' · 已耗尽(充能台可回充)',ccDexLine:'可充能·出厂充能 3 格(真髓 5)·耗尽可充能台回充',ccClose:'先不充了'},
  en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'End Crafting',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83C\uDFAE New Game',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mst:'\uD83C\uDF33 Skill Tree',mtitle:'Talisman Workshop \u00B7 Runes by Ear',msub:'Hear the pitch \u00B7 Draw the talisman \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options',gstart:'\uD83C\uDFAE New Game',gcont:'\u25B6\uFE0F Continue',mquit:'\uD83D\uDEAA Quit',ptitle:'Paused',presume:'\u25B6\uFE0F Resume',psave:'\uD83D\uDCBE Save',pload:'\uD83D\uDCC2 Load',phome:'\uD83C\uDFE0 Main Menu',nosave:'No save yet',rfw:'Refresh',snark:'Snark',dockHead:'🧰 Chest · drag blanks onto the anvil · click a material to feed the rings',wheel:'🌀 Wheels',spx:'📖 Spell Codex',b5fix:'🩹 Rune Mender · Mend Black Balls',b5polish:'✨ Rune Polish · String Flourish',b5fixHint:'Play the solfège sequence in order on the string keys to mend a black ball — one strike: any wrong key fails it (stays black, sell -20%); all 4 right = gilded (sell -5%). Keys tire daily; they recover overnight.',b5polHint:'Play the 3-note solfège in order for the gold-frame flourish (visual only, no price change). Wrong key = new question (fresh keys); shares the daily key pool with mending. Skippable.',b5replay:'🔊 Replay',b5skip:'⏭ Skip Polish',b5fixStep:'Black ball',b5polished:'Polished!',b5fixok:'Mended · gilded',b5fixno:'Missed · stays black',b5free:'visual only · no price change',b5retry:'Missed — new question (unlimited retries)',b5skipdone:'Polish skipped (visual only, no price impact)',b7keyLeft:'{n} left today',b7keyOut:'Exhausted today · recovers at dawn',b7stash:'📥 Stash It',b7stashed:'Stashed — black balls kept; click it in the chest to resume mending',b7tired:'Key fatigue: not enough fresh notes today — stash it and come back tomorrow when the pool recovers.',b7tiredS:'Keys tired',b7busy:'Mid-question / settling — mend it afterwards',b7packdone:'mended in chest!',b7mend:'🔧Fix',b7adorn:'✨Polish',b7pendTitle:'Pending: click to resume in the Rune Mender',b7tab3:'3rd-Position Zone',b7tab1:'1st-Position Zone',b7tabF:'Heavenly Fused Board (✦ = merged key · daily allowance sums both boards)',upgIns1:'Advanced Stringbox',upgIns1D:'Adds a 1st-position board to the Rune Mender: dual boards for mending/polish (15→30 string keys), switch via form tabs (mending defaults 3rd, polish 1st).',upgIns1Done:'Dual boards online! 30-key pool',upgInsF:'Heavenly Fusion Core',upgInsFD:'Fuses both boards into one full board: shared positions become merged keys (✦, daily allowance sums both boards) and every key gains +1 daily tap (requires Advanced Stringbox).',upgInsFDone:'Heavenly fusion! ✦ merged keys doubled + all keys +1',upgKeyT:'Key Quenching',upgKeyTD:'+1 tap per key per day per level · all forms (key-fatigue expansion)',upgKeyTDone:'+1 tap/key/day',upgMix:'Blend Mastery',upgMixD:'+1 ring placement per finished talisman per level (4 perfect answers = 4 base → 5/6; not granted on burst)',upgMixDone:'+1 placement per talisman',ringMixTag:'+{n}/cast',b7needPre:'Requires Advanced Stringbox',b7formOn:'dual boards',b7formFOn:'fused board',b7formOff:'not installed',dbgTitle:'🐞 Debug Panel',dbgWarn:'⚠️ debug actions write to the save (test pollution)',dbgForm:'Instrument form',b7f0:'Basic · 3rd Pos',b7f1:'Advanced · Dual',b7f2:'Final · Fused',dbgResetKeys:'Reset key pool (daily fatigue cleared)',dbgResetNotes:'Clear used notes',
 nightBtn:'🌙 Night Run',nightTitle:'🌙 Night Run · Wilderness Loot',nightCd:'Dawn in',nightGoHome:'🏠 Go Home & Settle',nightHaul:"🎒 Tonight's Haul",nightHaulEmpty:'Nothing yet',nightRule:"Rules: ⚡AP=12 · each move/open/gather costs 1 AP · every action brings dawn 1 step closer (starts 16) · AP or dawn hitting 0 forces sunrise — be home, or lose tonight's haul!",nightFar:'Too far — you can only move along a connection',nightNoAP:'Not enough AP',nightBusy:'Finish crafting first — no night runs mid-question',nightTblue:'common',nightTpurple:'uncommon',nightTorange:'rare',nightOpenBox:'📦 Open Box',nightOpenPick:'🌿 Gather',nightBoxOpen:'Box opened!',nightPickOpen:'Gathered!',nightBoxInfo:'A container: opening costs 1 AP, loot scales with node rarity',nightPickInfo:'Gatherable: costs 1 AP, loot scales with node rarity',nightPlainInfo:'Wilderness node — just a waypoint',nightHomeInfo:'Home · start & extraction: press "Go Home & Settle" here to bank the haul',nightEmptied:'Already emptied',nightCatMoney:'Gold',nightSettleT:"Tonight's Settlement",nightDayN:'Night of day {d}',nightSafe:'🏠 Home safe — haul banked!',nightLost:"🌅 Dawn broke before you got back — tonight's haul is all lost!",nightTotal:'Total',nightZero:'All lost',nightStashNote:'📦 Supplies/materials stored in the night stash (materials feed the energy ring in a later batch)',nightFatigueNote:"🌙 Staying up late: tomorrow's customers -1",nightBackDay:'Back to Day',
 nightN0:'Workshop Yard',nightN1:'Dry Riverbed',nightN2:'Ruined Gas Station',nightN3:'Night Market Stall',nightN4:'Old Bridge',nightN5:'Abandoned Clinic',nightN6:'Ruined Greenhouse',nightN7:'Metro Air Vent',nightN8:'Watchtower',nightN9:'Glass Chapel',nightN10:'Tin-Plate Bazaar',nightN11:'Signal Tower Base',nightN12:'Silted Ferry',nightN13:'Overpass Dead End',nightN14:'Old Water Tower',
 nightS0:'Canned Food',nightS1:'Battery',nightS2:'Bandage',nightS3:'Clean Water',
 nightM0:'Goldmetal Shavings',nightM1:'Verdant Vine',nightM2:'Coldwater Marrow',nightM3:'Ember-Rune Stone',nightM4:'Loam Core',
 nightElM:'Metal',nightElW:'Wood',nightElA:'Water',nightElF:'Fire',nightElE:'Earth',
-ringCap:'🌀 Elemental Rings',ringHint:'Pick a material → click a ring to place · rings unlock outward from the base · +1 placement per perfect question · locked mid-question',ringFuel:'Placements',ringPowTip:'Click to select for a ring (click again to cancel)',ringNstTip:'Night-run crafting material · click to select for a ring (consumed from stash)',ringSelT:'Picked {n} — click a lit ring to place it (pick again to cancel)',ringNoMat:'Pick a material first: chest powders or night-stash crafting materials',ringNoFuel:'Not enough placements — answer a question perfectly to gain one',ringBusy:'Cannot place mid-question / mid-settlement — wait for it to end',ringLockAdj:'Too far — energy spreads outward from the base: only rings adjacent to a filled ring can be filled',ringLockAttr:'Attribute lock: an adjacent filled source ring needs ≥6 of the "{el}" element (off-element materials don\u2019t count)',ringLockQ:'Quality lock: total field quality ≥{t} required (currently {q})',ringUp:'reached Lv.{lv}!',ringPlaced:'Placed {n}',ringTipIdle:'pick a material, then click here',ringTipPts:'{el} {p}/{n} · Lv{lv} · ',ringTypeBase:'Base ring',ringTypeEffect:'Effect ring',ringTypeAffix:'Trait-slot ring',ringTypeQuality:'Quality ring',ringTypeRecipe:'Recipe-change ring',ringTypeExpand:'Expansion ring',affDirEco:'Economy',affDirDur:'Durability',affDirCbt:'Combat',ringAffixLv:'Trait slot {lv} ({dir})',qualBadge:'Quality',ringQualTip:'Quality badge {b} · sell ×{m}',ringRecOk:'recipe change armed (✦ on cast)',ringRecNo:'order not met: fire material first + 2 or more',cxRecipeH:'✦ Hidden Recipes',cxRecipeSt:'Example',ringUpgNote:'Revolver expansion retired with the energy rings — owned saves keep the 5-note questions; no refunds'}};
+ringCap:'🌀 Elemental Rings',ringHint:'Pick a material → click a ring to place · rings unlock outward from the base · +1 placement per perfect question · locked mid-question',ringFuel:'Placements',ringPowTip:'Click to select for a ring (click again to cancel)',ringNstTip:'Night-run crafting material · click to select for a ring (consumed from stash)',ringSelT:'Picked {n} — click a lit ring to place it (pick again to cancel)',ringNoMat:'Pick a material first: chest powders or night-stash crafting materials',ringNoFuel:'Not enough placements — answer a question perfectly to gain one',ringBusy:'Cannot place mid-question / mid-settlement — wait for it to end',ringLockAdj:'Too far — energy spreads outward from the base: only rings adjacent to a filled ring can be filled',ringLockAttr:'Attribute lock: an adjacent filled source ring needs ≥6 of the "{el}" element (off-element materials don\u2019t count)',ringLockQ:'Quality lock: total field quality ≥{t} required (currently {q})',ringUp:'reached Lv.{lv}!',ringPlaced:'Placed {n}',ringTipIdle:'pick a material, then click here',ringTipPts:'{el} {p}/{n} · Lv{lv} · ',ringTypeBase:'Base ring',ringTypeEffect:'Effect ring',ringTypeAffix:'Trait-slot ring',ringTypeQuality:'Quality ring',ringTypeRecipe:'Recipe-change ring',ringTypeExpand:'Expansion ring',affDirEco:'Economy',affDirDur:'Durability',affDirCbt:'Combat',ringAffixLv:'Trait slot {lv} ({dir})',qualBadge:'Quality',ringQualTip:'Quality badge {b} · sell ×{m}',ringRecOk:'recipe change armed (✦ on cast)',ringRecNo:'order not met: fire material first + 2 or more',cxRecipeH:'✦ Hidden Recipes',cxRecipeSt:'Example',ringUpgNote:'Revolver expansion retired with the energy rings — owned saves keep the 5-note questions; no refunds',
+/* 批4 CC充能结构+充能台 */
+ccBtn:'⚡ Charge Bench',ccHint:'Rechargeable cards only (cast tier Fine/True) — one cell costs 15% of the current sell value, rounded up; charge repeatedly to full. One-shot cards (Crude/Medium) have no recharge qualification and are not listed',ccCharge:'+1 Cell',ccFull:'Already full — no charge needed',ccPoor:'Not enough coins — one cell costs {n}💰',ccDone:'⚡ Charged +1 ({cc}/{mx})',ccNone:'No rechargeable cards in the pack — only Fine/True tier casts recharge',ccOneNote:'One-shot cards (Crude/Medium) cannot be recharged — spent out means scrapped',ccEmptyTip:' · depleted (refill at the Charge Bench)',ccDexLine:'Rechargeable · 3 cells at forge (True: 5) · refill at the Charge Bench when depleted',ccClose:'Not now'}};
 let LANG='zh';try{LANG=localStorage.getItem('ft_lang')||'zh'}catch(e){}
 let CUR_RES=[1280,720];
 function t(k){return (I18N[LANG]&&I18N[LANG][k])||I18N.zh[k]||k}
 function setLang(l){LANG=l;try{localStorage.setItem('ft_lang',l)}catch(e){}applyLang()}
 function setRes(w,h2){CUR_RES=[w,h2];app.style.width=w+'px';app.style.height=h2+'px';try{localStorage.setItem('ft_res',w+'x'+h2)}catch(e){}fit();setTimeout(updateSword,80);renderOpts()}
 function applyLang(){
- const M=[['cal','btn-cal'],['endf','btn-endforge-lab'],['day2','btn-day2'],['quest','btn-quest'],['opt','btn-opt'],['ringCap','ring-cap'],['ringHint','ring-hint'],['ringFuel','ring-fuel-lab'],['dockHead','dock-head-txt'],['spx','goods-spx']]; // v31:upg/skill 主界面钮退役;endf=侧栏钮文字位;ring*/dockHead=v36R批2a能量环新文案;spx=v36B3法术图鉴钮
+ const M=[['cal','btn-cal'],['endf','btn-endforge-lab'],['day2','btn-day2'],['quest','btn-quest'],['opt','btn-opt'],['ringCap','ring-cap'],['ringHint','ring-hint'],['ringFuel','ring-fuel-lab'],['dockHead','dock-head-txt'],['spx','goods-spx'],['ccBtn','bill-cc']]; // v31:upg/skill 主界面钮退役;endf=侧栏钮文字位;ring*/dockHead=v36R批2a能量环新文案;spx=v36B3法术图鉴钮;ccBtn=v36批4充能台入口
  M.forEach(p=>{const el=document.getElementById(p[1]);if(el)el.textContent=t(p[0])});
  const mt=document.getElementById('menu-title');if(mt)mt.textContent=t('mtitle');
  const ms=document.getElementById('menu-sub');if(ms)ms.textContent=t('msub');
@@ -3056,6 +3118,7 @@ function applyLang(){
  if(S.fix){S.fix.mode==='fix'?b5RenderFix():b5RenderPolish()} // v36B5:维修/美化文案随语言重渲染
  renderRing(); // v36R批2a:环网节点tooltip/文案随语言重渲
  if($('dbg-panel').classList.contains('on'))b7DbgRender(); // v36B7:debug 面板文案随语言重渲染
+ if($('cc-modal').classList.contains('on'))renderCc(); // 批4:充能台文案随语言重渲染
  nightApplyLang(); // NIGHT D1:夜行面板文案随语言重渲染(面板关着=只落静态文案)
  renderOpts()}
 function renderOpts(){
@@ -3127,6 +3190,12 @@ function loadGame(){
   if(p.balls===undefined)p.balls=[]; // v36B5老档回填:已完成符按全红口径(无罚项=全对等效)
   if(p.polished===undefined)p.polished=false;
   if(p.pending===undefined)p.pending=b7PendingOf(p); // v36B7:延后修补标记回填(B5/B6老档按球态现算,空balls=终态)
+  if(p.ccx===undefined){ // v36批4老档合流(次数→CC迁移):剩余次数1:1→cc·可充能资格按基础品级(✦卡卸升格取铸成品级)·ccMax=max(cc,3)不强制满充·除⚡展示外行为观察等价
+   const bg=p.vary?(p.zhen?'sup':(p.grade==='mid'?'junk':'mid')):(p.grade||'junk'); // ✦升格逆映射(mid←杂/sup←中/zhen←上;无记录兜底杂)
+   p.ccx=(bg==='sup');
+   p.cc=(typeof p.dur==='number'&&p.dur>0)?p.dur:CFG.DUR_BASE;
+   p.ccMax=Math.max(p.cc,CFG.DUR_BASE);
+  }
  });
  renderRing(); // v36R批2a:环网随存档恢复(燃料/触碰环/最近放置)
  S.mkt=S.mkt||[];S.bought=S.bought||{}; // v34:货架/日限购缺省
@@ -3186,6 +3255,8 @@ addEventListener('keydown',e=>{if(e.key!=='Escape')return;
  if(sm&&sm.classList.contains('on')){sm.classList.remove('on');return} // v31:技能树界面 ESC 关闭
  const xm=document.getElementById('spx-modal');
  if(xm&&xm.classList.contains('on')){xm.classList.remove('on');return} // v36B3:法术图鉴 ESC 关闭
+ const cm126=document.getElementById('cc-modal');
+ if(cm126&&cm126.classList.contains('on')){cm126.classList.remove('on');return} // 批4:充能台 ESC 关闭(回账单)
  if(mm.classList.contains('on'))return;
  if(ov.classList.contains('on'))return;
  openPause()});
@@ -3259,6 +3330,8 @@ function openBill(){
  })();
 }
 $('bill-upg').onclick=()=>openUpg(); // 账单内唯一升级铺子入口;upg-modal z150 盖住账单 z145,关掉即回账单
+$('bill-cc').onclick=()=>openCc(); // 批4充能台:同层挂位(bill-btns);cc-modal z150 盖账单,关掉即回
+$('cc-close').onclick=()=>$('cc-modal').classList.remove('on');
 $('bill-sleep').onclick=()=>{if(!$('bill-modal').classList.contains('on'))return;closeBill();nightFade(closeShop,'安睡',`🌙 第 ${S.day} 天结束 · 明天继续`)};
 $('btn-close').onclick=()=>{if(S.mode!=='shop')return;openBill()};
 
@@ -3361,8 +3434,9 @@ $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:制符听音 · 符�
   · 档位复用概率链(错音越多越差):<b>大成功×4 / 成功×2 / 失败×0.5</b> · 基础 20/70/10;失败=兑现减半注入减半,不炸符不没收标记<br>
   · <b>能量环玩法</b>(莱莎2式调合):全局 12 环——基底×1(开局已放=起点)+效果×4+词条栏×3+品质×1+配方变化×1+扩充×2,金木水火土各 2 环;<b>放入次数=听音燃料</b>——每答对一题 +1 次,放 1 件素材耗 1 次,答题中锁定;升级工坊「<b>调合心得</b>」(批2b)每级每符铸成/收工时再 +1 次(4 题全对=4 次基础→5/6,爆符不计);<b>相邻蔓延</b>——只能放与已放环直接相邻的环(基底向外铺,禁跳跃);<b>属性锁</b>——带锁环需相邻已放源环「该环属性」累计 ≥6;<b>品质锁</b>——品质环需全场累计品质 ≥5;<b>环升级</b>——单环同属性累计 4/9/15 → Lv1/2/3(异属性素材可放:占次数·贡献品质,但不累计该环升级值),品质环按<b>本环累计品质点</b> 4/9/15 升 Lv1/2/3=成品带<b>◆品质徽章Ⅰ/Ⅱ/Ⅲ</b>(卖价第四因子 +10%/+20%/+35%,独立乘区;Lv0 无徽章中性);<b>配方变化环</b>(批2b)——单环火行累计 4 点升 Lv1,且需以特定顺序投放素材(火行素材<b>首投</b>·随后任意·至少 2 件)才武装:铸成时触发「配方变化」,成品升格 <b>✦隐藏配方形态</b>(名前缀✦+法术升一档:杂→中/中→上/上→上·真髓)+卖价×1.5,顺序不对不触发;图鉴(商品/法术)有「✦ 隐藏配方」示例连锁;<b>敲对音的瞬间激光飞向最近放置的环</b>(色=素材属性色,答错偏折闪烁)。铸成/收工时全场五行累计点数随符入库(主属性定法术·纯度定品阶),环复位开下一轮调合。粉末商人「素材」区有售:一品30/二品70灵石;夜行仓库制卡素材(铄屑/青藤/寒髓/火石/壤芯)也可上环<br>
   · <b>丹药</b>(商人有售):🧪保底 60💰 绿/白标记→蓝(可接上蓝串触发进化);⚗️升级 120💰 单标记升一级(红封顶)<br>
-  · <b>法术判定</b>(批3):符制成时按五行构成判法术——火主火球/水主冰锥/金主雷击/木主藤缚/土主石甲;纯度=主元素量÷五元总量,<b>≥60% 上品 / ≥40% 中品 / 其余杂品</b>·全 0 兜底五行杂符;每符带 <b>3 次耐久</b><br>
-  · <b>词条</b>(批2b环口径,概率词条退役):三个词条栏环各自升级——<b>环 Lv≥1 解放一个词条位,词条等级=环 Lv</b>(Ⅰ/Ⅱ/Ⅲ,三环全升=3 词条封顶);方向按环属性:金/土环=<b>经济向</b>(价值/美观提卖价,美观另+协会好感),木/水环=<b>耐久向</b>(次数翻倍·耐久→6);<b>商人收购区卖符</b>:价值×纯度(×2.0/×1.4/×1.0)×词条×耐久(1+dur×10%)×<b>填色质量</b>(批5:修补球每个-5%/黑球每个-20%),法术图鉴铸成过即点亮<br>
+  · <b>法术判定</b>(批3):符制成时按五行构成判法术——火主火球/水主冰锥/金主雷击/木主藤缚/土主石甲;纯度=主元素量÷五元总量,<b>≥60% 上品 / ≥40% 中品 / 其余杂品</b>·全 0 兜底五行杂符;每符出厂带 <b>充能×3</b>(CC 口径见下条)<br>
+  · <b>词条</b>(批2b环口径,概率词条退役):三个词条栏环各自升级——<b>环 Lv≥1 解放一个词条位,词条等级=环 Lv</b>(Ⅰ/Ⅱ/Ⅲ,三环全升=3 词条封顶);方向按环属性:金/土环=<b>经济向</b>(价值/美观提卖价,美观另+协会好感),木/水环=<b>耐久向</b>(次数翻倍·充能上限×2,批4口径);<b>商人收购区卖符</b>:价值×纯度(×2.0/×1.4/×1.0)×词条×耐久(1+dur×10%)×<b>填色质量</b>(批5:修补球每个-5%/黑球每个-20%),法术图鉴铸成过即点亮<br>
+  · <b>充能 CC</b>(批4):成品按铸成品级定档——<b>杂/中=一次性卡</b>(耗尽即报废),<b>上品=可充能卡</b>(⚡出厂满充 3 格·真髓 5),✦隐藏配方继承基础品级不重定档;每次使用消耗 1 格(「次数翻倍」词条作用<b>充能上限×2</b>,一次性/可充能同效);耗尽的可充能卡留册禁用(卡面 <b>⚡0/N 红显置灰</b>),在账单「<b>⚡充能台</b>」回充——<b>充 1 格价=该卡当前卖价×15% 向上取整</b>,可连充至满;充能费是钱汇不影响卖价;「放入次数」(铸时答题燃料)与 CC 是两套口径互不影响<br>
   · <b>元素球</b>(批5):符纸中段=元素球行,每题一球——全对染主元素色,答错染黑,修补镀金,未答灰褐虚线底稿<br>
   · <b>维修台+美化</b>(批5):符画完统一结算——有黑球先开维修台(三把位小提琴指板,逐黑球重播题目后一击修补:点对镀金/点错保持黑),再进美化阶段(一把位指板敲轻量新题,全对=符面加金边纹样,纯视觉不改卖价;答错重出无限次,可跳过)<br>
   · 角色等级封顶符的成长:<b>Lv.1 制符师每张符最多 4 题,最高 4 音域</b>,每天 3 张符坯<br>
@@ -3547,7 +3621,7 @@ function nightClick(id){const T=NIGHT.trip;if(!T||NIGHT.mode!=='night')return;if
 })();
 
 /* 测试钩子 */
-window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,makeItem,judgeSpell,spellName,affixName,affixNames,syncFocus,stashAll,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,gradeQuestion,appendMark,recalcEvolution,markVal,progSwords,potEligible,applyPotion,enterPotSel,MARK_VAL,MARK_ORDER,POTIONS,swordCap,openMerchant,renderMerchant,openUpg,buyUpg,UPG,anvilN,renderRack,renderUpg,openBill,closeBill,billData,metaObj,metaSave,settleLegacy,renderSkillTree,updListenBtn,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()},ALL_GOODS,HI_TABLE,HI_CHANCE,gCls,rollShelf,ELEMS,ELEM_META,zeroElem,powTotal,POWDER_GOODS,answerSettle,renderSpellCodex,openSpellCodex,sellPrice, // v36B5(V21教训:新函数必须暴露才能 TB 测);批2a:renderPot/potPut/potTake/potLocked/spinWheel/potWeights 随转盘退役→answerSettle+__api.ring;批2b:rollAffix随概率词条退役→affixNames+__api.ring.aff
+window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,makeItem,judgeSpell,spellName,affixName,affixNames,syncFocus,stashAll,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,gradeQuestion,appendMark,recalcEvolution,markVal,progSwords,potEligible,applyPotion,enterPotSel,MARK_VAL,MARK_ORDER,POTIONS,swordCap,openMerchant,renderMerchant,openUpg,buyUpg,UPG,anvilN,renderRack,renderUpg,openBill,closeBill,billData,metaObj,metaSave,settleLegacy,renderSkillTree,updListenBtn,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()},ALL_GOODS,HI_TABLE,HI_CHANCE,gCls,rollShelf,ELEMS,ELEM_META,zeroElem,powTotal,POWDER_GOODS,answerSettle,renderSpellCodex,openSpellCodex,sellPrice,ccTierOf,ccSpend,ccPriceOf,openCc,renderCc,ccCharge, // v36B5(V21教训:新函数必须暴露才能 TB 测);批2a:renderPot/potPut/potTake/potLocked/spinWheel/potWeights 随转盘退役→answerSettle+__api.ring;批2b:rollAffix随概率词条退役→affixNames+__api.ring.aff;批4:ccTierOf(CC定档表)+ccSpend(统一消耗)+充能台四件套
  b5:{pos3:B5_POS3,pos1:B5_POS1,openMidi:b5OpenMidi,semiToPos:b5SemiToPos,sol:b5SolOf,nm:b5NoteName,open:b5OpenSession,fixClick:b5FixClick,polClick:b5PolishClick,polNew:b5PolishNewQ,skip:b5PolishSkip,auto:b5AutoFinish,record:b5RecordBall,finish:b5FinishSw,paper:b5PaperSVG},
  ring:{net:RING_NET,st:ringSt,node:ringNode,adj:ringAdjOf,lv:ringLvOf,spread:ringSpreadOk,attrOk:ringAttrLockOk,qTot:ringQualityTot,can:ringCanPlace,elem:ringElemTotals,reset:ringResetCast,snap:ringSnapshot,craftSnap:ringCraftSnap,aff:ringAffixes,qLv:ringQualLv,rec:ringRecipeArmed,mat:ringMatSpec,matName:ringMatName,matCnt:ringMatCount,select:ringSelectMat,place:ringPlace,locked:ringLocked,laser:ringLaserClick,render:()=>{if(typeof renderRing==='function')renderRing()}}, // v36R批2a(V21教训:新函数必须暴露才能 TB 测);批2b:+craftSnap/aff(词条环)/qLv(品质环)/rec(配方变化武装)
  b7:{roll:b7Roll,cap:keyCapOf,left:b7Left,tap:b7Tap,pool:b7Pool,genQ:b7GenQ,board:b7BoardTable,fused:B5_FUSED,dual:B7_DUAL_SET,pend:b7PendingOf,stash:b7StashCur,openPack:b7OpenPack,dbg:b7DbgRender,retry:b7RetryTired,sw:b5SW,rr:b7RerenderFix}, // v36B7(V21教训:新函数必须暴露才能 TB 测)

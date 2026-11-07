@@ -32,6 +32,17 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 #cc-hint{font-size:11px;color:#c9a06a;line-height:1.65;margin:8px 0;padding:6px 9px;border:1px dashed #5a4028;border-radius:8px}
 #cc-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
 #cc-list .cc-note{font-size:10px;color:#8a7455;text-align:center;padding:4px 2px;letter-spacing:.5px}
+/* ===== v36批6 K5 网上专有商店(常驻入口·博士直邮×1.5) ===== */
+#web-modal{position:absolute;inset:0;z-index:150;background:#000000ba;display:none;align-items:center;justify-content:center;cursor:auto}
+#web-modal.on{display:flex}
+#web-card{width:min(620px,88vw);max-height:88vh;overflow-y:auto;background:linear-gradient(165deg,#231a2b,#14101a 70%);border:2px solid #a88ac990;border-radius:18px;padding:14px 18px;box-shadow:0 18px 60px #000c}
+#web-card h3{color:#e6d8ff;font-size:15px;margin:0 0 6px;letter-spacing:1px}
+#web-hint{font-size:11px;color:#b9a0d8;line-height:1.65;margin:8px 0;padding:6px 9px;border:1px dashed #4a3a5a;border-radius:8px}
+#web-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.web-tag{font-size:9px;letter-spacing:1px;color:#140d06;border-radius:4px;padding:1px 7px;font-weight:800;background:#c9a8ff}
+.web-tag.excl{background:#ffd54f}
+.upg-row.off{opacity:.45}
+.upg-row .u-p{flex:none;color:#ffd54f;font-weight:900;font-size:13px;min-width:52px;text-align:right}
 #cc-close{width:100%}
 #upg-modal{position:absolute;inset:0;z-index:150;background:#000000ba;display:none;align-items:center;justify-content:center;cursor:auto}
 #upg-modal.on{display:flex}#q-modal{position:absolute;inset:0;z-index:150;background:#000000ba;display:none;align-items:center;justify-content:center;cursor:auto}
@@ -364,6 +375,29 @@ body{overflow:hidden}
 #cust-slot::after{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(90px 62px at 50% 42%,#ffffff0a,transparent 70%);pointer-events:none}
 .cust-e{font-size:34px;line-height:1;opacity:.34;filter:grayscale(.55)}
 .cust-tx{font-size:10px;color:#8a7455;letter-spacing:1px;text-align:center;padding:0 6px}
+/* —— 批6客人在窗(立绘复用girl idle帧+名+需求位成交章)+客人台词气泡 —— */
+#cust-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:0;width:100%}
+.cust-img{width:74px;height:58px;object-fit:contain;object-position:bottom;filter:drop-shadow(0 4px 8px #000a)}
+.cust-name{font-size:11px;font-weight:900;color:#ffe9b8;text-shadow:0 0 8px #ffb84d33;white-space:nowrap}
+.cust-chips{display:flex;gap:3px;flex-wrap:wrap;justify-content:center;max-width:118px}
+.cust-chip{font-size:10px;font-weight:800;padding:1px 5px;border-radius:7px;background:#180f08;border:1px solid #4a3320;white-space:nowrap}
+.cust-chip.ok{border-color:#6a9a4a;background:#16240f}
+.cust-chip.no{border-color:#a84a3a;background:#2a120c;opacity:.72}
+.cust-btn{margin-top:2px;font-size:10px;font-weight:800;letter-spacing:1px;color:#ffe9b8;background:linear-gradient(180deg,#3a2a16,#241708);border:1.5px solid #8a6a3a;border-radius:8px;padding:3px 10px;cursor:pointer;transition:border-color .12s}
+.cust-btn:hover{border-color:#ffd54f}
+.cust-btn:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.6)}
+#g-talk{display:none;position:relative;color:#20303a;background:linear-gradient(180deg,#dde9f5,#b8ccd8);border:1.5px solid #5a7a8a;border-radius:10px;padding:5px 12px;font-size:12px;line-height:1.5;box-shadow:0 4px 14px #0008;max-width:560px}
+#g-talk::before{content:'';position:absolute;left:-9px;top:36%;border:8px solid transparent;border-right-color:#5a7a8a;border-left:0}
+#g-talk.on{display:block}
+/* —— 批6 K4 博士串门商:货单行(3件高档货·点购) —— */
+.cust-e.doc{opacity:.9;font-size:30px;filter:drop-shadow(0 0 12px #b98cff44)}
+.doc-items{display:flex;flex-direction:column;gap:2px;width:100%;padding:0 4px;min-width:0}
+.doc-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#ffe9b8;background:#180f08;border:1px solid #4a3320;border-radius:6px;padding:2px 5px;cursor:pointer;white-space:nowrap;overflow:hidden}
+.doc-item:hover{border-color:#ffd54f}
+.doc-item.off{opacity:.4;cursor:not-allowed}
+.doc-item .dn{flex:1;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.doc-item .dp{color:#ffd54f;font-weight:900}
+.doc-item .db{color:#8a7455;font-weight:700}
 /* —— 中层:柜台(批5三层壳:横向6格上架位展示条) —— */
 #counter-layer{flex:none;display:flex;flex-direction:column;gap:4px;padding:6px 10px 8px;border:1px solid #4a3320;border-radius:12px;background:linear-gradient(180deg,#2a1e12,#1a120a);box-shadow:inset 0 6px 14px #00000088;position:relative}
 #counter-layer::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,transparent,#b98c4a55 16%,#b98c4a55 84%,transparent);pointer-events:none}
@@ -796,9 +830,10 @@ body{overflow:hidden}
         <div id="shop-title">🧙‍♂️ 流浪商人 · 「独眼」格罗兹</div>
         <div id="m-name">「独眼」格罗兹</div>
         <div id="m-talk">制符师，看看货？你的符，我按手艺收。</div>
+        <div id="g-talk"></div>
         <div id="m-belt"></div>
       </div>
-      <div id="cust-slot" title="顾客站位(客人系统下一批入住)"><div class="cust-e">🚶</div><div class="cust-tx" id="cust-wait">等待下一位客人…</div></div>
+      <div id="cust-slot"><div id="cust-body"><div class="cust-e">🚶</div><div class="cust-tx" id="cust-wait">等待下一位客人…</div></div><button id="cust-next" class="cust-btn">🚶 接待下一位</button><div class="cust-tx" id="cust-qcap"></div><div class="cust-tx" id="cust-fat" style="display:none;color:#c9a06a">🌙 昨夜熬夜 · 今日客人较少</div></div>
       <div id="shop-head">
         <div id="shop-gold">💰 <span id="shop-gold-num">0</span><button id="btn-dbg2" title="debug +99999">🐞</button></div>
         <div id="mkt-banner"></div>
@@ -809,7 +844,7 @@ body{overflow:hidden}
       <div id="counter-strip"></div>
     </div>
     <div id="goods-layer">
-      <div class="inv-sec"><span>🛒 今日摊架 · 三类分区 · 点卡买入</span><span class="sec-cap" id="m-shelf-cap"></span><button id="goods-codex" class="opt-b">📖 商品图鉴</button><button id="goods-spx" class="opt-b">📖 法术图鉴</button><button id="shelf-refresh" class="opt-b"></button></div>
+      <div class="inv-sec"><span>🛒 今日摊架 · 三类分区 · 点卡买入</span><span class="sec-cap" id="m-shelf-cap"></span><button id="goods-codex" class="opt-b">📖 商品图鉴</button><button id="goods-spx" class="opt-b">📖 法术图鉴</button><button id="web-shop" class="opt-b">🌐 网上商店</button><button id="shelf-refresh" class="opt-b"></button></div>
       <div id="m-shelf"></div>
     </div>
     <div id="pack-layer">
@@ -910,6 +945,12 @@ body{overflow:hidden}
     <div id="cc-hint"></div>
     <div id="cc-list"></div>
     <button id="cc-close" class="btn">先不充了</button>
+  </div></div>
+  <div id="web-modal"><div id="web-card">
+    <h3><span id="web-title">🌐 网上商店 · 主动联系博士</span> · 🪙<span id="web-gold">0</span></h3>
+    <div id="web-hint"></div>
+    <div id="web-list"></div>
+    <button id="web-close" class="btn">先不买了</button>
   </div></div>
   <div id="bill-modal"><div id="bill-wrap">
    <div id="bill-paper">
@@ -1030,6 +1071,8 @@ const CFG={
  INSF_PRICE:400,                      // 天工融合核(R6:id insF,max1,前置ins1)
  KEYT_PRICES:[180,320],              // 键位淬炼每级价(R6:id keyT,max2,每级每键+1次)
  MIX_PRICES:[200,400],               // 调合心得每级价(批2b:id mix,max2,每级每符放入次数+1)
+ /* ===== v36批6 客人系统 ===== */
+ CUST_DOCTOR_P:.2,                   // 博士串门商每日出现概率(K4,挂在客人队列末尾·random注入可测)
 };
 /* ================= v36B2 五行(批2):金木水火土 ================= */
 const ELEMS=['metal','wood','water','fire','earth'];
@@ -1118,6 +1161,7 @@ const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0
  roleLv:1,dayLog:[],day:1,mode:'forge',cur:null,anvils:[],up:{anvil:0,sword:0,armor:0,bow:0,wand:0,shield:0,artSlot:0},pack:[],counter:[],forgeEnded:false,soldCnt:0,
  counterSlots:[{cid:null,demand:null},{cid:null,demand:null},{cid:null,demand:null},{cid:null,demand:null},{cid:null,demand:null},{cid:null,demand:null}], // v36批5:柜台6上架位(cid=库存卡id·demand=客人需求位挂点留null)——入档持久·日切不清空
  shopCapacity:24,cardSeq:0, // 批5:格子墙容量字段(本批只入档不参与逻辑,扩容语义留给后续批次)·库存卡自增id序列
+ guestQ:[],guestAt:0, // v36批6:今日客人队列(日切生成·日切作废不累积)+已接待指针(下一位=guestQ[guestAt]);元素=genGuestQ当日现算,nightFatigueFor只读扣减
  chest:[{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'}],
  frenzyActive:false,frenzyEnd:0,frenzyTimer:null,pendingQuench:false,laneDeco:null,frenzyGold:0,qMiss:0,inputGraceUntil:0,
  perm:{armor:0,wand:0,relic:0},dragon:0,ironNext:0,eventMult:1,eventTxt:'',mkt:[],bought:{},refreshCnt:0,
@@ -1132,7 +1176,7 @@ const S={tier:0,value:0,potential:0,charge:0,gold:0,forged:0,frenzies:0,qCount:0
  ringSel:null, // v36R批2a:待放置素材token('pow:fire:1'|'nst:nightM3'),点素材选中→点环放置
  rep:{face:50,dark:0}, // v36B2:声誉占位(本批只入档不显示不使用)
  codex:{}, // v36B3:法术图鉴点亮台账 {"fireball:sup":铸成次数,…}
- ledger:{forge:0,sell:0,buy:0}, // v31:当日流水台账(只记账不改经济):forge=淬火兑现 sell=商人卖出 buy=商人买入
+ ledger:{forge:0,sell:0,buy:0,guest:0,doctor:0,web:0}, // v31:当日流水台账(只记账不改经济):forge=淬火兑现 sell=商人卖出 buy=商人买入;批6:guest=客人成交收入 doctor=博士采购支出 web=网上店支出(K3上账单行)
  ins:{form:0,view:0}, // v36B7:乐器形态(0初阶三把位/1进阶双板/2终阶融合)·view=双板当前显示(0三把位/1一把位;修复默认0/美化默认1)
  kfat:{day:1,keys:{},notes:{}}} // v36B7:键位疲劳 {day:dateKey(=S.day,翻天自愈),keys:{midi:当日已点次数},notes:{midi:1=今日已入题音(修复+美化避重集合)}};
 const $=id=>document.getElementById(id);
@@ -2797,6 +2841,7 @@ function openMerchant(){
  S.mode='shop';$('shop').classList.add('on');
  S.pack.forEach(p=>{p.sold=false});
  rollShelf();renderMerchant();renderShopGold();
+ CUST.disp=null;renderCustWindow(); // 批6:进店窗口回空态(队列仍在档,接待继续);girl帧循环开/关在此收口
 }
 function renderShopGold(){$('shop-gold-num').textContent=S.gold}
 function mSay(t){$('m-talk').textContent=t}
@@ -2807,6 +2852,7 @@ function applyGood(g){
  else if(g.id==='armor')S.perm.armor++;
  else if(g.id==='wand')S.perm.wand++;
  else if(g.id==='relic')S.perm.relic++;
+ else if(g.id==='web-ink'){S.webInk=1;toast('🖋️ 博士的五行墨入册!每天清晨送 2 份二品五行粉',2600)} // 批6 K5:网上独有永久品
  else if(g.id==='book'){S.roleLv++;S.sp++;toast('📖 制符师等级+1,技能点+1',2000)}
  else if(g.id==='dragon')S.dragon++;
  else if(g.id==='iron')S.ironNext+=10;
@@ -2955,6 +3001,159 @@ function renderMerchant(){
  $('m-sell-cap').textContent=avail.length?avail.length+' 张待售':'空';
  $('counter-cap').textContent=counterUsed()+'/'+COUNTER_N;
  $('shop-hint').textContent=t('shopHint');
+}
+/* ================= v36批6 客人系统(K1 数据层):每日随机客人队列=五行需求位 =================
+   波次基数 CUST_BASE=4;前夜熬夜标志 nightFatigue(只读,夜间线零改动)→当日 -1,下限 1;
+   每位客人 1~2 个「不同」五行需求位(ELEMS 不重复抽取),日切生成入档,当日未接待完的日切作废不累积 */
+const CUST_BASE=4;
+const CUST_NAMES=['阿绣','小满','青娘','石叔','柳姨','阿六','茯苓','白露','九斤','半夏','老鲁','杏儿'];
+const CUST_NAMES_EN=['Axiu','Xiaoman','Qingni','Uncle Shi','Aunt Liu','Aliu','Fuling','Bailu','Jiujin','Banxia','Old Lu','Xinger'];
+const CUST_SAY_ZH=['老板,收一张{el}行符——柜台上有就直接拿走。','我要一张{el}行的,柜台上有吗?','{el}行最近紧俏,有多少我要多少——今天就要一张。','听闻贵柜{el}行手艺好,匀我一张。'];
+const CUST_SAY_EN=['Boss, I need one {el} talisman — straight off the counter, please.','One {el}-element card. Anything on the counter?','{el} talismans are in demand — I\'ll take one right now.','I hear your counter has fine {el} work — sell me one.'];
+const CUST_MISS_ZH=['柜台没有我要的行……罢了,不等了。','没有对路的货?那我去别家看看。'];
+const CUST_MISS_EN=['Nothing on the counter for me… fine, I won\'t wait.','No match? I\'ll try another shop.'];
+const custNameOf=g=>LANG==='en'?(g.nameEn||g.name):g.name; // 客人名字随语言(队列存双名,读档老 Guest 兜底)
+const custSayOf=g=>((LANG==='en'?CUST_SAY_EN:CUST_SAY_ZH)[g.sayI%CUST_SAY_ZH.length]||'').replace('{el}',(g.els||[]).map(el=>ELEM_META[el]?ELEM_META[el].zh:'?').join('·')); // 台词按语言现取+{el}落需求行
+const custMissSay=()=>(LANG==='en'?CUST_MISS_EN:CUST_MISS_ZH)[0]; // 空手走台词(错失,不等人)
+function genGuestQ(day){ // 队列纯随机生成(测试可钉 Math.random):张数=4-熬夜扣减(下限1)·需求位 1~2 个不同五行
+ const n=Math.max(1,CUST_BASE-nightFatigueFor(day)),q=[];
+ for(let i=0;i<n;i++){
+  const ni=Math.floor(Math.random()*CUST_NAMES.length),nE=Math.random()<.5?1:2,els=[],pool=ELEMS.slice();
+  for(let k=0;k<nE;k++)els.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+  q.push({name:CUST_NAMES[ni],nameEn:CUST_NAMES_EN[ni],els,sayI:Math.floor(Math.random()*CUST_SAY_ZH.length),doctor:false,items:[]});
+ }
+ if(Math.random()<CFG.CUST_DOCTOR_P)q.push(genDoctor()); // K4:每日20%概率队列末尾插入博士(只此一日,日切随队列作废)
+ return q;
+}
+function rollGuestQ(){S.guestQ=genGuestQ(S.day);S.guestAt=0} // 日切/新档:今日队列落位(前日作废)
+const custMainEl=p=>judgeSpell(p&&p.elem).main; // 卡主属性判定源(✦隐藏形态同源——elem=铸成时环快照,升格不动主属性)
+/* —— K4 博士式串门商:深空当铺博士式神秘商人,每日20%(CFG.CUST_DOCTOR_P)挂在客人队列末尾;
+   卖3件高档素材/商品(高档池=✨高级坯四类+神器三件),价格=常规价×1.2;只此一日过时不候 —— */
+const DOCTOR_SAY_ZH=['又见面了,制符师。今夜我带了些……别处买不到的东西。','时间是最贵的商品——而我,恰好不缺。','别问货从哪来。问价就好。'];
+const DOCTOR_SAY_EN=['We meet again, crafter. Tonight I bring… things found nowhere else.','Time is the priciest good — and I have plenty.','Don\'t ask where the goods come from. Just ask the price.'];
+const DOCTOR_POOL=()=>[...Object.keys(HI_TABLE).map(k=>HI_TABLE[k](ALL_GOODS.find(g=>g.id===k))),...ARTIFACTS.map(a=>({...a}))]; // 高档池:✨高级坯×4(现取,价随制符师Lv)+神器×3(克隆防污染共享定义表)
+const docPriceOf=g=>premPriceOf(g,1.2); // 博士价=常规价×1.2(坯料=blankInfo现价·神器=货架价,均随制符师Lv)
+const premPriceOf=(g,mult)=>Math.round((g.lvG?blankInfo(g).base:g.price)*mult); // 高档货通用溢价(博士×1.2/网上店×1.5):坯料(lvG)=blankInfo现价随制符师Lv·定价品(神器/独有)=定义price
+const docName=g=>g.art?g.n.replace(/^神器·/,''):(g.hi?'✨高级'+WLBL[g.cat]+'坯':g.n); // 窗内紧凑名
+const docSayOf=g=>(LANG==='en'?DOCTOR_SAY_EN:DOCTOR_SAY_ZH)[g.sayI%DOCTOR_SAY_ZH.length]||DOCTOR_SAY_ZH[0];
+function genDoctor(){ // 博士客人:els留空(不买东西)·items=3件不同高档货(克隆定义+博士价+已购标记)
+ const pool=DOCTOR_POOL(),items=[];
+ for(let k=0;k<3&&pool.length;k++){const src=pool.splice(Math.floor(Math.random()*pool.length),1)[0];items.push({g:src,cost:docPriceOf(src),bought:false})}
+ return {name:'博士',nameEn:'The Doctor',els:[],sayI:Math.floor(Math.random()*DOCTOR_SAY_ZH.length),doctor:true,items};
+}
+/* —— K5 网上专有商店:常驻入口「主动联系博士」——商品池5件=高档素材4+网上独有品1(博士的五行墨),价格=常规价×1.5;不限日次;购买走现行采购流程 —— */
+const WEB_INK_DEF={id:'web-ink',e:'🖋️',kind:'perm',cls:'relic',n:'博士的五行墨',price:260,stock:1,d:'网上独有·永久:每天清晨随机送来 2 份二品五行粉入袋(效果随安睡结算)'};
+const WEB_POOL=()=>[...Object.keys(HI_TABLE).map(k=>HI_TABLE[k](ALL_GOODS.find(g=>g.id===k))),{...WEB_INK_DEF}]; // 5件:✨高级坯×4+网上独有×1
+const webPriceOf=g=>premPriceOf(g,1.5); // 网上价=常规价×1.5(独有品=定义价260→390)
+const webOwned=g=>g.id==='web-ink'&&S.webInk; // 独有品永久=已入册置灰;高级坯不限购(常驻直邮)
+function webBuy(g,cost){ // 现行采购流程模式:钱够→ledger.web支出→applyGood现行入库/入册;钱不够真实反馈拒
+ if(S.mode!=='shop')return;
+ if(webOwned(g))return;
+ if(S.gold<cost){toast(t('webPoor'),1600);return}
+ S.gold-=cost;if(S.ledger)S.ledger.web=(S.ledger.web||0)+cost;
+ applyGood(g);
+ toast(t('webBought').replace('{n}',g.n).replace('{p}',cost),2200);
+ renderShopGold();renderWeb();
+}
+function renderWeb(){
+ $('web-gold').textContent=S.gold;$('web-hint').textContent=t('webHint');
+ const box=$('web-list');
+ box.innerHTML=WEB_POOL().map((g,i)=>{
+  const cost=webPriceOf(g),off=webOwned(g);
+  const nm=g.hi?('✨高级'+WLBL[g.cat]+'坯'):g.n;
+  const tag=g.id==='web-ink'?'<span class="web-tag excl">'+t('webExcl')+'</span>':'<span class="web-tag">'+t('webMat')+'</span>';
+  return `<div class="upg-row${off?' off':''}"><span class="u-e"${g.id==='web-ink'?' style="color:#c9a8ff"':''}>${g.e}</span><div class="u-mid"><div class="u-n">${nm} ${tag}</div><div class="u-d">${g.d||''}</div></div><span class="u-p">💰${cost}</span><button class="u-btn btn ${off?'':'gold'}" data-web="${i}" ${off?'disabled':''}>${off?t('webInkDone'):t('webBuyBt')}</button></div>`}).join('')
+  +'<div class="cc-note">'+t('webNote')+'</div>';
+ box.querySelectorAll('button[data-web]').forEach(b=>b.onclick=()=>{const g=WEB_POOL()[+b.dataset.web];webBuy(g,webPriceOf(g))});
+}
+function openWeb(){if(S.mode!=='shop')return;renderWeb();$('web-modal').classList.add('on')}
+/* —— K2 接待与柜台成交:客人只买柜台 6 个 counterSlots(卡主属性=需求五行即成交)·错失不等人;
+   库存格墙同五行不算(柜台制精神);成交价=sellPrice 四因子原样·清位+钱入账(ledger.guest·K3 上账单行) —— */
+const CUST={disp:null,tm:null}; // 窗口展示态:disp=null=空态等待 / {g,bought,miss}=刚接待完的客人在窗(girl idle帧循环计时器挂tm)
+const custElLab=el=>ELEM_META[el].ic+(LANG==='en'?t(NIGHT_EL_KEY[el]):ELEM_META[el].zh); // 需求位标签:🪙金/Metal
+function custPortrait(host){ // 复用现有 girl 立绘帧(assets/girl/idle f0~f15 慢速循环;素材缺失=碎图占位,语义不变)
+ const img=document.createElement('img');img.className='cust-img';img.src='assets/girl/idle/f0.png';img.alt='';
+ host.appendChild(img);
+ let f=0;CUST.tm=setInterval(()=>{f=(f+1)%16;img.src='assets/girl/idle/f'+f+'.png'},240);
+}
+function renderCustWindow(){ // 顶层窗口顾客站位:空态(🚶+等待文案)/在窗客人(立绘+名+需求位✓✗章+台词气泡挂#g-talk)
+ if(CUST.tm){clearInterval(CUST.tm);CUST.tm=null}
+ const body=$('cust-body');if(!body)return;
+ const gt=$('g-talk');if(gt)gt.classList.remove('on');
+ const mb=$('m-belt');if(mb)mb.style.display='';
+ const cs=$('cust-slot');if(cs)cs.title=t('ctWait');
+ if(!CUST.disp)body.innerHTML='<div class="cust-e">🚶</div><div class="cust-tx" id="cust-wait">'+t('ctWait')+'</div>';
+ else{
+  const g=CUST.disp.g,bought=CUST.disp.bought;
+  cs.title=custNameOf(g);
+  if(g.doctor){ // K4:博士在窗=采购站(3件高档货·点购·已购置灰)——神秘博士不露脸,emoji内联在名行(省高度防货单溢出)
+   body.innerHTML='<div class="cust-name">👨‍🔬 '+custNameOf(g)+'</div>';
+   const list=document.createElement('div');list.className='doc-items';
+   (g.items||[]).forEach((it,i)=>{
+    const r=document.createElement('div');r.className='doc-item'+(it.bought?' off':'');r.dataset.di=i;
+    r.innerHTML='<span>'+it.g.e+'</span><span class="dn">'+docName(it.g)+'</span><span class="dp">💰'+it.cost+'</span>'+(it.bought?'<span class="db">'+t('docDone')+'</span>':'');
+    r.title=(it.g.d||'')+' · '+t('docPriceTip').replace('{p}',it.cost);
+    if(!it.bought)r.onclick=()=>doctorBuy(i);
+    list.appendChild(r)});
+   body.appendChild(list);
+   if(gt){gt.textContent='「'+docSayOf(g)+'」';gt.classList.add('on')}
+  }else{
+  body.innerHTML='<div class="cust-name">'+custNameOf(g)+'</div>';
+  custPortrait(body);
+  const chips=document.createElement('div');chips.className='cust-chips';
+  g.els.forEach(el=>{const hit=bought.find(x=>x.el===el);
+   const c=document.createElement('span');c.className='cust-chip '+(hit?'ok':'no');c.style.color=ELEM_META[el].color;
+   c.textContent=custElLab(el)+' '+(hit?'✓':'✗');chips.appendChild(c)});
+  body.appendChild(chips);
+  if(gt){gt.textContent='「'+(bought.length?custSayOf(g):custMissSay())+'」';gt.classList.add('on')}
+  }
+  if(mb)mb.style.display='none'; // 台词气泡在场时家底行让位(防窗口溢出,家底本就tooltip可见)
+ }
+ const btn=$('cust-next');
+ if(btn)btn.disabled=S.guestAt>=S.guestQ.length&&!CUST.disp; // 博士在窗=按钮保持可点(=送客+尝试下一位);队列尽且窗空=禁用
+ const qc=$('cust-qcap');
+ if(qc)qc.textContent=(CUST.disp&&CUST.disp.g.doctor)?t('docVisitTag'):(S.guestAt>=S.guestQ.length?t('custDone'):t('custLeft').replace('{n}',S.guestQ.length-S.guestAt));
+ const fat=$('cust-fat'); // K3:熬夜映射窗口可见——前夜夜行标志扣减了今日波次→挂「今日客人较少」提示
+ if(fat)fat.style.display=nightFatigueFor(S.day)>0?'':'none';
+}
+function custReceive(){ // 接待下一位:逐需求位扫柜台(findIndex 首个主属性匹配位)·成交=sold标记+清位+sellPrice入账·无匹配=空手走
+ if(S.mode!=='shop')return;
+ if(S.guestAt>=S.guestQ.length){CUST.disp=null;renderCustWindow();toast(t('custDone'),1600);return} // 队列尽:窗口收口(博士在窗时点此=送客)
+ counterFix();
+ const g=S.guestQ[S.guestAt++];
+ if(g.doctor){ // K4:博士=采购站——展示3件高档货等玩家点购,不自动成交;队列收口自动回空态对博士不适用(要留着买东西)
+  CUST.disp={g,bought:[],miss:[],doctor:true};
+  toast(t('docHere'),2400);
+  renderCustWindow();renderShopGold();
+  return;
+ }
+ const bought=[],miss=[];
+ g.els.forEach(el=>{
+  const i=S.counterSlots.findIndex(s=>{if(s.cid==null)return false;const p=packByCid(s.cid);return p&&custMainEl(p)===el});
+  if(i<0){miss.push(el);return} // 柜台无匹配卡=错失,不等人(库存同五行卡不算)
+  const s=S.counterSlots[i],p=packByCid(s.cid),price=sellPrice(p);
+  p.sold=true; // 与商人 mSell 同口径:sold 标记,日切 closeShop 的 pack 过滤清卡
+  s.cid=null;s.demand=null;
+  S.gold+=price;if(S.ledger)S.ledger.guest=(S.ledger.guest||0)+price;
+  bought.push({el,name:p.name,price});
+ });
+ CUST.disp={g,bought,miss};
+ if(bought.length){coinSound();
+  toast(t('custBuy').replace('{name}',custNameOf(g)).replace('{k}',bought.length).replace('{p}',bought.reduce((s,b)=>s+b.price,0))
+   +(miss.length?' · '+t('custShort').replace('{els}',miss.map(custElLab).join('·')):''),2200)}
+ else toast(t('custMissT').replace('{els}',miss.map(custElLab).join('·')).replace('{name}',custNameOf(g)),2200);
+ renderCustWindow();renderMerchant();renderShopGold();
+ if(S.guestAt>=S.guestQ.length){CUST.disp=null;renderCustWindow()} // 队列收口:窗口回「下一位」空态(按钮禁用+今日客人都送走了)
+}
+function doctorBuy(i){ // K4:博士采购——现行采购流程模式(钱够→ledger.doctor支出→applyGood 现行入库/入槽)·每件1次·钱不够真实反馈拒
+ const d=CUST.disp;if(!d||!d.g.doctor||S.mode!=='shop')return;
+ const it=d.g.items[i];if(!it||it.bought)return;
+ if(S.gold<it.cost){toast(t('docPoor').replace('{p}',it.cost),1800);return}
+ S.gold-=it.cost;if(S.ledger)S.ledger.doctor=(S.ledger.doctor||0)+it.cost;
+ it.bought=true;
+ applyGood(it.g); // 高级坯入箱/神器入槽(共享定义表已克隆,污染不回流)
+ toast(t('docBought').replace('{n}',docName(it.g)).replace('{p}',it.cost),2200);
+ renderShopGold();renderCustWindow();
 }
 /* ===== v34 商品图鉴(大爷21:16令):纯只读思考工具——全池三类陈列+在架状态,开关不碰任何游戏状态 ===== */
 const HI_DEFS=Object.keys(HI_TABLE).map(k=>HI_TABLE[k](ALL_GOODS.find(g=>g.id===k))); // ✨高级货陈列模板(价格随级动态算)
@@ -3166,7 +3365,10 @@ ringCap:'🌀 五行能量环',ringHint:'点选素材 → 点环放置 · 相邻
 /* 批4 CC充能结构+充能台 */
 ccBtn:'⚡ 充能台',ccHint:'只列可充能卡(铸成品级上品/真髓)——充 1 格价=该卡当前卖价×15% 向上取整,可连充至满;一次性卡(杂/中品)无充能资格,列表不收',ccCharge:'充 1 格',ccFull:'已满充——不用再充',ccPoor:'灵石不够——充 1 格要 {n}💰',ccDone:'⚡ 充能 +1({cc}/{mx})',ccNone:'册上没有可充能卡——上品/真髓铸成才可充能',ccOneNote:'一次性卡(杂/中品)无充能资格——耗尽即报废,不可充',ccEmptyTip:' · 已耗尽(充能台可回充)',ccDexLine:'可充能·出厂充能 3 格(真髓 5)·耗尽可充能台回充',ccClose:'先不充了',
 /* 批5 柜台格子化(三层壳:窗口/柜台/库存格子墙) */
-ctLab:'🪞 柜台 · 上架展示位 · 点库存卡上架 · 点柜台卡取回',gwLab:'📦 库存格子墙 · 点卡上架 · 双击/拖拽出售 · 悬停看详情',ctWait:'等待下一位客人…',ctFull:'柜台 6 格已满——先取回一张再上架',ctPlaced:'🪞 上架「{n}」→ {i} 号位',ctTaken:'📥 取回「{n}」回库存',ctTakeTip:'点我取回库存',ctSlotTip:'空柜台位',gwTip:'点卡上架 · 双击或拖到摊架出售',shopHint:'点摊架买 · 点库存卡上架 · 双击/拖拽卖 · 「🌙 离开·安睡」结账进明天'},
+ctLab:'🪞 柜台 · 上架展示位 · 点库存卡上架 · 点柜台卡取回',gwLab:'📦 库存格子墙 · 点卡上架 · 双击/拖拽出售 · 悬停看详情',ctWait:'等待下一位客人…',ctFull:'柜台 6 格已满——先取回一张再上架',ctPlaced:'🪞 上架「{n}」→ {i} 号位',ctTaken:'📥 取回「{n}」回库存',ctTakeTip:'点我取回库存',ctSlotTip:'空柜台位',gwTip:'点卡上架 · 双击或拖到摊架出售',shopHint:'点摊架买 · 点库存卡上架 · 双击/拖拽卖 · 「🌙 离开·安睡」结账进明天',
+/* 批6 客人系统 */
+custNext:'🚶 接待下一位',custLeft:'今日剩 {n} 位',custDone:'今日客人都送走了',custBuy:'🚶 {name} 买走 {k} 张 +{p}💰',custMissT:'柜台没有 {els} 行——{name} 空手走了(错失,不等人)',custShort:'{els}行缺货',custElTip:'需求位:{el} · 柜台卡主属性匹配即成交',custFew:'🌙 昨夜熬夜 · 今日客人较少',docHere:'👨‍🔬 博士驾到——今晚只此一遇,过时不候!',docPoor:'💰 灵石不够——博士摇头不卖',docBought:'🧪 从博士处购入 {n} -💰{p}',docDone:'已购',docPriceTip:'博士价=常规价×1.2 · {p}💰 · 只此一日',docVisitTag:'👨‍🔬 采购中 · 过时不候',
+webBtn:'🌐 网上商店',webTitle:'🌐 网上商店 · 主动联系博士',webHint:'常驻直邮 · 价格=常规价×1.5 · 不限日次 · 高级坯档位随制符师等级',webBuyBt:'下单',webPoor:'💰 灵石不够——博士不发货',webBought:'📦 已下单:{n} -💰{p}',webInkDone:'已入册',webExcl:'网上独有',webMat:'高档素材',webNote:'网上价=常规价×1.5——博士只收跑腿费,概不退换',webBtnTip:'主动联系博士 · 常驻直邮 · 价格=常规价×1.5',webClose:'先不买了'},
  en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'End Crafting',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83C\uDFAE New Game',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mst:'\uD83C\uDF33 Skill Tree',mtitle:'Talisman Workshop \u00B7 Runes by Ear',msub:'Hear the pitch \u00B7 Draw the talisman \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options',gstart:'\uD83C\uDFAE New Game',gcont:'\u25B6\uFE0F Continue',mquit:'\uD83D\uDEAA Quit',ptitle:'Paused',presume:'\u25B6\uFE0F Resume',psave:'\uD83D\uDCBE Save',pload:'\uD83D\uDCC2 Load',phome:'\uD83C\uDFE0 Main Menu',nosave:'No save yet',rfw:'Refresh',snark:'Snark',dockHead:'🧰 Chest · drag blanks onto the anvil · click a material to feed the rings',wheel:'🌀 Wheels',spx:'📖 Spell Codex',b5fix:'🩹 Rune Mender · Mend Black Balls',b5polish:'✨ Rune Polish · String Flourish',b5fixHint:'Play the solfège sequence in order on the string keys to mend a black ball — one strike: any wrong key fails it (stays black, sell -20%); all 4 right = gilded (sell -5%). Keys tire daily; they recover overnight.',b5polHint:'Play the 3-note solfège in order for the gold-frame flourish (visual only, no price change). Wrong key = new question (fresh keys); shares the daily key pool with mending. Skippable.',b5replay:'🔊 Replay',b5skip:'⏭ Skip Polish',b5fixStep:'Black ball',b5polished:'Polished!',b5fixok:'Mended · gilded',b5fixno:'Missed · stays black',b5free:'visual only · no price change',b5retry:'Missed — new question (unlimited retries)',b5skipdone:'Polish skipped (visual only, no price impact)',b7keyLeft:'{n} left today',b7keyOut:'Exhausted today · recovers at dawn',b7stash:'📥 Stash It',b7stashed:'Stashed — black balls kept; click it in the chest to resume mending',b7tired:'Key fatigue: not enough fresh notes today — stash it and come back tomorrow when the pool recovers.',b7tiredS:'Keys tired',b7busy:'Mid-question / settling — mend it afterwards',b7packdone:'mended in chest!',b7mend:'🔧Fix',b7adorn:'✨Polish',b7pendTitle:'Pending: click to resume in the Rune Mender',b7tab3:'3rd-Position Zone',b7tab1:'1st-Position Zone',b7tabF:'Heavenly Fused Board (✦ = merged key · daily allowance sums both boards)',upgIns1:'Advanced Stringbox',upgIns1D:'Adds a 1st-position board to the Rune Mender: dual boards for mending/polish (15→30 string keys), switch via form tabs (mending defaults 3rd, polish 1st).',upgIns1Done:'Dual boards online! 30-key pool',upgInsF:'Heavenly Fusion Core',upgInsFD:'Fuses both boards into one full board: shared positions become merged keys (✦, daily allowance sums both boards) and every key gains +1 daily tap (requires Advanced Stringbox).',upgInsFDone:'Heavenly fusion! ✦ merged keys doubled + all keys +1',upgKeyT:'Key Quenching',upgKeyTD:'+1 tap per key per day per level · all forms (key-fatigue expansion)',upgKeyTDone:'+1 tap/key/day',upgMix:'Blend Mastery',upgMixD:'+1 ring placement per finished talisman per level (4 perfect answers = 4 base → 5/6; not granted on burst)',upgMixDone:'+1 placement per talisman',ringMixTag:'+{n}/cast',b7needPre:'Requires Advanced Stringbox',b7formOn:'dual boards',b7formFOn:'fused board',b7formOff:'not installed',dbgTitle:'🐞 Debug Panel',dbgWarn:'⚠️ debug actions write to the save (test pollution)',dbgForm:'Instrument form',b7f0:'Basic · 3rd Pos',b7f1:'Advanced · Dual',b7f2:'Final · Fused',dbgResetKeys:'Reset key pool (daily fatigue cleared)',dbgResetNotes:'Clear used notes',
 nightBtn:'🌙 Night Run',nightTitle:'🌙 Night Run · Wilderness Loot',nightCd:'Dawn in',nightGoHome:'🏠 Go Home & Settle',nightHaul:"🎒 Tonight's Haul",nightHaulEmpty:'Nothing yet',nightRule:"Rules: ⚡AP=12 · each move/open/gather costs 1 AP · every action brings dawn 1 step closer (starts 16) · AP or dawn hitting 0 forces sunrise — be home, or lose tonight's haul!",nightFar:'Too far — you can only move along a connection',nightNoAP:'Not enough AP',nightBusy:'Finish crafting first — no night runs mid-question',nightTblue:'common',nightTpurple:'uncommon',nightTorange:'rare',nightOpenBox:'📦 Open Box',nightOpenPick:'🌿 Gather',nightBoxOpen:'Box opened!',nightPickOpen:'Gathered!',nightBoxInfo:'A container: opening costs 1 AP, loot scales with node rarity',nightPickInfo:'Gatherable: costs 1 AP, loot scales with node rarity',nightPlainInfo:'Wilderness node — just a waypoint',nightHomeInfo:'Home · start & extraction: press "Go Home & Settle" here to bank the haul',nightEmptied:'Already emptied',nightCatMoney:'Gold',nightSettleT:"Tonight's Settlement",nightDayN:'Night of day {d}',nightSafe:'🏠 Home safe — haul banked!',nightLost:"🌅 Dawn broke before you got back — tonight's haul is all lost!",nightTotal:'Total',nightZero:'All lost',nightStashNote:'📦 Supplies/materials stored in the night stash (materials feed the energy ring in a later batch)',nightFatigueNote:"🌙 Staying up late: tomorrow's customers -1",nightBackDay:'Back to Day',
 nightN0:'Workshop Yard',nightN1:'Dry Riverbed',nightN2:'Ruined Gas Station',nightN3:'Night Market Stall',nightN4:'Old Bridge',nightN5:'Abandoned Clinic',nightN6:'Ruined Greenhouse',nightN7:'Metro Air Vent',nightN8:'Watchtower',nightN9:'Glass Chapel',nightN10:'Tin-Plate Bazaar',nightN11:'Signal Tower Base',nightN12:'Silted Ferry',nightN13:'Overpass Dead End',nightN14:'Old Water Tower',
@@ -3177,14 +3379,17 @@ ringCap:'🌀 Elemental Rings',ringHint:'Pick a material → click a ring to pla
 /* 批4 CC充能结构+充能台 */
 ccBtn:'⚡ Charge Bench',ccHint:'Rechargeable cards only (cast tier Fine/True) — one cell costs 15% of the current sell value, rounded up; charge repeatedly to full. One-shot cards (Crude/Medium) have no recharge qualification and are not listed',ccCharge:'+1 Cell',ccFull:'Already full — no charge needed',ccPoor:'Not enough coins — one cell costs {n}💰',ccDone:'⚡ Charged +1 ({cc}/{mx})',ccNone:'No rechargeable cards in the pack — only Fine/True tier casts recharge',ccOneNote:'One-shot cards (Crude/Medium) cannot be recharged — spent out means scrapped',ccEmptyTip:' · depleted (refill at the Charge Bench)',ccDexLine:'Rechargeable · 3 cells at forge (True: 5) · refill at the Charge Bench when depleted',ccClose:'Not now',
 /* Batch 5 counter shell */
-ctLab:'🪞 Counter · Display slots · click a stock card to shelve · click a counter card to take back',gwLab:'📦 Stock Grid · click to shelve · double-click / drag to sell · hover for details',ctWait:'Waiting for the next customer…',ctFull:'Counter full (6/6) — take one back before shelving another',ctPlaced:'🪞 Shelved "{n}" → slot {i}',ctTaken:'📥 Took "{n}" back to stock',ctTakeTip:'click to take back',ctSlotTip:'Empty counter slot',gwTip:'click to shelve · double-click or drag to the shelf to sell',shopHint:'Buy from the shelf · click a stock card to shelve · double-click / drag to sell · "🌙 Leave · Sleep" settles into tomorrow'}};
+ctLab:'🪞 Counter · Display slots · click a stock card to shelve · click a counter card to take back',gwLab:'📦 Stock Grid · click to shelve · double-click / drag to sell · hover for details',ctWait:'Waiting for the next customer…',ctFull:'Counter full (6/6) — take one back before shelving another',ctPlaced:'🪞 Shelved "{n}" → slot {i}',ctTaken:'📥 Took "{n}" back to stock',ctTakeTip:'click to take back',ctSlotTip:'Empty counter slot',gwTip:'click to shelve · double-click or drag to the shelf to sell',shopHint:'Buy from the shelf · click a stock card to shelve · double-click / drag to sell · "🌙 Leave · Sleep" settles into tomorrow',
+/* Batch 6 customers */
+custNext:'🚶 Next Customer',custLeft:'{n} left today',custDone:'All customers served',custBuy:'🚶 {name} bought {k} card(s) +{p}💰',custMissT:'No {els} card on the counter — {name} left empty-handed (won\'t wait)',custShort:'{els} out of stock',custElTip:'Wants: {el} · sells when a counter card\'s main element matches',custFew:'🌙 Late night — fewer customers today',docHere:'👨‍🔬 The Doctor is here — tonight only, gone by dawn!',docPoor:'Not enough coins — the Doctor shakes his head',docBought:'🧪 Bought {n} from the Doctor -💰{p}',docDone:'sold',docPriceTip:'Doctor price = regular ×1.2 · {p}💰 · tonight only',docVisitTag:'👨‍🔬 Shopping · tonight only',
+webBtn:'🌐 Web Shop',webTitle:'🌐 Web Shop · Contact the Doctor',webHint:'Always open · price = regular ×1.5 · no daily limit · blank tiers scale with your level',webBuyBt:'Order',webPoor:'Not enough coins — the Doctor ships nothing',webBought:'📦 Ordered: {n} -💰{p}',webInkDone:'Owned',webExcl:'Web exclusive',webMat:'Premium stock',webNote:'Web price = regular ×1.5 — the Doctor keeps a courier fee, no refunds',webBtnTip:'Contact the Doctor · always open · price = regular ×1.5',webClose:'Not now'}};
 let LANG='zh';try{LANG=localStorage.getItem('ft_lang')||'zh'}catch(e){}
 let CUR_RES=[1280,720];
 function t(k){return (I18N[LANG]&&I18N[LANG][k])||I18N.zh[k]||k}
 function setLang(l){LANG=l;try{localStorage.setItem('ft_lang',l)}catch(e){}applyLang()}
 function setRes(w,h2){CUR_RES=[w,h2];app.style.width=w+'px';app.style.height=h2+'px';try{localStorage.setItem('ft_res',w+'x'+h2)}catch(e){}fit();setTimeout(updateSword,80);renderOpts()}
 function applyLang(){
- const M=[['cal','btn-cal'],['endf','btn-endforge-lab'],['day2','btn-day2'],['quest','btn-quest'],['opt','btn-opt'],['ringCap','ring-cap'],['ringHint','ring-hint'],['ringFuel','ring-fuel-lab'],['dockHead','dock-head-txt'],['spx','goods-spx'],['ccBtn','bill-cc'],['ctLab','counter-lab'],['gwLab','gw-lab'],['ctWait','cust-wait']]; // v31:upg/skill 主界面钮退役;endf=侧栏钮文字位;ring*/dockHead=v36R批2a能量环新文案;spx=v36B3法术图鉴钮;ccBtn=v36批4充能台入口;ct*/gw*=批5柜台三层壳
+ const M=[['cal','btn-cal'],['endf','btn-endforge-lab'],['day2','btn-day2'],['quest','btn-quest'],['opt','btn-opt'],['ringCap','ring-cap'],['ringHint','ring-hint'],['ringFuel','ring-fuel-lab'],['dockHead','dock-head-txt'],['spx','goods-spx'],['ccBtn','bill-cc'],['ctLab','counter-lab'],['gwLab','gw-lab'],['ctWait','cust-wait'],['custNext','cust-next'],['custFew','cust-fat'],['webBtn','web-shop'],['webTitle','web-title'],['webHint','web-hint'],['webClose','web-close']]; // v31:upg/skill 主界面钮退役;endf=侧栏钮文字位;ring*/dockHead=v36R批2a能量环新文案;spx=v36B3法术图鉴钮;ccBtn=v36批4充能台入口;ct*/gw*=批5柜台三层壳;custNext/custFew=批6接待钮+熬夜提示(#cust-wait 由renderCustWindow按ctWait现渲);web*=批6K5网上商店
  M.forEach(p=>{const el=document.getElementById(p[1]);if(el)el.textContent=t(p[0])});
  const mt=document.getElementById('menu-title');if(mt)mt.textContent=t('mtitle');
  const ms=document.getElementById('menu-sub');if(ms)ms.textContent=t('msub');
@@ -3202,7 +3407,9 @@ function applyLang(){
  renderRing(); // v36R批2a:环网节点tooltip/文案随语言重渲
  if($('dbg-panel').classList.contains('on'))b7DbgRender(); // v36B7:debug 面板文案随语言重渲染
  if($('cc-modal').classList.contains('on'))renderCc(); // 批4:充能台文案随语言重渲染
- if(S.mode==='shop')renderMerchant(); // 批5:柜台条/格子墙/toast 文案随语言重渲(关店=只落静态文案,下次进店生效)
+ if($('web-modal').classList.contains('on'))renderWeb(); // 批6K5:网上商店文案随语言重渲染
+ const wsb=document.getElementById('web-shop');if(wsb)wsb.title=t('webBtnTip'); // 批6K5:入口钮悬停提示
+ if(S.mode==='shop'){renderMerchant();renderCustWindow()} // 批5:柜台条/格子墙/toast 文案随语言重渲(关店=只落静态文案,下次进店生效);批6:客人窗(名/台词/需求章)随语言重渲
  nightApplyLang(); // NIGHT D1:夜行面板文案随语言重渲染(面板关着=只落静态文案)
  renderOpts()}
 function renderOpts(){
@@ -3237,12 +3444,13 @@ function loadGame(){
  let d=null;try{d=JSON.parse(localStorage.getItem('ft_save'))}catch(e){}
  if(!d||d.v!==1||!d.S){toast('\u26A0\uFE0F \u5B58\u6863\u65E0\u6548',1600);return false}
  Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,d.S);if(!S.char)S.char='smith';if(!S.charms)S.charms={};
- S.ledger=S.ledger||{forge:0,sell:0,buy:0}; // v31:旧档补流水台账默认值
+ S.ledger=S.ledger||{forge:0,sell:0,buy:0,guest:0,doctor:0,web:0}; // v31:旧档补流水台账默认值(批6新键缺省=零动老账)
   if(S.qActive&&S.qActive.thief){S.qActive.archer=S.qActive.thief;delete S.qActive.thief}
   if(S.qBoard&&S.qBoard.thief){S.qBoard.archer=S.qBoard.thief;delete S.qBoard.thief}
  if(['playing','input','quench','busy','session'].includes(S.phase)){S.phase='idle';S.q=[];S.pos=0;S.revealed=false;S.pendingQuench=false}
  S.row=S.row||[];S.potions=S.potions||{safe:0,up:0};S.potSel=null;renderMarkRow(); // v29:标记台账/药水随存档恢复
  S.powders=S.powders||{}; // v36B2:粉末袋缺省
+ if(typeof S.webInk!=='number')S.webInk=0; // 批6K5:网上独有品入册标记缺省(老档=未入册)
  if(S.up&&S.up.rev5===undefined)S.up.rev5=0; // v36B6:扩容档缺省(老档=未购);v36R批2a升级入口退役但已购档保留5音题口径(灵石不退,renderUpg占位说明)
  if(S.up){if(S.up.ins1===undefined)S.up.ins1=0;if(S.up.insF===undefined)S.up.insF=0;if(S.up.keyT===undefined)S.up.keyT=0;if(S.up.mix===undefined)S.up.mix=0} // v36B7:乐器线升级缺省(老档=未购);批2b调合心得缺省0
  (Array.isArray(S.pot)?S.pot:[]).forEach(p=>{if(p&&p.k)S.powders[p.k]=(S.powders[p.k]||0)+1}); // v36R批2a老档迁移(R5延续):转盘退役——碟内粉末全数归还底箱袋(不丢粉·经济零动)
@@ -3289,6 +3497,14 @@ function loadGame(){
  if(!Array.isArray(S.counterSlots)||S.counterSlots.length!==6)S.counterSlots=[{cid:null,demand:null},{cid:null,demand:null},{cid:null,demand:null},{cid:null,demand:null},{cid:null,demand:null},{cid:null,demand:null}];
  S.counterSlots=S.counterSlots.map(s=>(s&&typeof s==='object')?{cid:(typeof s.cid==='number'?s.cid:null),demand:(s&&s.demand!==undefined?s.demand:null)}:{cid:null,demand:null});
  S.counterSlots.forEach(s=>{if(s.cid!=null&&!S.pack.some(p=>p.cid===s.cid&&!p.sold))s.cid=null});
+ // v36批6老档合流:客人队列缺省/脏值兜底(四代老档=当日按新规则现生成);已接待指针越界钳制;博士条目(items载荷)净化
+ if(!Array.isArray(S.guestQ))S.guestQ=[];
+ S.guestQ=S.guestQ.filter(g=>g&&typeof g==='object'&&Array.isArray(g.els)&&g.els.every(el=>ELEMS.includes(el)))
+  .map(g=>({name:String(g.name||'?'),nameEn:String(g.nameEn||g.name||'?'),els:g.els.slice(0,2),sayI:(typeof g.sayI==='number'&&g.sayI>=0)?g.sayI|0:0,doctor:!!g.doctor,
+   items:g.doctor?(Array.isArray(g.items)?g.items.filter(x=>x&&x.g&&typeof x.g==='object'&&typeof x.cost==='number').map(x=>({g:x.g,cost:x.cost|0,bought:!!x.bought})):[]):[]}));
+ S.guestAt=(typeof S.guestAt==='number'&&S.guestAt>=0)?Math.min(S.guestAt|0,S.guestQ.length):0;
+ if(!S.guestQ.length)rollGuestQ();
+ CUST.disp=null;renderCustWindow(); // 批6:读档窗口回空态(队列在档按指针续接)
  renderRing(); // v36R批2a:环网随存档恢复(燃料/触碰环/最近放置)
  S.mkt=S.mkt||[];S.bought=S.bought||{}; // v34:货架/日限购缺省
  if(S.mkt.length&&S.mkt.some(g=>!g.cls))S.mkt=[]; // v34:旧货架结构作废——进店 openMerchant 重 roll,已购 S.bought/perm/art 原样保留
@@ -3349,6 +3565,8 @@ addEventListener('keydown',e=>{if(e.key!=='Escape')return;
  if(xm&&xm.classList.contains('on')){xm.classList.remove('on');return} // v36B3:法术图鉴 ESC 关闭
  const cm126=document.getElementById('cc-modal');
  if(cm126&&cm126.classList.contains('on')){cm126.classList.remove('on');return} // 批4:充能台 ESC 关闭(回账单)
+ const wm=document.getElementById('web-modal');
+ if(wm&&wm.classList.contains('on')){wm.classList.remove('on');return} // 批6K5:网上商店 ESC 关闭(回当铺)
  if(mm.classList.contains('on'))return;
  if(ov.classList.contains('on'))return;
  openPause()});
@@ -3366,6 +3584,8 @@ function closeShop(){
  S.mode='forge';$('shop').classList.remove('on');
  const rentDay=(S.day%7===0); // 大爷22:55令:每7天交房租,交租日打烊时收
  S.day++;S.forgeEnded=false;S.phase='idle';
+ rollGuestQ(); // v36批6:日切生成今日客人队列(昨日未接待完的作废不累积;熬夜扣减经 nightFatigueFor 现读)
+ CUST.disp=null;renderCustWindow(); // 批6:窗口回空态+girl帧循环停表
  S.pack=S.pack.filter(p=>!p.sold);
  if(S.perm.relic){const inc=S.perm.relic*10;S.gold+=inc;toast('💎 锈怀表走时 +'+inc+'💰',2000)} // 遗物:每日被动收益
  if(S.art.includes('fairy')){ // 🧚赠礼妖精(大爷00:37令):每晨自动送3件低级装备(免费补坯已取消)
@@ -3373,8 +3593,9 @@ function closeShop(){
   for(let i=0;i<3&&S.chest.length<45;i++){const b=FB[Math.floor(Math.random()*FB.length)];S.chest.push({name:b[0],emoji:b[1],lv:1,cat:b[2]})}
   toast('🧚 赠礼妖精送来 3 件低级装备!',2600);
  }
+ if(S.webInk){for(let i=0;i<2;i++){const el=ELEMS[Math.floor(Math.random()*ELEMS.length)];S.powders[el+':2']=(S.powders[el+':2']||0)+1}toast('🖋️ 博士的五行墨送来 2 份二品粉!',2400)} // 批6 K5:网上独有品晨送(安睡=清晨,妖精同点)
  S.dayLog=[];S.gStreak=0;S.gBonus=0;questRollover();S.refreshCnt=0;
- S.ledger={forge:0,sell:0,buy:0};closeBill(); // v31:日切清流水台账(小票已在睡前过目)
+ S.ledger={forge:0,sell:0,buy:0,guest:0,doctor:0,web:0};closeBill(); // v31:日切清流水台账(小票已在睡前过目);批6:客人/博士/网上店流水同清
  S.row=[];S.potSel=null;S.dayErrN=0;S.dayFull=0;syncPotential();renderMarkRow(); // v29/v36B2:日切清标记台账(标记价值已逐题经轮盘兑现,此处只清跨日连击史)
  hud();updateSword();
  if(rentDay){
@@ -3392,9 +3613,10 @@ function printTick(final){const c=au(),t=c.currentTime; // 打印头「哒」声
  o.frequency.setValueAtTime(final?620:1950,t);o.frequency.exponentialRampToValueAtTime(final?180:980,t+.03);
  g.gain.setValueAtTime(final?.12:.07,t);g.gain.exponentialRampToValueAtTime(.0001,t+(final?.14:.05));
  o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+(final?.16:.06))}
-function billData(){
- const d=S.ledger||{forge:0,sell:0,buy:0},rent=S.day%7===0?CFG.RENT:0;
- return {forge:d.forge||0,sell:d.sell||0,buy:d.buy||0,rent,net:(d.forge||0)+(d.sell||0)-(d.buy||0)-rent}}
+function billData(){ // 批6 K3:沿用账单结构只增条目类型——guest=客人成交收入(加项)·doctor/web=博士/网上店采购支出(减项)
+ const d=S.ledger||{forge:0,sell:0,buy:0,guest:0,doctor:0,web:0},rent=S.day%7===0?CFG.RENT:0;
+ return {forge:d.forge||0,sell:d.sell||0,guest:d.guest||0,buy:d.buy||0,doctor:d.doctor||0,web:d.web||0,rent,
+  net:(d.forge||0)+(d.sell||0)+(d.guest||0)-(d.buy||0)-(d.doctor||0)-(d.web||0)-rent}}
 function closeBill(){$('bill-modal').classList.remove('on')}
 function openBill(){
  if(S.mode!=='shop')return;
@@ -3408,6 +3630,9 @@ function openBill(){
   {k:'forge',lab:'🔨 制符兑现',v:b.forge},
   {k:'sell',lab:'🛒 卖出收入',v:b.sell},
   {k:'buy',lab:'📦 买入支出',v:-b.buy}];
+ if(b.guest)rows.push({k:'guest',lab:'🚶 客人成交',v:b.guest}); // 批6 K3:新条目类型——有流水才打印(小票短)
+ if(b.doctor)rows.push({k:'doctor',lab:'👨‍🔬 博士采购',v:-b.doctor});
+ if(b.web)rows.push({k:'web',lab:'🌐 网上商店',v:-b.web});
  if(b.rent)rows.push({k:'rent',lab:'🏠 摊租',v:-b.rent}); // 仅交租日打印该行
  let i=0;
  (function step(){
@@ -3426,6 +3651,8 @@ $('bill-cc').onclick=()=>openCc(); // 批4充能台:同层挂位(bill-btns);cc-m
 $('cc-close').onclick=()=>$('cc-modal').classList.remove('on');
 $('bill-sleep').onclick=()=>{if(!$('bill-modal').classList.contains('on'))return;closeBill();nightFade(closeShop,'安睡',`🌙 第 ${S.day} 天结束 · 明天继续`)};
 $('btn-close').onclick=()=>{if(S.mode!=='shop')return;openBill()};
+$('cust-next').onclick=custReceive; // 批6:接待下一位(只买柜台位·错失不等人)
+$('web-shop').onclick=openWeb;$('web-close').onclick=()=>$('web-modal').classList.remove('on'); // 批6K5:网上商店常驻入口+关闭
 
 /* ================= 成功/结束 ================= */
 function growSword(){
@@ -3465,8 +3692,8 @@ function restart(newRun){ // v36C:newRun=true=角色选择全新开局→已出�
  S.totHits=0;S.totStrikes=0;S.hits=0;S.strikes=0;S.dmgLv=0;
  S.roleLv=1;S.dayLog=[];S.day=1;S.mode='forge';S.pack=[];S.counter=[];S.forgeEnded=false;S.soldCnt=0;$('shop').classList.remove('on');
  S.counterSlots=[{cid:null,demand:null},{cid:null,demand:null},{cid:null,demand:null},{cid:null,demand:null},{cid:null,demand:null},{cid:null,demand:null}];S.shopCapacity=24;S.cardSeq=0; // v36批5:新档柜台6空位/容量字段/卡id序列归零
- S.gStreak=0;S.gBonus=0;S.perm={armor:0,wand:0,relic:0};S.dragon=0;S.ironNext=0;S.eventMult=1;S.eventTxt='';S.mkt=[];S.bought={};S.refreshCnt=0;
- S.ledger={forge:0,sell:0,buy:0};closeBill(); // v31:新档清流水台账+关账单
+ S.gStreak=0;S.gBonus=0;S.perm={armor:0,wand:0,relic:0};S.dragon=0;S.ironNext=0;S.eventMult=1;S.eventTxt='';S.mkt=[];S.bought={};S.refreshCnt=0;S.webInk=0; // 批6K5:网上独有品「五行墨」入册标记归零
+ S.ledger={forge:0,sell:0,buy:0,guest:0,doctor:0,web:0};closeBill(); // v31:新档清流水台账+关账单
  S.xp=0;S.sp=0;S.sk={sell:0,buy:0,xp:0,quench:0};S.art=[];
  S.row=[];S.potions={safe:0,up:0};S.potSel=null;S.dayErrN=0;S.dayFull=0;renderMarkRow(); // v29:新档清标记台账+药水
  S.powders={'fire:1':3};S.rep={face:50,dark:0};S.codex={}; // v36R批2a:开局赠3份一品火粉进袋(不进碟——答对攒放入次数后手动上环,现行B6赠粉口径保留)
@@ -3475,6 +3702,7 @@ function restart(newRun){ // v36C:newRun=true=角色选择全新开局→已出�
  $('fix-modal').classList.remove('on');
  S.ins={form:0,view:0};S.kfat={day:1,keys:{},notes:{}}; // v36B7:新档=初阶三把位+键池满/已用音空
  S.nightLog=[];S.nightStash=[];S.nightFatigue=null;NIGHT.mode='day';NIGHT.trip=null; // NIGHT D1:新档夜行账本/仓库/熬夜标志清零+昼夜状态机回白天(夜间overlay在开时restart不可达,防御性复位)
+ S.guestQ=[];S.guestAt=0;rollGuestQ();CUST.disp=null;renderCustWindow(); // v36批6:新档第1天客人队列现生成+窗口空态
  S.up={anvil:0,sword:0,armor:0,bow:0,wand:0,shield:0,artSlot:0,rev5:0,ins1:0,insF:0,keyT:0,mix:0};S.anvils=[];syncFocus();renderRack();
  S.qDay=0;S.qBoard={};S.qActive={};S.nq=newRun?0:9999;renderQStrip(); // v36C:全新开局nq清0走新档梯度;裸restart=9999老兵(难度零回退)
  S.chest=[{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'}];renderChest();
@@ -3715,7 +3943,7 @@ function nightClick(id){const T=NIGHT.trip;if(!T||NIGHT.mode!=='night')return;if
 
 /* 测试钩子 */
 window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,makeItem,judgeSpell,spellName,affixName,affixNames,syncFocus,stashAll,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,gradeQuestion,appendMark,recalcEvolution,markVal,progSwords,potEligible,applyPotion,enterPotSel,MARK_VAL,MARK_ORDER,POTIONS,swordCap,openMerchant,renderMerchant,openUpg,buyUpg,UPG,anvilN,renderRack,renderUpg,openBill,closeBill,billData,metaObj,metaSave,settleLegacy,renderSkillTree,updListenBtn,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()},ALL_GOODS,HI_TABLE,HI_CHANCE,gCls,rollShelf,ELEMS,ELEM_META,zeroElem,powTotal,POWDER_GOODS,answerSettle,renderSpellCodex,openSpellCodex,sellPrice,ccTierOf,ccSpend,ccPriceOf,openCc,renderCc,ccCharge, // v36B5(V21教训:新函数必须暴露才能 TB 测);批2a:renderPot/potPut/potTake/potLocked/spinWheel/potWeights 随转盘退役→answerSettle+__api.ring;批2b:rollAffix随概率词条退役→affixNames+__api.ring.aff;批4:ccTierOf(CC定档表)+ccSpend(统一消耗)+充能台四件套
- counterFix,counterPlace,counterTake,counterUsed,cardFaceHTML,cardTipBase,freshCounterSlots,packByCid,COUNTER_N, // v36批5:柜台位三件套+共用卡面渲染+自愈
+ counterFix,counterPlace,counterTake,counterUsed,cardFaceHTML,cardTipBase,freshCounterSlots,packByCid,COUNTER_N,genGuestQ,rollGuestQ,CUST_BASE,custMainEl,CUST_NAMES,custReceive,custRender:renderCustWindow,custElLab,genDoctor,DOCTOR_POOL,docPriceOf,doctorBuy,docName,WEB_POOL,webPriceOf,openWeb,renderWeb,webBuy, // v36批5:柜台位三件套+共用卡面渲染+自愈;批6:客人队列生成/日切落位/波次基数/主属性判定源/接待成交/窗口渲染/需求位标签/博士四件套/网上店五件套(TB测)
  b5:{pos3:B5_POS3,pos1:B5_POS1,openMidi:b5OpenMidi,semiToPos:b5SemiToPos,sol:b5SolOf,nm:b5NoteName,open:b5OpenSession,fixClick:b5FixClick,polClick:b5PolishClick,polNew:b5PolishNewQ,skip:b5PolishSkip,auto:b5AutoFinish,record:b5RecordBall,finish:b5FinishSw,paper:b5PaperSVG},
  ring:{net:RING_NET,st:ringSt,node:ringNode,adj:ringAdjOf,lv:ringLvOf,spread:ringSpreadOk,attrOk:ringAttrLockOk,qTot:ringQualityTot,can:ringCanPlace,elem:ringElemTotals,reset:ringResetCast,snap:ringSnapshot,craftSnap:ringCraftSnap,aff:ringAffixes,qLv:ringQualLv,rec:ringRecipeArmed,mat:ringMatSpec,matName:ringMatName,matCnt:ringMatCount,select:ringSelectMat,place:ringPlace,locked:ringLocked,laser:ringLaserClick,render:()=>{if(typeof renderRing==='function')renderRing()}}, // v36R批2a(V21教训:新函数必须暴露才能 TB 测);批2b:+craftSnap/aff(词条环)/qLv(品质环)/rec(配方变化武装)
  b7:{roll:b7Roll,cap:keyCapOf,left:b7Left,tap:b7Tap,pool:b7Pool,genQ:b7GenQ,board:b7BoardTable,fused:B5_FUSED,dual:B7_DUAL_SET,pend:b7PendingOf,stash:b7StashCur,openPack:b7OpenPack,dbg:b7DbgRender,retry:b7RetryTired,sw:b5SW,rr:b7RerenderFix}, // v36B7(V21教训:新函数必须暴露才能 TB 测)

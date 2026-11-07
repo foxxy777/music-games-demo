@@ -167,7 +167,7 @@ html,body{background:#0a0705;font-family:"Segoe UI","Microsoft YaHei",system-ui,
 /* ===== v36R 批2a 五行能量环:SVG环网(左栏,原转盘位)·12节点17边·属性色环圈+点数/档位+锁标+选中可放脉冲 ===== */
 #ring-zone{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 6px 5px;border-top:2px solid #4a3320}
 #ring-cap{font-size:12px;color:#c9a06a;letter-spacing:1px;text-shadow:0 1px 2px #000}
-#ring-svg{width:176px;height:auto;flex:none}
+#ring-svg{width:176px;height:312px;flex:none} /* 批2b目验收口:定高312收进侧栏(原height:auto=424溢出压底箱格子·品质环/角标与粉行相撞);viewBox坐标零动,meet等比缩放,命中检测走getBoundingClientRect不受影响 */
 .ring-edge{stroke:#5a4028;stroke-width:1.6;stroke-dasharray:4 3;opacity:.5}
 .ring-edge.lit{stroke:#ffd54f;opacity:.9;stroke-dasharray:none;filter:drop-shadow(0 0 2px #ffd54f88)}
 .ring-node{cursor:pointer}
@@ -437,6 +437,7 @@ body{overflow:hidden}
 .cm-blank .cb-e{font-size:19px;flex:none}
 .cm-done{grid-row:span 1;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:6px;border:1.5px solid #5a4020;background:linear-gradient(180deg,#3a2812,#241708);color:#ffe9b8;font-size:11px;cursor:pointer;overflow:hidden;white-space:nowrap;padding:0 4px}
 .cm-done .cd-v{color:#ffd54f;font-size:9px}
+.q-badge{color:#ffe08a;font-weight:bold;text-shadow:0 0 6px #ffd54f66;font-size:10px} /* 批2b品质徽章(品质环Lv→成品◆Ⅰ/Ⅱ/Ⅲ) */
 .cm-done:hover{border-color:#ffd54f}
 /* v36B2 五行粉末底箱行:元素色字点+数量,占1格,题间点击投锅(阶段B接线) */
 .cm-pow{grid-row:span 1;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:6px;border:1.5px solid #5a4020;background:linear-gradient(180deg,#3a2812,#241708);color:#ffe9b8;font-size:11px;overflow:hidden;white-space:nowrap;padding:0 4px}
@@ -715,7 +716,7 @@ body{overflow:hidden}
     <div id="ring-zone">
       <div id="ring-cap">🌀 五行能量环</div>
       <svg id="ring-svg" viewBox="0 0 176 424" xmlns="http://www.w3.org/2000/svg"></svg>
-      <div id="ring-fuel">✦ <span id="ring-fuel-lab">放入次数</span> <b id="ring-fuel-n">0</b></div>
+      <div id="ring-fuel">✦ <span id="ring-fuel-lab">放入次数</span> <b id="ring-fuel-n">0</b><i id="ring-mix" style="display:none"></i></div>
       <div id="ring-hint">点选素材 → 点环放置 · 每答对一题+1放入次数 · 答题中锁定</div>
     </div>
     <div id="inst-zone">
@@ -957,6 +958,9 @@ const CFG={
  RING_LV:[4,9,15],        // 单环同属性累计升级阈值 Lv1/Lv2/Lv3
  RING_ATTR_LOCK:6,        // 属性锁:相邻上游已放源环「该环属性」累计≥6 解锁
  RING_QUALITY_LOCK:5,     // 品质锁:全场累计品质≥5 解锁品质环
+ RING_QUAL_MULT:[1.1,1.2,1.35], // 批2b品质环:品质徽章Ⅰ/Ⅱ/Ⅲ卖价独立乘区(+10%/+20%/+35%,三因子之后第四因子;Lv0/缺省=中性)
+ RING_RECIPE_MIN:2,       // 批2b配方变化环:隐藏配方解锁最少投放件数(顺序=火行素材首投·随后任意)
+ RING_RECIPE_MULT:1.5,    // 批2b配方变化:✦升格成品卖价乘区(独立于四因子之外)
  RING_MAT:{               // 统一素材表:pts=五行点数 q=品质(powder=底箱粉末按品级;nst=夜行仓库素材按稀有档,老档无档位字段=蓝档兜底)
   pow:{1:{pts:2,q:1},2:{pts:3,q:2}},
   nst:{blue:{pts:2,q:1},purple:{pts:3,q:2},orange:{pts:4,q:3}}},
@@ -970,8 +974,7 @@ const CFG={
  SPELL_GRADE:{sup:{zh:'上品',en:'Fine',min:.6,sellM:2},mid:{zh:'中品',en:'Medium',min:.4,sellM:1.4},junk:{zh:'杂品',en:'Crude',min:0,sellM:1}}, // min=纯度门槛(主/总量) sellM=卖价纯度系数
  SPELL_MIX:{zh:'五行杂符',en:'Mixed Talisman'}, // 五元素全0兜底(理论不达:空锅也有等权注入)
  DUR_BASE:3,DUR_DOUBLE:6,SELL_DUR_STEP:.1, // 铸成耐久/「次数翻倍」词条耐久/耐久卖价步长(1+dur×step)
- AFFIX_CHANCE:{base:.30,great:.08,good:.03,cap:.70}, // 词条出现率=基础+该符轮盘史每次大成功+8%每次成功+3%,封顶70%
- AFFIX_TIER_P:[.6,.3,.1],AFFIX_TIER_ZH:['Ⅰ','Ⅱ','Ⅲ'], // 词条档位概率(出词条后)/中文序数
+ AFFIX_TIER_ZH:['Ⅰ','Ⅱ','Ⅲ'], // 词条等级/品质徽章中文序数(共用;批2b概率词条退役,词条纯由词条栏环Lv决定)
  AFFIX_POOL:{value:{zh:'价值',en:'Worth',mult:[1.25,1.5,2]},beauty:{zh:'美观',en:'Pretty',mult:[1.4,1.8,2.4],face:1},double:{zh:'次数翻倍',en:'Lasting',dur:6}}, // mult=卖价系数表(Ⅰ/Ⅱ/Ⅲ)·face=协会好感+1(入S.rep.face占位)·dur=耐久直改
  /* ===== v36B4 五碟+符纸(批4) ===== */
  TALISMAN_PER_Q:3,                    // [v36B5退役]批4笔画口径:中段笔画组已改元素球行(球数=题数),常量保留防旧引用
@@ -987,7 +990,8 @@ const CFG={
  B7_POL_QN:3,                         // 美化题=3音唱名序列(R4,沿用B5一把位域口径)
  INS1_PRICE:240,                      // 进阶弦音器(R6:id ins1,max1)
  INSF_PRICE:400,                      // 天工融合核(R6:id insF,max1,前置ins1)
- KEYT_PRICES:[180,320],               // 键位淬炼每级价(R6:id keyT,max2,每级每键+1次)
+ KEYT_PRICES:[180,320],              // 键位淬炼每级价(R6:id keyT,max2,每级每键+1次)
+ MIX_PRICES:[200,400],               // 调合心得每级价(批2b:id mix,max2,每级每符放入次数+1)
 };
 /* ================= v36B2 五行(批2):金木水火土 ================= */
 const ELEMS=['metal','wood','water','fire','earth'];
@@ -1232,6 +1236,14 @@ function ringAdjOf(id){const s=new Set();RING_NET.edges.forEach(e=>{if(e[0]===id
 function ringLvOf(id){ // 单环同属性累计→档位(Lv1=4/Lv2=9/Lv3=15;无属性环恒0)
  const n=ringNode(id);if(!n.el)return 0;
  const p=ringSt(id).pts[n.el]||0;let lv=0;CFG.RING_LV.forEach(th=>{if(p>=th)lv++});return lv}
+function ringQualLv(){ // v36R批2b品质环:无属性环以本环累计品质点升档(同RING_LV阈值4/9/15→Lv1/2/3=成品品质徽章Ⅰ/Ⅱ/Ⅲ,第四卖价因子源);Lv0=无徽章中性
+ const qn=RING_NET.nodes.find(n=>n.type==='quality');if(!qn)return 0;
+ const st=ringSt(qn.id);let lv=0;CFG.RING_LV.forEach(th=>{if((st.q||0)>=th)lv++});return lv}
+function ringRecipeArmed(){ // v36R批2b配方变化武装:配方环Lv≥1(火点4/9/15)且投放顺序对——火行素材首投·随后任意·至少2件(「顺序+来源」大爷口径;顺序不对/Lv不足=不触发)
+ const rn=RING_NET.nodes.find(n=>n.type==='recipe');if(!rn)return false;
+ if(ringLvOf(rn.id)<1)return false;
+ const seq=ringSt(rn.id).seq||[];
+ return seq.length>=CFG.RING_RECIPE_MIN&&seq[0]==='fire'}
 function ringSpreadOk(id){ // 相邻蔓延:自身已放 或 与任一已放环相邻(禁跳跃;基底开局已放)
  if(ringSt(id).has>0)return true;
  return ringAdjOf(id).some(a=>ringSt(a).has>0)}
@@ -1283,6 +1295,7 @@ function ringPlace(id){ // 放1件素材上环:耗1放入次数·累计点数/�
  const st=ringSt(id);st.has++;st.pts[sp.el]=(st.pts[sp.el]||0)+sp.pts;st.q=(st.q||0)+sp.q;
  S.ring.last=id;
  const n=ringNode(id),lv1=ringLvOf(id);
+ if(n.type==='recipe')(st.seq=st.seq||[]).push(sp.el); // 批2b:配方变化环投放顺序留痕(隐藏配方解锁条件:火行素材首投+≥2件,ringRecipeArmed判)
  if(n.el&&lv1>lv0){toast(`🌀 ${ELEM_META[n.el].zh}${t(RING_TYPE_KEY[n.type])} ${t('ringUp').replace('{lv}',''+lv1)} (${st.pts[n.el]}${CFG.RING_LV[lv1-1]>=st.pts[n.el]?'/'+CFG.RING_LV[lv1-1]:''})`,2200);clank(true)}
  else toast(`🌀 ${t('ringPlaced').replace('{n}',ringMatName(tok))} · ${n.el?ELEM_META[n.el].zh+st.pts[n.el]:'×'+st.has}`,1600);
  S.ringSel=null;
@@ -1293,6 +1306,10 @@ function ringElemTotals(){ // 全场各属性累计点数(铸成快照数据源=
 function ringResetCast(){ // 调合收口:环复位到基底起点(素材已在放置时消耗;放入次数不清=跨调合可攒)
  S.ring.rings={};ringSt(0);S.ring.last=null;S.ringSel=null}
 function ringSnapshot(){const e=ringElemTotals();ringResetCast();return e}
+function ringCraftSnap(){ // v36R批2b:调合收口快照(铸成/收工/爆符三收口点共用)——elem累计(批2a判定源)+词条/品质徽章/配方变化随案冻结,抓完环复位一次完成
+ const e=ringElemTotals(),affixes=ringAffixes(),qual=ringQualLv(),recipe=ringRecipeArmed();
+ ringResetCast();
+ return{e,affixes,qual,recipe}}
 function renderRing(){ // 环网全量重渲(12节点17边,量小不做增量;SVG circle cx/cy绝对坐标=TB几何断言直接可读)
  const svg=$('ring-svg');if(!svg)return;
  const R=S.ring||(S.ring={fuel:0,rings:{},last:null});ringSt(0);
@@ -1302,20 +1319,21 @@ function renderRing(){ // 环网全量重渲(12节点17边,量小不做增量;SV
  RING_NET.edges.forEach(e=>{const a=ringSt(e[0]),b=ringSt(e[1]);
   h+=`<line class="ring-edge${(a.has>0&&b.has>0)?' lit':''}" x1="${ringNode(e[0]).x}" y1="${ringNode(e[0]).y}" x2="${ringNode(e[1]).x}" y2="${ringNode(e[1]).y}"/>`});
  RING_NET.nodes.forEach(n=>{
-  const st=ringSt(n.id),lv=ringLvOf(n.id),can=ringCanPlace(n.id);
+  const st=ringSt(n.id),isQ=n.type==='quality',can=ringCanPlace(n.id);
+  const lv=isQ?ringQualLv():ringLvOf(n.id); // 批2b:品质环按本环累计品质点升档(4/9/15→Lv1/2/3)
   const locked=n.lock==='quality'?ringQualityTot()<CFG.RING_QUALITY_LOCK:(n.lock==='attr'?!ringAttrLockOk(n.id):false);
   const col=n.el?ELEM_META[n.el].color:'#c9a06a';
   const cls=['ring-node',st.has>0?'on':'',can.ok&&selTok?'can':'',locked?'lk':'',S.ring.last===n.id?'ring-last':''].filter(Boolean).join(' ');
-  const sameP=n.el?(st.pts[n.el]||0):st.has;
-  const thr=n.el?(lv<CFG.RING_LV.length?CFG.RING_LV[lv]:'MAX'):null;
-  const tx=n.type==='base'?'基':n.type==='quality'?'质':ELEM_META[n.el].zh;
+  const sameP=isQ?(st.q||0):(n.el?(st.pts[n.el]||0):st.has);
+  const thr=(isQ||n.el)?(lv<CFG.RING_LV.length?CFG.RING_LV[lv]:'MAX'):null;
+  const tx=n.type==='base'?'基':isQ?'质':ELEM_META[n.el].zh;
   let tip;
   if(!can.ok)tip=can.why==='adj'?t('ringLockAdj'):can.why==='quality'?t('ringLockQ').replace('{t}',''+CFG.RING_QUALITY_LOCK).replace('{q}',''+ringQualityTot()):t('ringLockAttr').replace('{el}',ELEM_META[n.el].zh);
-  else tip=(n.el?(t('ringTipPts').replace('{el}',ELEM_META[n.el].zh).replace('{p}',''+sameP).replace('{n}',''+thr).replace('{lv}',''+lv)):t(RING_TYPE_KEY[n.type]))+' · '+t('ringTipIdle');
+  else tip=(n.el?(t('ringTipPts').replace('{el}',ELEM_META[n.el].zh).replace('{p}',''+sameP).replace('{n}',''+thr).replace('{lv}',''+lv)):t(RING_TYPE_KEY[n.type]))+(n.type==='affix'&&lv>0?' · ✨'+t('ringAffixLv').replace('{lv}',CFG.AFFIX_TIER_ZH[lv-1]).replace('{dir}',t('affDir'+RING_AFFIX_DIR[n.el])):'')+(isQ&&lv>0?' · ◆'+t('ringQualTip').replace('{b}',CFG.AFFIX_TIER_ZH[lv-1]).replace('{m}',''+CFG.RING_QUAL_MULT[lv-1]):'')+(n.type==='recipe'&&lv>0?' · '+(ringRecipeArmed()?'✦'+t('ringRecOk'):t('ringRecNo')):'')+' · '+t('ringTipIdle');
   h+=`<g class="${cls}" data-node="${n.id}" data-el="${n.el||''}" data-lock="${n.lock||''}" data-lv="${lv}">
    <circle class="ring-c" cx="${n.x}" cy="${n.y}" r="${n.r}" stroke="${col}"${lv>0?` style="filter:drop-shadow(0 0 ${lv*3}px ${lvCl[lv]})"`:''}/>
    <text class="ring-tx" x="${n.x}" y="${n.y+5}" fill="${col}">${tx}</text>
-   <text class="ring-pt" x="${n.x}" y="${n.y+n.r+10}">${n.el?sameP+(thr!=='MAX'?'/'+thr:' MAX'):('×'+st.has)}</text>
+   <text class="ring-pt" x="${n.x}" y="${n.y+n.r+10}">${thr!=null?sameP+(thr!=='MAX'?'/'+thr:' MAX'):('×'+st.has)}</text>
    ${lv>0?`<text class="ring-lvt" x="${n.x}" y="${n.y-n.r-7}">Lv${lv}</text>`:''}
    ${locked?`<text class="ring-lkic" x="${n.x}" y="${n.y-Math.round(n.r*0.55)}">🔒</text>`:''}
    <title>${tip}</title></g>`;
@@ -1323,6 +1341,7 @@ function renderRing(){ // 环网全量重渲(12节点17边,量小不做增量;SV
  svg.innerHTML=h;
  svg.querySelectorAll('g.ring-node').forEach(g=>{g.addEventListener('click',()=>ringPlace(+g.dataset.node))});
  const fl=$('ring-fuel-n');if(fl)fl.textContent=R.fuel||0;
+ const mx=$('ring-mix');if(mx){const m=(S.up&&S.up.mix)||0;mx.textContent=t('ringMixTag').replace('{n}',''+m);mx.style.display=m>0?'':'none'} // 批2b调合心得:HUD放入次数行挂每符加成标签
 }
 
 /* ================= 淬火概率(大爷21:51令:三档·错音/全对驱动) ================= */
@@ -1365,10 +1384,13 @@ function makeItem(sw){
  it.skipped=!!sw.skipped; // v36B7:跳过美化标记(修饰终态口径)
  it.lv=sw.lv||1; // v36B7:等级随符入库(箱内回修/修饰展示用,不进卖价)
  it.pending=b7PendingOf(it); // v36B7:延后修补标记(R5):有黑球待修/全定未美化可修饰;铸成全流程走完=终态 false
- it.affix=rollAffix(it.tierHist); // 词条一次一条,可为null
- if(it.affix){const A=CFG.AFFIX_POOL[it.affix.k];
+ const rc=sw.ringCraft||{}; // v36R批2b:调合收口随案冻结(ringCraftSnap在铸成/收工/爆符三收口点抓取)——老档在途符无此字段=全中性
+ it.affixes=(rc.affixes||[]).map(a=>({k:a.k,t:a.t})); // 词条环口径(批2b):词条位数/等级=词条栏环Lv,纯由环决定(概率词条退役)
+ it.qual=rc.qual||0; // 品质环口径(批2b):品质徽章档0~3(品质环累计品质点4/9/15→Ⅰ/Ⅱ/Ⅲ,Lv0/缺省=中性)
+ it.affixes.forEach(a=>{const A=CFG.AFFIX_POOL[a.k];
   if(A.dur)it.dur=A.dur; // 次数翻倍:耐久直改不叠加
-  if(A.face)S.rep.face=(S.rep&&S.rep.face||0)+A.face} // 美观:协会好感+1(落S.rep.face占位,批2口径:只入档不显示)
+  if(A.face)S.rep.face=(S.rep&&S.rep.face||0)+A.face}); // 美观:协会好感+1(落S.rep.face占位,只入档不显示)
+ if(rc.recipe)applyRecipeVary(it); // 配方变化环(批2b):铸成升格✦——升格先于codex行,图鉴按升格后档点亮
  if(it.spell){const ck=it.spell+':'+it.grade;S.codex[ck]=(S.codex[ck]||0)+1} // 法术图鉴点亮:铸成过即亮(杂符不占15条目)
  return it;
 }
@@ -1385,19 +1407,27 @@ function judgeSpell(elem){ // 主元素=五元之max(并列取表序前者)·次
  const grade=purity>=CFG.SPELL_GRADE.sup.min?'sup':purity>=CFG.SPELL_GRADE.mid.min?'mid':'junk';
  return {spell:CFG.SPELL_ELEM[main],grade,purity,main,second};
 }
-function rollAffix(hist){ // 出现率=基础30%+轮盘史每次大成功+8%/成功+3%·封顶70%;命中后种类等权·档位Ⅰ60%/Ⅱ30%/Ⅲ10%
- const c=CFG.AFFIX_CHANCE,h=hist||[];
- let p=c.base+c.great*h.filter(k=>k==='great').length+c.good*h.filter(k=>k==='good').length;
- if(p>c.cap)p=c.cap;
- if(Math.random()>=p)return null;
- const ks=Object.keys(CFG.AFFIX_POOL),k=ks[Math.floor(Math.random()*ks.length)];
- let r=Math.random(),acc=0,t=0;
- for(let i=0;i<CFG.AFFIX_TIER_P.length;i++){acc+=CFG.AFFIX_TIER_P[i];if(r<acc){t=i;break}}
- return {k,t};
+/* ===== v36R批2b 词条栏环(批3概率词条退役):词条纯由环Lv决定(堆数值=解锁,大爷口径) ===== */
+const RING_AFFIX_DIR={metal:'Eco',earth:'Eco',wood:'Dur',water:'Dur',fire:'Cbt'}; // 方向按环属性:金/土=经济·木/水=耐久·火=战斗
+const RING_AFFIX_POOL={Eco:['value','beauty'],Dur:['double'],Cbt:[]}; // 同向内具体词条沿用现行池等权随机(战斗向暂空:现行池无战斗词条)
+function ringAffixes(){ // 每个词条栏环Lv≥1=解放一个词条位,词条等级=环Lv(t=Lv-1→Ⅰ/Ⅱ/Ⅲ);三环全升=3词条=「≤3/卡」天然对齐
+ const out=[];
+ RING_NET.nodes.forEach(n=>{
+  if(n.type!=='affix')return;
+  const lv=ringLvOf(n.id);if(lv<1)return;
+  const pool=RING_AFFIX_POOL[RING_AFFIX_DIR[n.el]]||[];if(!pool.length)return;
+  out.push({k:pool[Math.floor(Math.random()*pool.length)],t:lv-1})});
+ return out}
+const spellName=(sp,grade,zhen)=>sp?(CFG.SPELLS[sp].zh+'·'+(CFG.SPELL_GRADE[grade]||CFG.SPELL_GRADE.junk).zh+(zhen?'·真髓':'')):CFG.SPELL_MIX.zh; // 火球·上品 / 火球·上品·真髓(批2b配方变化) / 五行杂符
+function applyRecipeVary(it){ // v36R批2b隐藏配方变化(铸成时触发):✦前缀+法术升一档(杂→中/中→上/上→上·真髓)+卖价×1.5(sellPrice vary独立乘区)
+ it.vary=true;it.name='✦'+it.name;
+ if(it.grade==='junk')it.grade='mid';
+ else if(it.grade==='mid')it.grade='sup';
+ else it.zhen=true; // 上品→上·真髓(sellM沿用上品,升格收益由×1.5乘区承担)
 }
-const spellName=(sp,grade)=>sp?(CFG.SPELLS[sp].zh+'·'+(CFG.SPELL_GRADE[grade]||CFG.SPELL_GRADE.junk).zh):CFG.SPELL_MIX.zh; // 火球·上品 / 五行杂符
 const spellEn=(sp,grade)=>sp?(CFG.SPELLS[sp].en+' · '+(CFG.SPELL_GRADE[grade]||CFG.SPELL_GRADE.junk).en):CFG.SPELL_MIX.en;
 const affixName=a=>a?(CFG.AFFIX_POOL[a.k].zh+CFG.AFFIX_TIER_ZH[a.t]):''; // 美观Ⅱ
+const affixNames=p=>(Array.isArray(p.affixes)?p.affixes:(p.affix?[p.affix]:[])).map(a=>affixName(a)).filter(Boolean).join('·'); // 批2b:多词条展示(老档单词条p.affix兼容)
 function renderRack(){
  const r=$('anvil-rack');if(!r)return;
  let h='';
@@ -1418,7 +1448,8 @@ const UPG=[
  {id:'artSlot',e:'🧿',n:'神器槽位',d:'神器槽 +1(初始 3 格,商人处的神器需占槽供奉)',max:5,price:150},
  {id:'ins1',e:'🎻',n:'进阶弦音器',d:'符纹修复器加装一把位板:修复/美化双板并列(弦音键15→30),形态标签切换显示(修复默认三把位/美化默认一把位)',max:1,price:CFG.INS1_PRICE}, // v36B7:R6二形态
  {id:'insF',e:'🌌',n:'天工融合核',d:'双板融合为一张完整弦纹板:重复音位并板为单键(✦,每日次数取两板之和),全板每键每日+1次(前置:进阶弦音器)',max:1,price:CFG.INSF_PRICE,req:'ins1'}, // v36B7:R6三形态
- {id:'keyT',e:'🔑',n:'键位淬炼',d:'每键每日可点次数+1/级·全形态生效(键位疲劳扩容)',max:2,prices:CFG.KEYT_PRICES}]; // v36B7:R6键池扩容线
+ {id:'keyT',e:'🔑',n:'键位淬炼',d:'每键每日可点次数+1/级·全形态生效(键位疲劳扩容)',max:2,prices:CFG.KEYT_PRICES}, // v36B7:R6键池扩容线
+ {id:'mix',e:'🌀',n:'调合心得',d:'每符铸成/收工时放入次数+1/级(4题全对=4次基础→5/6;爆符不计)',max:2,prices:CFG.MIX_PRICES}]; // v36R批2b:第一条制卡师成长线(放入次数)
 const SKILLS=[
  {id:'sell',e:'📈',n:'精明商贩',d:'你卖出的所有东西 +10%/级',max:5},
  {id:'buy',e:'🤝',n:'讨价还价',d:'商人处购买价格 -5%/级',max:5},
@@ -1449,15 +1480,15 @@ function buySkill(id){
 }
 function renderUpg(){
  const box=$('upg-list');let h='';
- const NM={ins1:t('upgIns1'),insF:t('upgInsF'),keyT:t('upgKeyT')}; // v36B7:新文案进i18n(v36R批2a:rev5条目退役)
- const DS={ins1:t('upgIns1D'),insF:t('upgInsFD'),keyT:t('upgKeyTD')};
+ const NM={ins1:t('upgIns1'),insF:t('upgInsF'),keyT:t('upgKeyT'),mix:t('upgMix')}; // v36B7:新文案进i18n(v36R批2a:rev5条目退役);批2b:+mix
+ const DS={ins1:t('upgIns1D'),insF:t('upgInsFD'),keyT:t('upgKeyTD'),mix:t('upgMixD')};
  UPG.forEach(u=>{
   const lv=S.up[u.id],maxed=lv>=u.max;
   const price=Array.isArray(u.prices)?u.prices[lv]:u.price; // v36B7:keyT 每级价
   const reqOk=!u.req||S.up[u.req]>0; // v36B7:融合核前置 ins1
   const can=!maxed&&reqOk&&S.gold>=price;
   const nm=NM[u.id]||u.n,ds=DS[u.id]||u.d;
-  const eff=u.id==='anvil'?`现有 ${anvilN()} 案`:u.id==='artSlot'?`现有 ${artSlots()} 格`:u.id==='ins1'?`现 ${(S.ins.form||0)>=1?t('b7formOn'):t('b7formOff')}`:u.id==='insF'?`现 ${(S.ins.form||0)>=2?t('b7formFOn'):t('b7formOff')}`:u.id==='keyT'?`现每键每日 ${CFG.B7_KEY_CAP+(S.up.keyT||0)} 次`:`现效果 +${lv*10}%`;
+  const eff=u.id==='anvil'?`现有 ${anvilN()} 案`:u.id==='artSlot'?`现有 ${artSlots()} 格`:u.id==='ins1'?`现 ${(S.ins.form||0)>=1?t('b7formOn'):t('b7formOff')}`:u.id==='insF'?`现 ${(S.ins.form||0)>=2?t('b7formFOn'):t('b7formOff')}`:u.id==='keyT'?`现每键每日 ${CFG.B7_KEY_CAP+(S.up.keyT||0)} 次`:u.id==='mix'?`现每符放入次数 +${lv}`:`现效果 +${lv*10}%`;
   h+=`<div class="upg-row"><span class="u-e">${u.e}</span><div class="u-mid"><div class="u-n">${nm}<span class="u-lv">Lv.${lv}/${u.max} · ${eff}</span></div><div class="u-d">${ds}${u.req&&!reqOk?' · 🔒'+t('b7needPre'):''}</div></div><button class="u-btn btn ${can?'gold':''}" data-upg="${u.id}" ${can?'':'disabled'}>${maxed?'已满级':'💰'+price}</button></div>`;
  });
  if((S.up&&S.up.rev5)>0)h+='<div style="font-size:10px;color:#8a7455;text-align:center;padding:5px 2px;letter-spacing:.5px">🗝️ '+t('ringUpgNote')+'</div>'; // v36R批2a:已购老档占位说明(灵石不退·5音题口径保留)
@@ -1476,8 +1507,8 @@ function buyUpg(id){
  if(id==='ins1'){S.ins.form=Math.max(S.ins.form||0,1)} // v36B7:进二形态(双板并列)
  if(id==='insF'){S.ins.form=2} // v36B7:进三形态(融合并板+福利)
  if(id==='ins1'||id==='insF'||id==='keyT')b7RerenderFix(); // 键态/形态即时反映(session 开着时)
- const tN={ins1:t('upgIns1'),insF:t('upgInsF'),keyT:t('upgKeyT')}[id]||u.n;
- const tTail=id==='anvil'?` · 符案 ×${anvilN()}`:id==='artSlot'?` · 槽位 ${artSlots()} 格`:id==='ins1'?` · ${t('upgIns1Done')}`:id==='insF'?` · ${t('upgInsFDone')}`:id==='keyT'?` · ${t('upgKeyTDone')} =${CFG.B7_KEY_CAP+(lv+1)}次/键`:` · 该类售价 +${(lv+1)*10}%`;
+ const tN={ins1:t('upgIns1'),insF:t('upgInsF'),keyT:t('upgKeyT'),mix:t('upgMix')}[id]||u.n;
+ const tTail=id==='anvil'?` · 符案 ×${anvilN()}`:id==='artSlot'?` · 槽位 ${artSlots()} 格`:id==='ins1'?` · ${t('upgIns1Done')}`:id==='insF'?` · ${t('upgInsFDone')}`:id==='keyT'?` · ${t('upgKeyTDone')} =${CFG.B7_KEY_CAP+(lv+1)}次/键`:id==='mix'?` · ${t('upgMixDone')}(每符 +${lv+1})`:` · 该类售价 +${(lv+1)*10}%`;
  toast(`🏗️ ${tN} Lv.${lv+1}${tTail}`,2000);
  if(id==='anvil'){renderRack();applyWindow()}
  hud();renderUpg();renderShopGold();
@@ -1883,8 +1914,8 @@ function b5FinishSw(){ // session 完成:forge源=铸成入箱(B5 口径);pack�
  const sw=S.fixQueue.shift();if(!sw)return;
  $('fix-modal').classList.remove('on');S.fix=null;
  const it=makeItem(sw);S.pack.push(it);S.forged++;markDay('done');questProg(it,sw);
- const spx=(it.spell?CFG.SPELLS[it.spell].ic:'📜')+' '+spellName(it.spell,it.grade);
- toast(`🎉 ${it.name} 制成!品质 ${'★'.repeat(it.star)}${'☆'.repeat(4-it.star)} · ${spx} · 灵力 ${it.value}`+(it.affix?` · ✨词条:${affixName(it.affix)}`:'')+` · 收进箱子`);
+ const spx=(it.spell?CFG.SPELLS[it.spell].ic:'📜')+' '+spellName(it.spell,it.grade,it.zhen);
+ toast(`🎉 ${it.name} 制成!品质 ${'★'.repeat(it.star)}${'☆'.repeat(4-it.star)} · ${spx} · 灵力 ${it.value}`+(affixNames(it)?` · ✨词条:${affixNames(it)}`:'')+(it.qual?` · ◆品质${CFG.AFFIX_TIER_ZH[it.qual-1]}`:'')+(it.vary?' · ✦配方变化':'')+` · 收进箱子`);
  syncFocus();hud();updateSword();renderRack();renderChest();
  castFlashFx(sw); // v36B4口径:满绘金辉压轴(updateSword 先按现状复位,550ms 后自清,不被立刻抹掉)
  if(S.fixQueue.length){b5OpenSession();return} // 多符同铸:逐张结算
@@ -2322,7 +2353,7 @@ function diceFail(){
  snark('break',true); // 🎲命运骰(大爷00:48令):答错一音,砧上剑当场爆,龙鳞可逐剑救(救下的按现状收工入箱)
  S.gStreak=0;S.gBonus=0;
  const rolling=[...S.anvils];S.anvils=[];syncFocus();
- if(rolling.length){const e=ringSnapshot();rolling.forEach(sw=>{sw.elem=e})} // v36R批2a:爆符=调合中止——环累计快照备着(龙鳞救下的符带现状入库),环复位
+ if(rolling.length){const c=ringCraftSnap();rolling.forEach(sw=>{sw.elem=c.e;sw.ringCraft={affixes:c.affixes,qual:c.qual,recipe:c.recipe}})} // v36R批2a:爆符=调合中止——环累计快照备着(龙鳞救下的符带现状入库),批2b词条同点冻结;环复位
  let savedN=0;
  rolling.forEach(sw=>{
   if(S.dragon>0){S.dragon--;savedN++;const it=makeItem(sw);S.pack.push(it);toast('🐉 龙鳞碎裂!'+it.name+' 按现状收工',2200)}
@@ -2393,7 +2424,7 @@ function progSwords(mv,grade){
    if(nl>sw.lv){sw.lv=nl;applyWindow();updateSword();toast(`⬆️ 符升级!Lv.${nl} · 共画音域 ${curSpan()} 音`)}}
  });
  S.anvils=S.anvils.filter(sw=>!done.includes(sw));
- if(done.length){const e=ringSnapshot();done.forEach(sw=>{sw.elem=e})} // v36R批2a判定源切换:铸成=调合收口——全场环累计点数快照随符入库(elem语义与旧轮盘注入同构:judgeSpell主属性/纯度链零触碰),环复位开下一轮调合
+ if(done.length){const c=ringCraftSnap();done.forEach(sw=>{sw.elem=c.e;sw.ringCraft={affixes:c.affixes,qual:c.qual,recipe:c.recipe};if(S.up.mix>0)S.ring.fuel=(S.ring.fuel||0)+S.up.mix})} // 批2b调合心得:每符铸成放入次数+1/级(爆符不计) // v36R批2a判定源切换+批2b词条随案冻结:铸成=调合收口——全场环累计点数快照+词条栏环词条随符入库,环复位开下一轮调合
  // v36B5:铸成符改入待结算队列(维修→美化→makeItem 入箱,时序后移见 b5FinishSw),progress/经验照旧
  done.forEach(sw=>{sw.stage='repair';S.fixQueue.push(sw)});
  syncFocus();hud();updateSword();renderRack();renderChest();
@@ -2527,7 +2558,7 @@ function newSword(lv=1,cat){
  toast(S.anvils.length>1?`⚒️ 第 ${S.anvils.length} 件上案!同题共画,注灵各 roll`:`🔨 新${WLBL[cat]}开画:`+W.names[lv-1]+' · 封顶 Lv.'+swordCap()+' · 每级 2 题');
  return true}
 function stashAll(silent){ // 收工/第二天:在场剑全按当前价值入箱(没碎就能卖,大爷拍板)
- if(S.anvils.length){const e=ringSnapshot();S.anvils.forEach(sw=>{sw.elem=e})} // v36R批2a:收工=调合提前收口——在案符按当前环累计快照入库(没画完也带走已放行能量),环复位
+ if(S.anvils.length){const c=ringCraftSnap();S.anvils.forEach(sw=>{sw.elem=c.e;sw.ringCraft={affixes:c.affixes,qual:c.qual,recipe:c.recipe};if(S.up.mix>0)S.ring.fuel=(S.ring.fuel||0)+S.up.mix})} // 批2b调合心得:收工=提前铸成,同口径+1/级 // v36R批2a:收工=调合提前收口——在案符按当前环累计快照入库(没画完也带走已放行能量),批2b词条同点冻结;环复位
  const items=S.anvils.map(sw=>makeItem(sw));
  if(items.length){items.forEach(it=>S.pack.push(it));S.forged+=items.length;markDay('done')}
  S.anvils=[];syncFocus();updateSword();hud();renderRack();
@@ -2548,7 +2579,7 @@ function renderChest(){
  S.pack.forEach(p=>{used+=wOf(p.name);
   const d=document.createElement('div');d.className='cm-done'+(p.pending?' b7-pending':'');d.style.gridColumn='span '+wOf(p.name);
   const pend=p.pending?`<i class="b7-pbadge${(p.balls||[]).some(b=>b&&b.st==='bad')?'':' pol'}">${(p.balls||[]).some(b=>b&&b.st==='bad')?t('b7mend'):t('b7adorn')}</i>`:'';
-  d.innerHTML=pend+'<span>'+p.emoji+' '+p.name+' '+'★'.repeat(p.star)+'</span><span class="cd-v">💰'+p.value+'</span>';
+  d.innerHTML=pend+'<span>'+p.emoji+' '+p.name+' '+'★'.repeat(p.star)+(p.qual?' <b class="q-badge">◆'+CFG.AFFIX_TIER_ZH[p.qual-1]+'</b>':'')+'</span><span class="cd-v">💰'+p.value+'</span>';
   d.title=p.pending?t('b7pendTitle'):'';
   d.onclick=()=>{if(p.pending){const pi=S.pack.indexOf(p);if(pi>=0)b7OpenPack(pi)}else toast('傍晚见商人,点一下就卖')}; // v36B7:R5库存回修/修饰入口
   g.appendChild(d)});
@@ -2656,7 +2687,7 @@ const GOODS_RAND=[
 const POWDER_GOODS=[];
 ELEMS.forEach(el=>{for(let gr=1;gr<=CFG.POWDER_MAX_GR;gr++)POWDER_GOODS.push({id:'pow-'+el+'-'+gr,pow:el+':'+gr,e:ELEM_META[el].zh,kind:'mat',cls:'mat',
  n:grZH(gr)+'品'+ELEM_META[el].zh+'粉',price:CFG.POWDER_PRICE[gr],stock:CFG.POWDER_STOCK,gr:gr,
- d:'五行粉末·'+ELEM_META[el].zh+'行:点选上能量环,同行点数累计可升级(词条解锁是后续批次)'})});
+  d:'五行粉末·'+ELEM_META[el].zh+'行:点选上能量环,同行点数累计可升级(词条栏环Lv=词条位·品质环Lv=品质徽章)'})});
 GOODS_RAND.push(...POWDER_GOODS);
 const M_SAY=['手艺不错,下次还来!','独眼识货,童叟无欺。','这价公道——制符师朋友。'];
 /* —— v34 三分类货架(大爷10-25 21:16令):cls=mat素材/relic遗物/use一次性;基础剑坯+神器位常驻,其余每类随机抽 3 —— */
@@ -2775,8 +2806,8 @@ function renderMerchant(){
   const pB=Array.isArray(p.balls)?p.balls:[],pFx=pB.filter(b=>b&&b.st==='fixed').length,pBa=pB.filter(b=>b&&b.st==='bad').length; // v36B5:填色质量(金/黑球数,因子见 sellPrice)
   const spx=p.spell?CFG.SPELLS[p.spell].ic+' '+spellName(p.spell,p.grade):'📜 '+CFG.SPELL_MIX.zh;
   const d=document.createElement('div');d.className='inv-cell';d.style.gridColumn='span '+wOf(p.name);
-  d.innerHTML=`<span class="ic-e">${p.emoji}</span><span class="ic-info"><span>${p.spell?CFG.SPELLS[p.spell].ic:''}${p.name} ★${p.star}</span><span class="ic-v">💰${price}</span></span>`;
-  d.title=`${p.name} ★${p.star} · ${spx} · 耐久${p.dur!=null?p.dur:3}`+(p.affix?` · ✨${affixName(p.affix)}`:'')+(hist.length?` · 轮盘:大成功×${hN('great')}/成功×${hN('good')}/失败×${hN('fail')}`:'')+(pFx+pBa?` · 填色:金×${pFx}/黑×${pBa}(-${Math.round((pFx*CFG.PAINT_PEN_FIX+pBa*CFG.PAINT_PEN_BAD)*100)}%)`:'')+(p.polished?' · ✨美化':'')+' · 双击出售 · 或拖到摊架松手 · 单击看详情';
+  d.innerHTML=`<span class="ic-e">${p.emoji}</span><span class="ic-info"><span>${p.spell?CFG.SPELLS[p.spell].ic:''}${p.name} ★${p.star}${p.qual?' <b class="q-badge">◆'+CFG.AFFIX_TIER_ZH[p.qual-1]+'</b>':''}</span><span class="ic-v">💰${price}</span></span>`;
+  d.title=`${p.name} ★${p.star} · ${spx} · 耐久${p.dur!=null?p.dur:3}`+(p.qual?` · ◆${t('qualBadge')}${CFG.AFFIX_TIER_ZH[p.qual-1]}(+${Math.round((CFG.RING_QUAL_MULT[p.qual-1]-1)*100)}%)`:'')+(affixNames(p)?` · ✨${affixNames(p)}`:'')+(hist.length?` · 轮盘:大成功×${hN('great')}/成功×${hN('good')}/失败×${hN('fail')}`:'')+(pFx+pBa?` · 填色:金×${pFx}/黑×${pBa}(-${Math.round((pFx*CFG.PAINT_PEN_FIX+pBa*CFG.PAINT_PEN_BAD)*100)}%)`:'')+(p.polished?' · ✨美化':'')+' · 双击出售 · 或拖到摊架松手 · 单击看详情';
   d.onclick=()=>{if(Date.now()<cellDragTick)return; // 拖拽松手后的静默窗:不再弹提示(v28)
    toast(`⚔️ ${p.name} ★${p.star}${p.spell?' · '+spellName(p.spell,p.grade):''} · 售价 💰${price}${S.eventMult!==1?` (行情×${S.eventMult})`:''} · 双击或拖到摊架出售`,2200)};
   d.ondblclick=()=>mSell(i);
@@ -2814,6 +2845,7 @@ function renderCodex(){
    r.innerHTML=`<span class="cx-e"${g.pow?` style="color:${ELEM_META[g.pow.split(':')[0]].color}"`:''}>${g.e||'🧿'}</span><span class="cx-n">${codexName(g)}</span><span class="cx-p">${codexPrice(g)}</span><span class="cx-d">${g.d||'常驻位——每天轮换展示一件神器'}</span><span class="cx-st ${st[1]}">${st[0]}</span>`;
    sec.appendChild(r)});
   body.appendChild(sec)})
+ recipeDexSection(body); // v36R批2b:商品图鉴补「✦ 隐藏配方」分区(3示例连锁)
 }
 function openCodex(){renderCodex();$('codex-modal').classList.add('on')}
 /* ===== v36B3 法术图鉴(批3阶段B):沿用商品图鉴骨架——5法术×3纯度档=15条目,铸成过即点亮,未点亮剪影 ===== */
@@ -2834,17 +2866,34 @@ function renderSpellCodex(){
    r.innerHTML=`<span class="cx-e">${D.ic}</span><span class="cx-n">${n?nm:'？？？'}</span><span class="cx-p">×${G.sellM}</span><span class="cx-d">${desc}</span><span class="cx-st ${n?'on':'no'}">${st}</span>`;
    sec.appendChild(r)});
   body.appendChild(sec)})
+ recipeDexSection(body); // v36R批2b:法术图鉴补「✦ 隐藏配方」分区(3示例连锁)
 }
 function openSpellCodex(){renderSpellCodex();$('spx-modal').classList.add('on')}
+/* ===== v36R批2b 隐藏配方图鉴:配方变化环✦示例连锁(3条,纯只读说明——顺序=火行素材首投·随后任意·至少2件+配方环Lv≥1) ===== */
+const RECIPE_DEX=[
+ {ic:'🔥',zh:'✦火球·真髓',en:'✦ True Fireball',dz:'上品火球铸成时升格真髓:卖价×2.0×1.5=×3.0',de:'Fine Fireball ascends on cast: sell ×2.0×1.5=×3.0'},
+ {ic:'💧',zh:'✦冰锥·上品',en:'✦ Fine Ice Spike',dz:'中品冰锥随铸成升上品:卖价×1.4×1.5=×2.1',de:'Medium Ice Spike rises to Fine: sell ×1.4×1.5=×2.1'},
+ {ic:'⛰️',zh:'✦石甲·中品',en:'✦ Medium Stoneskin',dz:'杂品石甲随铸成升中品:卖价×1.0×1.5=×1.5',de:'Crude Stoneskin rises to Medium: sell ×1.0×1.5=×1.5'}];
+function recipeDexSection(host){ // 商品/法术图鉴共用「✦ 隐藏配方」分区(3示例连锁·纯只读)
+ const en=LANG==='en';
+ const sec=document.createElement('div');sec.className='cx-sec';sec.dataset.grade='recipe';
+ sec.innerHTML='<div class="cx-sec-h">'+t('cxRecipeH')+'</div>';
+ RECIPE_DEX.forEach(x=>{
+  const r=document.createElement('div');r.className='cx-row';
+  r.innerHTML=`<span class="cx-e">${x.ic}</span><span class="cx-n">${en?x.en:x.zh}</span><span class="cx-p">✦</span><span class="cx-d">${en?x.de:x.dz}</span><span class="cx-st on">${t('cxRecipeSt')}</span>`;
+  sec.appendChild(r)});
+ host.appendChild(sec)}
 /* ===== v28 出售交互(大爷10-25令):单击=只看详情 · 双击=卖 · 拖到货架=卖 =====
    pointer events 手写拖拽(不依赖 HTML5 dragstart),影子跟光标,松手在商品层内=成交 */
 function sellPrice(p){ // v36B3:round(价值×纯度系数×词条系数×耐久系数(1+dur×0.1)),再沿用既有类升级/精明商贩/行情叠加;新字段缺省兜底=中性系数(老档不炸价)
  const G=p.grade&&CFG.SPELL_GRADE[p.grade],gM=G?G.sellM:1;
- const A=p.affix&&CFG.AFFIX_POOL[p.affix.k],aM=(A&&A.mult)?(A.mult[p.affix.t]||1):1;
+ let aM=1;(Array.isArray(p.affixes)?p.affixes:(p.affix?[p.affix]:[])).forEach(a=>{const A=a&&CFG.AFFIX_POOL[a.k];if(A&&A.mult)aM*=(A.mult[a.t]||1)}); // 批2b词条环:词条数组连乘;老档单词条p.affix原样保留效果(不追溯重算);缺省中性(老档不炸价)
  const dM=1+(p.dur||0)*CFG.SELL_DUR_STEP;
+ const qM=(p.qual&&CFG.RING_QUAL_MULT[p.qual-1])||1; // 批2b品质环:第四因子独立乘区(+10%/+20%/+35%;Lv0/缺省=中性,老档不炸价)
+ const vM=p.vary?CFG.RING_RECIPE_MULT:1; // 批2b配方变化:✦升格成品×1.5(独立乘区;老档无vary字段=中性)
  const B=Array.isArray(p.balls)?p.balls:[];let pen=0; // v36B5填色质量因子(R4,三因子外乘法项):修补球每个-5%·黑球到底每个-20%·独立叠加不封底
  B.forEach(b=>{if(b&&b.st==='fixed')pen+=CFG.PAINT_PEN_FIX;else if(b&&b.st==='bad')pen+=CFG.PAINT_PEN_BAD});
- return Math.round(p.value*gM*aM*dM*(1-pen)*(1+S.up[(p.cat||'sword')]*.1)*(1+S.sk.sell*.1)*S.eventMult)}
+ return Math.round(p.value*gM*aM*dM*qM*vM*(1-pen)*(1+S.up[(p.cat||'sword')]*.1)*(1+S.sk.sell*.1)*S.eventMult)}
 let sellDrag=null,cellDragTick=0; // cellDragTick:拖拽结束后静默窗(≥300ms),吞掉紧随的 click
 const inRect=(e,r)=>e.clientX>=r.left-2&&e.clientX<=r.right+2&&e.clientY>=r.top-2&&e.clientY<=r.bottom+2;
 function bindSellDrag(el,p,i){
@@ -2968,7 +3017,7 @@ function renderSkillTree(){
 }
 /* ================= 开始菜单+选项(大爷00:43令) ================= */
 const I18N={
- zh:{cal:'\uD83D\uDCC5 \u65E5\u5386',upg:'\uD83C\uDFD7\uFE0F 升级工坊',skill:'\uD83C\uDF33 功法',endf:'结束制符',day2:'\uD83D\uDED2 \u7B2C\u4E8C\u5929\u00B7\u5546\u4EBA',quest:'\uD83D\uDCCB \u4EFB\u52A1\u677F',opt:'\u2699\uFE0F \u9009\u9879',mstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',mmod:'\uD83E\uDE9B Mod \u5DE5\u574A',mopt:'\u2699\uFE0F \u9009\u9879',mst:'\uD83C\uDF33 功法',mtitle:'符箓工坊 · 制符听音',msub:'听音高 · 画灵符 · 交清摊租',res:'\u5206\u8FA8\u7387',lang:'\u8BED\u8A00',optt:'\u9009\u9879',gstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',gcont:'\u25B6\uFE0F \u7EE7\u7EED\u6E38\u620F',mquit:'\uD83D\uDEAA \u9000\u51FA',ptitle:'\u6682\u505C',presume:'\u25B6\uFE0F \u6062\u590D\u6E38\u620F',psave:'\uD83D\uDCBE \u4FDD\u5B58',pload:'\uD83D\uDCC2 \u52A0\u8F7D',phome:'\uD83C\uDFE0 \u8FD4\u56DE\u4E3B\u83DC\u5355',nosave:'\u6682\u65E0\u5B58\u6863',rfw:'刷新摊架',snark:'\u5410\u69FD',dockHead:'🧰 工具箱 · 符坯直接拖上符案 · 点素材上能量环',wheel:'🌀 五行轮',spx:'📖 法术图鉴',b5fix:'🩹 符纹修复器 · 修补黑球',b5polish:'✨ 符纹修饰 · 弦音纹样',b5fixHint:'按大字唱名序列顺序点弦音键修补黑球——每球一击制:点错任意键=判错保持黑(卖价-20%),4音全点对=镀金(卖价-5%);弦音键每日次数有限,点灰过一夜恢复',b5polHint:'按唱名序列顺序点对 3 音,为符面添金边纹样(纯视觉不改卖价);答错换新题重试(耗新键),与修补共享键池,也可跳过',b5replay:'🔊 重播',b5skip:'⏭ 跳过美化',b5fixStep:'黑球',b5polished:'美化完成!',b5fixok:'修补成功·镀金',b5fixno:'一击未中·保持黑',b5free:'纯视觉·不改卖价',b5retry:'美化失手——重出一题(无限重试)',b5skipdone:'已跳过美化(纯视觉,不影响卖价)',b7keyLeft:'今日剩余 {n} 次',b7keyOut:'今日已用尽·明晨恢复',b7stash:'📥 先收着',b7stashed:'已先收着——黑球保留,箱子里点它继续修',b7tired:'弦音键疲劳:今日可用弦音不足——点「先收着」入箱,明日键池恢复再来',b7tiredS:'键位疲劳',b7busy:'答题/结算中——等这题完了再修',b7packdone:'箱内修补完成!',b7mend:'🔧修',b7adorn:'✨饰',b7pendTitle:'待修补/待修饰:点一下进符纹修复器继续',b7tab3:'三把位弦音区',b7tab1:'一把位弦音区',b7tabF:'天工融合板(✦=并板键·每日次数取两板之和)',upgIns1:'进阶弦音器',upgIns1D:'符纹修复器加装一把位板:修复/美化双板并列(弦音键15→30),形态标签切换显示(修复默认三把位/美化默认一把位)',upgIns1Done:'双板并列装联!键池30弦音键',upgInsF:'天工融合核',upgInsFD:'双板融合为一张完整弦纹板:重复音位并板为单键(✦,每日次数取两板之和),全板每键每日+1次(前置:进阶弦音器)',upgInsFDone:'天工融合!并板键✦双倍次数+全板每日+1',upgKeyT:'键位淬炼',upgKeyTD:'每键每日可点次数+1/级·全形态生效(键位疲劳扩容)',upgKeyTDone:'每键每日+1次',b7needPre:'前置:进阶弦音器',b7formOn:'双板并列',b7formFOn:'融合板',b7formOff:'未装',dbgTitle:'🐞 Debug 面板',dbgWarn:'⚠️ debug 操作会写入存档(测试污染)',dbgForm:'乐器形态',b7f0:'初阶·三把位',b7f1:'进阶·双板',b7f2:'终阶·融合',dbgResetKeys:'键池重置(当日疲劳清零)',dbgResetNotes:'已用音清零',
+ zh:{cal:'\uD83D\uDCC5 \u65E5\u5386',upg:'\uD83C\uDFD7\uFE0F 升级工坊',skill:'\uD83C\uDF33 功法',endf:'结束制符',day2:'\uD83D\uDED2 \u7B2C\u4E8C\u5929\u00B7\u5546\u4EBA',quest:'\uD83D\uDCCB \u4EFB\u52A1\u677F',opt:'\u2699\uFE0F \u9009\u9879',mstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',mmod:'\uD83E\uDE9B Mod \u5DE5\u574A',mopt:'\u2699\uFE0F \u9009\u9879',mst:'\uD83C\uDF33 功法',mtitle:'符箓工坊 · 制符听音',msub:'听音高 · 画灵符 · 交清摊租',res:'\u5206\u8FA8\u7387',lang:'\u8BED\u8A00',optt:'\u9009\u9879',gstart:'\uD83C\uDFAE \u5F00\u59CB\u6E38\u620F',gcont:'\u25B6\uFE0F \u7EE7\u7EED\u6E38\u620F',mquit:'\uD83D\uDEAA \u9000\u51FA',ptitle:'\u6682\u505C',presume:'\u25B6\uFE0F \u6062\u590D\u6E38\u620F',psave:'\uD83D\uDCBE \u4FDD\u5B58',pload:'\uD83D\uDCC2 \u52A0\u8F7D',phome:'\uD83C\uDFE0 \u8FD4\u56DE\u4E3B\u83DC\u5355',nosave:'\u6682\u65E0\u5B58\u6863',rfw:'刷新摊架',snark:'\u5410\u69FD',dockHead:'🧰 工具箱 · 符坯直接拖上符案 · 点素材上能量环',wheel:'🌀 五行轮',spx:'📖 法术图鉴',b5fix:'🩹 符纹修复器 · 修补黑球',b5polish:'✨ 符纹修饰 · 弦音纹样',b5fixHint:'按大字唱名序列顺序点弦音键修补黑球——每球一击制:点错任意键=判错保持黑(卖价-20%),4音全点对=镀金(卖价-5%);弦音键每日次数有限,点灰过一夜恢复',b5polHint:'按唱名序列顺序点对 3 音,为符面添金边纹样(纯视觉不改卖价);答错换新题重试(耗新键),与修补共享键池,也可跳过',b5replay:'🔊 重播',b5skip:'⏭ 跳过美化',b5fixStep:'黑球',b5polished:'美化完成!',b5fixok:'修补成功·镀金',b5fixno:'一击未中·保持黑',b5free:'纯视觉·不改卖价',b5retry:'美化失手——重出一题(无限重试)',b5skipdone:'已跳过美化(纯视觉,不影响卖价)',b7keyLeft:'今日剩余 {n} 次',b7keyOut:'今日已用尽·明晨恢复',b7stash:'📥 先收着',b7stashed:'已先收着——黑球保留,箱子里点它继续修',b7tired:'弦音键疲劳:今日可用弦音不足——点「先收着」入箱,明日键池恢复再来',b7tiredS:'键位疲劳',b7busy:'答题/结算中——等这题完了再修',b7packdone:'箱内修补完成!',b7mend:'🔧修',b7adorn:'✨饰',b7pendTitle:'待修补/待修饰:点一下进符纹修复器继续',b7tab3:'三把位弦音区',b7tab1:'一把位弦音区',b7tabF:'天工融合板(✦=并板键·每日次数取两板之和)',upgIns1:'进阶弦音器',upgIns1D:'符纹修复器加装一把位板:修复/美化双板并列(弦音键15→30),形态标签切换显示(修复默认三把位/美化默认一把位)',upgIns1Done:'双板并列装联!键池30弦音键',upgInsF:'天工融合核',upgInsFD:'双板融合为一张完整弦纹板:重复音位并板为单键(✦,每日次数取两板之和),全板每键每日+1次(前置:进阶弦音器)',upgInsFDone:'天工融合!并板键✦双倍次数+全板每日+1',upgKeyT:'键位淬炼',upgKeyTD:'每键每日可点次数+1/级·全形态生效(键位疲劳扩容)',upgKeyTDone:'每键每日+1次',upgMix:'调合心得',upgMixD:'每符铸成/收工时放入次数+1/级(4题全对=4次基础→5/6;爆符不计)',upgMixDone:'每符放入次数+1',ringMixTag:'+{n}/符',b7needPre:'前置:进阶弦音器',b7formOn:'双板并列',b7formFOn:'融合板',b7formOff:'未装',dbgTitle:'🐞 Debug 面板',dbgWarn:'⚠️ debug 操作会写入存档(测试污染)',dbgForm:'乐器形态',b7f0:'初阶·三把位',b7f1:'进阶·双板',b7f2:'终阶·融合',dbgResetKeys:'键池重置(当日疲劳清零)',dbgResetNotes:'已用音清零',
 /* NIGHT D1 夜间出行 */
 nightBtn:'🌙 夜行',nightTitle:'🌙 夜间出行 · 荒野搜打撤',nightCd:'天亮倒计时',nightGoHome:'🏠 回家结算',nightHaul:'🎒 今晚收获',nightHaulEmpty:'还没捡到东西',nightRule:'规则:⚡AP=12·沿路移动/开箱/采集各耗1AP·每做一个动作天亮近1刻(16起)·AP或倒计时任一耗尽=强制天亮——不在家,今晚收获全部丢失!',nightFar:'太远了——只能沿连线移动到相邻节点',nightNoAP:'AP 不够——这个动作做不了',nightBusy:'制符/答题进行中,收工后再夜行',nightTblue:'常见',nightTpurple:'少见',nightTorange:'稀有',nightOpenBox:'📦 开箱',nightOpenPick:'🌿 采集',nightBoxOpen:'开箱!',nightPickOpen:'采集完成!',nightBoxInfo:'有容器:开箱耗1AP,产出按节点稀有档',nightPickInfo:'可采集:采集耗1AP,产出按节点稀有档',nightPlainInfo:'荒野节点,只是路过',nightHomeInfo:'家·起点=撤离点:在这里点「回家结算」才算落袋',nightEmptied:'已经搜空了',nightCatMoney:'灵石',nightSettleT:'今晚结算',nightDayN:'第{d}天夜行',nightSafe:'🏠 平安到家——收获落袋!',nightLost:'🌅 天亮了,你没能赶回来——今晚收获全部丢失!',nightTotal:'收益合计',nightZero:'全部丢失',nightStashNote:'📦 生活必需品/制卡素材已存入夜行仓库(素材接入能量环是后续批次)',nightFatigueNote:'🌙 熬夜代价:明天客人 -1',nightBackDay:'回到白天',
 nightN0:'符坊后院',nightN1:'枯河床',nightN2:'加油站废墟',nightN3:'夜市残摊',nightN4:'旧桥',nightN5:'废弃诊所',nightN6:'荒废温室',nightN7:'地铁通风口',nightN8:'哨塔',nightN9:'玻璃教堂',nightN10:'铁皮集市',nightN11:'信号塔基座',nightN12:'沉沙渡口',nightN13:'高架断头路',nightN14:'老水塔',
@@ -2976,14 +3025,14 @@ nightS0:'罐头',nightS1:'电池',nightS2:'绷带',nightS3:'净水',
 nightM0:'铄金屑',nightM1:'青木藤',nightM2:'寒水髓',nightM3:'火纹石',nightM4:'厚壤芯',
 nightElM:'金',nightElW:'木',nightElA:'水',nightElF:'火',nightElE:'土',
 /* v36R批2a 五行能量环 */
-ringCap:'🌀 五行能量环',ringHint:'点选素材 → 点环放置 · 相邻蔓延解锁新环 · 每答对一题+1放入次数 · 答题中锁定',ringFuel:'放入次数',ringPowTip:'点选上能量环(再点取消)',ringNstTip:'夜行制卡素材·点选上能量环(放置即扣仓)',ringSelT:'已选 {n} —— 点亮的目标环点击放置(再点素材取消)',ringNoMat:'先点选素材:底箱粉末或夜行仓库制卡素材',ringNoFuel:'放入次数不足——答对一题+1次',ringBusy:'答题/结算中不能放素材——等这题结束',ringLockAdj:'太远了——能量从基底向外蔓延,只能放与已放环直接相邻的环',ringLockAttr:'属性锁:需相邻已放源环「{el}」行累计≥6(异属性素材不累计)',ringLockQ:'品质锁:全场累计品质≥{t}才解锁(当前{q})',ringUp:'升到 Lv.{lv}!',ringPlaced:'已放入 {n}',ringTipIdle:'点选素材后点此放置',ringTipPts:'{el}行 {p}/{n} · Lv{lv} · ',ringTypeBase:'基底环',ringTypeEffect:'效果环',ringTypeAffix:'词条栏环',ringTypeQuality:'品质环',ringTypeRecipe:'配方变化环',ringTypeExpand:'扩充环',ringUpgNote:'转盘扩容已随能量环退役——已购档保留5音题口径,灵石不退'},
- en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'End Crafting',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83C\uDFAE New Game',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mst:'\uD83C\uDF33 Skill Tree',mtitle:'Talisman Workshop \u00B7 Runes by Ear',msub:'Hear the pitch \u00B7 Draw the talisman \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options',gstart:'\uD83C\uDFAE New Game',gcont:'\u25B6\uFE0F Continue',mquit:'\uD83D\uDEAA Quit',ptitle:'Paused',presume:'\u25B6\uFE0F Resume',psave:'\uD83D\uDCBE Save',pload:'\uD83D\uDCC2 Load',phome:'\uD83C\uDFE0 Main Menu',nosave:'No save yet',rfw:'Refresh',snark:'Snark',dockHead:'🧰 Chest · drag blanks onto the anvil · click a material to feed the rings',wheel:'🌀 Wheels',spx:'📖 Spell Codex',b5fix:'🩹 Rune Mender · Mend Black Balls',b5polish:'✨ Rune Polish · String Flourish',b5fixHint:'Play the solfège sequence in order on the string keys to mend a black ball — one strike: any wrong key fails it (stays black, sell -20%); all 4 right = gilded (sell -5%). Keys tire daily; they recover overnight.',b5polHint:'Play the 3-note solfège in order for the gold-frame flourish (visual only, no price change). Wrong key = new question (fresh keys); shares the daily key pool with mending. Skippable.',b5replay:'🔊 Replay',b5skip:'⏭ Skip Polish',b5fixStep:'Black ball',b5polished:'Polished!',b5fixok:'Mended · gilded',b5fixno:'Missed · stays black',b5free:'visual only · no price change',b5retry:'Missed — new question (unlimited retries)',b5skipdone:'Polish skipped (visual only, no price impact)',b7keyLeft:'{n} left today',b7keyOut:'Exhausted today · recovers at dawn',b7stash:'📥 Stash It',b7stashed:'Stashed — black balls kept; click it in the chest to resume mending',b7tired:'Key fatigue: not enough fresh notes today — stash it and come back tomorrow when the pool recovers.',b7tiredS:'Keys tired',b7busy:'Mid-question / settling — mend it afterwards',b7packdone:'mended in chest!',b7mend:'🔧Fix',b7adorn:'✨Polish',b7pendTitle:'Pending: click to resume in the Rune Mender',b7tab3:'3rd-Position Zone',b7tab1:'1st-Position Zone',b7tabF:'Heavenly Fused Board (✦ = merged key · daily allowance sums both boards)',upgIns1:'Advanced Stringbox',upgIns1D:'Adds a 1st-position board to the Rune Mender: dual boards for mending/polish (15→30 string keys), switch via form tabs (mending defaults 3rd, polish 1st).',upgIns1Done:'Dual boards online! 30-key pool',upgInsF:'Heavenly Fusion Core',upgInsFD:'Fuses both boards into one full board: shared positions become merged keys (✦, daily allowance sums both boards) and every key gains +1 daily tap (requires Advanced Stringbox).',upgInsFDone:'Heavenly fusion! ✦ merged keys doubled + all keys +1',upgKeyT:'Key Quenching',upgKeyTD:'+1 tap per key per day per level · all forms (key-fatigue expansion)',upgKeyTDone:'+1 tap/key/day',b7needPre:'Requires Advanced Stringbox',b7formOn:'dual boards',b7formFOn:'fused board',b7formOff:'not installed',dbgTitle:'🐞 Debug Panel',dbgWarn:'⚠️ debug actions write to the save (test pollution)',dbgForm:'Instrument form',b7f0:'Basic · 3rd Pos',b7f1:'Advanced · Dual',b7f2:'Final · Fused',dbgResetKeys:'Reset key pool (daily fatigue cleared)',dbgResetNotes:'Clear used notes',
+ringCap:'🌀 五行能量环',ringHint:'点选素材 → 点环放置 · 相邻蔓延解锁新环 · 每答对一题+1放入次数 · 答题中锁定',ringFuel:'放入次数',ringPowTip:'点选上能量环(再点取消)',ringNstTip:'夜行制卡素材·点选上能量环(放置即扣仓)',ringSelT:'已选 {n} —— 点亮的目标环点击放置(再点素材取消)',ringNoMat:'先点选素材:底箱粉末或夜行仓库制卡素材',ringNoFuel:'放入次数不足——答对一题+1次',ringBusy:'答题/结算中不能放素材——等这题结束',ringLockAdj:'太远了——能量从基底向外蔓延,只能放与已放环直接相邻的环',ringLockAttr:'属性锁:需相邻已放源环「{el}」行累计≥6(异属性素材不累计)',ringLockQ:'品质锁:全场累计品质≥{t}才解锁(当前{q})',ringUp:'升到 Lv.{lv}!',ringPlaced:'已放入 {n}',ringTipIdle:'点选素材后点此放置',ringTipPts:'{el}行 {p}/{n} · Lv{lv} · ',ringTypeBase:'基底环',ringTypeEffect:'效果环',ringTypeAffix:'词条栏环',ringTypeQuality:'品质环',ringTypeRecipe:'配方变化环',ringTypeExpand:'扩充环',affDirEco:'经济向',affDirDur:'耐久向',affDirCbt:'战斗向',ringAffixLv:'词条位{lv}(方向:{dir})',qualBadge:'品质',ringQualTip:'品质徽章{b}·卖价×{m}',ringRecOk:'配方变化就绪(铸成升格✦)',ringRecNo:'顺序未达:火行素材首投+≥2件',cxRecipeH:'✦ 隐藏配方',cxRecipeSt:'示例',ringUpgNote:'转盘扩容已随能量环退役——已购档保留5音题口径,灵石不退'},
+ en:{cal:'\uD83D\uDCC5 Calendar',upg:'\uD83C\uDFD7\uFE0F Upgrades',skill:'\uD83C\uDF33 Skills',endf:'End Crafting',day2:'\uD83D\uDED2 Merchant',quest:'\uD83D\uDCCB Quests',opt:'\u2699\uFE0F Options',mstart:'\uD83C\uDFAE New Game',mmod:'\uD83E\uDE9B Mod Workshop',mopt:'\u2699\uFE0F Options',mst:'\uD83C\uDF33 Skill Tree',mtitle:'Talisman Workshop \u00B7 Runes by Ear',msub:'Hear the pitch \u00B7 Draw the talisman \u00B7 Pay the rent',res:'Resolution',lang:'Language',optt:'Options',gstart:'\uD83C\uDFAE New Game',gcont:'\u25B6\uFE0F Continue',mquit:'\uD83D\uDEAA Quit',ptitle:'Paused',presume:'\u25B6\uFE0F Resume',psave:'\uD83D\uDCBE Save',pload:'\uD83D\uDCC2 Load',phome:'\uD83C\uDFE0 Main Menu',nosave:'No save yet',rfw:'Refresh',snark:'Snark',dockHead:'🧰 Chest · drag blanks onto the anvil · click a material to feed the rings',wheel:'🌀 Wheels',spx:'📖 Spell Codex',b5fix:'🩹 Rune Mender · Mend Black Balls',b5polish:'✨ Rune Polish · String Flourish',b5fixHint:'Play the solfège sequence in order on the string keys to mend a black ball — one strike: any wrong key fails it (stays black, sell -20%); all 4 right = gilded (sell -5%). Keys tire daily; they recover overnight.',b5polHint:'Play the 3-note solfège in order for the gold-frame flourish (visual only, no price change). Wrong key = new question (fresh keys); shares the daily key pool with mending. Skippable.',b5replay:'🔊 Replay',b5skip:'⏭ Skip Polish',b5fixStep:'Black ball',b5polished:'Polished!',b5fixok:'Mended · gilded',b5fixno:'Missed · stays black',b5free:'visual only · no price change',b5retry:'Missed — new question (unlimited retries)',b5skipdone:'Polish skipped (visual only, no price impact)',b7keyLeft:'{n} left today',b7keyOut:'Exhausted today · recovers at dawn',b7stash:'📥 Stash It',b7stashed:'Stashed — black balls kept; click it in the chest to resume mending',b7tired:'Key fatigue: not enough fresh notes today — stash it and come back tomorrow when the pool recovers.',b7tiredS:'Keys tired',b7busy:'Mid-question / settling — mend it afterwards',b7packdone:'mended in chest!',b7mend:'🔧Fix',b7adorn:'✨Polish',b7pendTitle:'Pending: click to resume in the Rune Mender',b7tab3:'3rd-Position Zone',b7tab1:'1st-Position Zone',b7tabF:'Heavenly Fused Board (✦ = merged key · daily allowance sums both boards)',upgIns1:'Advanced Stringbox',upgIns1D:'Adds a 1st-position board to the Rune Mender: dual boards for mending/polish (15→30 string keys), switch via form tabs (mending defaults 3rd, polish 1st).',upgIns1Done:'Dual boards online! 30-key pool',upgInsF:'Heavenly Fusion Core',upgInsFD:'Fuses both boards into one full board: shared positions become merged keys (✦, daily allowance sums both boards) and every key gains +1 daily tap (requires Advanced Stringbox).',upgInsFDone:'Heavenly fusion! ✦ merged keys doubled + all keys +1',upgKeyT:'Key Quenching',upgKeyTD:'+1 tap per key per day per level · all forms (key-fatigue expansion)',upgKeyTDone:'+1 tap/key/day',upgMix:'Blend Mastery',upgMixD:'+1 ring placement per finished talisman per level (4 perfect answers = 4 base → 5/6; not granted on burst)',upgMixDone:'+1 placement per talisman',ringMixTag:'+{n}/cast',b7needPre:'Requires Advanced Stringbox',b7formOn:'dual boards',b7formFOn:'fused board',b7formOff:'not installed',dbgTitle:'🐞 Debug Panel',dbgWarn:'⚠️ debug actions write to the save (test pollution)',dbgForm:'Instrument form',b7f0:'Basic · 3rd Pos',b7f1:'Advanced · Dual',b7f2:'Final · Fused',dbgResetKeys:'Reset key pool (daily fatigue cleared)',dbgResetNotes:'Clear used notes',
 nightBtn:'🌙 Night Run',nightTitle:'🌙 Night Run · Wilderness Loot',nightCd:'Dawn in',nightGoHome:'🏠 Go Home & Settle',nightHaul:"🎒 Tonight's Haul",nightHaulEmpty:'Nothing yet',nightRule:"Rules: ⚡AP=12 · each move/open/gather costs 1 AP · every action brings dawn 1 step closer (starts 16) · AP or dawn hitting 0 forces sunrise — be home, or lose tonight's haul!",nightFar:'Too far — you can only move along a connection',nightNoAP:'Not enough AP',nightBusy:'Finish crafting first — no night runs mid-question',nightTblue:'common',nightTpurple:'uncommon',nightTorange:'rare',nightOpenBox:'📦 Open Box',nightOpenPick:'🌿 Gather',nightBoxOpen:'Box opened!',nightPickOpen:'Gathered!',nightBoxInfo:'A container: opening costs 1 AP, loot scales with node rarity',nightPickInfo:'Gatherable: costs 1 AP, loot scales with node rarity',nightPlainInfo:'Wilderness node — just a waypoint',nightHomeInfo:'Home · start & extraction: press "Go Home & Settle" here to bank the haul',nightEmptied:'Already emptied',nightCatMoney:'Gold',nightSettleT:"Tonight's Settlement",nightDayN:'Night of day {d}',nightSafe:'🏠 Home safe — haul banked!',nightLost:"🌅 Dawn broke before you got back — tonight's haul is all lost!",nightTotal:'Total',nightZero:'All lost',nightStashNote:'📦 Supplies/materials stored in the night stash (materials feed the energy ring in a later batch)',nightFatigueNote:"🌙 Staying up late: tomorrow's customers -1",nightBackDay:'Back to Day',
 nightN0:'Workshop Yard',nightN1:'Dry Riverbed',nightN2:'Ruined Gas Station',nightN3:'Night Market Stall',nightN4:'Old Bridge',nightN5:'Abandoned Clinic',nightN6:'Ruined Greenhouse',nightN7:'Metro Air Vent',nightN8:'Watchtower',nightN9:'Glass Chapel',nightN10:'Tin-Plate Bazaar',nightN11:'Signal Tower Base',nightN12:'Silted Ferry',nightN13:'Overpass Dead End',nightN14:'Old Water Tower',
 nightS0:'Canned Food',nightS1:'Battery',nightS2:'Bandage',nightS3:'Clean Water',
 nightM0:'Goldmetal Shavings',nightM1:'Verdant Vine',nightM2:'Coldwater Marrow',nightM3:'Ember-Rune Stone',nightM4:'Loam Core',
 nightElM:'Metal',nightElW:'Wood',nightElA:'Water',nightElF:'Fire',nightElE:'Earth',
-ringCap:'🌀 Elemental Rings',ringHint:'Pick a material → click a ring to place · rings unlock outward from the base · +1 placement per perfect question · locked mid-question',ringFuel:'Placements',ringPowTip:'Click to select for a ring (click again to cancel)',ringNstTip:'Night-run crafting material · click to select for a ring (consumed from stash)',ringSelT:'Picked {n} — click a lit ring to place it (pick again to cancel)',ringNoMat:'Pick a material first: chest powders or night-stash crafting materials',ringNoFuel:'Not enough placements — answer a question perfectly to gain one',ringBusy:'Cannot place mid-question / mid-settlement — wait for it to end',ringLockAdj:'Too far — energy spreads outward from the base: only rings adjacent to a filled ring can be filled',ringLockAttr:'Attribute lock: an adjacent filled source ring needs ≥6 of the "{el}" element (off-element materials don\u2019t count)',ringLockQ:'Quality lock: total field quality ≥{t} required (currently {q})',ringUp:'reached Lv.{lv}!',ringPlaced:'Placed {n}',ringTipIdle:'pick a material, then click here',ringTipPts:'{el} {p}/{n} · Lv{lv} · ',ringTypeBase:'Base ring',ringTypeEffect:'Effect ring',ringTypeAffix:'Trait-slot ring',ringTypeQuality:'Quality ring',ringTypeRecipe:'Recipe-change ring',ringTypeExpand:'Expansion ring',ringUpgNote:'Revolver expansion retired with the energy rings — owned saves keep the 5-note questions; no refunds'}};
+ringCap:'🌀 Elemental Rings',ringHint:'Pick a material → click a ring to place · rings unlock outward from the base · +1 placement per perfect question · locked mid-question',ringFuel:'Placements',ringPowTip:'Click to select for a ring (click again to cancel)',ringNstTip:'Night-run crafting material · click to select for a ring (consumed from stash)',ringSelT:'Picked {n} — click a lit ring to place it (pick again to cancel)',ringNoMat:'Pick a material first: chest powders or night-stash crafting materials',ringNoFuel:'Not enough placements — answer a question perfectly to gain one',ringBusy:'Cannot place mid-question / mid-settlement — wait for it to end',ringLockAdj:'Too far — energy spreads outward from the base: only rings adjacent to a filled ring can be filled',ringLockAttr:'Attribute lock: an adjacent filled source ring needs ≥6 of the "{el}" element (off-element materials don\u2019t count)',ringLockQ:'Quality lock: total field quality ≥{t} required (currently {q})',ringUp:'reached Lv.{lv}!',ringPlaced:'Placed {n}',ringTipIdle:'pick a material, then click here',ringTipPts:'{el} {p}/{n} · Lv{lv} · ',ringTypeBase:'Base ring',ringTypeEffect:'Effect ring',ringTypeAffix:'Trait-slot ring',ringTypeQuality:'Quality ring',ringTypeRecipe:'Recipe-change ring',ringTypeExpand:'Expansion ring',affDirEco:'Economy',affDirDur:'Durability',affDirCbt:'Combat',ringAffixLv:'Trait slot {lv} ({dir})',qualBadge:'Quality',ringQualTip:'Quality badge {b} · sell ×{m}',ringRecOk:'recipe change armed (✦ on cast)',ringRecNo:'order not met: fire material first + 2 or more',cxRecipeH:'✦ Hidden Recipes',cxRecipeSt:'Example',ringUpgNote:'Revolver expansion retired with the energy rings — owned saves keep the 5-note questions; no refunds'}};
 let LANG='zh';try{LANG=localStorage.getItem('ft_lang')||'zh'}catch(e){}
 let CUR_RES=[1280,720];
 function t(k){return (I18N[LANG]&&I18N[LANG][k])||I18N.zh[k]||k}
@@ -3048,7 +3097,7 @@ function loadGame(){
  S.row=S.row||[];S.potions=S.potions||{safe:0,up:0};S.potSel=null;renderMarkRow(); // v29:标记台账/药水随存档恢复
  S.powders=S.powders||{}; // v36B2:粉末袋缺省
  if(S.up&&S.up.rev5===undefined)S.up.rev5=0; // v36B6:扩容档缺省(老档=未购);v36R批2a升级入口退役但已购档保留5音题口径(灵石不退,renderUpg占位说明)
- if(S.up){if(S.up.ins1===undefined)S.up.ins1=0;if(S.up.insF===undefined)S.up.insF=0;if(S.up.keyT===undefined)S.up.keyT=0} // v36B7:乐器线升级缺省(老档=未购)
+ if(S.up){if(S.up.ins1===undefined)S.up.ins1=0;if(S.up.insF===undefined)S.up.insF=0;if(S.up.keyT===undefined)S.up.keyT=0;if(S.up.mix===undefined)S.up.mix=0} // v36B7:乐器线升级缺省(老档=未购);批2b调合心得缺省0
  (Array.isArray(S.pot)?S.pot:[]).forEach(p=>{if(p&&p.k)S.powders[p.k]=(S.powders[p.k]||0)+1}); // v36R批2a老档迁移(R5延续):转盘退役——碟内粉末全数归还底箱袋(不丢粉·经济零动)
  delete S.pot;delete S.rev; // S.pot碟载荷/S.rev转盘字段退役(读档兜底,全库无读取方)
  S.ring=(S.ring&&typeof S.ring==='object'&&S.ring.rings&&typeof S.ring.rings==='object')?S.ring:{fuel:0,rings:{},last:null}; // v36R批2a:能量环缺省回填空环态(老档无环字段→基底已放,载入不炸)
@@ -3260,7 +3309,7 @@ function restart(newRun){ // v36C:newRun=true=角色选择全新开局→已出�
  $('fix-modal').classList.remove('on');
  S.ins={form:0,view:0};S.kfat={day:1,keys:{},notes:{}}; // v36B7:新档=初阶三把位+键池满/已用音空
  S.nightLog=[];S.nightStash=[];S.nightFatigue=null;NIGHT.mode='day';NIGHT.trip=null; // NIGHT D1:新档夜行账本/仓库/熬夜标志清零+昼夜状态机回白天(夜间overlay在开时restart不可达,防御性复位)
- S.up={anvil:0,sword:0,armor:0,bow:0,wand:0,shield:0,artSlot:0,rev5:0,ins1:0,insF:0,keyT:0};S.anvils=[];syncFocus();renderRack();
+ S.up={anvil:0,sword:0,armor:0,bow:0,wand:0,shield:0,artSlot:0,rev5:0,ins1:0,insF:0,keyT:0,mix:0};S.anvils=[];syncFocus();renderRack();
  S.qDay=0;S.qBoard={};S.qActive={};S.nq=newRun?0:9999;renderQStrip(); // v36C:全新开局nq清0走新档梯度;裸restart=9999老兵(难度零回退)
  S.chest=[{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'},{name:'褪色符纸',emoji:'🗡️'}];renderChest();
  S.frenzyActive=false;S.pendingQuench=false;app.classList.remove('frenzy');
@@ -3310,10 +3359,10 @@ $('btn-help').onclick=()=>{showOverlay('gold','❓','玩法:制符听音 · 符�
   · <b>连击进化</b>:连续「蓝及以上」≥3 全紫(4💰)/≥5 全金(5💰)/≥7 全红(6💰),绿白黑断串<br>
   · <b>五行能量环</b>(左侧环网,批2a:12环调合体系,替代旧转盘):该题标记灵力 × 档位倍率<b>即时兑现成灵石</b>;五行元素改由<b>素材上环</b>累积——点底箱粉末/夜行素材选中 → 点亮的目标环放置<br>
   · 档位复用概率链(错音越多越差):<b>大成功×4 / 成功×2 / 失败×0.5</b> · 基础 20/70/10;失败=兑现减半注入减半,不炸符不没收标记<br>
-  · <b>能量环玩法</b>(莱莎2式调合):全局 12 环——基底×1(开局已放=起点)+效果×4+词条栏×3+品质×1+配方变化×1+扩充×2,金木水火土各 2 环;<b>放入次数=听音燃料</b>——每答对一题 +1 次,放 1 件素材耗 1 次,答题中锁定;<b>相邻蔓延</b>——只能放与已放环直接相邻的环(基底向外铺,禁跳跃);<b>属性锁</b>——带锁环需相邻已放源环「该环属性」累计 ≥6;<b>品质锁</b>——品质环需全场累计品质 ≥5;<b>环升级</b>——单环同属性累计 4/9/15 → Lv1/2/3(异属性素材可放:占次数·贡献品质,但不累计该环升级值);<b>敲对音的瞬间激光飞向最近放置的环</b>(色=素材属性色,答错偏折闪烁)。铸成/收工时全场五行累计点数随符入库(主属性定法术·纯度定品阶),环复位开下一轮调合。粉末商人「素材」区有售:一品30/二品70灵石;夜行仓库制卡素材(铄屑/青藤/寒髓/火石/壤芯)也可上环<br>
+  · <b>能量环玩法</b>(莱莎2式调合):全局 12 环——基底×1(开局已放=起点)+效果×4+词条栏×3+品质×1+配方变化×1+扩充×2,金木水火土各 2 环;<b>放入次数=听音燃料</b>——每答对一题 +1 次,放 1 件素材耗 1 次,答题中锁定;升级工坊「<b>调合心得</b>」(批2b)每级每符铸成/收工时再 +1 次(4 题全对=4 次基础→5/6,爆符不计);<b>相邻蔓延</b>——只能放与已放环直接相邻的环(基底向外铺,禁跳跃);<b>属性锁</b>——带锁环需相邻已放源环「该环属性」累计 ≥6;<b>品质锁</b>——品质环需全场累计品质 ≥5;<b>环升级</b>——单环同属性累计 4/9/15 → Lv1/2/3(异属性素材可放:占次数·贡献品质,但不累计该环升级值),品质环按<b>本环累计品质点</b> 4/9/15 升 Lv1/2/3=成品带<b>◆品质徽章Ⅰ/Ⅱ/Ⅲ</b>(卖价第四因子 +10%/+20%/+35%,独立乘区;Lv0 无徽章中性);<b>配方变化环</b>(批2b)——单环火行累计 4 点升 Lv1,且需以特定顺序投放素材(火行素材<b>首投</b>·随后任意·至少 2 件)才武装:铸成时触发「配方变化」,成品升格 <b>✦隐藏配方形态</b>(名前缀✦+法术升一档:杂→中/中→上/上→上·真髓)+卖价×1.5,顺序不对不触发;图鉴(商品/法术)有「✦ 隐藏配方」示例连锁;<b>敲对音的瞬间激光飞向最近放置的环</b>(色=素材属性色,答错偏折闪烁)。铸成/收工时全场五行累计点数随符入库(主属性定法术·纯度定品阶),环复位开下一轮调合。粉末商人「素材」区有售:一品30/二品70灵石;夜行仓库制卡素材(铄屑/青藤/寒髓/火石/壤芯)也可上环<br>
   · <b>丹药</b>(商人有售):🧪保底 60💰 绿/白标记→蓝(可接上蓝串触发进化);⚗️升级 120💰 单标记升一级(红封顶)<br>
   · <b>法术判定</b>(批3):符制成时按五行构成判法术——火主火球/水主冰锥/金主雷击/木主藤缚/土主石甲;纯度=主元素量÷五元总量,<b>≥60% 上品 / ≥40% 中品 / 其余杂品</b>·全 0 兜底五行杂符;每符带 <b>3 次耐久</b><br>
-  · <b>词条</b>:铸成时按该符 4 题答题档位史 roll(基础30%+每次大成功+8%/成功+3%,封顶70%)——价值/美观提卖价,次数翻倍耐久→6;<b>商人收购区卖符</b>:价值×纯度(×2.0/×1.4/×1.0)×词条×耐久(1+dur×10%)×<b>填色质量</b>(批5:修补球每个-5%/黑球每个-20%),法术图鉴铸成过即点亮<br>
+  · <b>词条</b>(批2b环口径,概率词条退役):三个词条栏环各自升级——<b>环 Lv≥1 解放一个词条位,词条等级=环 Lv</b>(Ⅰ/Ⅱ/Ⅲ,三环全升=3 词条封顶);方向按环属性:金/土环=<b>经济向</b>(价值/美观提卖价,美观另+协会好感),木/水环=<b>耐久向</b>(次数翻倍·耐久→6);<b>商人收购区卖符</b>:价值×纯度(×2.0/×1.4/×1.0)×词条×耐久(1+dur×10%)×<b>填色质量</b>(批5:修补球每个-5%/黑球每个-20%),法术图鉴铸成过即点亮<br>
   · <b>元素球</b>(批5):符纸中段=元素球行,每题一球——全对染主元素色,答错染黑,修补镀金,未答灰褐虚线底稿<br>
   · <b>维修台+美化</b>(批5):符画完统一结算——有黑球先开维修台(三把位小提琴指板,逐黑球重播题目后一击修补:点对镀金/点错保持黑),再进美化阶段(一把位指板敲轻量新题,全对=符面加金边纹样,纯视觉不改卖价;答错重出无限次,可跳过)<br>
   · 角色等级封顶符的成长:<b>Lv.1 制符师每张符最多 4 题,最高 4 音域</b>,每天 3 张符坯<br>
@@ -3498,9 +3547,9 @@ function nightClick(id){const T=NIGHT.trip;if(!T||NIGHT.mode!=='night')return;if
 })();
 
 /* 测试钩子 */
-window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,makeItem,judgeSpell,rollAffix,spellName,affixName,syncFocus,stashAll,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,gradeQuestion,appendMark,recalcEvolution,markVal,progSwords,potEligible,applyPotion,enterPotSel,MARK_VAL,MARK_ORDER,POTIONS,swordCap,openMerchant,renderMerchant,openUpg,buyUpg,UPG,anvilN,renderRack,renderUpg,openBill,closeBill,billData,metaObj,metaSave,settleLegacy,renderSkillTree,updListenBtn,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()},ALL_GOODS,HI_TABLE,HI_CHANCE,gCls,rollShelf,ELEMS,ELEM_META,zeroElem,powTotal,POWDER_GOODS,answerSettle,renderSpellCodex,openSpellCodex,sellPrice, // v36B5(V21教训:新函数必须暴露才能 TB 测);批2a:renderPot/potPut/potTake/potLocked/spinWheel/potWeights 随转盘退役→answerSettle+__api.ring
+window.__api={S,NOTES,SWORDS,CFG,GRIDW,wOf,INST,playInst,computeProbs,rollTier,makeItem,judgeSpell,spellName,affixName,affixNames,syncFocus,stashAll,placeBlank,renderChest,startForge,openCal,nextQuestion,hitLane,gradeQuestion,appendMark,recalcEvolution,markVal,progSwords,potEligible,applyPotion,enterPotSel,MARK_VAL,MARK_ORDER,POTIONS,swordCap,openMerchant,renderMerchant,openUpg,buyUpg,UPG,anvilN,renderRack,renderUpg,openBill,closeBill,billData,metaObj,metaSave,settleLegacy,renderSkillTree,updListenBtn,forceFrenzy:()=>{S.charge=CFG.FRENZY_NEED;startFrenzy()},ALL_GOODS,HI_TABLE,HI_CHANCE,gCls,rollShelf,ELEMS,ELEM_META,zeroElem,powTotal,POWDER_GOODS,answerSettle,renderSpellCodex,openSpellCodex,sellPrice, // v36B5(V21教训:新函数必须暴露才能 TB 测);批2a:renderPot/potPut/potTake/potLocked/spinWheel/potWeights 随转盘退役→answerSettle+__api.ring;批2b:rollAffix随概率词条退役→affixNames+__api.ring.aff
  b5:{pos3:B5_POS3,pos1:B5_POS1,openMidi:b5OpenMidi,semiToPos:b5SemiToPos,sol:b5SolOf,nm:b5NoteName,open:b5OpenSession,fixClick:b5FixClick,polClick:b5PolishClick,polNew:b5PolishNewQ,skip:b5PolishSkip,auto:b5AutoFinish,record:b5RecordBall,finish:b5FinishSw,paper:b5PaperSVG},
- ring:{net:RING_NET,st:ringSt,node:ringNode,adj:ringAdjOf,lv:ringLvOf,spread:ringSpreadOk,attrOk:ringAttrLockOk,qTot:ringQualityTot,can:ringCanPlace,elem:ringElemTotals,reset:ringResetCast,snap:ringSnapshot,mat:ringMatSpec,matName:ringMatName,matCnt:ringMatCount,select:ringSelectMat,place:ringPlace,locked:ringLocked,laser:ringLaserClick,render:()=>{if(typeof renderRing==='function')renderRing()}}, // v36R批2a(V21教训:新函数必须暴露才能 TB 测)
+ ring:{net:RING_NET,st:ringSt,node:ringNode,adj:ringAdjOf,lv:ringLvOf,spread:ringSpreadOk,attrOk:ringAttrLockOk,qTot:ringQualityTot,can:ringCanPlace,elem:ringElemTotals,reset:ringResetCast,snap:ringSnapshot,craftSnap:ringCraftSnap,aff:ringAffixes,qLv:ringQualLv,rec:ringRecipeArmed,mat:ringMatSpec,matName:ringMatName,matCnt:ringMatCount,select:ringSelectMat,place:ringPlace,locked:ringLocked,laser:ringLaserClick,render:()=>{if(typeof renderRing==='function')renderRing()}}, // v36R批2a(V21教训:新函数必须暴露才能 TB 测);批2b:+craftSnap/aff(词条环)/qLv(品质环)/rec(配方变化武装)
  b7:{roll:b7Roll,cap:keyCapOf,left:b7Left,tap:b7Tap,pool:b7Pool,genQ:b7GenQ,board:b7BoardTable,fused:B5_FUSED,dual:B7_DUAL_SET,pend:b7PendingOf,stash:b7StashCur,openPack:b7OpenPack,dbg:b7DbgRender,retry:b7RetryTired,sw:b5SW,rr:b7RerenderFix}, // v36B7(V21教训:新函数必须暴露才能 TB 测)
  night:{enter:nightEnter,state:()=>NIGHT.trip,mode:()=>NIGHT.mode,move:nightMove,open:nightOpen,home:nightGoHome,adj:nightAdjOf,nodes:NIGHT_NODES,edges:NIGHT_EDGES,for:nightFatigueFor,back:nightBackDay,roll:nightRollLoot}}; // NIGHT D1(V21教训:新函数必须暴露才能 TB 测;state()=活引用,TB可注入ap/cd)
 
